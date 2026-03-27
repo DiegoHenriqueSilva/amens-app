@@ -141,9 +141,10 @@ Responda APENAS com um objeto JSON válido no formato:
   };
 
   const level = getLevel(totalXp);
+  const APP_URL = "https://amens-app.vercel.app";
   const referralLink = user
-    ? `${window.location.origin}/auth?ref=${user.id}`
-    : window.location.origin;
+    ? `${APP_URL}/auth?ref=${user.id}`
+    : APP_URL;
 
   const handleShare = async (mode: 'full' | 'summary' = 'full') => {
     if (!gospel) return;

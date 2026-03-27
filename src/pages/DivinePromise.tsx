@@ -60,7 +60,8 @@ const DivinePromise = () => {
 
   const handleShare = async () => {
     if (!promise) return;
-    const shareText = `✦ Minha Divina Promessa de Hoje ✦\n\n"${promise.verse}"\n— ${promise.ref}\n\n🙏 ${promise.context || ""}\n\nReceba sua promessa também em: ${window.location.origin}`;
+    const APP_URL = "https://amens-app.vercel.app";
+    const shareText = `✦ Minha Divina Promessa de Hoje ✦\n\n"${promise.verse}"\n— ${promise.ref}\n\n🙏 ${promise.context || ""}\n\nReceba sua promessa também em: ${APP_URL}`;
     
     if (navigator.share) {
       try {
