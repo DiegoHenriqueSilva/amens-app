@@ -12,7 +12,8 @@ import { toast } from "sonner";
 import type { User as SupabaseUser } from "@supabase/supabase-js";
 
 interface GospelData {
-  verse: string;
+  verse: string; // O resumo poético principal
+  fullText: string; // O texto original completo
   reference: string;
   liturgicalDay?: string;
   title?: string;
@@ -111,20 +112,23 @@ Responda APENAS com um objeto JSON válido no formato:
 
       const finalGospel = {
         verse: verseResumo,
+        fullText: evangelhoTextoCompleto,
         reference: evangelhoReferencia,
         liturgicalDay: liturgiaData.liturgia || "Evangelho do Dia",
         title: "Palavra de Salvação",
         curiosity: curiosidade,
-        imageUrl: "/daily-gospel/today.jpg" // Imagem manual provida via chat (Override)
+        imageUrl: "/daily-gospel/today.jpg"
       };
 
       setGospel(finalGospel);
-      localStorage.setItem("daily_gospel_cache_v6", JSON.stringify({ data: finalGospel, date: todayString }));
+      localStorage.setItem("daily_gospel_cache_v7", JSON.stringify({ data: finalGospel, date: todayString }));
 
     } catch (err) {
       console.error("Failed to fetch daily gospel:", err);
+      const fallbackText = "Porque Deus amou o mundo de tal maneira que deu o seu Filho unigênito...";
       setGospel({
-        verse: "Porque Deus amou o mundo de tal maneira que deu o seu Filho unigênito...",
+        verse: "Deus nos amou tanto que entregou Seu Filho para que tivéssemos a vida eterna.",
+        fullText: fallbackText,
         reference: "João 3:16",
         liturgicalDay: "Evangelho Perene",
         title: "O Amor de Deus",
@@ -141,15 +145,16 @@ Responda APENAS com um objeto JSON válido no formato:
     ? `${window.location.origin}/auth?ref=${user.id}`
     : window.location.origin;
 
-  const handleShare = async () => {
+  const handleShare = async (mode: 'full' | 'summary' = 'full') => {
     if (!gospel) return;
     
     setGenerating(true);
     try {
-      const shareText = `✦ Evangelho de Hoje (${gospel.liturgicalDay}) ✦\n\n"${gospel.verse}"\n— ${gospel.reference}\n\n🙏 ${gospel.curiosity}\n\nJunte-se à corrente de prece comigo:\n${referralLink}`;
+      const textToShare = mode === 'full' ? gospel.fullText : gospel.verse;
+      const shareText = `✦ Evangelho de Hoje (${gospel.liturgicalDay}) ✦\n\n"${textToShare}"\n— ${gospel.reference}\n\n🙏 ${gospel.curiosity}\n\nJunte-se à corrente de prece comigo:\n${referralLink}`;
       
       const shareData: any = {
-        title: 'Améns - Evangelho do Dia',
+        title: mode === 'full' ? 'Evangelho Completo' : 'Resumo do Evangelho',
         text: shareText,
       };
 
@@ -165,10 +170,9 @@ Responda APENAS com um objeto JSON válido no formato:
               ...shareData,
               files: [file]
             });
-            toast.success("Compartilhado com imagem! ✨");
+            toast.success(mode === 'full' ? "Compartilhado completo! ✨" : "Resumo compartilhado! ✨");
             return;
           } else {
-            // Se não der pra compartilhar arquivo, vai só o texto + link
             await navigator.share(shareData);
             toast.success("Evangelho compartilhado!");
             return;
@@ -182,7 +186,7 @@ Responda APENAS com um objeto JSON válido no formato:
       }
 
       await navigator.clipboard.writeText(shareText);
-      toast.success("Mensagem abençoada copiada! 📋");
+      toast.success("Mensagem copiada para a área de transferência! 📋");
     } catch {
       toast.error("Não foi possível realizar o compartilhamento.");
     } finally {
@@ -248,10 +252,20 @@ Responda APENAS com um objeto JSON válido no formato:
                   >
                     "{gospel.verse}"
                   </motion.blockquote>
-                  <p className="text-sm font-semibold text-primary mt-4 flex justify-center items-center gap-2">
+                  <p className="text-xs font-semibold text-primary mt-4 flex justify-center items-center gap-2">
                     <span className="h-px w-6 bg-primary/30 inline-block"></span> 
-                    {gospel.reference} 
+                    Resumo do Dia
                     <span className="h-px w-6 bg-primary/30 inline-block"></span>
+                  </p>
+                </div>
+
+                <div className="text-left space-y-3 pt-4">
+                  <h3 className="text-xs uppercase tracking-widest text-muted-foreground font-bold flex items-center">
+                    <BookOpen className="w-3.5 h-3.5 mr-2" /> 
+                    Leitura Completa ({gospel.reference})
+                  </h3>
+                  <p className="text-sm text-foreground/70 leading-relaxed font-serif bg-white/30 p-4 rounded-xl">
+                    {gospel.fullText}
                   </p>
                 </div>
                 
@@ -272,14 +286,26 @@ Responda APENAS com um objeto JSON válido no formato:
 
                 <div className="divider-gold mx-auto my-6" />
 
-                <Button
-                  onClick={handleShare}
-                  disabled={generating}
-                  className="gradient-divine text-primary-foreground hover:opacity-90 w-full rounded-full py-6 text-base shadow-md"
-                >
-                  <Share2 className="w-5 h-5 mr-3" />
-                  Compartilhar Mensagem
-                </Button>
+                <div className="grid grid-cols-1 gap-3">
+                  <Button
+                    onClick={() => handleShare('summary')}
+                    disabled={generating}
+                    className="gradient-divine text-primary-foreground hover:opacity-90 w-full rounded-full py-6 text-base shadow-md"
+                  >
+                    <Sparkles className="w-5 h-5 mr-3" />
+                    Compartilhar Resumo (IA)
+                  </Button>
+                  
+                  <Button
+                    onClick={() => handleShare('full')}
+                    disabled={generating}
+                    variant="outline"
+                    className="border-primary/20 text-primary hover:bg-primary/5 w-full rounded-full py-6 text-sm"
+                  >
+                    <Share2 className="w-4 h-4 mr-3" />
+                    Enviar Texto Completo
+                  </Button>
+                </div>
                 
                 {user && (
                   <motion.div className="pt-2" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }}>
