@@ -40,8 +40,9 @@ const DivinePromise = () => {
         throw new Error("API Key ausente");
       }
 
-      const promptPromise = `Gere uma "Divina Promessa" encorajadora baseada na Bíblia Sagrada para alguém que está buscando conforto.
-Sua tarefa é sortear um versículo bíblico muito encorajador e adicionar uma curtíssima reflexão amorosa.
+      const promptPromise = `Gere uma "Divina Promessa" encorajadora baseada na Bíblia Sagrada. 
+SEMENTE ALEATÓRIA: ${Math.random()} - ${new Date().getTime()}
+Sua tarefa é sortear um versículo bíblico DIFERENTE do anterior, muito encorajador e adicionar uma curtíssima reflexão amorosa.
 Devolva APENAS um objeto JSON válido. Exemplo:
 {
   "verse": "O texto do versículo bíblico",
@@ -49,7 +50,7 @@ Devolva APENAS um objeto JSON válido. Exemplo:
   "context": "Uma frase de encorajamento ou reflexão amorosa (1 a 2 frases)"
 }`;
 
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ contents: [{ parts: [{ text: promptPromise }] }] })

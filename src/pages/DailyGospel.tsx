@@ -41,7 +41,7 @@ const DailyGospel = () => {
   const fetchDailyGospel = async () => {
     setLoadingGospel(true);
     try {
-      const cached = localStorage.getItem("daily_gospel_cache_v2");
+      const cached = localStorage.getItem("daily_gospel_cache_v3");
       const todayString = new Date().toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" });
       
       if (cached) {
@@ -59,7 +59,10 @@ const DailyGospel = () => {
       const liturgiaData = await liturgiaRes.json();
       
       const evangelhoReferencia = liturgiaData.evangelho?.referencia || "Evangelho Universal";
-      const evangelhoTextoCompleto = liturgiaData.evangelho?.texto || "Texto indisponível.";
+      const evangelhoTextoBruto = liturgiaData.evangelho?.texto || "Texto indisponível.";
+      
+      // Limpa números de versículos (ex: [1], 1., 20, etc) para uma leitura mais fluida
+      const evangelhoTextoCompleto = evangelhoTextoBruto.replace(/\[\d+\]|\d+\.|\d+/g, '').replace(/\s+/g, ' ').trim();
       
       const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
       let verseResumo = evangelhoTextoCompleto;
@@ -82,7 +85,7 @@ Devolva APENAS um objeto JSON valido sem crases ou markdown.
   "curiosidade": "Você sabia que nessa passagem...",
   "searchKeywords": "3 keyword in english related to the scene, separated by comma"
 }`;
-          const geminiRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
+          const geminiRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ contents: [{ parts: [{ text: promptDaily }] }] })
@@ -114,7 +117,7 @@ Devolva APENAS um objeto JSON valido sem crases ou markdown.
       };
 
       setGospel(finalGospel);
-      localStorage.setItem("daily_gospel_cache_v2", JSON.stringify({ data: finalGospel, date: todayString }));
+      localStorage.setItem("daily_gospel_cache_v3", JSON.stringify({ data: finalGospel, date: todayString }));
 
     } catch (err) {
       console.error("Failed to fetch daily gospel:", err);

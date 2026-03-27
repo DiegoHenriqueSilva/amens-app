@@ -6,15 +6,15 @@
 
 .text-glow {
   text-shadow: 
-    -1px -1px 0 #fff,  
-     1px -1px 0 #fff,
-    -1px  1px 0 #fff,
-     1px  1px 0 #fff,
-     0 0 8px rgba(255, 255, 255, 0.8);
+    -2px -2px 0 #fff,  
+     2px -2px 0 #fff,
+    -2px  2px 0 #fff,
+     2px  2px 0 #fff,
+     0 0 12px rgba(255, 255, 255, 1);
 }
 
 .text-soft-outline {
-  -webkit-text-stroke: 0.8px white;
+  -webkit-text-stroke: 1.2px white;
   paint-order: stroke fill;
 }
 
