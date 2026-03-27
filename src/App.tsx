@@ -13,9 +13,23 @@ import DailyGospel from "./pages/DailyGospel";
 import DivinePromise from "./pages/DivinePromise";
 import NotFound from "./pages/NotFound";
 
+import { useEffect } from "react";
+
 const queryClient = new QueryClient();
 
-const App = () => (
+const App = () => {
+  useEffect(() => {
+    const backgrounds = [
+      '/backgrounds/bg-1.png',
+      '/backgrounds/bg-2.png',
+      '/backgrounds/bg-3.png',
+      '/backgrounds/bg-4.png'
+    ];
+    const randomBg = backgrounds[Math.floor(Math.random() * backgrounds.length)];
+    document.body.style.setProperty('--bg-url', `url(${randomBg})`);
+  }, []);
+
+  return (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
@@ -36,6 +50,7 @@ const App = () => (
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
-);
+  );
+};
 
 export default App;
