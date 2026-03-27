@@ -25,18 +25,6 @@ const Auth = () => {
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === "SIGNED_IN" && session) {
-        // Process referral if applicable
-        const storedRef = localStorage.getItem("fe_referrer");
-        if (storedRef && storedRef !== session.user.id) {
-          try {
-            await supabase.functions.invoke("process-referral", {
-              body: { referrer_user_id: storedRef, referred_user_id: session.user.id },
-            });
-          } catch (e) {
-            console.error("Referral processing error:", e);
-          }
-          localStorage.removeItem("fe_referrer");
-        }
         navigate("/");
       }
     });

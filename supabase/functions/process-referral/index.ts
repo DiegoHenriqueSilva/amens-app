@@ -46,17 +46,17 @@ serve(async (req) => {
       xp_awarded: true,
     });
 
-    // Award 30 XP to referrer
+    // Award 20 XP to referrer
     await supabase.rpc('add_xp', {
       p_user_id: referrer_user_id,
-      p_xp_amount: 30,
+      p_xp_amount: 20,
       p_action: 'referral',
     });
 
     // Notify referrer
     await supabase.from('notifications').insert({
       user_id: referrer_user_id,
-      message: '🎉 Alguém se cadastrou pelo seu link! Você ganhou +30 XP!',
+      message: '🎉 Alguém se cadastrou pelo seu link! Você ganhou +20 XP!',
     });
 
     return new Response(

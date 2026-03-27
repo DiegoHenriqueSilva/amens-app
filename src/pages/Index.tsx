@@ -55,6 +55,22 @@ const Index = () => {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user ?? null);
+      
+      // Process referral if applicable
+      if ((event === "SIGNED_IN" || event === "INITIAL_SESSION") && session) {
+        const storedRef = localStorage.getItem("fe_referrer");
+        if (storedRef && storedRef !== session.user.id) {
+          console.log("Processing referral:", storedRef);
+          supabase.functions.invoke("process-referral", {
+            body: { referrer_user_id: storedRef, referred_user_id: session.user.id },
+          }).then(({ error }) => {
+            if (!error) {
+              toast.success("Referência processada! Que bom ter você aqui. 🙏");
+            }
+          }).catch(e => console.error("Referral processing error:", e));
+          localStorage.removeItem("fe_referrer");
+        }
+      }
     });
 
     return () => {
