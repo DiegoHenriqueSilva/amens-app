@@ -41,7 +41,7 @@ const DailyGospel = () => {
   const fetchDailyGospel = async () => {
     setLoadingGospel(true);
     try {
-      const cached = localStorage.getItem("daily_gospel_cache_v3");
+      const cached = localStorage.getItem("daily_gospel_cache_v4");
       const todayString = new Date().toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" });
       
       if (cached) {
@@ -95,7 +95,9 @@ Devolva APENAS um objeto JSON valido sem crases ou markdown.
             const gData = await geminiRes.json();
             const textResponse = gData.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
             try {
-              const cleanJson = textResponse.replace(/^\s*(`+json|`+)\s*/, '').replace(/\s*`+\s*$/, '').trim();
+              // Regex mais robusta para extrair JSON de dentro de blocos de código markdown ou texto puro
+              const jsonMatch = textResponse.match(/\{[\s\S]*\}/);
+              const cleanJson = jsonMatch ? jsonMatch[0] : "{}";
               const parsed = JSON.parse(cleanJson);
               if (parsed.resumo) verseResumo = parsed.resumo;
               if (parsed.curiosidade) curiosidade = parsed.curiosidade;
@@ -112,12 +114,12 @@ Devolva APENAS um objeto JSON valido sem crases ou markdown.
         reference: evangelhoReferencia,
         liturgicalDay: liturgiaData.liturgia || "Evangelho do Dia",
         title: "Palavra de Salvação",
-        curiosity: curiosidade,
+        curiosity: curiosidade || "Reflexão: Que a mensagem deste Evangelho inspire suas ações hoje e fortaleça sua fé na jornada diária.",
         imageUrl: imageUrl
       };
 
       setGospel(finalGospel);
-      localStorage.setItem("daily_gospel_cache_v3", JSON.stringify({ data: finalGospel, date: todayString }));
+      localStorage.setItem("daily_gospel_cache_v4", JSON.stringify({ data: finalGospel, date: todayString }));
 
     } catch (err) {
       console.error("Failed to fetch daily gospel:", err);
