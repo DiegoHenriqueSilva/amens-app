@@ -63,47 +63,50 @@ const DailyGospel = () => {
       
       // Limpa números de versículos (ex: [1], 1., 20, etc) para uma leitura mais fluida
       const evangelhoTextoCompleto = evangelhoTextoBruto.replace(/\[\d+\]|\d+\.|\d+/g, '').replace(/\s+/g, ' ').trim();
-      
-      const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
+         const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
       let verseResumo = evangelhoTextoCompleto;
       let curiosidade = "";
-      let imageUrl = "";
       
       // Inteligência Artificial resume o pão diário e gera o extra!
       if (GEMINI_API_KEY && evangelhoTextoCompleto.length > 50) {
           const promptDaily = `Abaixo está o texto do Evangelho Católico do dia de hoje (${evangelhoReferencia}).
 Texto Oficial: "${evangelhoTextoCompleto}"
 
-Sua tarefa é extrair 3 informações do texto oficial acima:
+Sua tarefa é extrair 2 informações:
 1. RESUMO: Um resumo poético de no máximo 2 frases.
-2. CURIOSIDADE: Um fato HISTÓRICO, ARQUEOLÓGICO ou CULTURAL impactante sobre a época de Jesus especificamente relacionado a este texto. Comece com 'Você sabia que...'.
-3. KEYWORDS: 3 palavras-chave em inglês separadas por vírgula para busca de imagem.
+2. CURIOSIDADE: Um fato HISTÓRICO, ARQUEOLÓGICO ou CULTURAL impactante sobre a época de Jesus relacionado a este texto. Comece com 'Você sabia que...'.
 
-Responda exatamente no formato abaixo:
-RESUMO: [texto]
-CURIOSIDADE: [texto]
-KEYWORDS: [texto]`;
-          const geminiRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ contents: [{ parts: [{ text: promptDaily }] }] })
-          });
-          
-          if (geminiRes.ok) {
-            const gData = await geminiRes.json();
-            const textResponse = gData.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
-            try {
-              const resLines = textResponse.split('\n');
-              resLines.forEach(line => {
-                if (line.startsWith('RESUMO:')) verseResumo = line.replace('RESUMO:', '').trim();
-                if (line.startsWith('CURIOSIDADE:')) curiosidade = line.replace('CURIOSIDADE:', '').trim();
-                if (line.startsWith('KEYWORDS:')) {
-                  const keys = line.replace('KEYWORDS:', '').trim();
-                  imageUrl = `https://loremflickr.com/1024/1024/${encodeURIComponent(keys.replace(/\s/g, ''))}/all`;
-                }
-              });
-            } catch(e) { console.error("Falha ao processar texto", e); }
+Responda APENAS com um objeto JSON válido no formato:
+{
+  "resumo": "texto aqui",
+  "curiosidade": "texto aqui"
+}`;
+          try {
+            const geminiRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ contents: [{ parts: [{ text: promptDaily }] }] })
+            });
+            
+            if (geminiRes.ok) {
+              const gData = await geminiRes.json();
+              const textResponse = gData.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
+              
+              // Limpa Markdown se houver
+              const jsonClean = textResponse.replace(/```json|```/g, "").trim();
+              const parsed = JSON.parse(jsonClean);
+              
+              if (parsed.resumo) verseResumo = parsed.resumo;
+              if (parsed.curiosidade) curiosidade = parsed.curiosidade;
+            }
+          } catch(e) { 
+            console.error("Falha ao processar IA", e);
           }
+      }
+
+      // Fallback robusto para curiosidade caso a IA falhe ou não tenha chave
+      if (!curiosidade) {
+        curiosidade = "Você sabia que, nos tempos de Jesus, a maior parte das pessoas ouvia o Evangelho oralmente, pois os manuscritos eram raros e preciosos, guardados em sinagogas em rolos de pergaminho ou papiro.";
       }
 
       const finalGospel = {
@@ -120,14 +123,13 @@ KEYWORDS: [texto]`;
 
     } catch (err) {
       console.error("Failed to fetch daily gospel:", err);
-      // Generate a fallback image URL for John 3:16
       setGospel({
         verse: "Porque Deus amou o mundo de tal maneira que deu o seu Filho unigênito...",
         reference: "João 3:16",
         liturgicalDay: "Evangelho Perene",
         title: "O Amor de Deus",
-        curiosity: "João 3:16 é frequentemente chamado de 'O Evangelho em Miniatura' porque resume brilhantemente toda a mensagem da salvação cristã num único sopro de esperança.",
-        imageUrl: "https://loremflickr.com/1024/1024/jesus,faith/all"
+        curiosity: "João 3:16 é frequentemente chamado de 'O Evangelho em Miniatura' porque resume brilhantemente toda a mensagem da salvação cristã.",
+        imageUrl: "/daily-gospel/today.jpg"
       });
     } finally {
       setLoadingGospel(false);
@@ -141,27 +143,46 @@ KEYWORDS: [texto]`;
 
   const handleShare = async () => {
     if (!gospel) return;
-    const shareText = `✦ Evangelho de Hoje (${gospel.liturgicalDay}) ✦\n\n"${gospel.verse}"\n— ${gospel.reference}\n\n🙏 ${gospel.curiosity || ""}\n\nJunte-se à corrente de preces comigo:\n${referralLink}`;
     
     setGenerating(true);
     try {
+      const shareText = `✦ Evangelho de Hoje (${gospel.liturgicalDay}) ✦\n\n"${gospel.verse}"\n— ${gospel.reference}\n\n🙏 ${gospel.curiosity}\n\nJunte-se à corrente de prece comigo:\n${referralLink}`;
+      
+      const shareData: any = {
+        title: 'Améns - Evangelho do Dia',
+        text: shareText,
+      };
+
+      // Tenta compartilhar como arquivo para incluir a imagem diretamente
       if (navigator.share) {
         try {
-          // Passamos a URL da imagem diretamente para que o app alvo (WhatsApp, etc) busque e mostre o preview
-          await navigator.share({
-            title: 'Evangelho Divino',
-            text: shareText,
-            url: gospel.imageUrl || undefined
-          });
-          toast.success("Evangelho compartilhado com sucesso!");
+          const response = await fetch(gospel.imageUrl);
+          const blob = await response.blob();
+          const file = new File([blob], 'evangelho.jpg', { type: 'image/jpeg' });
+          
+          if (navigator.canShare && navigator.canShare({ files: [file] })) {
+            await navigator.share({
+              ...shareData,
+              files: [file]
+            });
+            toast.success("Compartilhado com imagem! ✨");
+            return;
+          } else {
+            // Se não der pra compartilhar arquivo, vai só o texto + link
+            await navigator.share(shareData);
+            toast.success("Evangelho compartilhado!");
+            return;
+          }
+        } catch (fileErr) {
+          console.warn("Falha ao gerar arquivo de imagem, tentando texto apenas", fileErr);
+          await navigator.share(shareData);
+          toast.success("Evangelho compartilhado!");
           return;
-        } catch (shareErr) {
-          console.warn("Share cancelado ou falhou", shareErr);
         }
       }
 
-      await navigator.clipboard.writeText(shareText + (gospel.imageUrl ? `\n\nVeja a imagem de hoje: ${gospel.imageUrl}` : ''));
-      toast.success("Texto belíssimo copiado! Hora de abençoar as mensagens de outras pessoas. 📋");
+      await navigator.clipboard.writeText(shareText);
+      toast.success("Mensagem abençoada copiada! 📋");
     } catch {
       toast.error("Não foi possível realizar o compartilhamento.");
     } finally {
