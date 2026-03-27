@@ -7,6 +7,8 @@ import PageTransition from "@/components/PageTransition";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 
+import { divine_promises } from "@/data/divine_promises";
+
 const DivinePromise = () => {
   const navigate = useNavigate();
   const [promise, setPromise] = useState<{verse:string, ref:string, context?:string} | null>(null);
@@ -28,52 +30,29 @@ const DivinePromise = () => {
     setIsDrawing(true);
     setPromise(null);
 
-    const fallbackPromise = {
-      verse: "Porque eu bem sei os pensamentos que tenho a vosso respeito, diz o Senhor; pensamentos de paz, e não de mal, para vos dar o fim que esperais.",
-      ref: "Jeremias 29:11",
-      context: "Deus tem um plano perfeito para sua vida. Confie Nele."
-    };
+    // Simula um tempo de "sorteio" para o feedback visual
+    await new Promise(resolve => setTimeout(resolve, 1500));
 
     try {
-      const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
-      if (!GEMINI_API_KEY) {
-        throw new Error("API Key ausente");
-      }
-
-      const promptPromise = `Gere uma "Divina Promessa" encorajadora baseada na Bíblia Sagrada. 
-SEMENTE ALEATÓRIA: ${Math.random()} - ${new Date().getTime()}
-Sua tarefa é sortear um versículo bíblico DIFERENTE do anterior, muito encorajador e adicionar uma curtíssima reflexão amorosa.
-Devolva APENAS um objeto JSON válido. Exemplo:
-{
-  "verse": "O texto do versículo bíblico",
-  "ref": "A referência bíblica",
-  "context": "Uma frase de encorajamento ou reflexão amorosa (1 a 2 frases)"
-}`;
-
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contents: [{ parts: [{ text: promptPromise }] }] })
-      });
-
-      if (!response.ok) throw new Error('Falha na resposta da API');
-
-      const data = await response.json();
-      const textResponse = data.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
+      // Sorteia da base local para garantir variedade e evitar repetições imediatas
+      const lastPromiseVerese = promise?.verse;
+      let availablePromises = divine_promises;
       
-      const cleanJson = textResponse.replace(/^\s*(`+json|`+)\s*/, '').replace(/\s*`+\s*$/, '').trim();
-      const parsed = JSON.parse(cleanJson);
-      
-      if (parsed.verse && parsed.ref) {
-        setPromise(parsed);
-        localStorage.setItem("last_divine_promise", JSON.stringify(parsed));
-      } else {
-        throw new Error("Formato inválido retornado pela IA");
+      if (lastPromiseVerese) {
+        availablePromises = divine_promises.filter(p => p.verse !== lastPromiseVerese);
       }
+      
+      const randomIndex = Math.floor(Math.random() * availablePromises.length);
+      const selectedPromise = availablePromises[randomIndex];
+      
+      setPromise(selectedPromise);
+      localStorage.setItem("last_divine_promise", JSON.stringify(selectedPromise));
+      toast.success("Uma promessa foi retirada para você! ✨");
+      
     } catch (error) {
       console.error("Erro ao buscar promessa:", error);
-      toast.error("Retiramos uma promessa especial para você offline.");
-      setPromise(fallbackPromise);
+      const fallback = divine_promises[0];
+      setPromise(fallback);
     } finally {
       setIsDrawing(false);
     }
