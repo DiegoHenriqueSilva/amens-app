@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/((?!assets/|daily-gospel/|backgrounds/|.*\\..*).*)",
+      "destination": "/index.html"
+    }
+  ]
+}
