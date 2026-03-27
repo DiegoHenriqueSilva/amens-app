@@ -56,13 +56,16 @@ const Auth = () => {
   const handleGoogleSignIn = async () => {
     setGoogleLoading(true);
     try {
-      const result = await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: window.location.origin,
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: window.location.origin,
+        },
       });
-      if (result.error) {
-        toast({ title: "Erro ao entrar com Google", description: String(result.error), variant: "destructive" });
+      if (error) {
+        toast({ title: "Erro ao entrar com Google", description: error.message, variant: "destructive" });
       }
-    } catch {
+    } catch (err) {
       toast({ title: "Erro ao entrar com Google", description: "Tente novamente mais tarde", variant: "destructive" });
     } finally {
       setGoogleLoading(false);
