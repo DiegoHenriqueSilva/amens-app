@@ -41,7 +41,7 @@ const DailyGospel = () => {
   const fetchDailyGospel = async () => {
     setLoadingGospel(true);
     try {
-      const cached = localStorage.getItem("daily_gospel_cache_v4");
+      const cached = localStorage.getItem("daily_gospel_cache_v5");
       const todayString = new Date().toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" });
       
       if (cached) {
@@ -81,9 +81,9 @@ Sua tarefa:
 
 Devolva APENAS um objeto JSON valido sem crases ou markdown.
 {
-  "resumo": "sua frase",
-  "curiosidade": "Você sabia que nessa passagem...",
-  "searchKeywords": "3 keyword in english related to the scene, separated by comma"
+  "resumo": "Um resumo poético de no máximo 2 frases",
+  "curiosidade": "Um fato HISTÓRICO, ARQUEOLÓGICO ou CULTURAL impactante sobre a época de Jesus especificamente relacionado a este texto. Comece com 'Você sabia que...'",
+  "searchKeywords": "3 keyword in english for the scene"
 }`;
           const geminiRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
             method: 'POST',
@@ -114,12 +114,12 @@ Devolva APENAS um objeto JSON valido sem crases ou markdown.
         reference: evangelhoReferencia,
         liturgicalDay: liturgiaData.liturgia || "Evangelho do Dia",
         title: "Palavra de Salvação",
-        curiosity: curiosidade || "Reflexão: Que a mensagem deste Evangelho inspire suas ações hoje e fortaleça sua fé na jornada diária.",
+        curiosity: curiosidade,
         imageUrl: imageUrl
       };
 
       setGospel(finalGospel);
-      localStorage.setItem("daily_gospel_cache_v4", JSON.stringify({ data: finalGospel, date: todayString }));
+      localStorage.setItem("daily_gospel_cache_v5", JSON.stringify({ data: finalGospel, date: todayString }));
 
     } catch (err) {
       console.error("Failed to fetch daily gospel:", err);
