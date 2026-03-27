@@ -41,7 +41,7 @@ const DailyGospel = () => {
   const fetchDailyGospel = async () => {
     setLoadingGospel(true);
     try {
-      const cached = localStorage.getItem("daily_gospel_cache_v5");
+      const cached = localStorage.getItem("daily_gospel_cache_v6");
       const todayString = new Date().toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" });
       
       if (cached) {
@@ -74,17 +74,15 @@ const DailyGospel = () => {
           const promptDaily = `Abaixo está o texto do Evangelho Católico do dia de hoje (${evangelhoReferencia}).
 Texto Oficial: "${evangelhoTextoCompleto}"
 
-Sua tarefa:
-1. "resumo": Extrair e reescrever o evangelho de maneira muito poética, resumindo ele mas não corrompendo a mensagem. Deve ter apenas de 2 a 3 frases no máximo, super fáceis de ler.
-2. "curiosidade": Elaborar uma CURIOSIDADE histórica, teológica ou geográfica real e comprovada especificamente sobre a época, os personagens ou evento desse trecho para enriquecer o conhecimento cristão.
-3. "imagePrompt": Uma descrição IMPECÁVEL e super detalhada EM INGLÊS de uma cena bíblica altamente fotorealista e cinematográfica que represente exatamente este evento. NÃO INCLUA TEXTOS NA IMAGEM. Deve ser em estilo pintura renascentista divina ou cinematic lighting.
+Sua tarefa é extrair 3 informações do texto oficial acima:
+1. RESUMO: Um resumo poético de no máximo 2 frases.
+2. CURIOSIDADE: Um fato HISTÓRICO, ARQUEOLÓGICO ou CULTURAL impactante sobre a época de Jesus especificamente relacionado a este texto. Comece com 'Você sabia que...'.
+3. KEYWORDS: 3 palavras-chave em inglês separadas por vírgula para busca de imagem.
 
-Devolva APENAS um objeto JSON valido sem crases ou markdown.
-{
-  "resumo": "Um resumo poético de no máximo 2 frases",
-  "curiosidade": "Um fato HISTÓRICO, ARQUEOLÓGICO ou CULTURAL impactante sobre a época de Jesus especificamente relacionado a este texto. Comece com 'Você sabia que...'",
-  "searchKeywords": "3 keyword in english for the scene"
-}`;
+Responda exatamente no formato abaixo:
+RESUMO: [texto]
+CURIOSIDADE: [texto]
+KEYWORDS: [texto]`;
           const geminiRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -95,17 +93,16 @@ Devolva APENAS um objeto JSON valido sem crases ou markdown.
             const gData = await geminiRes.json();
             const textResponse = gData.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
             try {
-              // Regex mais robusta para extrair JSON de dentro de blocos de código markdown ou texto puro
-              const jsonMatch = textResponse.match(/\{[\s\S]*\}/);
-              const cleanJson = jsonMatch ? jsonMatch[0] : "{}";
-              const parsed = JSON.parse(cleanJson);
-              if (parsed.resumo) verseResumo = parsed.resumo;
-              if (parsed.curiosidade) curiosidade = parsed.curiosidade;
-              if (parsed.searchKeywords) {
-                // Usamos Loremflickr para busca semântica estável, já que as IAs gratuitas estão instáveis
-                imageUrl = `https://loremflickr.com/1024/1024/${encodeURIComponent(parsed.searchKeywords.replace(/\s/g, ''))}/all`;
-              }
-            } catch(e) { console.error("Falha ao parsear JSON", e); }
+              const resLines = textResponse.split('\n');
+              resLines.forEach(line => {
+                if (line.startsWith('RESUMO:')) verseResumo = line.replace('RESUMO:', '').trim();
+                if (line.startsWith('CURIOSIDADE:')) curiosidade = line.replace('CURIOSIDADE:', '').trim();
+                if (line.startsWith('KEYWORDS:')) {
+                  const keys = line.replace('KEYWORDS:', '').trim();
+                  imageUrl = `https://loremflickr.com/1024/1024/${encodeURIComponent(keys.replace(/\s/g, ''))}/all`;
+                }
+              });
+            } catch(e) { console.error("Falha ao processar texto", e); }
           }
       }
 
@@ -119,7 +116,7 @@ Devolva APENAS um objeto JSON valido sem crases ou markdown.
       };
 
       setGospel(finalGospel);
-      localStorage.setItem("daily_gospel_cache_v5", JSON.stringify({ data: finalGospel, date: todayString }));
+      localStorage.setItem("daily_gospel_cache_v6", JSON.stringify({ data: finalGospel, date: todayString }));
 
     } catch (err) {
       console.error("Failed to fetch daily gospel:", err);
