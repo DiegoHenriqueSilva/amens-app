@@ -80,13 +80,13 @@ const Pray = () => {
         return;
       }
       
-      const systemPrompt = `Você é um gerador de orações empáticas e acessíveis para a rede social de solidariedade "Améns".
-REGRAS OBRIGATÓRIAS:
-1. MÁXIMO 250 palavras, linguagem SIMPLES e ACESSÍVEL.
-2. PRIMEIRA PESSOA.
-3. NUNCA assuma parentesco com a pessoa do pedido.
-4. É DE SUMA IMPORTÂNCIA que a oração faça o usuário sentir que a oração dele é um instrumento para ajudar o próximo. Exemplo de como construir: "Pai, fazei de mim um instrumento de sua bondade, faça das minhas preces a força que esta família está precisando..." 
-5. TOM ACOLHEDOR e CARINHOSO. Crie a oração focada NESTA CAUSA agora: "${prayerRequest.content}"`;
+      const systemPrompt = `Você é um gerador de orações empáticas e poderosas para a rede social "Améns".
+REGRA DE OURO: A oração DEVE OBRIGATORIAMENTE começar com: "Que faça de minha oração uma ferramenta para a bencao dessa causa..." ou algo muito similar que use a palavra "ferramenta".
+REGRAS ADICIONAIS:
+1. Seja ACOLHEDOR, HUMILDE e CARINHOSO.
+2. Use PRIMEIRA PESSOA (Eu).
+3. Máximo de 150 palavras.
+4. Foco total em interceder por esta causa: "${prayerRequest.content}"`;
 
       const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
         method: 'POST',
@@ -176,6 +176,15 @@ REGRAS OBRIGATÓRIAS:
                               user_id: session.user.id,
                             }, { onConflict: 'prayer_request_id,user_id' });
 
+                            // Notify the author
+                            if (prayerRequest.user_id) {
+                              await supabase.from('notifications').insert({
+                                user_id: prayerRequest.user_id,
+                                prayer_request_id: prayerRequest.id,
+                                message: "🙏 Alguém acabou de interceder pela sua causa!",
+                              });
+                            }
+
                             await addXp("pray");
                             toast.success("Amém! Sua intercessão foi enviada. O autor sentirá sua paz. 🙏");
                             fetchRandomPrayerRequest(); // Carrega a próxima
@@ -235,6 +244,17 @@ REGRAS OBRIGATÓRIAS:
                                   reactor_user_id: session.user.id,
                                   reaction_type: reaction.type,
                                 });
+
+                                // Notify the author
+                                if (prayerRequest.user_id) {
+                                  const emoji = reaction.emoji;
+                                  await supabase.from("notifications").insert({
+                                    user_id: prayerRequest.user_id,
+                                    prayer_request_id: prayerRequest.id,
+                                    message: `${emoji} Alguém reagiu com ${reaction.label} ao seu pedido!`,
+                                  });
+                                }
+
                                 await addXp("react");
                                 toast.success(`Reação enviada!`);
                               } catch {

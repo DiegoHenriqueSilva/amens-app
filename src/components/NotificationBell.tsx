@@ -31,9 +31,31 @@ export const NotificationBell = () => {
 
   useEffect(() => {
     fetchNotifications();
-    // Poll every 30s
-    const interval = setInterval(fetchNotifications, 30000);
-    return () => clearInterval(interval);
+
+    // Subscribe to real-time notifications
+    const channel = supabase
+      .channel('schema-db-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'notifications',
+        },
+        (payload) => {
+          // Verify if the notification is for the current user
+          supabase.auth.getSession().then(({ data: { session } }) => {
+            if (session && payload.new.user_id === session.user.id) {
+              setNotifications(prev => [payload.new as Notification, ...prev]);
+            }
+          });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const unreadCount = notifications.filter(n => !n.is_read).length;
