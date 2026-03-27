@@ -112,7 +112,7 @@ KEYWORDS: [texto]`;
         liturgicalDay: liturgiaData.liturgia || "Evangelho do Dia",
         title: "Palavra de Salvação",
         curiosity: curiosidade,
-        imageUrl: imageUrl
+        imageUrl: "/daily-gospel/today.jpg" // Imagem manual provida via chat (Override)
       };
 
       setGospel(finalGospel);
