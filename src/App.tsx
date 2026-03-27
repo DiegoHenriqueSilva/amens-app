@@ -24,7 +24,8 @@ const App = () => {
       '/backgrounds/bg-2.png',
       '/backgrounds/bg-3.png',
       '/backgrounds/bg-4.png',
-      '/bg-divine-new.png'
+      '/bg-divine-new.png',
+      '/bg-tree.png'
     ];
     const randomBg = backgrounds[Math.floor(Math.random() * backgrounds.length)];
     document.body.style.setProperty('--bg-url', `url(${randomBg})`);
