@@ -76,8 +76,8 @@ const Index = () => {
           
           {/* Header Mobile Style */}
           <motion.div className="text-center mb-8 pt-4" initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
-             <h1 className="text-5xl font-bold text-foreground mb-1 tracking-tight">Améns</h1>
-             <div className="flex items-center justify-center gap-2 text-primary/60">
+             <h1 className="text-5xl font-bold text-foreground mb-1 tracking-tight text-glow text-soft-outline">Améns</h1>
+             <div className="flex items-center justify-center gap-2 text-primary/70 text-glow">
                 <Sparkles className="w-3 h-3" />
                 <span className="text-xs uppercase tracking-[0.2em] font-medium">Unidos pela Fé</span>
                 <Sparkles className="w-3 h-3" />
@@ -233,8 +233,8 @@ const Index = () => {
           )}
 
           {user && (
-            <motion.div className="flex justify-center mt-12 opacity-50" initial={{ opacity: 0 }} animate={{ opacity: 0.5 }}>
-               <Button onClick={handleSignOut} variant="ghost" size="sm" className="text-xs">
+            <motion.div className="flex justify-center mt-12 opacity-80" initial={{ opacity: 0 }} animate={{ opacity: 0.8 }}>
+               <Button onClick={handleSignOut} variant="ghost" size="sm" className="text-xs text-glow font-bold">
                   <LogOut className="w-3 h-3 mr-2" /> Sair da Conta
                </Button>
             </motion.div>

@@ -110,10 +110,10 @@ Devolva APENAS um objeto JSON válido. Exemplo:
           </Button>
 
           <motion.div className="text-center mb-10" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-            <p className="text-xs uppercase tracking-[0.25em] text-primary mb-2">✦ Caixinha de Promessas ✦</p>
-            <h1 className="text-4xl font-bold text-foreground mb-3">Divina Promessa</h1>
+            <p className="text-xs uppercase tracking-[0.25em] text-primary mb-2 text-glow font-bold">✦ Caixinha de Promessas ✦</p>
+            <h1 className="text-4xl font-bold text-foreground mb-3 text-glow text-soft-outline">Divina Promessa</h1>
             <div className="divider-gold max-w-[6rem] mx-auto mb-4" />
-            <p className="text-sm text-muted-foreground leading-relaxed">
+            <p className="text-sm text-muted-foreground leading-relaxed text-glow font-medium">
               Deus tem uma palavra especial para o seu coração hoje. Sorteie uma promessa e receba força.
             </p>
           </motion.div>
