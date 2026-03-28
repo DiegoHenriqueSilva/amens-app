@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { formatTimeAgo } from "@/lib/utils";
 import PageTransition from "@/components/PageTransition";
 import { motion } from "framer-motion";
 
@@ -131,7 +132,7 @@ const MyIntercessions = () => {
                     <div className="flex items-center gap-4 text-sm text-muted-foreground mb-3">
                       <div className="flex items-center gap-1.5">
                         <Clock className="w-4 h-4" />
-                        <span>Orei em {format(new Date(item.created_at), "dd MMM yyyy", { locale: ptBR })}</span>
+                        <span>Orei {formatTimeAgo(item.created_at)}</span>
                       </div>
                     </div>
 

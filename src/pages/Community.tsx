@@ -7,6 +7,7 @@ import { Users, Sparkles, ArrowLeft, Heart, Globe, Award, TrendingUp } from "luc
 import PageTransition from "@/components/PageTransition";
 import { motion, AnimatePresence } from "framer-motion";
 import { useXp } from "@/hooks/use-xp";
+import { formatTimeAgo } from "@/lib/utils";
 
 const Community = () => {
   const navigate = useNavigate();
@@ -136,7 +137,7 @@ const Community = () => {
                           <p className="text-[13px] font-medium leading-tight text-foreground/90">
                             Uma pessoa em <span className="text-primary font-bold">{(activity.prayer_requests as any)?.location || "Lugar Sagrado"}</span> acabou de interceder por uma causa.
                           </p>
-                          <p className="text-[10px] text-muted-foreground mt-1 font-bold">há {Math.floor((new Date().getTime() - new Date(activity.created_at).getTime()) / 60000)} min</p>
+                          <p className="text-[10px] text-muted-foreground mt-1 font-bold">{formatTimeAgo(activity.created_at)}</p>
                         </div>
                         <Heart className="w-4 h-4 text-primary/30 fill-primary/5" />
                       </Card>

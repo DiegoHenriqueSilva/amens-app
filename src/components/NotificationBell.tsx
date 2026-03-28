@@ -5,6 +5,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { formatTimeAgo } from "@/lib/utils";
 
 type Notification = {
   id: string;
@@ -91,7 +92,7 @@ export const NotificationBell = () => {
               <div key={n.id} className={`p-3 border-b border-border last:border-0 ${!n.is_read ? "bg-primary/5" : ""}`}>
                 <p className="text-sm text-foreground">{n.message}</p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  {format(new Date(n.created_at), "dd MMM yyyy, HH:mm", { locale: ptBR })}
+                  {formatTimeAgo(n.created_at)}
                 </p>
               </div>
             ))

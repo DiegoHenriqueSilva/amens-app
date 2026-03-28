@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { formatTimeAgo } from "@/lib/utils";
 import PageTransition from "@/components/PageTransition";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -169,7 +170,7 @@ const MyPrayers = () => {
                     <div className="flex items-center gap-4 text-sm text-muted-foreground mb-4 flex-wrap">
                       <div className="flex items-center gap-1.5"><Eye className="w-4 h-4" /><span>{prayer.prayer_count} orações</span></div>
                       <div className="flex items-center gap-1.5"><Heart className="w-4 h-4" /><span>{totalReactions(prayer.reactions)} reações</span></div>
-                      <div className="flex items-center gap-1.5"><Clock className="w-4 h-4" /><span>{format(new Date(prayer.created_at), "dd MMM yyyy", { locale: ptBR })}</span></div>
+                      <div className="flex items-center gap-1.5"><Clock className="w-4 h-4" /><span>{formatTimeAgo(prayer.created_at)}</span></div>
                     </div>
 
                     {totalReactions(prayer.reactions) > 0 && (

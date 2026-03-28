@@ -7,6 +7,7 @@ import { Mail, Sparkles, ArrowLeft, Heart, CheckCircle2, MessageCircle } from "l
 import PageTransition from "@/components/PageTransition";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
+import { formatTimeAgo } from "@/lib/utils";
 
 const Messages = () => {
   const navigate = useNavigate();
@@ -132,7 +133,7 @@ const Messages = () => {
                              </p>
                              <div className="flex items-center justify-between">
                                <p className="text-[10px] text-muted-foreground font-medium">
-                                 há {Math.floor((new Date().getTime() - new Date(notif.created_at).getTime()) / 60000)} min
+                                 {formatTimeAgo(notif.created_at)}
                                </p>
                                {notif.is_read && (
                                  <CheckCircle2 className="w-3 h-3 text-primary/40" />
