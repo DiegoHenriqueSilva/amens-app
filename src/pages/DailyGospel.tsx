@@ -42,12 +42,15 @@ const DailyGospel = () => {
   const fetchDailyGospel = async () => {
     setLoadingGospel(true);
     try {
-      const cached = localStorage.getItem("daily_gospel_cache_v6");
+      const CACHE_KEY = "daily_gospel_cache_v11";
+      const cached = localStorage.getItem(CACHE_KEY);
       const todayString = new Date().toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" });
       
       if (cached) {
         const parsed = JSON.parse(cached);
+        const liturgicalDay = "Evangelho do Dia"; // Fallback se não carregar a liturgia
         if (parsed.date === todayString && parsed.data.curiosity) {
+          console.log("Using cached gospel for today:", parsed.data.reference);
           setGospel(parsed.data);
           setLoadingGospel(false);
           return;
@@ -74,8 +77,8 @@ const DailyGospel = () => {
 Texto Oficial: "${evangelhoTextoCompleto}"
 
 Sua tarefa é extrair 2 informações:
-1. RESUMO: Um resumo poético de no máximo 2 frases.
-2. CURIOSIDADE: Um fato HISTÓRICO, ARQUEOLÓGICO ou CULTURAL impactante sobre a época de Jesus relacionado a este texto. Comece com 'Você sabia que...'.
+1. RESUMO: Um resumo poético de no máximo 2 frases que capture a essência da mensagem.
+2. CURIOSIDADE: Um fato HISTÓRICO, ARQUEOLÓGICO ou CULTURAL único e específico sobre a época de Jesus que ajude a dar contexto a este texto exato. Evite generalidades. Comece com 'Você sabia que...'.
 
 Responda APENAS com um objeto JSON válido no formato:
 {
@@ -105,9 +108,16 @@ Responda APENAS com um objeto JSON válido no formato:
           }
       }
 
-      // Fallback robusto para curiosidade caso a IA falhe ou não tenha chave
+      // Fallback dinâmico para curiosidade caso a IA falhe ou não tenha chave
       if (!curiosidade) {
-        curiosidade = "Você sabia que, nos tempos de Jesus, a maior parte das pessoas ouvia o Evangelho oralmente, pois os manuscritos eram raros e preciosos, guardados em sinagogas em rolos de pergaminho ou papiro.";
+        const fallbacks = [
+          "Você sabia que, nos tempos de Jesus, os manuscritos eram raros e preciosos, guardados em sinagogas em rolos de pergaminho ou papiro.",
+          "Curiosidade: Na época do Evangelho, a maioria dos pescadores falava Aramaico, mas as escrituras eram lidas em Hebraico nas sinagogas.",
+          "Fato Histórico: As casas na Palestina do primeiro século eram feitas de pedra ou tijolos de barro, com telhados planos usados para oração e descanso.",
+          "Você sabia que o Rio Jordão, citado em muitos batismos, era o limite geográfico e espiritual para o povo de Israel ao entrar na Terra Prometida.",
+          "Contexto: O Mar da Galileia, onde Jesus tanto caminhou, é na verdade um lago de água doce a cerca de 200 metros abaixo do nível do mar."
+        ];
+        curiosidade = fallbacks[Math.floor(Math.random() * fallbacks.length)];
       }
 
       const finalGospel = {
@@ -120,8 +130,10 @@ Responda APENAS com um objeto JSON válido no formato:
         imageUrl: "/daily-gospel/today-gospel.webp"
       };
 
+      // Salva no cache incluindo o dia litúrgico para evitar repetições se a data for a mesma mas o conteúdo mudar
       setGospel(finalGospel);
-      localStorage.setItem("daily_gospel_cache_v7", JSON.stringify({ data: finalGospel, date: todayString }));
+      const cacheData = { data: finalGospel, date: todayString, liturgy: liturgiaData.liturgia };
+      localStorage.setItem("daily_gospel_cache_v11", JSON.stringify(cacheData));
 
     } catch (err) {
       console.error("Failed to fetch daily gospel:", err);
