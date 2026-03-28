@@ -174,7 +174,7 @@ REGRAS ADICIONAIS:
                             // Resolve sender info for personalized notification
                             const senderFullName = session.user.user_metadata?.full_name || "";
                             const senderFirstName = senderFullName.split(" ")[0] || "Um irmão";
-                            const senderCity = prayerRequest.location || "um lugar sagrado";
+                            const senderCity = session.user.user_metadata?.city || "";
                             
                             // Increase count and record intercession
                             await supabase.from('prayer_requests').update({ 
@@ -191,7 +191,7 @@ REGRAS ADICIONAIS:
                               await supabase.from('notifications').insert({
                                 user_id: prayerRequest.user_id,
                                 prayer_request_id: prayerRequest.id,
-                                message: `🙏 ${senderFirstName}${senderCity !== "um lugar sagrado" ? ` (${senderCity})` : ""} acabou de interceder pela sua causa!`,
+                                message: `🙏 ${senderFirstName}${senderCity ? ` (${senderCity})` : ""} acabou de interceder pela sua causa!`,
                               });
                             }
 
@@ -253,7 +253,7 @@ REGRAS ADICIONAIS:
                                 // Resolve sender info for personalized notification
                                 const senderFullName = session.user.user_metadata?.full_name || "";
                                 const senderFirstName = senderFullName.split(" ")[0] || "Um irmão";
-                                const senderCity = prayerRequest.location || "";
+                                const senderCity = session.user.user_metadata?.city || "";
 
                                 await supabase.from("prayer_reactions").insert({
                                   prayer_request_id: prayerRequest.id,

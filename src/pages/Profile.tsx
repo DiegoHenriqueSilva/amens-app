@@ -3,19 +3,24 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { LogOut, ArrowLeft, Trophy, Heart, Send, Sparkles, User } from "lucide-react";
+import { LogOut, ArrowLeft, Trophy, Heart, Send, Sparkles, User, MapPin, Pencil, Check, X } from "lucide-react";
 import { useXp } from "@/hooks/use-xp";
-import { getLevel } from "@/lib/xp";
+import { getLevel, CELESTIAL_LEVELS, getLevelProgress } from "@/lib/xp";
 import { toast } from "sonner";
 import PageTransition from "@/components/PageTransition";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 
 const Profile = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState<any>(null);
   const { totalXp, loading: xpLoading } = useXp();
   const [stats, setStats] = useState({ requests: 0, intercessions: 0 });
+  const [editingCity, setEditingCity] = useState(false);
+  const [cityInput, setCityInput] = useState("");
+  const [savingCity, setSavingCity] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -24,6 +29,7 @@ const Profile = () => {
         return;
       }
       setUser(session.user);
+      setCityInput(session.user.user_metadata?.city || "");
       fetchStats(session.user.id);
     });
   }, [navigate]);
@@ -45,6 +51,28 @@ const Profile = () => {
     });
   };
 
+  const handleSaveCity = async () => {
+    if (!cityInput.trim()) {
+      toast.error("Digite uma cidade válida.");
+      return;
+    }
+    setSavingCity(true);
+    const { error } = await supabase.auth.updateUser({
+      data: { city: cityInput.trim() },
+    });
+    setSavingCity(false);
+    if (error) {
+      toast.error("Erro ao salvar cidade.");
+    } else {
+      setUser((prev: any) => ({
+        ...prev,
+        user_metadata: { ...prev.user_metadata, city: cityInput.trim() },
+      }));
+      setEditingCity(false);
+      toast.success("Cidade atualizada com sucesso! 📍");
+    }
+  };
+
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     toast.success("Até logo! Que a paz esteja com você. 🙏");
@@ -60,7 +88,10 @@ const Profile = () => {
   }
 
   const level = getLevel(totalXp);
+  const levelIndex = CELESTIAL_LEVELS.indexOf(level) + 1;
+  const levelProgress = getLevelProgress(totalXp);
   const fullName = user.user_metadata?.full_name || "Usuário Améns";
+  const currentCity = user.user_metadata?.city || "";
 
   return (
     <PageTransition>
@@ -93,12 +124,53 @@ const Profile = () => {
                 animate={{ scale: [1, 1.1, 1] }}
                 transition={{ duration: 2, repeat: Infinity }}
               >
-                Nível {level.number}
+                Nível {levelIndex}
               </motion.div>
             </div>
             
             <h1 className="text-3xl font-bold text-foreground mb-1 text-soft-outline">{fullName}</h1>
-            <p className="text-sm text-muted-foreground font-medium uppercase tracking-widest">{level.name}</p>
+            <p className="text-sm text-muted-foreground font-medium uppercase tracking-widest mb-3">{level.name}</p>
+
+            {/* City Display / Edit */}
+            <AnimatePresence mode="wait">
+              {editingCity ? (
+                <motion.div
+                  key="editing"
+                  initial={{ opacity: 0, y: -5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -5 }}
+                  className="flex items-center gap-2 w-full max-w-xs"
+                >
+                  <Input 
+                    value={cityInput}
+                    onChange={(e) => setCityInput(e.target.value)}
+                    placeholder="Ex: São Paulo, SP"
+                    className="text-center text-sm border-primary/20 rounded-full h-9"
+                    autoFocus
+                    onKeyDown={(e) => { if (e.key === "Enter") handleSaveCity(); if (e.key === "Escape") setEditingCity(false); }}
+                  />
+                  <Button size="icon" className="h-9 w-9 rounded-full bg-primary/10 hover:bg-primary/20 text-primary flex-shrink-0" onClick={handleSaveCity} disabled={savingCity}>
+                    <Check className="w-4 h-4" />
+                  </Button>
+                  <Button size="icon" variant="ghost" className="h-9 w-9 rounded-full flex-shrink-0" onClick={() => { setEditingCity(false); setCityInput(currentCity); }}>
+                    <X className="w-4 h-4" />
+                  </Button>
+                </motion.div>
+              ) : (
+                <motion.button
+                  key="display"
+                  initial={{ opacity: 0, y: -5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -5 }}
+                  className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors group"
+                  onClick={() => setEditingCity(true)}
+                >
+                  <MapPin className="w-3.5 h-3.5" />
+                  <span>{currentCity || "Adicionar cidade..."}</span>
+                  <Pencil className="w-3 h-3 opacity-0 group-hover:opacity-60 transition-opacity" />
+                </motion.button>
+              )}
+            </AnimatePresence>
           </motion.div>
 
           {/* XP Progress Card */}
@@ -120,7 +192,7 @@ const Profile = () => {
                 <motion.div 
                   className="h-full bg-gradient-to-r from-primary/60 to-primary rounded-full"
                   initial={{ width: 0 }}
-                  animate={{ width: `${Math.min((totalXp % 1000) / 10, 100)}%` }}
+                  animate={{ width: `${Math.min(levelProgress, 100)}%` }}
                   transition={{ duration: 1, ease: "easeOut" }}
                 />
               </div>

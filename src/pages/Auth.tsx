@@ -14,6 +14,7 @@ import { motion } from "framer-motion";
 
 const Auth = () => {
   const [fullName, setFullName] = useState("");
+  const [city, setCity] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -63,7 +64,7 @@ const Auth = () => {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !password || !fullName) {
+    if (!email || !password || !fullName || !city) {
       toast({ title: "Erro", description: "Preencha todos os campos", variant: "destructive" });
       return;
     }
@@ -79,6 +80,7 @@ const Auth = () => {
         emailRedirectTo: `${window.location.origin}/`,
         data: {
           full_name: fullName,
+          city: city,
         }
       } 
     });
@@ -167,6 +169,11 @@ const Auth = () => {
                   <div className="space-y-2">
                     <Label htmlFor="signup-name">Nome Completo</Label>
                     <Input id="signup-name" type="text" placeholder="Seu nome" value={fullName} onChange={(e) => setFullName(e.target.value)} required />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-city">Sua Cidade</Label>
+                    <Input id="signup-city" type="text" placeholder="Ex: São Paulo, SP" value={city} onChange={(e) => setCity(e.target.value)} required />
+                    <p className="text-xs text-muted-foreground">Usada para conectar você com outros irmãos em oração. 📍</p>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="signup-email">Email</Label>
