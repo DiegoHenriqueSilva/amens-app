@@ -15,6 +15,11 @@ import NotFound from "./pages/NotFound";
 
 import { useEffect } from "react";
 
+import Profile from "./pages/Profile";
+import Community from "./pages/Community";
+import Tree from "./pages/Tree";
+import Messages from "./pages/Messages";
+
 const queryClient = new QueryClient();
 
 const App = () => {
@@ -46,6 +51,10 @@ const App = () => {
           <Route path="/auth" element={<Auth />} />
           <Route path="/daily-gospel" element={<DailyGospel />} />
           <Route path="/divine-promise" element={<DivinePromise />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/community" element={<Community />} />
+          <Route path="/tree" element={<Tree />} />
+          <Route path="/messages" element={<Messages />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

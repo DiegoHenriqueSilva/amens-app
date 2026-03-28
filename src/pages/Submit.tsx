@@ -44,6 +44,7 @@ const Submit = () => {
         location: formData.location.trim() || null,
         prayer_count: 0,
         user_id: session?.user?.id,
+        author_name: firstName,
       }]);
       if (error) throw error;
       await addXp("submit");

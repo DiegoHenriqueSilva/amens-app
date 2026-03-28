@@ -117,7 +117,7 @@ Responda APENAS com um objeto JSON válido no formato:
         liturgicalDay: liturgiaData.liturgia || "Evangelho do Dia",
         title: "Palavra de Salvação",
         curiosity: curiosidade,
-        imageUrl: "/daily-gospel/today.jpg"
+        imageUrl: "/daily-gospel/today-gospel.webp"
       };
 
       setGospel(finalGospel);
@@ -133,7 +133,7 @@ Responda APENAS com um objeto JSON válido no formato:
         liturgicalDay: "Evangelho Perene",
         title: "O Amor de Deus",
         curiosity: "João 3:16 é frequentemente chamado de 'O Evangelho em Miniatura' porque resume brilhantemente toda a mensagem da salvação cristã.",
-        imageUrl: "/daily-gospel/today.jpg"
+        imageUrl: "/daily-gospel/today-gospel.webp"
       });
     } finally {
       setLoadingGospel(false);
@@ -246,19 +246,6 @@ Responda APENAS com um objeto JSON válido no formato:
                   </motion.div>
                 )}
 
-                <div className="bg-primary/5 p-6 rounded-2xl border border-primary/10 relative">
-                  <motion.blockquote
-                    initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}
-                    className="text-base leading-relaxed text-foreground italic font-serif"
-                  >
-                    "{gospel.verse}"
-                  </motion.blockquote>
-                  <p className="text-xs font-semibold text-primary mt-4 flex justify-center items-center gap-2">
-                    <span className="h-px w-6 bg-primary/30 inline-block"></span> 
-                    Resumo do Dia
-                    <span className="h-px w-6 bg-primary/30 inline-block"></span>
-                  </p>
-                </div>
 
                 <div className="text-left space-y-3 pt-4">
                   <h3 className="text-xs uppercase tracking-widest text-muted-foreground font-bold flex items-center">
@@ -288,14 +275,6 @@ Responda APENAS com um objeto JSON válido no formato:
                 <div className="divider-gold mx-auto my-6" />
 
                 <div className="grid grid-cols-1 gap-3">
-                  <Button
-                    onClick={() => handleShare('summary')}
-                    disabled={generating}
-                    className="gradient-divine text-primary-foreground hover:opacity-90 w-full rounded-full py-6 text-base shadow-md"
-                  >
-                    <Sparkles className="w-5 h-5 mr-3" />
-                    Compartilhar Resumo (IA)
-                  </Button>
                   
                   <Button
                     onClick={() => handleShare('full')}

@@ -6,7 +6,8 @@ CREATE TABLE IF NOT EXISTS public.prayer_requests (
   location TEXT,
   prayer_count INTEGER DEFAULT 0 NOT NULL,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL,
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL,
+  author_name TEXT
 );
 
 -- Enable RLS

@@ -148,7 +148,12 @@ REGRAS ADICIONAIS:
                     <div className="flex items-start gap-4 mb-6">
                       <Heart className="w-5 h-5 text-primary flex-shrink-0 mt-1" />
                       <div>
-                        {prayerRequest.title && <h3 className="text-xl font-semibold mb-2 text-foreground">{prayerRequest.title}</h3>}
+                        {prayerRequest.title && <h3 className="text-xl font-semibold mb-1 text-foreground">{prayerRequest.title}</h3>}
+                        {prayerRequest.author_name && (
+                          <p className="text-xs text-primary font-bold uppercase tracking-widest mb-3 opacity-80">
+                            Enviado por {prayerRequest.author_name}
+                          </p>
+                        )}
                         <p className="text-foreground/80 leading-relaxed">{prayerRequest.content}</p>
                         {prayerRequest.location && <p className="text-sm text-muted-foreground mt-3">📍 {prayerRequest.location}</p>}
                       </div>

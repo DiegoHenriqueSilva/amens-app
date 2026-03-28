@@ -13,6 +13,7 @@ import PageTransition from "@/components/PageTransition";
 import { motion } from "framer-motion";
 
 const Auth = () => {
+  const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -62,7 +63,7 @@ const Auth = () => {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !password) {
+    if (!email || !password || !fullName) {
       toast({ title: "Erro", description: "Preencha todos os campos", variant: "destructive" });
       return;
     }
@@ -71,7 +72,16 @@ const Auth = () => {
       return;
     }
     setLoading(true);
-    const { error } = await supabase.auth.signUp({ email, password, options: { emailRedirectTo: `${window.location.origin}/` } });
+    const { error } = await supabase.auth.signUp({ 
+      email, 
+      password, 
+      options: { 
+        emailRedirectTo: `${window.location.origin}/`,
+        data: {
+          full_name: fullName,
+        }
+      } 
+    });
     setLoading(false);
     if (error) {
       toast({ title: "Erro ao criar conta", description: error.message, variant: "destructive" });
@@ -154,6 +164,10 @@ const Auth = () => {
               </TabsContent>
               <TabsContent value="signup">
                 <form onSubmit={handleSignUp} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-name">Nome Completo</Label>
+                    <Input id="signup-name" type="text" placeholder="Seu nome" value={fullName} onChange={(e) => setFullName(e.target.value)} required />
+                  </div>
                   <div className="space-y-2">
                     <Label htmlFor="signup-email">Email</Label>
                     <Input id="signup-email" type="email" placeholder="seu@email.com" value={email} onChange={(e) => setEmail(e.target.value)} required />
