@@ -20,7 +20,7 @@ export function XpBadge({ totalXp, userName }: XpBadgeProps) {
         </div>
         <div className="flex-1">
           <div className="flex items-baseline justify-between mb-0.5">
-            {userName && <p className="text-xs text-primary/80 font-bold uppercase tracking-widest truncate max-w-[130px]">{userName.split(' ')[0]}</p>}
+            {userName && <p className="text-sm font-black uppercase tracking-widest truncate max-w-[150px]" style={{color: '#5a3e0a'}}>{userName.split(' ')[0]}</p>}
             <span className="text-xs text-muted-foreground font-medium ml-auto">{totalXp} XP</span>
           </div>
           <div className="flex items-baseline justify-between mb-1">
