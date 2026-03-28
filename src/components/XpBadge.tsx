@@ -4,9 +4,10 @@ import { BookOpen } from "lucide-react";
 
 interface XpBadgeProps {
   totalXp: number;
+  userName?: string;
 }
 
-export function XpBadge({ totalXp }: XpBadgeProps) {
+export function XpBadge({ totalXp, userName }: XpBadgeProps) {
   const level = getLevel(totalXp);
   const next = getNextLevel(totalXp);
   const progress = getLevelProgress(totalXp);
@@ -18,9 +19,12 @@ export function XpBadge({ totalXp }: XpBadgeProps) {
           {level.emoji}
         </div>
         <div className="flex-1">
+          <div className="flex items-baseline justify-between mb-0.5">
+            {userName && <p className="text-xs text-primary/80 font-bold uppercase tracking-widest truncate max-w-[130px]">{userName.split(' ')[0]}</p>}
+            <span className="text-xs text-muted-foreground font-medium ml-auto">{totalXp} XP</span>
+          </div>
           <div className="flex items-baseline justify-between mb-1">
             <h3 className="font-bold text-foreground text-lg">{level.name}</h3>
-            <span className="text-xs text-muted-foreground font-medium">{totalXp} XP</span>
           </div>
           <Progress value={progress} className="h-2 bg-secondary border border-primary/5" />
           <div className="flex justify-between items-center mt-1">

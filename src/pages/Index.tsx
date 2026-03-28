@@ -127,7 +127,7 @@ const Index = () => {
           {user && !xpLoading && (
             <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.1 }}>
               <Card className="p-5 mb-8 soft-shadow border-primary/5 bg-white/70 backdrop-blur-sm rounded-[2rem]">
-                 <XpBadge totalXp={totalXp} />
+                 <XpBadge totalXp={totalXp} userName={user.user_metadata?.full_name || ""} />
               </Card>
             </motion.div>
           )}
@@ -144,7 +144,7 @@ const Index = () => {
                     <h2 className="text-lg font-bold mb-2">Orar por uma Causa</h2>
                     <p className="text-xs text-muted-foreground leading-tight mb-4 font-medium">Receba um pedido e seja um instrumento de graça</p>
                   </div>
-                  <Button size="sm" className="gradient-divine w-full rounded-full text-xs py-5">
+                  <Button size="sm" className="w-full rounded-full text-xs py-5 font-bold shadow-sm" style={{background: 'linear-gradient(135deg, #c9a227, #e8c547)', color: '#3d2800'}}>
                     <Sparkles className="w-3 h-3 mr-2" />
                     Começar
                   </Button>
@@ -162,7 +162,7 @@ const Index = () => {
                     <h2 className="text-lg font-bold mb-2">Enviar Pedido</h2>
                     <p className="text-xs text-muted-foreground leading-tight mb-4 font-medium">Compartilhe sua necessidade e receba apoio</p>
                   </div>
-                  <Button size="sm" variant="outline" className="w-full rounded-full text-xs py-5 border-primary/20 bg-primary/5 text-primary font-bold">
+                  <Button size="sm" className="w-full rounded-full text-xs py-5 font-bold shadow-sm border-0" style={{background: 'linear-gradient(135deg, #b8860b, #d4a017)', color: '#fff8e1'}}>
                     <Send className="w-3 h-3 mr-2" />
                     Enviar
                   </Button>
@@ -180,7 +180,7 @@ const Index = () => {
                     <h2 className="text-lg font-bold mb-2">Evangelho do Dia</h2>
                     <p className="text-xs text-muted-foreground leading-tight mb-4 font-medium">A palavra sagrada com reflexões da IA</p>
                   </div>
-                  <Button size="sm" variant="outline" className="w-full rounded-full text-xs py-5 border-primary/20 bg-primary/5 text-primary font-bold">
+                  <Button size="sm" className="w-full rounded-full text-xs py-5 font-bold shadow-sm border-0" style={{background: 'linear-gradient(135deg, #c8a830, #f0d060)', color: '#3d2800'}}>
                     <Sun className="w-3 h-3 mr-2" />
                     Ler
                   </Button>
@@ -198,7 +198,7 @@ const Index = () => {
                     <h2 className="text-lg font-bold mb-2">Divina Promessa</h2>
                     <p className="text-xs text-muted-foreground leading-tight mb-4 font-medium">Uma citação bíblica para seu coração</p>
                   </div>
-                  <Button size="sm" className="gradient-sacred w-full rounded-full text-xs py-5 text-foreground hover:opacity-90">
+                  <Button size="sm" className="w-full rounded-full text-xs py-5 font-bold shadow-sm border-0" style={{background: 'linear-gradient(135deg, #a0720a, #c9951f)', color: '#fff8e1'}}>
                     <Sparkles className="w-3 h-3 mr-2" />
                     Sortear
                   </Button>
