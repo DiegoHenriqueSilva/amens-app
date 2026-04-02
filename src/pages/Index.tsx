@@ -138,7 +138,7 @@ const Index = () => {
               <Link to="/pray">
                 <Card className="p-6 h-full text-center flex flex-col items-center justify-between border-primary/5 soft-shadow hover:bg-white transition-colors rounded-[2rem]">
                   <div className="w-14 h-14 bg-transparent rounded-full flex items-center justify-center mb-4 overflow-hidden">
-                    <img src="/pray-icon.png" alt="Orar por uma causa" className="w-full h-full object-contain drop-shadow-md" />
+                    <img src="/icons-sprite.jpg" alt="Orar por uma causa" className="w-full h-full object-cover drop-shadow-md rounded-full" />
                   </div>
                   <div>
                     <h2 className="text-lg font-bold mb-2">Orar por uma Causa</h2>
