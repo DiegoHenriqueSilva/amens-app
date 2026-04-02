@@ -51,9 +51,9 @@ const Submit = () => {
       toast.success(`Pedido enviado! +${XP_REWARDS.submit} XP`);
       setFormData({ title: "", content: "", location: "" });
       setTimeout(() => navigate("/"), 2000);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error submitting prayer request:', error);
-      toast.error("Erro ao enviar pedido de oração");
+      toast.error(`Erro técnico: ${error.message || JSON.stringify(error)}`);
     } finally {
       setIsSubmitting(false);
     }

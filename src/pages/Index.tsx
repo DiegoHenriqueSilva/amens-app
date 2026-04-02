@@ -137,8 +137,8 @@ const Index = () => {
             <motion.div variants={fadeUp}>
               <Link to="/pray">
                 <Card className="p-6 h-full text-center flex flex-col items-center justify-between border-primary/5 soft-shadow hover:bg-white transition-colors rounded-[2rem]">
-                  <div className="w-14 h-14 bg-secondary/40 rounded-full flex items-center justify-center mb-4">
-                    <Heart className="w-7 h-7 text-primary/70 fill-primary/10" />
+                  <div className="w-14 h-14 bg-transparent rounded-full flex items-center justify-center mb-4 overflow-hidden">
+                    <img src="/pray-icon.png" alt="Orar por uma causa" className="w-full h-full object-contain drop-shadow-md" />
                   </div>
                   <div>
                     <h2 className="text-lg font-bold mb-2">Orar por uma Causa</h2>
