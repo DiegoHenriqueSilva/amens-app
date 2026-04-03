@@ -3,17 +3,28 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Users, Sparkles, ArrowLeft, Heart, Globe, Award, TrendingUp } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Progress } from "@/components/ui/progress";
+import { Users, Sparkles, ArrowLeft, Heart, Globe, Award, TrendingUp, MapPin, Church } from "lucide-react";
 import PageTransition from "@/components/PageTransition";
 import { motion, AnimatePresence } from "framer-motion";
-import { useXp } from "@/hooks/use-xp";
 import { formatTimeAgo } from "@/lib/utils";
+import BrazilMap from "@/components/BrazilMap";
+import { fetchCitiesByState, type IBGECity } from "@/lib/ibge";
 
 const Community = () => {
   const navigate = useNavigate();
   const [activities, setActivities] = useState<any[]>([]);
   const [totalPrayers, setTotalPrayers] = useState(0);
   const [loading, setLoading] = useState(true);
+
+  // Map States
+  const [selectedMapState, setSelectedMapState] = useState<string | null>(null);
+  const [mapCities, setMapCities] = useState<IBGECity[]>([]);
+  const [selectedMapCity, setSelectedMapCity] = useState<string>("");
+  const [parishStats, setParishStats] = useState<any[]>([]);
+  const [cityTotalUsers, setCityTotalUsers] = useState(0);
+  const [mapLoading, setMapLoading] = useState(false);
 
   useEffect(() => {
     fetchGlobalStats();
@@ -46,8 +57,6 @@ const Community = () => {
 
   const fetchRecentActivities = async () => {
     setLoading(true);
-    // Mimic a "feed" of generic activities
-    // In a real app, we'd have a dedicated activity table or complex join
     const { data: intercessions } = await supabase
       .from("prayer_intercessions")
       .select("*, prayer_requests(location)")
@@ -58,6 +67,34 @@ const Community = () => {
       setActivities(intercessions);
     }
     setLoading(false);
+  };
+
+  const handleStateClick = async (stateUf: string) => {
+    setSelectedMapState(stateUf);
+    setSelectedMapCity("");
+    setParishStats([]);
+    
+    const citiesData = await fetchCitiesByState(stateUf);
+    setMapCities(citiesData);
+  };
+
+  const handleSearchCity = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedMapState || !selectedMapCity) return;
+    
+    setMapLoading(true);
+    const { data } = await supabase
+      .from('parish_stats')
+      .select('*')
+      .eq('state', selectedMapState)
+      .ilike('city', `%${selectedMapCity}%`);
+
+    if (data) {
+      const total = data.reduce((acc, curr) => acc + Number(curr.total_users), 0);
+      setCityTotalUsers(total);
+      setParishStats(data.sort((a: any, b: any) => b.total_users - a.total_users));
+    }
+    setMapLoading(false);
   };
 
   return (
@@ -84,11 +121,94 @@ const Community = () => {
             <p className="text-sm text-muted-foreground font-medium uppercase tracking-[0.2em]">Unidos em Uma Só Fé</p>
           </motion.div>
 
-          {/* Global Impact Card */}
+          {/* Map Feature Section */}
           <motion.div 
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.1 }}
+            className="mb-8 space-y-4"
+          >
+            <div className="flex items-center gap-2 px-2">
+              <MapPin className="w-4 h-4 text-primary" />
+              <h2 className="text-xs uppercase font-bold tracking-widest text-foreground/70">Oração no Brasil</h2>
+            </div>
+            
+            <BrazilMap onStateClick={handleStateClick} selectedState={selectedMapState} />
+            
+            <AnimatePresence>
+              {selectedMapState && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="space-y-4"
+                >
+                  <Card className="p-5 soft-shadow border-primary/15 bg-gradient-to-br from-white/80 to-primary/5 backdrop-blur-md rounded-[2rem]">
+                    <h3 className="text-sm font-bold text-primary mb-3">Pesquisar em {selectedMapState}</h3>
+                    <form onSubmit={handleSearchCity} className="flex gap-2">
+                      <Input 
+                        type="text" 
+                        list="map-cities-list" 
+                        placeholder="Digite sua cidade..." 
+                        value={selectedMapCity}
+                        onChange={(e) => setSelectedMapCity(e.target.value)}
+                        className="flex-1 rounded-2xl"
+                      />
+                      <datalist id="map-cities-list">
+                        {mapCities.map(c => <option key={c.id} value={c.nome} />)}
+                      </datalist>
+                      <Button type="submit" disabled={!selectedMapCity || mapLoading} className="rounded-2xl gradient-divine px-6">
+                        Buscar
+                      </Button>
+                    </form>
+                  </Card>
+
+                  {/* Resultados das Paróquias */}
+                  {parishStats.length > 0 && (
+                     <div className="space-y-3 pt-2">
+                       <h4 className="text-xs font-bold uppercase tracking-widest px-2 text-primary/80">
+                         Paróquias em {selectedMapCity}
+                       </h4>
+                       {parishStats.map((stat, idx) => {
+                         const percentage = cityTotalUsers > 0 ? Math.round((Number(stat.total_users) / cityTotalUsers) * 100) : 0;
+                         return (
+                           <motion.div key={stat.parish} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.1 }}>
+                             <Card className="p-4 border-primary/10 bg-white/70 rounded-[1.5rem] soft-shadow">
+                               <div className="flex justify-between items-start mb-2">
+                                 <div className="flex items-center gap-2">
+                                   <Church className="w-4 h-4 text-primary/60" />
+                                   <span className="font-semibold text-sm leading-tight text-foreground/90">{stat.parish}</span>
+                                 </div>
+                                 <span className="text-xs font-extrabold text-primary bg-primary/10 px-2 py-0.5 rounded-full whitespace-nowrap ml-2">
+                                   {stat.total_users} {stat.total_users === 1 ? 'membro' : 'membros'}
+                                 </span>
+                               </div>
+                               <div className="flex items-center gap-3">
+                                 <Progress value={percentage} className="h-1.5 flex-1 bg-primary/10" indicatorClassName="bg-primary" />
+                                 <span className="text-[10px] font-bold text-muted-foreground w-8 text-right">{percentage}%</span>
+                               </div>
+                             </Card>
+                           </motion.div>
+                         );
+                       })}
+                     </div>
+                  )}
+
+                  {parishStats.length === 0 && selectedMapCity && !mapLoading && (
+                    <p className="text-center text-xs text-muted-foreground py-4 italic opacity-70">
+                      Nenhuma paróquia encontrada nesta cidade. Pesquise novamente.
+                    </p>
+                  )}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </motion.div>
+
+          {/* Global Impact Card */}
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.2 }}
           >
             <Card className="p-8 mb-8 soft-shadow border-primary/15 bg-gradient-to-br from-white/80 to-primary/5 backdrop-blur-md rounded-[2.5rem] border-2">
               <div className="flex flex-col items-center text-center">

@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,38 +9,105 @@ import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowLeft } from "lucide-react";
 import PageTransition from "@/components/PageTransition";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
+import { fetchStates, fetchCitiesByState, IBGEState, IBGECity } from "@/lib/ibge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 const Auth = () => {
-  const [fullName, setFullName] = useState("");
-  const [city, setCity] = useState("");
+  // Common Form
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  
+  // Profile Info
+  const [fullName, setFullName] = useState("");
+  const [selectedState, setSelectedState] = useState("");
+  const [selectedCity, setSelectedCity] = useState("");
+  const [parish, setParish] = useState("");
+  
+  // IBGE Data
+  const [states, setStates] = useState<IBGEState[]>([]);
+  const [cities, setCities] = useState<IBGECity[]>([]);
+  const [existingParishes, setExistingParishes] = useState<string[]>([]);
+  
+  // State handling
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  
+  // Google Incomplete Profile Dialog
+  const [showIncompleteProfile, setShowIncompleteProfile] = useState(false);
+  const [sessionUser, setSessionUser] = useState<any>(null);
+
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { toast } = useToast();
   const referrerId = searchParams.get("ref");
 
   useEffect(() => {
+    fetchStates().then(setStates);
+    
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === "SIGNED_IN" && session) {
-        navigate("/");
+      if (session && session.user) {
+        // Checar se o perfil está completo em caso de OAuth (ex: Google)
+        const { data: profile } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
+        if (!profile || !profile.state || !profile.city || !profile.parish) {
+          setSessionUser(session.user);
+          if (profile?.full_name) setFullName(profile.full_name);
+          else if (session.user.user_metadata?.full_name) setFullName(session.user.user_metadata.full_name);
+          setShowIncompleteProfile(true);
+        } else {
+          navigate("/");
+        }
       }
     });
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) navigate("/");
+
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (session && session.user) {
+        const { data: profile } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
+        if (!profile || !profile.state || !profile.city || !profile.parish) {
+          setSessionUser(session.user);
+          if (profile?.full_name) setFullName(profile.full_name);
+          else if (session.user.user_metadata?.full_name) setFullName(session.user.user_metadata.full_name);
+          setShowIncompleteProfile(true);
+        } else {
+          navigate("/");
+        }
+      }
     });
+    
     return () => subscription.unsubscribe();
   }, [navigate]);
 
-  // Store referrer ID
   useEffect(() => {
     if (referrerId) {
       localStorage.setItem("fe_referrer", referrerId);
     }
   }, [referrerId]);
+
+  // Load cities when state changes
+  useEffect(() => {
+    if (selectedState) {
+      fetchCitiesByState(selectedState).then(setCities);
+      setSelectedCity("");
+      setParish("");
+      setExistingParishes([]);
+    }
+  }, [selectedState]);
+
+  // Load parishes when city changes
+  useEffect(() => {
+    if (selectedState && selectedCity) {
+      supabase.from('parish_stats')
+        .select('parish')
+        .eq('state', selectedState)
+        .eq('city', selectedCity)
+        .then(({ data }) => {
+          if (data) {
+            setExistingParishes(data.map(p => p.parish).filter(Boolean));
+          }
+        });
+    }
+  }, [selectedState, selectedCity]);
 
   const handleGoogleSignIn = async () => {
     setGoogleLoading(true);
@@ -64,8 +130,8 @@ const Auth = () => {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !password || !fullName || !city) {
-      toast({ title: "Erro", description: "Preencha todos os campos", variant: "destructive" });
+    if (!email || !password || !fullName || !selectedState || !selectedCity || !parish) {
+      toast({ title: "Erro", description: "Preencha todos os campos do seu perfil", variant: "destructive" });
       return;
     }
     if (password.length < 6) {
@@ -80,7 +146,9 @@ const Auth = () => {
         emailRedirectTo: `${window.location.origin}/`,
         data: {
           full_name: fullName,
-          city: city,
+          state: selectedState,
+          city: selectedCity,
+          parish: parish
         }
       } 
     });
@@ -88,7 +156,7 @@ const Auth = () => {
     if (error) {
       toast({ title: "Erro ao criar conta", description: error.message, variant: "destructive" });
     } else {
-      toast({ title: "Conta criada!", description: "Verifique seu email para confirmar" });
+      toast({ title: "Conta criada!", description: "Verifique seu email para confirmar ou já verifique se a tela pulou." });
     }
   };
 
@@ -110,10 +178,119 @@ const Auth = () => {
     }
   };
 
+  const handleCompleteProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!sessionUser) return;
+    if (!fullName || !selectedState || !selectedCity || !parish) {
+      toast({ title: "Erro", description: "Preencha todos os campos para continuar", variant: "destructive" });
+      return;
+    }
+    setLoading(true);
+
+    // Save properly into our profiles table
+    const { error } = await supabase.from('profiles').upsert({
+      id: sessionUser.id,
+      full_name: fullName,
+      state: selectedState,
+      city: selectedCity,
+      parish: parish
+    });
+
+    // Also update auth user metadata gracefully
+    await supabase.auth.updateUser({
+      data: {
+        full_name: fullName,
+        state: selectedState,
+        city: selectedCity,
+        parish: parish
+      }
+    });
+
+    setLoading(false);
+
+    if (error) {
+      toast({ title: "Erro", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Sucesso!", description: "Informações completadas. Bem-vindo!" });
+      setShowIncompleteProfile(false);
+      navigate("/");
+    }
+  };
+
   return (
     <PageTransition>
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
-        <motion.div initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.45 }}>
+        
+        {/* MODAL PARA GOOGLE LOGIN SEM PERFIL */}
+        <Dialog open={showIncompleteProfile} onOpenChange={(val) => {
+            if(!val && showIncompleteProfile) {
+                // block closing
+            }
+        }}>
+          <DialogContent className="max-w-md bg-card/95 backdrop-blur-md border-primary/20 soft-shadow rounded-[2rem]">
+            <DialogHeader>
+              <DialogTitle className="text-2xl text-center font-bold">Complete seu Perfil ✨</DialogTitle>
+              <DialogDescription className="text-center">
+                Para se conectar verdadeiramente à comunidade, preencha as informações da sua paróquia.
+              </DialogDescription>
+            </DialogHeader>
+            <form onSubmit={handleCompleteProfile} className="space-y-4 mt-2">
+              <div className="space-y-2">
+                 <Label>Nome Completo</Label>
+                 <Input type="text" placeholder="Seu nome" value={fullName} onChange={(e) => setFullName(e.target.value)} required />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <Label>Estado</Label>
+                  <Select value={selectedState} onValueChange={setSelectedState} required>
+                    <SelectTrigger><SelectValue placeholder="UF" /></SelectTrigger>
+                    <SelectContent>
+                      {states.map(st => (
+                        <SelectItem key={st.sigla} value={st.sigla}>{st.sigla} - {st.nome}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Cidade</Label>
+                  <Select value={selectedCity} onValueChange={setSelectedCity} disabled={!selectedState} required>
+                    <SelectTrigger className="truncate"><SelectValue placeholder="Cidade" /></SelectTrigger>
+                    <SelectContent>
+                      {cities.map(ct => (
+                        <SelectItem key={ct.id} value={ct.nome}>{ct.nome}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                 <Label>Paróquia</Label>
+                 <Input 
+                   type="text" 
+                   list="parishes-list" 
+                   placeholder="Ex: Paróquia São José" 
+                   value={parish} 
+                   onChange={(e) => setParish(e.target.value)} 
+                   disabled={!selectedCity}
+                   required 
+                 />
+                 <datalist id="parishes-list">
+                    {existingParishes.map(p => (
+                      <option key={p} value={p} />
+                    ))}
+                 </datalist>
+                 <p className="text-xs text-muted-foreground">Digite a sua ou escolha uma já listada na sua cidade.</p>
+              </div>
+
+              <Button type="submit" className="w-full gradient-divine" disabled={loading}>
+                {loading ? "Salvando..." : "Entrar na Comunidade"}
+              </Button>
+            </form>
+          </DialogContent>
+        </Dialog>
+
+        <motion.div initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: showIncompleteProfile ? 0 : 1, scale: showIncompleteProfile ? 0.96 : 1 }} transition={{ duration: 0.45 }} className="w-full max-w-md">
           <Card className="w-full max-w-md p-8 soft-shadow border-primary/15 relative">
             <Button variant="ghost" size="icon" onClick={() => navigate("/")} className="absolute top-4 left-4">
               <ArrowLeft className="w-5 h-5" />
@@ -150,7 +327,7 @@ const Auth = () => {
                 <TabsTrigger value="signup">Criar Conta</TabsTrigger>
               </TabsList>
               <TabsContent value="login">
-                <form onSubmit={handleSignIn} className="space-y-4">
+                <form onSubmit={handleSignIn} className="space-y-4 pt-2">
                   <div className="space-y-2">
                     <Label htmlFor="login-email">Email</Label>
                     <Input id="login-email" type="email" placeholder="seu@email.com" value={email} onChange={(e) => setEmail(e.target.value)} required />
@@ -165,29 +342,71 @@ const Auth = () => {
                 </form>
               </TabsContent>
               <TabsContent value="signup">
-                <form onSubmit={handleSignUp} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-name">Nome Completo</Label>
-                    <Input id="signup-name" type="text" placeholder="Seu nome" value={fullName} onChange={(e) => setFullName(e.target.value)} required />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-city">Sua Cidade</Label>
-                    <Input id="signup-city" type="text" placeholder="Ex: São Paulo, SP" value={city} onChange={(e) => setCity(e.target.value)} required />
-                    <p className="text-xs text-muted-foreground">Usada para conectar você com outros irmãos em oração. 📍</p>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-email">Email</Label>
-                    <Input id="signup-email" type="email" placeholder="seu@email.com" value={email} onChange={(e) => setEmail(e.target.value)} required />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-password">Senha</Label>
-                    <Input id="signup-password" type="password" placeholder="••••••" value={password} onChange={(e) => setPassword(e.target.value)} required />
-                    <p className="text-xs text-muted-foreground">Mínimo de 6 caracteres</p>
-                  </div>
-                  <Button type="submit" className="w-full gradient-divine text-primary-foreground hover:opacity-90" disabled={loading}>
-                    {loading ? "Criando conta..." : "Criar Conta"}
-                  </Button>
-                </form>
+                {/* O container tem q ter overflow-y-auto e max-h para evitar de fugir da tela na versão mobile */}
+                <div className="max-h-[50vh] overflow-y-auto px-1 pb-2 pt-2 -mx-1 hide-scrollbar">
+                  <form onSubmit={handleSignUp} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label>Nome Completo</Label>
+                      <Input type="text" placeholder="Seu nome completo" value={fullName} onChange={(e) => setFullName(e.target.value)} required />
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-2">
+                        <Label>Estado</Label>
+                        <Select value={selectedState} onValueChange={setSelectedState} required>
+                          <SelectTrigger className="text-left bg-transparent border-input"><SelectValue placeholder="UF" /></SelectTrigger>
+                          <SelectContent>
+                            {states.map(st => (
+                              <SelectItem key={st.sigla} value={st.sigla}>{st.sigla} - {st.nome}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Cidade</Label>
+                        <Select value={selectedCity} onValueChange={setSelectedCity} disabled={!selectedState} required>
+                          <SelectTrigger className="text-left bg-transparent border-input truncate"><SelectValue placeholder="Selecione" /></SelectTrigger>
+                          <SelectContent>
+                            {cities.map(ct => (
+                              <SelectItem key={ct.id} value={ct.nome}>{ct.nome}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                       <Label>Paróquia / Igreja</Label>
+                       <Input 
+                         type="text" 
+                         list="form-parishes-list" 
+                         placeholder="Ex: Paróquia São José" 
+                         value={parish} 
+                         onChange={(e) => setParish(e.target.value)} 
+                         disabled={!selectedCity}
+                         required 
+                       />
+                       <datalist id="form-parishes-list">
+                          {existingParishes.map(p => (
+                            <option key={p} value={p} />
+                          ))}
+                       </datalist>
+                       <p className="text-xs text-muted-foreground opacity-70">Encontre a sua ou digite uma nova.</p>
+                    </div>
+
+                    <div className="space-y-2 pt-2">
+                      <Label>Email</Label>
+                      <Input type="email" placeholder="seu@email.com" value={email} onChange={(e) => setEmail(e.target.value)} required />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Senha</Label>
+                      <Input type="password" placeholder="••••••" value={password} onChange={(e) => setPassword(e.target.value)} required />
+                    </div>
+                    <Button type="submit" className="w-full gradient-divine text-primary-foreground hover:opacity-90" disabled={loading}>
+                      {loading ? "Criando conta..." : "Criar Conta"}
+                    </Button>
+                  </form>
+                </div>
               </TabsContent>
             </Tabs>
           </Card>

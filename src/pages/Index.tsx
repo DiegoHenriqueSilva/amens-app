@@ -138,7 +138,7 @@ const Index = () => {
               <Link to="/pray">
                 <Card className="p-6 h-full text-center flex flex-col items-center justify-between border-primary/5 soft-shadow hover:bg-white transition-colors rounded-[2rem]">
                   <div className="w-14 h-14 bg-transparent rounded-full flex items-center justify-center mb-4 overflow-hidden">
-                    <img src="/icons-sprite.jpg" alt="Orar por uma causa" className="w-full h-full object-cover drop-shadow-md rounded-full" />
+                    <img src="/oracao.jpg" alt="Orar por uma causa" className="w-full h-full object-cover drop-shadow-md rounded-full" />
                   </div>
                   <div>
                     <h2 className="text-lg font-bold mb-2">Orar por uma Causa</h2>
@@ -155,8 +155,8 @@ const Index = () => {
             <motion.div variants={fadeUp}>
               <Link to="/submit">
                 <Card className="p-6 h-full text-center flex flex-col items-center justify-between border-primary/5 soft-shadow hover:bg-white transition-colors rounded-[2rem]">
-                  <div className="w-14 h-14 bg-secondary/40 rounded-full flex items-center justify-center mb-4">
-                    <Send className="w-7 h-7 text-primary/70" />
+                  <div className="w-14 h-14 bg-transparent rounded-full flex items-center justify-center mb-4 overflow-hidden">
+                    <img src="/enviaroracao.jpg" alt="Enviar Pedido" className="w-full h-full object-cover drop-shadow-md rounded-full" />
                   </div>
                   <div>
                     <h2 className="text-lg font-bold mb-2">Enviar Pedido</h2>
@@ -173,8 +173,8 @@ const Index = () => {
             <motion.div variants={fadeUp}>
               <Link to="/daily-gospel">
                 <Card className="p-6 h-full text-center flex flex-col items-center justify-between border-primary/5 soft-shadow hover:bg-white transition-colors rounded-[2rem]">
-                  <div className="w-14 h-14 bg-secondary/40 rounded-full flex items-center justify-center mb-4">
-                    <Sun className="w-7 h-7 text-primary/70" />
+                  <div className="w-14 h-14 bg-transparent rounded-full flex items-center justify-center mb-4 overflow-hidden">
+                    <img src="/evangelho.jpg" alt="Evangelho do Dia" className="w-full h-full object-cover drop-shadow-md rounded-full" />
                   </div>
                   <div>
                     <h2 className="text-lg font-bold mb-2">Evangelho do Dia</h2>
@@ -191,8 +191,8 @@ const Index = () => {
             <motion.div variants={fadeUp}>
               <Link to="/divine-promise">
                 <Card className="p-6 h-full text-center flex flex-col items-center justify-between border-primary/5 soft-shadow hover:bg-white transition-colors rounded-[2rem] border-dashed">
-                  <div className="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center mb-4">
-                    <Sparkles className="w-7 h-7 text-primary" />
+                  <div className="w-14 h-14 bg-transparent rounded-full flex items-center justify-center mb-4 overflow-hidden">
+                    <img src="/divinaspromessas.png" alt="Divina Promessa" className="w-full h-full object-cover drop-shadow-md rounded-full" />
                   </div>
                   <div>
                     <h2 className="text-lg font-bold mb-2">Divina Promessa</h2>
