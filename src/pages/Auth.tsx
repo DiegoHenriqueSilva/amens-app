@@ -13,6 +13,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import { fetchStates, fetchCitiesByState, IBGEState, IBGECity } from "@/lib/ibge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Check, ChevronsUpDown } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const Auth = () => {
   // Common Form
@@ -37,6 +41,8 @@ const Auth = () => {
   // Google Incomplete Profile Dialog
   const [showIncompleteProfile, setShowIncompleteProfile] = useState(false);
   const [sessionUser, setSessionUser] = useState<any>(null);
+  const [popoverOpen, setPopoverOpen] = useState(false);
+  const [popoverOpenIncomplete, setPopoverOpenIncomplete] = useState(false);
 
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -49,7 +55,7 @@ const Auth = () => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (session && session.user) {
         // Checar se o perfil está completo em caso de OAuth (ex: Google)
-        const { data: profile } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
+        const { data: profile } = await supabase.from('profiles' as any).select('*').eq('id', session.user.id).single() as any;
         if (!profile || !profile.state || !profile.city || !profile.parish) {
           setSessionUser(session.user);
           if (profile?.full_name) setFullName(profile.full_name);
@@ -63,7 +69,7 @@ const Auth = () => {
 
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (session && session.user) {
-        const { data: profile } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
+        const { data: profile } = await supabase.from('profiles' as any).select('*').eq('id', session.user.id).single() as any;
         if (!profile || !profile.state || !profile.city || !profile.parish) {
           setSessionUser(session.user);
           if (profile?.full_name) setFullName(profile.full_name);
@@ -97,13 +103,16 @@ const Auth = () => {
   // Load parishes when city changes
   useEffect(() => {
     if (selectedState && selectedCity) {
-      supabase.from('parish_stats')
+      supabase.from('profiles' as any)
         .select('parish')
         .eq('state', selectedState)
         .eq('city', selectedCity)
+        .not('parish', 'is', null)
         .then(({ data }) => {
           if (data) {
-            setExistingParishes(data.map(p => p.parish).filter(Boolean));
+            const castedData = data as any[];
+            const unique = Array.from(new Set(castedData.map(p => p.parish)));
+            setExistingParishes(unique);
           }
         });
     }
@@ -188,7 +197,7 @@ const Auth = () => {
     setLoading(true);
 
     // Save properly into our profiles table
-    const { error } = await supabase.from('profiles').upsert({
+    const { error } = await (supabase.from('profiles' as any) as any).upsert({
       id: sessionUser.id,
       full_name: fullName,
       state: selectedState,
@@ -264,23 +273,58 @@ const Auth = () => {
                 </div>
               </div>
               
-              <div className="space-y-2">
+              <div className="space-y-2 flex flex-col">
                  <Label>Paróquia</Label>
-                 <Input 
-                   type="text" 
-                   list="parishes-list" 
-                   placeholder="Ex: Paróquia São José" 
-                   value={parish} 
-                   onChange={(e) => setParish(e.target.value)} 
-                   disabled={!selectedCity}
-                   required 
-                 />
-                 <datalist id="parishes-list">
-                    {existingParishes.map(p => (
-                      <option key={p} value={p} />
-                    ))}
-                 </datalist>
-                 <p className="text-xs text-muted-foreground">Digite a sua ou escolha uma já listada na sua cidade.</p>
+                 <Popover open={popoverOpenIncomplete} onOpenChange={setPopoverOpenIncomplete}>
+                   <PopoverTrigger asChild>
+                     <Button
+                       variant="outline"
+                       role="combobox"
+                       aria-expanded={popoverOpenIncomplete}
+                       className={cn(
+                         "w-full justify-between font-normal",
+                         !parish && "text-muted-foreground"
+                       )}
+                       disabled={!selectedCity}
+                     >
+                       <span className="truncate">{parish || "Buscar ou digitar..."}</span>
+                       <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                     </Button>
+                   </PopoverTrigger>
+                   <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
+                     <Command>
+                       <CommandInput 
+                         placeholder="Nome da paróquia..." 
+                         value={parish}
+                         onValueChange={(val) => setParish(val)}
+                       />
+                       <CommandList>
+                         <CommandEmpty className="py-2 px-4 text-xs italic">Nenhuma paróquia sugerida.</CommandEmpty>
+                         <CommandGroup heading="Sugeridas">
+                           {existingParishes.map((p) => (
+                             <CommandItem
+                               key={p}
+                               value={p}
+                               onSelect={(currentValue) => {
+                                 setParish(currentValue);
+                                 setPopoverOpenIncomplete(false);
+                               }}
+                             >
+                               <Check
+                                 className={cn(
+                                   "mr-2 h-4 w-4",
+                                   parish === p ? "opacity-100" : "opacity-0"
+                                 )}
+                               />
+                               {p}
+                             </CommandItem>
+                           ))}
+                         </CommandGroup>
+                       </CommandList>
+                     </Command>
+                   </PopoverContent>
+                 </Popover>
+                 <p className="text-[10px] text-muted-foreground">Digite a sua ou escolha uma já listada na sua cidade.</p>
               </div>
 
               <Button type="submit" className="w-full gradient-divine" disabled={loading}>
@@ -375,23 +419,58 @@ const Auth = () => {
                       </div>
                     </div>
 
-                    <div className="space-y-2">
+                    <div className="space-y-2 flex flex-col">
                        <Label>Paróquia / Igreja</Label>
-                       <Input 
-                         type="text" 
-                         list="form-parishes-list" 
-                         placeholder="Ex: Paróquia São José" 
-                         value={parish} 
-                         onChange={(e) => setParish(e.target.value)} 
-                         disabled={!selectedCity}
-                         required 
-                       />
-                       <datalist id="form-parishes-list">
-                          {existingParishes.map(p => (
-                            <option key={p} value={p} />
-                          ))}
-                       </datalist>
-                       <p className="text-xs text-muted-foreground opacity-70">Encontre a sua ou digite uma nova.</p>
+                       <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
+                         <PopoverTrigger asChild>
+                           <Button
+                             variant="outline"
+                             role="combobox"
+                             aria-expanded={popoverOpen}
+                             className={cn(
+                               "w-full justify-between font-normal",
+                               !parish && "text-muted-foreground"
+                             )}
+                             disabled={!selectedCity}
+                           >
+                             <span className="truncate">{parish || "Buscar ou digitar..."}</span>
+                             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                           </Button>
+                         </PopoverTrigger>
+                         <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
+                           <Command>
+                             <CommandInput 
+                               placeholder="Nome da paróquia..." 
+                               value={parish}
+                               onValueChange={(val) => setParish(val)}
+                             />
+                             <CommandList>
+                               <CommandEmpty className="py-2 px-4 text-xs italic">Nenhuma paróquia sugerida.</CommandEmpty>
+                               <CommandGroup heading="Sugeridas">
+                                 {existingParishes.map((p) => (
+                                   <CommandItem
+                                     key={p}
+                                     value={p}
+                                     onSelect={(currentValue) => {
+                                       setParish(currentValue);
+                                       setPopoverOpen(false);
+                                     }}
+                                   >
+                                     <Check
+                                       className={cn(
+                                         "mr-2 h-4 w-4",
+                                         parish === p ? "opacity-100" : "opacity-0"
+                                       )}
+                                     />
+                                     {p}
+                                   </CommandItem>
+                                 ))}
+                               </CommandGroup>
+                             </CommandList>
+                           </Command>
+                         </PopoverContent>
+                       </Popover>
+                       <p className="text-[10px] text-muted-foreground opacity-70">Encontre a sua ou digite uma nova.</p>
                     </div>
 
                     <div className="space-y-2 pt-2">

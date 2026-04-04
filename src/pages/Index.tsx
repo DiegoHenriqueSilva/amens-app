@@ -12,6 +12,7 @@ import PageTransition from "@/components/PageTransition";
 import { NotificationBell } from "@/components/NotificationBell";
 import { motion, AnimatePresence } from "framer-motion";
 import { scheduleDailyPromiseNotification } from "@/lib/notifications";
+import { CompleteProfileDialog } from "@/components/CompleteProfileDialog";
 
 const stagger = {
   animate: { transition: { staggerChildren: 0.1 } },
@@ -87,6 +88,7 @@ const Index = () => {
   return (
     <PageTransition>
       <div className="min-h-screen pb-24"> {/* Espaço para a bottom nav */}
+        <CompleteProfileDialog />
         
         <div className="container mx-auto px-6 py-8 relative z-10 max-w-lg">
           
