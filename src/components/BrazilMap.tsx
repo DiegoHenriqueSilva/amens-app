@@ -3,8 +3,8 @@ import { ComposableMap, Geographies, Geography } from 'react-simple-maps';
 import { Card } from '@/components/ui/card';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
-// Using a recognized public topojson for Brazil states
-const geoUrl = "https://raw.githubusercontent.com/luizbills/brasil-topojson/master/topojson/brm.json";
+// Using a highly reliable GeoJSON for Brazil states to ensure rendering
+const geoUrl = "https://raw.githubusercontent.com/codeforamerica/click_that_hood/master/public/data/brazil-states.geojson";
 
 interface BrazilMapProps {
   onStateClick: (stateUf: string) => void;
@@ -13,19 +13,25 @@ interface BrazilMapProps {
 
 const BrazilMap: React.FC<BrazilMapProps> = ({ onStateClick, selectedState }) => {
   return (
-    <Card className="p-2 sm:p-4 border-primary/20 bg-background/50 backdrop-blur-sm rounded-[2rem] overflow-hidden relative soft-shadow">
+    <Card className="p-2 sm:p-4 border-primary/10 bg-white/50 backdrop-blur-md rounded-[2.5rem] overflow-hidden relative soft-shadow border-2">
       <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent pointer-events-none" />
-      <div className="w-full relative z-10 flex justify-center">
-        <ComposableMap
-          projection="geoMercator"
-          projectionConfig={{ scale: 750, center: [-54, -15] }}
-          className="w-full max-w-[450px] aspect-square"
-        >
-          <TooltipProvider delayDuration={50}>
+      <div className="w-full relative z-10 flex justify-center min-h-[300px]">
+        <TooltipProvider delayDuration={50}>
+          <ComposableMap
+            projection="geoMercator"
+            projectionConfig={{ 
+              scale: 550, 
+              center: [-54, -15] 
+            }}
+            className="w-full h-full max-w-[500px]"
+          >
             <Geographies geography={geoUrl}>
               {({ geographies }) =>
                 geographies.map((geo) => {
-                  const stateUf = geo.id as string; // Usually "SP", "RJ", etc.
+                  // In this GeoJSON, properties usually contain 'sigla' or 'name'
+                  // Adjusting name extraction based on common geojson properties
+                  const stateName = geo.properties.name || "Estado";
+                  const stateUf = geo.properties.sigla || geo.id || stateName;
                   const isSelected = selectedState === stateUf;
                   
                   return (
@@ -36,40 +42,45 @@ const BrazilMap: React.FC<BrazilMapProps> = ({ onStateClick, selectedState }) =>
                           onClick={() => onStateClick(stateUf)}
                           style={{
                             default: {
-                              fill: isSelected ? "hsl(var(--primary))" : "hsl(var(--primary) / 0.15)",
-                              stroke: isSelected ? "hsl(var(--primary-foreground))" : "hsl(var(--primary) / 0.5)",
-                              strokeWidth: isSelected ? 1.5 : 0.75,
+                              fill: isSelected ? "#D4AF37" : "#F5F5DC",
+                              stroke: "#D4AF37",
+                              strokeWidth: isSelected ? 2 : 0.5,
                               outline: "none",
-                              transition: "all 250ms"
+                              transition: "all 300ms ease"
                             },
                             hover: {
-                              fill: "hsl(var(--primary) / 0.8)",
-                              stroke: "hsl(var(--primary))",
+                              fill: "#D4AF37",
+                              stroke: "#FFFFFF",
                               strokeWidth: 1.5,
+                              opacity: 0.9,
                               outline: "none",
                               cursor: "pointer",
-                              transition: "all 250ms"
+                              transition: "all 300ms ease"
                             },
                             pressed: {
-                              fill: "hsl(var(--primary))",
-                              stroke: "hsl(var(--background))",
+                              fill: "#B8860B",
+                              stroke: "#FFFFFF",
                               strokeWidth: 1,
                               outline: "none",
                             },
                           }}
                         />
                       </TooltipTrigger>
-                      <TooltipContent className="bg-primary text-primary-foreground font-bold border-none">
-                        <p>{stateUf}</p>
+                      <TooltipContent className="bg-primary text-primary-foreground font-bold border-none rounded-xl px-4 py-2 shadow-xl">
+                        <p className="text-xs uppercase tracking-widest">{stateName} ({stateUf})</p>
                       </TooltipContent>
                     </Tooltip>
                   );
                 })
               }
             </Geographies>
-          </TooltipProvider>
-        </ComposableMap>
+          </ComposableMap>
+        </TooltipProvider>
       </div>
+      
+      {/* Visual background element */}
+      <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-primary/5 rounded-full blur-3xl" />
+      <div className="absolute -top-10 -left-10 w-40 h-40 bg-accent/5 rounded-full blur-3xl" />
     </Card>
   );
 };
