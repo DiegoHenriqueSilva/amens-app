@@ -7,16 +7,37 @@ import { TreeDeciduous, Sparkles, ArrowLeft, Sun, Wind, CloudRain } from "lucide
 import PageTransition from "@/components/PageTransition";
 import { motion, AnimatePresence } from "framer-motion";
 import { useXp } from "@/hooks/use-xp";
+import { Player } from "@remotion/player";
+import PrayerTree from "@/remotion/PrayerTree/PrayerTree";
 
 const Tree = () => {
   const navigate = useNavigate();
   const { totalXp } = useXp();
   const [communityXp, setCommunityXp] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [recentPrayers, setRecentPrayers] = useState<{ name: string; timestamp: string }[]>([]);
 
   useEffect(() => {
     fetchCommunityStats();
+    fetchRecentPrayers();
   }, []);
+
+  const fetchRecentPrayers = async () => {
+    const { data } = await supabase
+      .from("prayer_requests")
+      .select("author_name, created_at")
+      .order("created_at", { ascending: false })
+      .limit(15);
+    
+    if (data) {
+      setRecentPrayers(
+        data.map(p => ({
+          name: p.author_name || "Intercessor Anônimo",
+          timestamp: p.created_at
+        }))
+      );
+    }
+  };
 
   const fetchCommunityStats = async () => {
     setLoading(true);
@@ -81,15 +102,27 @@ const Tree = () => {
                 className="relative z-10"
               >
                 <div className="flex flex-col items-center text-center">
-                   <motion.div
-                     animate={{ 
-                       y: [0, -5, 0],
-                       rotate: [-1, 1, -1]
-                     }}
-                     transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-                   >
-                     {stage.icon}
-                   </motion.div>
+                    <div className="w-[400px] h-[450px] flex items-center justify-center">
+                      {growthLevel > 0 ? (
+                        <Player
+                          component={PrayerTree}
+                          durationInFrames={recentPrayers.length * 30 + 120} // Dynamic duration based on names
+                          compositionWidth={400}
+                          compositionHeight={450}
+                          fps={30}
+                          style={{
+                             width: '100%',
+                             height: '100%',
+                             background: 'transparent',
+                          }}
+                          inputProps={{ prayers: recentPrayers }}
+                          autoPlay
+                          loop
+                        />
+                      ) : (
+                        stage.icon
+                      )}
+                    </div>
                 </div>
               </motion.div>
             </AnimatePresence>
