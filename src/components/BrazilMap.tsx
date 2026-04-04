@@ -67,7 +67,8 @@ const BrazilMap: React.FC<BrazilMapProps> = ({ onStateClick, selectedState }) =>
                         />
                       </TooltipTrigger>
                       <TooltipContent className="bg-primary text-primary-foreground font-bold border-none rounded-xl px-4 py-2 shadow-xl">
-                        <p className="text-xs uppercase tracking-widest">{stateName} ({stateUf})</p>
+                        <p className="text-xs font-bold uppercase tracking-widest">{stateName}</p>
+                        <p className="text-[10px] opacity-70 font-medium">Clique para ver paróquias</p>
                       </TooltipContent>
                     </Tooltip>
                   );

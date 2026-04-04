@@ -11,9 +11,22 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   state text,
   city text,
   parish text,
+  show_real_name boolean DEFAULT false,
+  display_name text,
   created_at timestamp with time zone default now(),
   updated_at timestamp with time zone default now()
 );
+
+-- Migração rápida caso a tabela já exista
+DO $$ 
+BEGIN 
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='profiles' AND column_name='show_real_name') THEN
+    ALTER TABLE public.profiles ADD COLUMN show_real_name boolean DEFAULT false;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='profiles' AND column_name='display_name') THEN
+    ALTER TABLE public.profiles ADD COLUMN display_name text;
+  END IF;
+END $$;
 
 -- Ativar RLS
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
@@ -29,13 +42,15 @@ CREATE POLICY "Users can update own profile." ON public.profiles FOR UPDATE USIN
 CREATE OR REPLACE FUNCTION public.handle_new_user() 
 RETURNS trigger AS $$
 BEGIN
-  INSERT INTO public.profiles (id, full_name, state, city, parish)
+  INSERT INTO public.profiles (id, full_name, state, city, parish, show_real_name, display_name)
   VALUES (
     new.id,
     new.raw_user_meta_data->>'full_name',
     new.raw_user_meta_data->>'state',
     new.raw_user_meta_data->>'city',
-    new.raw_user_meta_data->>'parish'
+    new.raw_user_meta_data->>'parish',
+    (new.raw_user_meta_data->>'show_real_name')::boolean,
+    new.raw_user_meta_data->>'display_name'
   );
   RETURN new;
 END;

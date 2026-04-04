@@ -1,6 +1,6 @@
 import React from "react";
 import { AbsoluteFill, useVideoConfig } from "remotion";
-import TreeSVG from "./TreeSVG";
+import FlowVisuals from "./FlowVisuals";
 import FloatingName from "./FloatingName";
 
 interface Prayer {
@@ -29,9 +29,9 @@ const PrayerTree: React.FC<PrayerTreeProps> = ({ prayers, level = 1 }) => {
         overflow: "hidden",
       }}
     >
-      {/* Tree Visualization */}
-      <div style={{ position: "relative", zIndex: 1, pointerEvents: "none" }}>
-        <TreeSVG level={level} />
+      {/* Flow Visualization */}
+      <div style={{ position: "absolute", inset: 0, zIndex: 1, pointerEvents: "none" }}>
+        <FlowVisuals level={level} />
       </div>
 
       {/* Floating Names of Intercessors */}

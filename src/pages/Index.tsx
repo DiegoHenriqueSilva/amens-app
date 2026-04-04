@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Heart, Send, Sparkles, LogOut, User, BookOpen, HandHeart, Sun, Users, TreeDeciduous, Mail, Home } from "lucide-react";
+import { Heart, Send, Sparkles, LogOut, User, BookOpen, HandHeart, Sun, Users, Wind, Mail, Home } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
@@ -273,8 +273,8 @@ const Index = () => {
            </Link>
            <Link to="/tree" className="flex flex-col items-center gap-1 text-muted-foreground hover:text-primary transition-colors">
               <div className="w-12 h-1 bg-primary rounded-full mb-1 opacity-0" />
-              <TreeDeciduous className="w-6 h-6" />
-              <span className="text-[10px] font-medium">Árvore</span>
+              <Wind className="w-6 h-6" />
+              <span className="text-[10px] font-medium">Fluxo</span>
            </Link>
            <Link to="/messages" className="flex flex-col items-center gap-1 text-muted-foreground hover:text-primary transition-colors">
               <div className="w-12 h-1 bg-primary rounded-full mb-1 opacity-0" />

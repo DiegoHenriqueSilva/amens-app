@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { TreeDeciduous, Sparkles, ArrowLeft, Sun, Wind, CloudRain, Sprout } from "lucide-react";
+import { Sparkles, ArrowLeft, Sun, Wind, CloudRain } from "lucide-react";
 import PageTransition from "@/components/PageTransition";
 import { motion, AnimatePresence } from "framer-motion";
 import { useXp } from "@/hooks/use-xp";
@@ -23,18 +23,34 @@ const Tree = () => {
   }, []);
 
   const fetchRecentPrayers = async () => {
-    const { data } = await supabase
+    // Fetch prayers first
+    const { data: prayers } = await supabase
       .from("prayer_requests")
-      .select("author_name, created_at")
+      .select("author_name, created_at, user_id")
       .order("created_at", { ascending: false })
       .limit(10);
     
-    if (data) {
+    if (prayers && prayers.length > 0) {
+      const userIds = prayers.map(p => p.user_id).filter(Boolean);
+      
+      // Fetch profiles for these users
+      const { data: profiles } = await supabase
+        .from("profiles" as any)
+        .select("id, full_name, show_real_name, display_name")
+        .in("id", userIds);
+
+      const profileMap = new Map(((profiles || []) as any[]).map(p => [p.id, p]));
+
       setRecentPrayers(
-        data.map(p => ({
-          name: p.author_name || "Intercessor",
-          timestamp: p.created_at
-        }))
+        prayers.map(p => {
+          const profile: any = profileMap.get(p.user_id);
+          return {
+            name: profile?.show_real_name 
+              ? (profile?.display_name || profile?.full_name?.split(" ")[0] || p.author_name || "Intercessor")
+              : "Intercessor",
+            timestamp: p.created_at
+          };
+        })
       );
     }
   };
@@ -53,16 +69,16 @@ const Tree = () => {
   // Level threshold: 500 XP per level for initial stages to show progress faster
   const growthLevel = Math.min(Math.floor(communityXp / 1000), 5); 
   
-  const getTreeStage = () => {
-    if (growthLevel === 0) return { label: "Semente da Fé", description: "O solo está sendo preparado no seu coração...", icon: <Sprout className="w-16 h-16 text-primary/40 animate-bounce" /> };
-    if (growthLevel === 1) return { label: "Broto de Esperança", description: "As primeiras preces germinaram com luz.", icon: null };
-    if (growthLevel === 2) return { label: "Árvore Jovem", description: "Nossa comunidade cria raízes profundas na fé.", icon: null };
-    if (growthLevel === 3) return { label: "Grande Carvalho", description: "O abrigo espiritual para todos os irmãos.", icon: null };
-    if (growthLevel === 4) return { label: "Árvore Sagrada", description: "Flores de gratidão desabrocham em cada ramo.", icon: null };
-    return { label: "Árvore do Éden", description: "O ápice da nossa conexão divina com o Pai.", icon: null };
+  const getFlowStage = () => {
+    if (growthLevel === 0) return { label: "Sussurro de Fé", description: "O solo está sendo preparado no seu coração...", icon: <Wind className="w-16 h-16 text-primary/40 animate-pulse" /> };
+    if (growthLevel === 1) return { label: "Brisa de Esperança", description: "As primeiras preces sopram com suavidade.", icon: null };
+    if (growthLevel === 2) return { label: "Corrente de Luz", description: "Nossa comunidade flui com determinação divina.", icon: null };
+    if (growthLevel === 3) return { label: "Rio da Vida", description: "Um caudal de graças que banha todos os irmãos.", icon: null };
+    if (growthLevel === 4) return { label: "Oceano de Graça", description: "A imensidão do amor de Deus em cada prece.", icon: null };
+    return { label: "Fluxo Infinito", description: "A conexão ininterrupta com o Reino dos Céus.", icon: null };
   };
 
-  const stage = getTreeStage();
+  const stage = getFlowStage();
 
   return (
     <PageTransition>
@@ -82,9 +98,9 @@ const Tree = () => {
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
           >
-            <h1 className="text-4xl font-extrabold text-foreground mb-1 tracking-tight">Árvore da Fé</h1>
+            <h1 className="text-4xl font-extrabold text-foreground mb-1 tracking-tight text-glow">Fluxo de Orações</h1>
             <div className="w-16 h-1 bg-gradient-to-r from-transparent via-primary/40 to-transparent mx-auto rounded-full" />
-            <p className="text-[10px] mt-2 uppercase tracking-[0.3em] font-bold text-primary/60">Comunhão e Crescimento Espiritual</p>
+            <p className="text-[10px] mt-2 uppercase tracking-[0.3em] font-bold text-primary/60">Intercessão e Comunhão Eterna</p>
           </motion.div>
 
           {/* Core Tree Visualization */}
@@ -98,31 +114,39 @@ const Tree = () => {
                 transition={{ duration: 1 }}
                 className="relative z-10 w-full h-full flex items-center justify-center"
               >
-                {growthLevel === 0 ? (
-                    <div className="flex flex-col items-center gap-4">
-                      {stage.icon}
-                      <p className="text-xs text-muted-foreground font-medium italic">Germinando...</p>
-                    </div>
-                ) : (
-                  <Player
-                    component={PrayerTree}
-                    durationInFrames={600} // Eternal feel: 20 seconds loop
-                    compositionWidth={400}
-                    compositionHeight={450}
-                    fps={30}
-                    style={{
-                       width: '100%',
-                       height: '100%',
-                       background: 'transparent',
-                    }}
-                    inputProps={{ 
-                      prayers: recentPrayers,
-                      level: growthLevel 
-                    }}
-                    autoPlay
-                    loop
-                  />
-                )}
+                <Player
+                  component={PrayerTree as any}
+                  durationInFrames={600} 
+                  compositionWidth={400}
+                  compositionHeight={450}
+                  fps={30}
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    background: 'transparent',
+                  }}
+                  inputProps={{ 
+                    prayers: recentPrayers,
+                    level: growthLevel 
+                  }}
+                  autoPlay
+                  loop
+                />
+                <AnimatePresence>
+                  {growthLevel === 0 && (
+                    <motion.div 
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none"
+                    >
+                       <div className="bg-background/20 backdrop-blur-sm p-8 rounded-full">
+                          {stage.icon}
+                       </div>
+                       <p className="text-xs text-muted-foreground font-medium italic mt-4">Sussurrando preces...</p>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </motion.div>
             </AnimatePresence>
 
@@ -179,7 +203,7 @@ const Tree = () => {
                    className="mt-8 gradient-divine w-full rounded-2xl py-6 text-sm font-bold shadow-xl active:scale-95 transition-transform"
                 >
                    <Sparkles className="w-4 h-4 mr-2" />
-                   Cuidar da Árvore
+                   Alimentar o Fluxo
                 </Button>
              </Card>
           </motion.div>

@@ -57,19 +57,42 @@ const Community = () => {
 
   const fetchRecentActivities = async () => {
     setLoading(true);
-    // Fetch with profiles and prayer_requests info
+    // Fetch intercessions first
     const { data: intercessions } = await supabase
       .from("prayer_intercessions")
-      .select(`
-        *, 
-        profiles(full_name, city), 
-        prayer_requests(location, author_name)
-      `)
+      .select("*")
       .order("created_at", { ascending: false })
       .limit(15);
 
-    if (intercessions) {
-      setActivities(intercessions);
+    if (intercessions && intercessions.length > 0) {
+      const userIds = intercessions.map(i => i.user_id).filter(Boolean);
+      const prayerRequestIds = intercessions.map(i => i.prayer_request_id).filter(Boolean);
+
+      // Fetch profiles
+      const { data: profiles } = await supabase
+        .from("profiles" as any)
+        .select("id, full_name, city, show_real_name, display_name")
+        .in("id", userIds);
+      
+      const profileMap = new Map(((profiles || []) as any[]).map(p => [p.id, p]));
+
+      // Fetch prayer requests
+      const { data: requests } = await supabase
+        .from("prayer_requests")
+        .select("id, location, author_name")
+        .in("id", prayerRequestIds);
+      
+      const requestsMap = new Map((requests || []).map(r => [r.id, r]));
+
+      const combined = intercessions.map(i => ({
+        ...i,
+        profiles: profileMap.get(i.user_id),
+        prayer_requests: requestsMap.get(i.prayer_request_id)
+      }));
+
+      setActivities(combined);
+    } else {
+      setActivities([]);
     }
     setLoading(false);
   };
@@ -88,9 +111,9 @@ const Community = () => {
     if (!selectedMapState || !selectedMapCity) return;
     
     setMapLoading(true);
-    const { data } = await supabase
-      .from('parish_stats')
-      .select('*')
+    const { data } = await (supabase
+      .from('parish_stats' as any)
+      .select('*') as any)
       .eq('state', selectedMapState)
       .ilike('city', `%${selectedMapCity}%`);
 
@@ -189,7 +212,7 @@ const Community = () => {
                                  </span>
                                </div>
                                <div className="flex items-center gap-3">
-                                 <Progress value={percentage} className="h-1.5 flex-1 bg-primary/10" indicatorClassName="bg-primary" />
+                                 <Progress value={percentage} className="h-1.5 flex-1 bg-primary/10" />
                                  <span className="text-[10px] font-bold text-muted-foreground w-8 text-right">{percentage}%</span>
                                </div>
                              </Card>
@@ -248,7 +271,9 @@ const Community = () => {
                   ))
                 ) : activities.length > 0 ? (
                   activities.map((activity, index) => {
-                    const firstName = activity.profiles?.full_name?.split(" ")[0] || activity.prayer_requests?.author_name?.split(" ")[0] || "Um intercessor";
+                    const firstName = activity.profiles?.show_real_name 
+                      ? (activity.profiles?.display_name || activity.profiles?.full_name?.split(" ")[0] || "Um intercessor")
+                      : "Um intercessor";
                     const city = activity.profiles?.city || activity.prayer_requests?.location || "Lugar Sagrado";
                     
                     return (

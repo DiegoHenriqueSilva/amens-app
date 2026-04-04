@@ -20,7 +20,17 @@ const Submit = () => {
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) navigate("/auth");
+      if (!session) {
+        navigate("/auth");
+      } else {
+        const city = session.user.user_metadata?.city;
+        const state = session.user.user_metadata?.state;
+        if (city && state) {
+          setFormData(prev => ({ ...prev, location: `${city}, ${state}` }));
+        } else if (city) {
+          setFormData(prev => ({ ...prev, location: city }));
+        }
+      }
     });
   }, [navigate]);
 

@@ -15,49 +15,38 @@ const FloatingName: React.FC<FloatingNameProps> = ({ name, delay }) => {
   const frame = useCurrentFrame();
   const { fps, width, height } = useVideoConfig();
 
-  // The animation starts at frame 'delay'
-  const startFrame = delay;
-  const relativeFrame = frame - startFrame;
+  // Animação começa no frame 'delay'
+  const relativeFrame = frame - delay;
 
-  // We want the name to float for a specific duration
-  const duration = 150; // A bit slower for a more peaceful feel
+  // Vertical Stability + Gentle Sway (Flowing in a channel)
+  const yBase = useMemo(() => (height * 0.2) + (Math.random() * height * 0.55), [height]);
+  const verticalSway = Math.sin(relativeFrame / 25) * 12;
+  const y = yBase + verticalSway;
 
-  // Opacity: Fade in and out
+  // Horizontal Movement (Left to Right)
+  const duration = 200; // Slower for a more meditative feel
+  const x = interpolate(
+    relativeFrame,
+    [0, duration],
+    [-80, width + 80],
+    { extrapolateLeft: "clamp", extrapolateRight: "clamp" }
+  );
+
+  // Opacity: Fade in at 10% and out at 90% of duration
   const opacity = interpolate(
     relativeFrame,
-    [0, 25, duration - 30, duration],
+    [0, 20, duration - 30, duration],
     [0, 1, 1, 0],
     { extrapolateLeft: "clamp", extrapolateRight: "clamp" }
   );
 
-  // Vertical Movement: From the middle area upwards
-  const y = interpolate(
-    relativeFrame,
-    [0, duration],
-    [height * 0.65, -50],
-    { extrapolateLeft: "clamp", extrapolateRight: "clamp" }
-  );
-
-  // Horizontal Movement (Wind Effect): Side dispersal + Sinusoidal wave
-  const xOffset = useMemo(() => (Math.random() - 0.5) * 280, []); 
-  
-  const windEffect = Math.sin(relativeFrame / 20) * 15; // Gentler sway
-  const horizontalPath = interpolate(
-    relativeFrame,
-    [0, duration],
-    [0, xOffset],
-    { extrapolateLeft: "clamp", extrapolateRight: "clamp" }
-  );
-
-  const x = width / 2 + horizontalPath + windEffect;
-
-  // Scaling effect using spring for a "pop"
+  // Scaling effect for a gentle entrance
   const scale = spring({
     frame: relativeFrame,
     fps,
     config: {
-      damping: 15,
-      stiffness: 90,
+      damping: 20,
+      stiffness: 80,
     },
   });
 

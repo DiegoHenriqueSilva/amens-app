@@ -33,6 +33,8 @@ const Auth = () => {
   const [states, setStates] = useState<IBGEState[]>([]);
   const [cities, setCities] = useState<IBGECity[]>([]);
   const [existingParishes, setExistingParishes] = useState<string[]>([]);
+  const [showRealName, setShowRealName] = useState(false);
+  const [displayName, setDisplayName] = useState("");
   
   // State handling
   const [loading, setLoading] = useState(false);
@@ -157,7 +159,9 @@ const Auth = () => {
           full_name: fullName,
           state: selectedState,
           city: selectedCity,
-          parish: parish
+          parish: parish,
+          show_real_name: showRealName,
+          display_name: showRealName ? displayName : null
         }
       } 
     });
@@ -202,7 +206,9 @@ const Auth = () => {
       full_name: fullName,
       state: selectedState,
       city: selectedCity,
-      parish: parish
+      parish: parish,
+      show_real_name: showRealName,
+      display_name: showRealName ? displayName : null
     });
 
     // Also update auth user metadata gracefully
@@ -211,7 +217,9 @@ const Auth = () => {
         full_name: fullName,
         state: selectedState,
         city: selectedCity,
-        parish: parish
+        parish: parish,
+        show_real_name: showRealName,
+        display_name: showRealName ? displayName : null
       }
     });
 
@@ -325,6 +333,40 @@ const Auth = () => {
                    </PopoverContent>
                  </Popover>
                  <p className="text-[10px] text-muted-foreground">Digite a sua ou escolha uma já listada na sua cidade.</p>
+              </div>
+              
+              <div className="space-y-4 pt-2 border-t border-primary/5">
+                <div className="flex items-center space-x-2">
+                  <input 
+                    type="checkbox" 
+                    id="show-real-name-incomplete" 
+                    className="w-4 h-4 rounded border-primary/20 text-primary focus:ring-primary"
+                    checked={showRealName}
+                    onChange={(e) => setShowRealName(e.target.checked)}
+                  />
+                  <Label htmlFor="show-real-name-incomplete" className="text-xs font-medium cursor-pointer">
+                    Desejo usar um nome público ao invés de anônimo
+                  </Label>
+                </div>
+
+                <AnimatePresence>
+                  {showRealName && (
+                    <motion.div 
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="space-y-2 overflow-hidden"
+                    >
+                      <Label className="text-xs">Qual nome você deseja utilizar no aplicativo?</Label>
+                      <Input 
+                        placeholder="Ex: João, Maria..." 
+                        value={displayName} 
+                        onChange={(e) => setDisplayName(e.target.value)}
+                        required={showRealName}
+                      />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
 
               <Button type="submit" className="w-full gradient-divine" disabled={loading}>
@@ -471,6 +513,40 @@ const Auth = () => {
                          </PopoverContent>
                        </Popover>
                        <p className="text-[10px] text-muted-foreground opacity-70">Encontre a sua ou digite uma nova.</p>
+                    </div>
+
+                    <div className="space-y-4 py-2 border-y border-primary/5">
+                      <div className="flex items-center space-x-2">
+                        <input 
+                          type="checkbox" 
+                          id="show-real-name-signup" 
+                          className="w-4 h-4 rounded border-primary/20 text-primary focus:ring-primary"
+                          checked={showRealName}
+                          onChange={(e) => setShowRealName(e.target.checked)}
+                        />
+                        <Label htmlFor="show-real-name-signup" className="text-xs font-medium cursor-pointer">
+                          Desejo usar um nome público ao invés de anônimo
+                        </Label>
+                      </div>
+
+                      <AnimatePresence>
+                        {showRealName && (
+                          <motion.div 
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: "auto" }}
+                            exit={{ opacity: 0, height: 0 }}
+                            className="space-y-2 overflow-hidden"
+                          >
+                            <Label className="text-xs">Nome para exibição no aplicativo</Label>
+                            <Input 
+                              placeholder="Ex: Pedro, Ana..." 
+                              value={displayName} 
+                              onChange={(e) => setDisplayName(e.target.value)}
+                              required={showRealName}
+                            />
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
                     </div>
 
                     <div className="space-y-2 pt-2">

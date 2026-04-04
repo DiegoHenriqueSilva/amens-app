@@ -11,6 +11,7 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Check, ChevronsUpDown, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { motion, AnimatePresence } from "framer-motion";
 
 export function CompleteProfileDialog() {
   const [isOpen, setIsOpen] = useState(false);
@@ -27,6 +28,8 @@ export function CompleteProfileDialog() {
   const [states, setStates] = useState<IBGEState[]>([]);
   const [cities, setCities] = useState<IBGECity[]>([]);
   const [existingParishes, setExistingParishes] = useState<string[]>([]);
+  const [showRealName, setShowRealName] = useState(false);
+  const [displayName, setDisplayName] = useState("");
   const [popoverOpen, setPopoverOpen] = useState(false);
 
   useEffect(() => {
@@ -46,6 +49,12 @@ export function CompleteProfileDialog() {
         setIsOpen(true);
         if (profile?.full_name) setFullName(profile.full_name);
         else if (session.user.user_metadata?.full_name) setFullName(session.user.user_metadata.full_name);
+        
+        if (profile?.show_real_name) setShowRealName(profile.show_real_name);
+        else if (session.user.user_metadata?.show_real_name) setShowRealName(session.user.user_metadata.show_real_name);
+        
+        if (profile?.display_name) setDisplayName(profile.display_name);
+        else if (session.user.user_metadata?.display_name) setDisplayName(session.user.user_metadata.display_name);
         
         // Pre-fill if some data already exists
         if (profile?.state) setSelectedState(profile.state);
@@ -98,7 +107,9 @@ export function CompleteProfileDialog() {
       full_name: fullName,
       state: selectedState,
       city: selectedCity,
-      parish: parish
+      parish: parish,
+      show_real_name: showRealName,
+      display_name: showRealName ? displayName : null
     });
 
     if (!error) {
@@ -108,7 +119,9 @@ export function CompleteProfileDialog() {
           full_name: fullName,
           state: selectedState,
           city: selectedCity,
-          parish: parish
+          parish: parish,
+          show_real_name: showRealName,
+          display_name: showRealName ? displayName : null
         }
       });
       
@@ -245,6 +258,41 @@ export function CompleteProfileDialog() {
             <p className="text-[10px] text-muted-foreground px-1">
               Dica: Se sua paróquia já foi cadastrada por outro fiel, ela aparecerá na lista.
             </p>
+          </div>
+
+          <div className="space-y-4 pt-2 border-t border-primary/5">
+            <div className="flex items-center space-x-2">
+              <input 
+                type="checkbox" 
+                id="show-real-name-dialog" 
+                className="w-4 h-4 rounded border-primary/20 text-primary focus:ring-primary"
+                checked={showRealName}
+                onChange={(e) => setShowRealName(e.target.checked)}
+              />
+              <Label htmlFor="show-real-name-dialog" className="text-xs font-medium cursor-pointer">
+                Desejo usar um nome público ao invés de anônimo
+              </Label>
+            </div>
+
+            <AnimatePresence>
+              {showRealName && (
+                <motion.div 
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="space-y-2 overflow-hidden px-1"
+                >
+                  <Label className="text-xs">Qual nome você deseja utilizar no aplicativo?</Label>
+                  <Input 
+                    placeholder="Ex: Pedro, Maria..." 
+                    value={displayName} 
+                    onChange={(e) => setDisplayName(e.target.value)}
+                    required={showRealName}
+                    className="rounded-xl border-primary/10"
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
 
           <Button 
