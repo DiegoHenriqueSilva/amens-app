@@ -57,9 +57,14 @@ const Community = () => {
 
   const fetchRecentActivities = async () => {
     setLoading(true);
+    // Fetch with profiles and prayer_requests info
     const { data: intercessions } = await supabase
       .from("prayer_intercessions")
-      .select("*, prayer_requests(location)")
+      .select(`
+        *, 
+        profiles(full_name, city), 
+        prayer_requests(location, author_name)
+      `)
       .order("created_at", { ascending: false })
       .limit(15);
 
@@ -242,27 +247,32 @@ const Community = () => {
                     <Card key={i} className="p-5 border-primary/5 bg-white/40 rounded-3xl animate-pulse h-20" />
                   ))
                 ) : activities.length > 0 ? (
-                  activities.map((activity, index) => (
-                    <motion.div
-                      key={activity.id}
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: index * 0.05 }}
-                    >
-                      <Card className="p-5 flex items-center gap-4 border-primary/5 soft-shadow bg-white/60 rounded-[1.8rem] hover:bg-white transition-all transform hover:-translate-y-0.5">
-                        <div className="w-12 h-12 bg-secondary/50 rounded-2xl flex items-center justify-center text-primary/70 border border-primary/10">
-                           <Sparkles className="w-6 h-6" />
-                        </div>
-                        <div className="flex-1">
-                          <p className="text-[13px] font-medium leading-tight text-foreground/90">
-                            Uma pessoa em <span className="text-primary font-bold">{(activity.prayer_requests as any)?.location || "Lugar Sagrado"}</span> acabou de interceder por uma causa.
-                          </p>
-                          <p className="text-[10px] text-muted-foreground mt-1 font-bold">{formatTimeAgo(activity.created_at)}</p>
-                        </div>
-                        <Heart className="w-4 h-4 text-primary/30 fill-primary/5" />
-                      </Card>
-                    </motion.div>
-                  ))
+                  activities.map((activity, index) => {
+                    const firstName = activity.profiles?.full_name?.split(" ")[0] || activity.prayer_requests?.author_name?.split(" ")[0] || "Um intercessor";
+                    const city = activity.profiles?.city || activity.prayer_requests?.location || "Lugar Sagrado";
+                    
+                    return (
+                      <motion.div
+                        key={activity.id}
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: index * 0.05 }}
+                      >
+                        <Card className="p-5 flex items-center gap-4 border-primary/5 soft-shadow bg-white/60 rounded-[1.8rem] hover:bg-white transition-all transform hover:-translate-y-0.5">
+                          <div className="w-12 h-12 bg-secondary/50 rounded-2xl flex items-center justify-center text-primary/70 border border-primary/10">
+                             <Sparkles className="w-6 h-6" />
+                          </div>
+                          <div className="flex-1">
+                            <p className="text-[13px] font-medium leading-tight text-foreground/90">
+                              <span className="text-primary font-bold">{firstName}</span> de <span className="font-bold">{city}</span> acabou de interceder por uma causa.
+                            </p>
+                            <p className="text-[10px] text-muted-foreground mt-1 font-bold">{formatTimeAgo(activity.created_at)}</p>
+                          </div>
+                          <Heart className="w-4 h-4 text-primary/30 fill-primary/5" />
+                        </Card>
+                      </motion.div>
+                    );
+                  })
                 ) : (
                   <div className="text-center py-10 opacity-40">
                     <p className="text-sm italic">O silêncio é prece, mas a comunidade logo se moverá... 🙏</p>

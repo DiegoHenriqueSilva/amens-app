@@ -10,9 +10,10 @@ interface Prayer {
 
 interface PrayerTreeProps {
   prayers: Prayer[];
+  level?: number;
 }
 
-const PrayerTree: React.FC<PrayerTreeProps> = ({ prayers }) => {
+const PrayerTree: React.FC<PrayerTreeProps> = ({ prayers, level = 1 }) => {
   const { width, height } = useVideoConfig();
 
   // Sort prayers by timestamp (optional, but good for consistency)
@@ -30,7 +31,7 @@ const PrayerTree: React.FC<PrayerTreeProps> = ({ prayers }) => {
     >
       {/* Tree Visualization */}
       <div style={{ position: "relative", zIndex: 1, pointerEvents: "none" }}>
-        <TreeSVG />
+        <TreeSVG level={level} />
       </div>
 
       {/* Floating Names of Intercessors */}
@@ -38,9 +39,7 @@ const PrayerTree: React.FC<PrayerTreeProps> = ({ prayers }) => {
         <FloatingName
           key={`${prayer.name}-${index}`}
           name={prayer.name}
-          // Offset each name's start frame to create a continuous flow
-          // Each name starts floating 30 frames apart (1 second at 30fps)
-          delay={index * 30}
+          delay={index * 35} // Slightly more spacing
         />
       ))}
     </AbsoluteFill>
