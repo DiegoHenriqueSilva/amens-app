@@ -11,6 +11,15 @@ interface FloatingNameProps {
   delay: number;
 }
 
+// Simple pseudo-noise function using multiple harmonics
+const organicNoise = (seed: number, t: number) => {
+  return (
+    Math.sin(seed + t * 0.5) * 0.5 +
+    Math.sin(seed * 1.5 + t * 1.2) * 0.3 +
+    Math.cos(seed * 0.7 + t * 0.8) * 0.2
+  );
+};
+
 const FloatingName: React.FC<FloatingNameProps> = ({ name, delay }) => {
   const frame = useCurrentFrame();
   const { fps, width, height } = useVideoConfig();
@@ -18,9 +27,13 @@ const FloatingName: React.FC<FloatingNameProps> = ({ name, delay }) => {
   // Animação começa no frame 'delay'
   const relativeFrame = frame - delay;
 
-  // Vertical Stability + Gentle Sway (Flowing in a channel)
-  const yBase = useMemo(() => (height * 0.2) + (Math.random() * height * 0.55), [height]);
-  const verticalSway = Math.sin(relativeFrame / 25) * 12;
+  // Vertical Stability + Organic Noise Float (Flowing in a channel)
+  const seed = useMemo(() => Math.random() * 1000, []);
+  const yBase = useMemo(() => (height * 0.15) + (Math.random() * height * 0.7), [height]);
+  
+  // Noise-based sway for a more unpredictable, organic feel
+  const t = relativeFrame / 40;
+  const verticalSway = organicNoise(seed, t) * 45;
   const y = yBase + verticalSway;
 
   // Horizontal Movement (Left to Right)
