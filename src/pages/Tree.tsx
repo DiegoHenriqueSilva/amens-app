@@ -88,7 +88,7 @@ const Tree = () => {
           </motion.div>
 
           {/* Core Tree Visualization */}
-          <div className="relative h-[380px] flex flex-col items-center justify-center mb-6">
+          <div className="relative h-[382px] flex flex-col items-center justify-center mb-6">
             <AnimatePresence mode="wait">
               <motion.div 
                 key={growthLevel}
@@ -106,7 +106,7 @@ const Tree = () => {
                 ) : (
                   <Player
                     component={PrayerTree}
-                    durationInFrames={300} // Fixed duration for loop feel
+                    durationInFrames={600} // Eternal feel: 20 seconds loop
                     compositionWidth={400}
                     compositionHeight={450}
                     fps={30}
