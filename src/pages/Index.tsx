@@ -74,7 +74,7 @@ const Index = () => {
             body: { referrer_user_id: storedRef, referred_user_id: session.user.id },
           }).then(({ error }) => {
             if (!error) {
-              toast.success("ReferÃªncia processada! Que bom ter vocÃª aqui. ðŸ™");
+              toast.success("Referência processada! Que bom ter você aqui. ðŸ™");
             }
           }).catch(e => console.error("Referral processing error:", e));
           localStorage.removeItem("fe_referrer");
@@ -90,22 +90,22 @@ const Index = () => {
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
-    toast.success("AtÃ© breve! Que a paz esteja com vocÃª. ðŸ™");
+    toast.success("Até breve! Que a paz esteja com você. ðŸ™");
   };
 
   return (
     <PageTransition>
-      <div className="min-h-screen pb-24"> {/* EspaÃ§o para a bottom nav */}
+      <div className="min-h-screen pb-24"> {/* Espaço para a bottom nav */}
         <CompleteProfileDialog />
         
         <div className="container mx-auto px-6 py-8 relative z-10 max-w-lg">
           
           {/* Header Mobile Style */}
           <motion.div className="text-center mb-8 pt-4" initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
-             <h1 className="text-5xl font-bold text-foreground mb-1 tracking-tight text-glow text-soft-outline">AmÃ©ns</h1>
+             <h1 className="text-5xl font-bold text-foreground mb-1 tracking-tight text-glow text-soft-outline">Améns</h1>
              <div className="flex items-center justify-center gap-2 text-[#8b6508] text-glow">
                 <Sparkles className="w-3 h-3" />
-                <span className="text-xs uppercase tracking-[0.2em] font-bold">Unidos pela FÃ©</span>
+                <span className="text-xs uppercase tracking-[0.2em] font-bold">Unidos pela Fé</span>
                 <Sparkles className="w-3 h-3" />
              </div>
           </motion.div>
@@ -127,7 +127,7 @@ const Index = () => {
                   ))}
                 </div>
                 <p className="text-[13px] text-foreground font-semibold text-glow">
-                  VocÃª faz parte dessa corrente. <span className="text-primary font-bold">{onlineCount} pessoas</span> estÃ£o conectadas agora.
+                  Você faz parte dessa corrente. <span className="text-primary font-bold">{onlineCount} pessoas</span> estào conectadas agora.
                 </p>
               </motion.div>
             )}
@@ -152,11 +152,11 @@ const Index = () => {
                   </div>
                   <div>
                     <h2 className="text-lg font-bold mb-2">Orar por uma Causa</h2>
-                    <p className="text-xs text-muted-foreground leading-tight mb-4 font-medium">Receba um pedido e seja um instrumento de graÃ§a</p>
+                    <p className="text-xs text-muted-foreground leading-tight mb-4 font-medium">Receba um pedido e seja um instrumento de graça</p>
                   </div>
                   <Button size="sm" className="w-full rounded-full text-xs py-5 font-bold shadow-sm" style={{background: 'linear-gradient(135deg, #c9a227, #e8c547)', color: '#3d2800'}}>
                     <Sparkles className="w-3 h-3 mr-2" />
-                    ComeÃ§ar
+                    Começar
                   </Button>
                 </Card>
               </Link>
@@ -188,7 +188,7 @@ const Index = () => {
                   </div>
                   <div>
                     <h2 className="text-lg font-bold mb-2">Evangelho do Dia</h2>
-                    <p className="text-xs text-muted-foreground leading-tight mb-4 font-medium">A palavra sagrada com reflexÃµes da IA</p>
+                    <p className="text-xs text-muted-foreground leading-tight mb-4 font-medium">A palavra sagrada com reflexões da IA</p>
                   </div>
                   <Button size="sm" className="w-full rounded-full text-xs py-5 font-bold shadow-sm border-0" style={{background: 'linear-gradient(135deg, #c8a830, #f0d060)', color: '#3d2800'}}>
                     <Sun className="w-3 h-3 mr-2" />
@@ -206,7 +206,7 @@ const Index = () => {
                   </div>
                   <div>
                     <h2 className="text-lg font-bold mb-2">Divina Promessa</h2>
-                    <p className="text-xs text-muted-foreground leading-tight mb-4 font-medium">Uma citaÃ§Ã£o bÃ­blica para seu coraÃ§Ã£o</p>
+                    <p className="text-xs text-muted-foreground leading-tight mb-4 font-medium">Uma citaçào bíblica para seu coraçào</p>
                   </div>
                   <Button size="sm" className="w-full rounded-full text-xs py-5 font-bold shadow-sm border-0" style={{background: 'linear-gradient(135deg, #a0720a, #c9951f)', color: '#fff8e1'}}>
                     <Sparkles className="w-3 h-3 mr-2" />
@@ -227,9 +227,9 @@ const Index = () => {
                     </div>
                     <div className="flex-1">
                        <h3 className="text-sm font-bold">Minhas Preces</h3>
-                       <p className="text-[11px] text-muted-foreground font-medium">Veja quem orou por vocÃª</p>
+                       <p className="text-[11px] text-muted-foreground font-medium">Veja quem orou por você</p>
                     </div>
-                    <Button variant="outline" size="sm" className="rounded-full text-[10px] h-8 px-4 border-primary/20 text-primary">Ver HistÃ³rico</Button>
+                    <Button variant="outline" size="sm" className="rounded-full text-[10px] h-8 px-4 border-primary/20 text-primary">Ver Histórico</Button>
                  </Card>
                </Link>
              </motion.div>
@@ -241,8 +241,8 @@ const Index = () => {
                        <HandHeart className="w-5 h-5" />
                     </div>
                     <div className="flex-1">
-                       <h3 className="text-sm font-bold">Minhas IntercessÃµes</h3>
-                       <p className="text-[11px] text-muted-foreground font-medium">Causas que vocÃª apoiou</p>
+                       <h3 className="text-sm font-bold">Minhas Intercessões</h3>
+                       <p className="text-[11px] text-muted-foreground font-medium">Causas que você apoiou</p>
                     </div>
                     <Button variant="outline" size="sm" className="rounded-full text-[10px] h-8 px-4 border-primary/20 text-primary">Ver Lista</Button>
                  </Card>

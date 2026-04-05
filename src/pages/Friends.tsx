@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -20,7 +20,7 @@ const Friends = () => {
   const handleCopyCode = () => {
     if (myCode) {
       navigator.clipboard.writeText(myCode);
-      toast.success("CÃ³digo copiado! Compartilhe com seus amigos. ðŸ™");
+      toast.success("Código copiado! Compartilhe com seus amigos. ðŸ™");
     }
   };
 
@@ -59,9 +59,9 @@ const Friends = () => {
             <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-primary/20">
               <Users className="w-8 h-8 text-primary" />
             </div>
-            <h1 className="text-4xl font-bold text-foreground mb-2 text-glow">Amigos da FÃ©</h1>
+            <h1 className="text-4xl font-bold text-foreground mb-2 text-glow">Amigos da Fé</h1>
             <div className="divider-gold max-w-[8rem] mx-auto mb-4" />
-            <p className="text-sm text-muted-foreground font-medium uppercase tracking-[0.2em]">Conectados em IntercessÃ£o</p>
+            <p className="text-sm text-muted-foreground font-medium uppercase tracking-[0.2em]">Conectados em Intercessào</p>
           </motion.div>
 
           {/* My Code Section */}
@@ -74,7 +74,7 @@ const Friends = () => {
             <Card className="p-6 bg-gradient-to-br from-white/80 to-primary/5 backdrop-blur-md border-primary/15 soft-shadow rounded-[2.5rem] border-2">
               <div className="flex flex-col items-center text-center">
                 <span className="text-[10px] font-bold text-primary uppercase tracking-widest mb-3 flex items-center gap-2">
-                  <Sparkles className="w-3 h-3" /> Seu CÃ³digo de Amigo <Sparkles className="w-3 h-3" />
+                  <Sparkles className="w-3 h-3" /> Seu Código de Amigo <Sparkles className="w-3 h-3" />
                 </span>
                 <div className="flex items-center gap-3 bg-white/50 px-6 py-3 rounded-2xl border border-primary/10 mb-4 w-full justify-between group cursor-pointer active:scale-95 transition-transform" onClick={handleCopyCode}>
                   <code className="text-2xl font-black text-primary tracking-tighter tabular-nums drop-shadow-sm">
@@ -83,7 +83,7 @@ const Friends = () => {
                   <Copy className="w-5 h-5 text-primary/40 group-hover:text-primary transition-colors" />
                 </div>
                 <p className="text-[11px] text-muted-foreground font-medium max-w-[200px]">
-                  Compartilhe este cÃ³digo para que outros possam te encontrar
+                  Compartilhe este código para que outros possam te encontrar
                 </p>
               </div>
             </Card>
@@ -98,7 +98,7 @@ const Friends = () => {
           >
             <form onSubmit={handleSendRequest} className="flex gap-2">
               <Input 
-                placeholder="CÃ³digo (AMEN-XXXXXX)"
+                placeholder="Código (AMEN-XXXXXX)"
                 value={friendCodeInput}
                 onChange={(e) => setFriendCodeInput(e.target.value)}
                 className="rounded-2xl border-primary/20 bg-white/70 h-12 text-sm font-bold uppercase tracking-widest placeholder:tracking-normal placeholder:font-medium placeholder:uppercase-0"
@@ -166,8 +166,8 @@ const Friends = () => {
                 ) : (
                   <div className="text-center py-12 opacity-40 italic flex flex-col items-center">
                     <Users className="w-12 h-12 mb-3 text-muted-foreground" />
-                    <p className="text-sm">VocÃª ainda nÃ£o possui Amigos da FÃ©.</p>
-                    <p className="text-[11px] mt-1">Envie seu cÃ³digo para comeÃ§ar!</p>
+                    <p className="text-sm">Você ainda nào possui Amigos da Fé.</p>
+                    <p className="text-[11px] mt-1">Envie seu código para começar!</p>
                   </div>
                 )}
               </AnimatePresence>
@@ -194,9 +194,9 @@ const Friends = () => {
                         </div>
                         <div className="flex-1">
                           <h3 className="text-[13px] font-bold">
-                            {request.profiles?.show_real_name ? (request.profiles?.display_name || request.profiles?.full_name?.split(" ")[0]) : "AlguÃ©m"}
+                            {request.profiles?.show_real_name ? (request.profiles?.display_name || request.profiles?.full_name?.split(" ")[0]) : "Alguém"}
                           </h3>
-                          <p className="text-[10px] text-muted-foreground">Quer se conectar com vocÃª</p>
+                          <p className="text-[10px] text-muted-foreground">Quer se conectar com você</p>
                         </div>
                         <div className="flex gap-2">
                           <Button 
@@ -222,7 +222,7 @@ const Friends = () => {
                 ) : (
                   <div className="text-center py-12 opacity-40 italic flex flex-col items-center">
                     <Sparkles className="w-12 h-12 mb-3 text-muted-foreground" />
-                    <p className="text-sm">Nenhuma solicitaÃ§Ã£o pendente.</p>
+                    <p className="text-sm">Nenhuma solicitaçào pendente.</p>
                   </div>
                 )}
               </AnimatePresence>
