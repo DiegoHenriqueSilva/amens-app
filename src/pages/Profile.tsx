@@ -282,7 +282,12 @@ const Profile = () => {
               </motion.div>
             </div>
             
-            <h1 className="text-3xl font-bold text-foreground mb-1 text-soft-outline">{fullName}</h1>
+            <div className="flex items-center justify-center gap-3 mb-1">
+              <h1 className="text-3xl font-bold text-foreground text-soft-outline">{fullName}</h1>
+              <span className="text-xs font-bold text-primary/70 bg-primary/10 border border-primary/20 px-2.5 py-1 rounded-full tracking-wide whitespace-nowrap">
+                Nível {levelIndex}
+              </span>
+            </div>
             <p className="text-sm text-muted-foreground font-medium uppercase tracking-widest mb-3">{level.name}</p>
 
             <div className="flex items-center gap-2 text-sm text-muted-foreground opacity-80">

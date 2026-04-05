@@ -21,6 +21,7 @@ const Pray = () => {
   const [suggestedPrayer, setSuggestedPrayer] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [activeReaction, setActiveReaction] = useState<string | null>(null);
   const navigate = useNavigate();
   const { addXp } = useXp();
 
@@ -44,18 +45,31 @@ const Pray = () => {
       if (data && data.length > 0) {
         const randomRequest = data[Math.floor(Math.random() * data.length)];
         setPrayerRequest(randomRequest);
+        setActiveReaction(null); // Reset reação ao trocar de causa
+        setSuggestedPrayer("");
+
         await supabase.from('prayer_requests').update({ prayer_count: randomRequest.prayer_count + 1 }).eq('id', randomRequest.id);
         
         // Record intercession
-        const { data: { session } } = await supabase.auth.getSession();
         if (session) {
           await supabase.from('prayer_intercessions').upsert({
             prayer_request_id: randomRequest.id,
             user_id: session.user.id,
           }, { onConflict: 'prayer_request_id,user_id' });
+
+          // Check if user already reacted to this prayer
+          const { data: existingReaction } = await supabase
+            .from('prayer_reactions')
+            .select('reaction_type')
+            .eq('prayer_request_id', randomRequest.id)
+            .eq('reactor_user_id', session.user.id)
+            .maybeSingle();
+
+          if (existingReaction) {
+            setActiveReaction(existingReaction.reaction_type);
+          }
         }
         
-        setSuggestedPrayer("");
         await addXp("pray");
         toast.success(`+${XP_REWARDS.pray} XP por orar!`);
       } else {
@@ -228,7 +242,11 @@ REGRAS ADICIONAIS:
                   <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45, delay: 0.1 }}>
                     <Card className="p-8 soft-shadow border-primary/15">
                       <h3 className="text-xl font-semibold mb-3 text-primary">Envie Energia e Solidariedade</h3>
-                      <p className="text-sm text-muted-foreground mb-5">Mostre seu apoio à causa</p>
+                      <p className="text-sm text-muted-foreground mb-5">
+                        {activeReaction
+                          ? "Você já enviou sua reação — clique em outro para trocar"
+                          : "Mostre seu apoio à causa"}
+                      </p>
                       <div className="flex flex-wrap gap-3 justify-center">
                         {[
                           { type: "love", emoji: "❤️", label: "Compaixão" },
@@ -236,52 +254,81 @@ REGRAS ADICIONAIS:
                           { type: "patience", emoji: "⏳", label: "Paciência" },
                           { type: "strength", emoji: "💪", label: "Força" },
                           { type: "empathy", emoji: "🥺", label: "Empatia" },
-                        ].map((reaction, i) => (
-                          <motion.button
-                            key={reaction.type}
-                            initial={{ opacity: 0, scale: 0.8 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            transition={{ delay: 0.1 + i * 0.05 }}
-                            whileHover={{ scale: 1.15 }}
-                            whileTap={{ scale: 0.9 }}
-                            className="flex flex-col items-center gap-1.5 p-3 rounded-lg hover:bg-primary/5 transition-colors"
-                            onClick={async () => {
-                              try {
-                                const { data: { session } } = await supabase.auth.getSession();
-                                if (!session) return;
+                        ].map((reaction, i) => {
+                          const isActive = activeReaction === reaction.type;
+                          const isOtherActive = activeReaction !== null && !isActive;
+                          return (
+                            <motion.button
+                              key={reaction.type}
+                              initial={{ opacity: 0, scale: 0.8 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              transition={{ delay: 0.1 + i * 0.05 }}
+                              whileHover={{ scale: 1.15 }}
+                              whileTap={{ scale: 0.9 }}
+                              className={`flex flex-col items-center gap-1.5 p-3 rounded-xl transition-all duration-200 ${
+                                isActive
+                                  ? "bg-primary/15 ring-2 ring-primary/40 shadow-sm"
+                                  : isOtherActive
+                                  ? "opacity-35 hover:opacity-60 hover:bg-primary/5"
+                                  : "hover:bg-primary/5"
+                              }`}
+                              onClick={async () => {
+                                try {
+                                  const { data: { session } } = await supabase.auth.getSession();
+                                  if (!session) return;
 
-                                // Resolve sender info for personalized notification
-                                const senderFullName = session.user.user_metadata?.full_name || "";
-                                const senderFirstName = senderFullName.split(" ")[0] || "Um irmão";
-                                const senderCity = session.user.user_metadata?.city || "";
+                                  if (isActive) {
+                                    // Toggle off — remove reaction
+                                    await supabase
+                                      .from("prayer_reactions")
+                                      .delete()
+                                      .eq("prayer_request_id", prayerRequest.id)
+                                      .eq("reactor_user_id", session.user.id);
+                                    setActiveReaction(null);
+                                    toast.success("Reação removida.");
+                                    return;
+                                  }
 
-                                await supabase.from("prayer_reactions").insert({
-                                  prayer_request_id: prayerRequest.id,
-                                  reactor_user_id: session.user.id,
-                                  reaction_type: reaction.type,
-                                });
+                                  // Resolve sender info for personalized notification
+                                  const senderFullName = session.user.user_metadata?.full_name || "";
+                                  const senderFirstName = senderFullName.split(" ")[0] || "Um irmão";
+                                  const senderCity = session.user.user_metadata?.city || "";
 
-                                // Notify the author
-                                if (prayerRequest.user_id) {
-                                  const emoji = reaction.emoji;
-                                  await supabase.from("notifications").insert({
-                                    user_id: prayerRequest.user_id,
+                                  // Upsert — replace any previous reaction
+                                  await supabase.from("prayer_reactions").upsert({
                                     prayer_request_id: prayerRequest.id,
-                                    message: `${emoji} ${senderFirstName}${senderCity ? ` (${senderCity})` : ""} reagiu com ${reaction.label} ao seu pedido!`,
-                                  });
-                                }
+                                    reactor_user_id: session.user.id,
+                                    reaction_type: reaction.type,
+                                  }, { onConflict: "prayer_request_id,reactor_user_id" });
 
-                                await addXp("react");
-                                toast.success(`Reação enviada!`);
-                              } catch {
-                                toast.error("Erro ao enviar reação");
-                              }
-                            }}
-                          >
-                            <span className="text-3xl">{reaction.emoji}</span>
-                            <span className="text-[11px] text-muted-foreground">{reaction.label}</span>
-                          </motion.button>
-                        ))}
+                                  setActiveReaction(reaction.type);
+
+                                  // Notify the author only on first reaction or when changing
+                                  if (prayerRequest.user_id && !activeReaction) {
+                                    const emoji = reaction.emoji;
+                                    await supabase.from("notifications").insert({
+                                      user_id: prayerRequest.user_id,
+                                      prayer_request_id: prayerRequest.id,
+                                      message: `${emoji} ${senderFirstName}${senderCity ? ` (${senderCity})` : ""} reagiu com ${reaction.label} ao seu pedido!`,
+                                    });
+                                  }
+
+                                  if (!activeReaction) await addXp("react");
+                                  toast.success(`${reaction.emoji} Reação enviada!`);
+                                } catch {
+                                  toast.error("Erro ao enviar reação");
+                                }
+                              }}
+                            >
+                              <span className={`text-3xl transition-transform duration-150 ${isActive ? "scale-110" : ""}`}>
+                                {reaction.emoji}
+                              </span>
+                              <span className={`text-[11px] font-medium transition-colors duration-150 ${isActive ? "text-primary" : "text-muted-foreground"}`}>
+                                {reaction.label}
+                              </span>
+                            </motion.button>
+                          );
+                        })}
                       </div>
                     </Card>
                   </motion.div>
