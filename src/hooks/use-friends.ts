@@ -147,8 +147,13 @@ export const useFriends = () => {
   useEffect(() => {
     const init = async () => {
       setLoading(true);
-      await Promise.all([fetchFriends(), fetchRequests(), fetchMyCode()]);
-      setLoading(false);
+      try {
+        await Promise.all([fetchFriends(), fetchRequests(), fetchMyCode()]);
+      } catch (e) {
+        console.error("Error initializing friends data:", e);
+      } finally {
+        setLoading(false);
+      }
     };
     init();
   }, []);

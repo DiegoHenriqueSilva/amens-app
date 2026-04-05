@@ -270,7 +270,7 @@ export function CompleteProfileDialog() {
                 onChange={(e) => setShowRealName(e.target.checked)}
               />
               <Label htmlFor="show-real-name-dialog" className="text-xs font-medium cursor-pointer">
-                Desejo usar um nome público ao invés de anônimo
+                Desejo utilizar um apelido ou outro nome para manter o anonimato.
               </Label>
             </div>
 
@@ -282,7 +282,7 @@ export function CompleteProfileDialog() {
                   exit={{ opacity: 0, height: 0 }}
                   className="space-y-2 overflow-hidden px-1"
                 >
-                  <Label className="text-xs">Qual nome você deseja utilizar no aplicativo?</Label>
+                  <Label className="text-xs">Qual apelido você gostaria de usar?</Label>
                   <Input 
                     placeholder="Ex: Pedro, Maria..." 
                     value={displayName} 

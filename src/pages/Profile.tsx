@@ -217,7 +217,9 @@ const Profile = () => {
   const level = getLevel(totalXp);
   const levelIndex = CELESTIAL_LEVELS.indexOf(level) + 1;
   const levelProgress = getLevelProgress(totalXp);
-  const fullName = user.user_metadata?.full_name || "Usuário Améns";
+  const fullName = editData.showRealName 
+    ? (editData.displayName || editData.fullName.split(' ')[0]) 
+    : (editData.fullName || "Usuário Améns");
   const currentCity = user.user_metadata?.city || "";
 
   return (
@@ -389,7 +391,7 @@ const Profile = () => {
                                     onChange={(e) => setEditData({...editData, showRealName: e.target.checked})}
                                 />
                                 <Label htmlFor="show-real-name-profile" className="text-xs font-medium cursor-pointer">
-                                    Desejo usar um nome público
+                                    Desejo utilizar um apelido ou outro nome para manter o anonimato.
                                 </Label>
                             </div>
 
@@ -399,9 +401,9 @@ const Profile = () => {
                                         initial={{ opacity: 0, height: 0 }}
                                         animate={{ opacity: 1, height: "auto" }}
                                         exit={{ opacity: 0, height: 0 }}
-                                        className="space-y-2 overflow-hidden"
+                                        className="space-y-2 overflow-hidden px-1 py-2 bg-primary/5 rounded-xl border border-primary/10"
                                     >
-                                        <Label className="text-xs">Nome para exibição no aplicativo</Label>
+                                        <Label className="text-[10px] font-bold uppercase tracking-wider text-primary/70">Qual apelido você gostaria de usar?</Label>
                                         <Input 
                                             placeholder="Ex: Pedro, Ana..." 
                                             value={editData.displayName} 
