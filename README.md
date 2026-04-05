@@ -1,5 +1,42 @@
 # Welcome to your Lovable project
 
+## 🚀 Local Development Setup (Wiki)
+
+Follow these steps to mount and run the project locally on your machine:
+
+### Prerequisites
+- Ensure you have **Node.js** and **npm** installed on your system. You can download it from [nodejs.org](https://nodejs.org/).
+
+### Running the Project
+
+1. **Open your terminal** and verify your Node installation:
+   ```sh
+   node -v
+   npm -v
+   ```
+
+2. **Navigate to the project directory** (if not already there):
+   ```sh
+   cd amens-app
+   ```
+
+3. **Install dependencies**:
+   Run the following command to download all required packages:
+   ```sh
+   npm install
+   ```
+
+4. **Start the development server**:
+   Launch the project locally with auto-reloading:
+   ```sh
+   npm run dev
+   ```
+
+5. **Access the application**:
+   Open your browser and navigate to the local URL provided in your terminal (usually `http://localhost:5173` or similar).
+
+---
+
 ## Project info
 
 **URL**: https://lovable.dev/projects/249e0f77-c021-46c8-89b4-c2fec2a1a9c4
