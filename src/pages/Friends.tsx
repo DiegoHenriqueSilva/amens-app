@@ -1,4 +1,4 @@
-﻿import { useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -194,9 +194,15 @@ const Friends = () => {
                         </div>
                         <div className="flex-1">
                           <h3 className="text-[13px] font-bold">
-                            {request.profiles?.show_real_name ? (request.profiles?.display_name || request.profiles?.full_name?.split(" ")[0]) : "Alguém"}
+                            {request.profiles?.show_real_name
+                              ? (request.profiles?.display_name || request.profiles?.full_name?.split(" ")[0])
+                              : "Um intercessor"}
                           </h3>
-                          <p className="text-[10px] text-muted-foreground">Quer se conectar com você</p>
+                          <p className="text-[10px] text-muted-foreground mt-0.5">
+                            {request.profiles?.city
+                              ? `${request.profiles.city}${request.profiles.state ? ` - ${request.profiles.state}` : ""}`
+                              : "Quer se conectar com você"}
+                          </p>
                         </div>
                         <div className="flex gap-2">
                           <Button 

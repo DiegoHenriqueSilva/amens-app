@@ -52,6 +52,8 @@ export const useFriends = () => {
           full_name,
           display_name,
           show_real_name,
+          city,
+          state,
           avatar_url
         )
       `)
