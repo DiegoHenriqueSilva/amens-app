@@ -9,6 +9,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useXp } from "@/hooks/use-xp";
 import { Player } from "@remotion/player";
 import PrayerTree from "@/remotion/PrayerTree/PrayerTree";
+import BottomNav from "@/components/BottomNav";
 
 const Tree = () => {
   const navigate = useNavigate();
@@ -36,7 +37,7 @@ const Tree = () => {
       // Fetch profiles for these users
       const { data: profiles } = await supabase
         .from("profiles" as any)
-        .select("id, full_name, show_real_name, display_name")
+        .select("id, full_name, show_real_name, display_name, avatar_url")
         .in("id", userIds);
 
       const profileMap = new Map(((profiles || []) as any[]).map(p => [p.id, p]));
@@ -208,6 +209,7 @@ const Tree = () => {
              </Card>
           </motion.div>
         </div>
+        <BottomNav />
       </div>
     </PageTransition>
   );

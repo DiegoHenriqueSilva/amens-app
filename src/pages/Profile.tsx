@@ -18,6 +18,8 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
+import BottomNav from "@/components/BottomNav";
+import { Camera } from "lucide-react";
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -40,8 +42,10 @@ const Profile = () => {
     city: "",
     parish: "",
     showRealName: false,
-    displayName: ""
+    displayName: "",
+    avatarUrl: ""
   });
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -50,19 +54,31 @@ const Profile = () => {
         return;
       }
       setUser(session.user);
-      const meta = session.user.user_metadata || {};
-      setEditData({
-        fullName: meta.full_name || "",
-        state: meta.state || "",
-        city: meta.city || "",
-        parish: meta.parish || "",
-        showRealName: meta.show_real_name || false,
-        displayName: meta.display_name || ""
-      });
+      fetchProfile(session.user.id);
       fetchStats(session.user.id);
     });
     fetchStates().then(setStates);
   }, [navigate]);
+
+  const fetchProfile = async (userId: string) => {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", userId)
+      .single();
+
+    if (profile) {
+      setEditData({
+        fullName: profile.full_name || "",
+        state: profile.state || "",
+        city: profile.city || "",
+        parish: profile.parish || "",
+        showRealName: profile.show_real_name || false,
+        displayName: profile.display_name || "",
+        avatarUrl: profile.avatar_url || ""
+      });
+    }
+  };
 
   useEffect(() => {
     if (editData.state) {
@@ -138,20 +154,49 @@ const Profile = () => {
     if (profileError || authError) {
       toast.error("Erro ao salvar perfil.");
     } else {
-      setUser((prev: any) => ({
-        ...prev,
-        user_metadata: { 
-          ...prev.user_metadata, 
-          full_name: editData.fullName,
-          state: editData.state,
-          city: editData.city,
-          parish: editData.parish,
-          show_real_name: editData.showRealName,
-          display_name: editData.showRealName ? editData.displayName : null
-        },
-      }));
       setIsEditing(false);
       toast.success("Perfil atualizado com sucesso! 🙏");
+      fetchProfile(user.id);
+    }
+  };
+
+  const handleUploadAvatar = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    try {
+      setUploading(true);
+      if (!event.target.files || event.target.files.length === 0) {
+        throw new Error("Você deve selecionar uma imagem para o upload.");
+      }
+
+      const file = event.target.files[0];
+      const fileExt = file.name.split(".").pop();
+      const filePath = `${user.id}/${Math.random()}.${fileExt}`;
+
+      // 1. Upload to Storage
+      const { error: uploadError } = await supabase.storage
+        .from("avatars")
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      // 2. Get Public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from("avatars")
+        .getPublicUrl(filePath);
+
+      // 3. Update Database
+      const { error: updateError } = await supabase
+        .from("profiles")
+        .update({ avatar_url: publicUrl })
+        .eq("id", user.id);
+
+      if (updateError) throw updateError;
+
+      setEditData(prev => ({ ...prev, avatarUrl: publicUrl }));
+      toast.success("Foto de perfil atualizada! 🙏");
+    } catch (error: any) {
+      toast.error(error.message);
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -192,14 +237,39 @@ const Profile = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
           >
-            <div className="relative mb-6">
-              <div className="w-32 h-32 rounded-full p-1 bg-gradient-to-tr from-primary/40 to-accent/40 soft-shadow">
+            <div className="relative mb-6 group">
+              <div className="w-32 h-32 rounded-full p-1 bg-gradient-to-tr from-primary/40 to-accent/40 soft-shadow relative overflow-hidden">
                 <Avatar className="w-full h-full border-4 border-background">
-                  <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user.id}`} />
+                  <AvatarImage src={editData.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.id}`} className="object-cover" />
                   <AvatarFallback className="bg-secondary text-primary">
                     <User className="w-12 h-12" />
                   </AvatarFallback>
                 </Avatar>
+                
+                <label 
+                  htmlFor="avatar-upload" 
+                  className={cn(
+                    "absolute inset-0 bg-black/40 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer text-white",
+                    uploading && "opacity-100"
+                  )}
+                >
+                  {uploading ? (
+                    <Sparkles className="w-6 h-6 animate-spin" />
+                  ) : (
+                    <>
+                      <Camera className="w-6 h-6 mb-1" />
+                      <span className="text-[8px] font-bold uppercase">Alterar</span>
+                    </>
+                  )}
+                </label>
+                <input 
+                  type="file" 
+                  id="avatar-upload" 
+                  className="hidden" 
+                  accept="image/*" 
+                  onChange={handleUploadAvatar}
+                  disabled={uploading}
+                />
               </div>
               <motion.div 
                 className="absolute -bottom-2 -right-2 bg-primary text-primary-foreground text-xs font-bold px-3 py-1.5 rounded-full shadow-lg border-2 border-background"
@@ -429,6 +499,7 @@ const Profile = () => {
             <p className="text-[10px] uppercase tracking-[0.3em] font-bold">Améns • Versão 1.0.0</p>
           </div>
         </div>
+        <BottomNav />
       </div>
     </PageTransition>
   );

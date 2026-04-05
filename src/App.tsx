@@ -19,6 +19,7 @@ import Profile from "./pages/Profile";
 import Community from "./pages/Community";
 import Tree from "./pages/Tree";
 import Messages from "./pages/Messages";
+import Friends from "./pages/Friends";
 
 const queryClient = new QueryClient();
 
@@ -55,6 +56,7 @@ const App = () => {
           <Route path="/community" element={<Community />} />
           <Route path="/tree" element={<Tree />} />
           <Route path="/messages" element={<Messages />} />
+          <Route path="/friends" element={<Friends />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

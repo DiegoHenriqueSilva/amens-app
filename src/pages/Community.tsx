@@ -11,6 +11,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import { formatTimeAgo } from "@/lib/utils";
 import BrazilMap from "@/components/BrazilMap";
 import { fetchCitiesByState, type IBGECity } from "@/lib/ibge";
+import BottomNav from "@/components/BottomNav";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { User as UserIcon } from "lucide-react";
 
 const Community = () => {
   const navigate = useNavigate();
@@ -71,7 +74,7 @@ const Community = () => {
       // Fetch profiles
       const { data: profiles } = await supabase
         .from("profiles" as any)
-        .select("id, full_name, city, show_real_name, display_name")
+        .select("id, full_name, city, show_real_name, display_name, avatar_url")
         .in("id", userIds);
       
       const profileMap = new Map(((profiles || []) as any[]).map(p => [p.id, p]));
@@ -284,8 +287,13 @@ const Community = () => {
                         transition={{ delay: index * 0.05 }}
                       >
                         <Card className="p-5 flex items-center gap-4 border-primary/5 soft-shadow bg-white/60 rounded-[1.8rem] hover:bg-white transition-all transform hover:-translate-y-0.5">
-                          <div className="w-12 h-12 bg-secondary/50 rounded-2xl flex items-center justify-center text-primary/70 border border-primary/10">
-                             <Sparkles className="w-6 h-6" />
+                          <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-primary/70 border border-primary/10 overflow-hidden">
+                             <Avatar className="w-full h-full rounded-2xl">
+                                <AvatarImage src={activity.profiles?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${activity.user_id}`} className="object-cover" />
+                                <AvatarFallback className="bg-secondary text-primary">
+                                   <UserIcon className="w-6 h-6" />
+                                </AvatarFallback>
+                             </Avatar>
                           </div>
                           <div className="flex-1">
                             <p className="text-[13px] font-medium leading-tight text-foreground/90">
@@ -321,6 +329,7 @@ const Community = () => {
              </Card>
           </motion.div>
         </div>
+        <BottomNav />
       </div>
     </PageTransition>
   );

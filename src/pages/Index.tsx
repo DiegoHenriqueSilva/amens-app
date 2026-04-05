@@ -3,6 +3,11 @@ import { Card } from "@/components/ui/card";
 import { Heart, Send, Sparkles, LogOut, User, BookOpen, HandHeart, Sun, Users, Wind, Mail, Home } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+  const fetchProfile = async (userId: string) => {
+    const { data } = await supabase.from('profiles').select('full_name, avatar_url').eq('id', userId).single();
+    if (data) setProfile(data);
+  };
+
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import type { User as SupabaseUser } from "@supabase/supabase-js";
@@ -13,6 +18,7 @@ import { NotificationBell } from "@/components/NotificationBell";
 import { motion, AnimatePresence } from "framer-motion";
 import { scheduleDailyPromiseNotification } from "@/lib/notifications";
 import { CompleteProfileDialog } from "@/components/CompleteProfileDialog";
+import BottomNav from "@/components/BottomNav";
 
 const stagger = {
   animate: { transition: { staggerChildren: 0.1 } },
@@ -28,10 +34,12 @@ const Index = () => {
   const [onlineCount, setOnlineCount] = useState(0);
   const navigate = useNavigate();
   const { totalXp, loading: xpLoading } = useXp();
+  const [profile, setProfile] = useState<any>(null);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
+      if (session) fetchProfile(session.user.id);
       if (session) {
         scheduleDailyPromiseNotification();
       }
@@ -129,7 +137,7 @@ const Index = () => {
           {user && !xpLoading && (
             <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.1 }}>
               <Card className="p-5 mb-8 soft-shadow border-primary/5 bg-white/70 backdrop-blur-sm rounded-[2rem]">
-                 <XpBadge totalXp={totalXp} userName={user.user_metadata?.full_name || ""} />
+                 <XpBadge totalXp={totalXp} userName={profile?.full_name || user.user_metadata?.full_name || ""} avatarUrl={profile?.avatar_url} />
               </Card>
             </motion.div>
           )}
@@ -240,6 +248,21 @@ const Index = () => {
                  </Card>
                </Link>
              </motion.div>
+
+              <motion.div variants={fadeUp}>
+                <Link to='/friends'>
+                  <Card className='p-4 flex items-center gap-4 border-primary/5 soft-shadow bg-white/60 rounded-3xl hover:bg-white transition-colors'>
+                     <div className='w-10 h-10 bg-secondary/50 rounded-2xl flex items-center justify-center text-primary/60'>
+                        <Users className='w-5 h-5' />
+                     </div>
+                     <div className='flex-1'>
+                        <h3 className='text-sm font-bold'>Amigos da FÈ</h3>
+                        <p className='text-[11px] text-muted-foreground font-medium'>Conecte-se com outros intercessores</p>
+                     </div>
+                     <Button variant='outline' size='sm' className='rounded-full text-[10px] h-8 px-4 border-primary/20 text-primary'>Conectar</Button>
+                  </Card>
+                </Link>
+              </motion.div>
           </motion.div>
 
           {!user && (
@@ -259,34 +282,7 @@ const Index = () => {
           )}
         </div>
 
-        {/* Bottom Navigation */}
-        <nav className="nav-blur h-20 flex items-center justify-around px-4 pb-2">
-           <Link to="/" className="flex flex-col items-center gap-1 group">
-              <div className="w-12 h-1 bg-primary rounded-full mb-1 opacity-0 group-hover:opacity-100 transition-opacity" />
-              <Home className="w-6 h-6 text-primary" />
-              <span className="text-[10px] font-bold text-primary">In√≠cio</span>
-           </Link>
-           <Link to="/community" className="flex flex-col items-center gap-1 text-muted-foreground hover:text-primary transition-colors">
-              <div className="w-12 h-1 bg-primary rounded-full mb-1 opacity-0" />
-              <Users className="w-6 h-6" />
-              <span className="text-[10px] font-medium">Comunidade</span>
-           </Link>
-           <Link to="/tree" className="flex flex-col items-center gap-1 text-muted-foreground hover:text-primary transition-colors">
-              <div className="w-12 h-1 bg-primary rounded-full mb-1 opacity-0" />
-              <Wind className="w-6 h-6" />
-              <span className="text-[10px] font-medium">Fluxo</span>
-           </Link>
-           <Link to="/messages" className="flex flex-col items-center gap-1 text-muted-foreground hover:text-primary transition-colors">
-              <div className="w-12 h-1 bg-primary rounded-full mb-1 opacity-0" />
-              <Mail className="w-6 h-6" />
-              <span className="text-[10px] font-medium">Mensagens</span>
-           </Link>
-           <Link to="/profile" className="flex flex-col items-center gap-1 text-muted-foreground hover:text-primary transition-colors">
-              <div className="w-12 h-1 bg-primary rounded-full mb-1 opacity-0" />
-              <User className="w-6 h-6" />
-              <span className="text-[10px] font-medium">Perfil</span>
-           </Link>
-        </nav>
+        <BottomNav />
       </div>
     </PageTransition>
   );
