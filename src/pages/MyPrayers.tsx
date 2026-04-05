@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { ArrowLeft, Eye, Heart, Clock, MessageCircle, Check } from "lucide-react";
+import { ArrowLeft, Eye, Heart, Clock, MessageCircle, Check, Users, ChevronDown, ChevronUp } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -27,6 +27,12 @@ const FEEDBACK_OPTIONS = [
   { value: "grace_received", label: "Consegui a graça solicitada, obrigado!", emoji: "⭐" },
 ];
 
+type Intercessor = {
+  name: string;
+  city: string;
+  state: string;
+};
+
 type PrayerWithReactions = {
   id: string;
   title: string | null;
@@ -36,6 +42,7 @@ type PrayerWithReactions = {
   created_at: string;
   feedback: string | null;
   reactions: Record<string, number>;
+  intercessors: Intercessor[];
 };
 
 const MyPrayers = () => {
@@ -44,6 +51,7 @@ const MyPrayers = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [feedbackOpen, setFeedbackOpen] = useState<string | null>(null);
   const [sendingFeedback, setSendingFeedback] = useState(false);
+  const [intercessorsOpen, setIntercessorsOpen] = useState<string | null>(null);
 
   useEffect(() => {
     const load = async () => {
@@ -56,6 +64,8 @@ const MyPrayers = () => {
         if (!prayerData || prayerData.length === 0) { setPrayers([]); setIsLoading(false); return; }
 
         const prayerIds = prayerData.map((p) => p.id);
+
+        // Reactions
         const { data: reactionData } = await supabase
           .from("prayer_reactions").select("prayer_request_id, reaction_type").in("prayer_request_id", prayerIds);
 
@@ -64,7 +74,42 @@ const MyPrayers = () => {
           if (!reactionsByPrayer[r.prayer_request_id]) reactionsByPrayer[r.prayer_request_id] = {};
           reactionsByPrayer[r.prayer_request_id][r.reaction_type] = (reactionsByPrayer[r.prayer_request_id][r.reaction_type] || 0) + 1;
         });
-        setPrayers(prayerData.map((p: any) => ({ ...p, reactions: reactionsByPrayer[p.id] || {} })));
+
+        // Intercessors
+        const { data: intercessionData } = await supabase
+          .from("prayer_intercessions")
+          .select("prayer_request_id, user_id")
+          .in("prayer_request_id", prayerIds);
+
+        const intercessorsByPrayer: Record<string, Intercessor[]> = {};
+        if (intercessionData && intercessionData.length > 0) {
+          const userIds = [...new Set(intercessionData.map((i) => i.user_id))];
+          const { data: profileData } = await supabase
+            .from("profiles" as any)
+            .select("id, full_name, display_name, show_real_name, city, state")
+            .in("id", userIds);
+
+          const profileMap = new Map(((profileData || []) as any[]).map((p) => [p.id, p]));
+
+          intercessionData.forEach((i) => {
+            if (!intercessorsByPrayer[i.prayer_request_id]) intercessorsByPrayer[i.prayer_request_id] = [];
+            const profile = profileMap.get(i.user_id);
+            const name = profile?.show_real_name
+              ? (profile.display_name || profile.full_name?.split(" ")[0] || "Intercessor")
+              : "Um intercessor";
+            intercessorsByPrayer[i.prayer_request_id].push({
+              name,
+              city: profile?.city || "",
+              state: profile?.state || "",
+            });
+          });
+        }
+
+        setPrayers(prayerData.map((p: any) => ({
+          ...p,
+          reactions: reactionsByPrayer[p.id] || {},
+          intercessors: intercessorsByPrayer[p.id] || [],
+        })));
       } catch (error) {
         console.error("Error loading prayers:", error);
         toast.error("Erro ao carregar seus pedidos");
@@ -174,7 +219,7 @@ const MyPrayers = () => {
                     </div>
 
                     {totalReactions(prayer.reactions) > 0 && (
-                      <div className="flex flex-wrap gap-2 pt-3 border-t border-border mb-4">
+                      <div className="flex flex-wrap gap-2 pt-3 border-t border-border mb-3">
                         {Object.entries(prayer.reactions).map(([type, count]) => {
                           const info = REACTION_MAP[type];
                           if (!info) return null;
@@ -184,6 +229,50 @@ const MyPrayers = () => {
                             </span>
                           );
                         })}
+                      </div>
+                    )}
+
+                    {/* Intercessors List */}
+                    {prayer.intercessors.length > 0 && (
+                      <div className="mb-4">
+                        <button
+                          onClick={() => setIntercessorsOpen(intercessorsOpen === prayer.id ? null : prayer.id)}
+                          className="flex items-center gap-2 text-xs font-bold text-primary/70 uppercase tracking-wider hover:text-primary transition-colors w-full text-left"
+                        >
+                          <Users className="w-3.5 h-3.5" />
+                          {prayer.intercessors.length} {prayer.intercessors.length === 1 ? "pessoa orou" : "pessoas oraram"} por você
+                          {intercessorsOpen === prayer.id
+                            ? <ChevronUp className="w-3.5 h-3.5 ml-auto" />
+                            : <ChevronDown className="w-3.5 h-3.5 ml-auto" />}
+                        </button>
+
+                        <AnimatePresence>
+                          {intercessorsOpen === prayer.id && (
+                            <motion.div
+                              initial={{ opacity: 0, height: 0 }}
+                              animate={{ opacity: 1, height: "auto" }}
+                              exit={{ opacity: 0, height: 0 }}
+                              className="overflow-hidden"
+                            >
+                              <div className="mt-3 flex flex-wrap gap-2">
+                                {prayer.intercessors.map((intercessor, idx) => (
+                                  <span
+                                    key={idx}
+                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/5 border border-primary/10 text-xs font-medium text-foreground/80"
+                                  >
+                                    <span className="text-primary">🙏</span>
+                                    <span className="font-semibold text-foreground">{intercessor.name}</span>
+                                    {intercessor.city && (
+                                      <span className="text-muted-foreground">
+                                        , {intercessor.city}{intercessor.state ? ` - ${intercessor.state}` : ""}
+                                      </span>
+                                    )}
+                                  </span>
+                                ))}
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
                       </div>
                     )}
 
