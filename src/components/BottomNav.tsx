@@ -1,17 +1,17 @@
 import { Link, useLocation } from "react-router-dom";
-import { Home, Users, Wind, Mail, User } from "lucide-react";
+import { Home, Users, Wind, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useFriends } from "@/hooks/use-friends";
 
 const BottomNav = () => {
   const location = useLocation();
-  const { requests } = useFriends();
+  const { requests, friends } = useFriends();
   
   const navItems = [
     { path: "/", icon: Home, label: "Início" },
     { path: "/community", icon: Users, label: "Comunidade" },
     { path: "/tree", icon: Wind, label: "Fluxo" },
-    { path: "/friends", icon: Users, label: "Amigos", badge: requests.length },
+    { path: "/friends", icon: Users, label: "Amigos", badge: requests.length, friendCount: friends.length },
     { path: "/profile", icon: User, label: "Perfil" },
   ];
 
@@ -36,9 +36,21 @@ const BottomNav = () => {
                 "w-6 h-6 transition-colors",
                 isActive ? "text-primary" : "text-muted-foreground group-hover:text-primary"
               )} />
-              {item.badge && item.badge > 0 && (
+              {/* Pending requests badge (red, top-right) */}
+              {item.badge !== undefined && item.badge > 0 && (
                 <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[9px] rounded-full flex items-center justify-center border border-background font-bold animate-pulse">
                   {item.badge}
+                </span>
+              )}
+              {/* Friend count badge (gold, bottom-right) */}
+              {item.friendCount !== undefined && (
+                <span className={cn(
+                  "absolute -bottom-1.5 -right-2.5 min-w-[18px] h-[18px] px-1 text-[9px] rounded-full flex items-center justify-center border font-bold transition-all",
+                  item.friendCount > 0
+                    ? "bg-primary text-primary-foreground border-background shadow-sm"
+                    : "bg-muted text-muted-foreground border-muted-foreground/20"
+                )}>
+                  {item.friendCount}
                 </span>
               )}
             </div>
