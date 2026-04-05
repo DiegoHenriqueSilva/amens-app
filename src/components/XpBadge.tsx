@@ -1,4 +1,4 @@
-﻿import { getLevel, getNextLevel, getLevelProgress } from "@/lib/xp";
+import { getLevel, getNextLevel, getLevelProgress } from "@/lib/xp";
 import { Progress } from "@/components/ui/progress";
 import { BookOpen } from "lucide-react";
 
@@ -36,7 +36,7 @@ export function XpBadge({ totalXp, userName, avatarUrl }: XpBadgeProps) {
              <span className="text-[10px] text-muted-foreground uppercase tracking-wider">{totalXp} XP</span>
              {next && (
                <span className="text-[10px] text-muted-foreground uppercase tracking-wider">
-                 PrÃ³ximo: {next.name} ({next.minXp} XP)
+                 Próximo: {next.name} ({next.minXp} XP)
                </span>
              )}
           </div>
