@@ -3,10 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Heart, Send, Sparkles, LogOut, User, BookOpen, HandHeart, Sun, Users, Wind, Mail, Home } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-  const fetchProfile = async (userId: string) => {
-    const { data } = await supabase.from('profiles').select('full_name, avatar_url').eq('id', userId).single();
-    if (data) setProfile(data);
-  };
+
 
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -35,6 +32,11 @@ const Index = () => {
   const navigate = useNavigate();
   const { totalXp, loading: xpLoading } = useXp();
   const [profile, setProfile] = useState<any>(null);
+
+  const fetchProfile = async (userId: string) => {
+    const { data } = await supabase.from('profiles').select('full_name, avatar_url').eq('id', userId).single();
+    if (data) setProfile(data);
+  };
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -200,9 +202,9 @@ const Index = () => {
 
             <motion.div variants={fadeUp}>
               <Link to="/divine-promise">
-                <Card className="p-6 h-full text-center flex flex-col items-center justify-between border-primary/5 soft-shadow hover:bg-white transition-colors rounded-[2rem] border-dashed">
-                  <div className="w-14 h-14 bg-transparent rounded-full flex items-center justify-center mb-4 overflow-hidden">
-                    <img src="/divinaspromessas_3d.png" alt="Divina Promessa" className="w-full h-full object-cover drop-shadow-md rounded-full" />
+                <Card className="group p-6 h-full text-center flex flex-col items-center justify-between border-primary/5 soft-shadow hover:bg-white transition-colors rounded-[2rem] border-dashed">
+                  <div className="w-14 h-14 bg-transparent rounded-full flex items-center justify-center mb-4 overflow-hidden relative">
+                    <img src="/divinaspromessas_3d.png" alt="Divina Promessa" className="w-full h-full object-cover rounded-full drop-shadow-md transition-all duration-500 group-active:drop-shadow-[0_0_25px_rgba(255,215,0,1)] group-active:brightness-125 group-active:scale-110" />
                   </div>
                   <div>
                     <h2 className="text-lg font-bold mb-2">Divina Promessa</h2>
