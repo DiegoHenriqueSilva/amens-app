@@ -148,13 +148,13 @@ const Index = () => {
           <motion.div className="grid grid-cols-2 gap-5 mb-8" variants={stagger} initial="initial" animate="animate">
             <motion.div variants={fadeUp}>
               <Link to="/pray">
-                <Card className="group p-6 h-full text-center flex flex-col items-center justify-between border-primary/5 soft-shadow hover:bg-white transition-colors rounded-[2rem]">
+                <Card className="group p-6 h-full text-center flex flex-col items-center justify-between bg-transparent border-transparent shadow-none hover:bg-transparent transition-colors">
                   <div className="w-14 h-14 bg-transparent flex items-center justify-center mb-4 overflow-visible relative">
                     <img src="/oracao_3d.png" alt="Orar por uma causa" className="w-full h-full object-contain drop-shadow-md transition-all duration-500 group-active:drop-shadow-[0_0_25px_rgba(255,215,0,1)] group-active:brightness-125 group-active:scale-110" />
                   </div>
                   <div>
                     <h2 className="text-lg font-bold mb-2">Orar por uma Causa</h2>
-                    <p className="text-xs text-muted-foreground leading-tight mb-4 font-medium">Receba um pedido e seja um instrumento de graça</p>
+                    <p className="text-[13.5px] text-slate-700 leading-snug mb-4 font-semibold [text-shadow:_0_1px_2px_rgb(255_255_255_/_80%)] px-2">Receba um pedido e seja um instrumento de graça</p>
                   </div>
                   <Button size="sm" className="w-full rounded-full text-xs py-5 font-bold shadow-sm" style={{background: 'linear-gradient(135deg, #c9a227, #e8c547)', color: '#3d2800'}}>
                     <Sparkles className="w-3 h-3 mr-2" />
@@ -166,13 +166,13 @@ const Index = () => {
 
             <motion.div variants={fadeUp}>
               <Link to="/submit">
-                <Card className="group p-6 h-full text-center flex flex-col items-center justify-between border-primary/5 soft-shadow hover:bg-white transition-colors rounded-[2rem]">
+                <Card className="group p-6 h-full text-center flex flex-col items-center justify-between bg-transparent border-transparent shadow-none hover:bg-transparent transition-colors">
                   <div className="w-14 h-14 bg-transparent flex items-center justify-center mb-4 overflow-visible relative">
                     <img src="/enviaroracao_3d.png" alt="Enviar Pedido" className="w-full h-full object-contain drop-shadow-md transition-all duration-500 group-active:drop-shadow-[0_0_25px_rgba(255,215,0,1)] group-active:brightness-125 group-active:scale-110" />
                   </div>
                   <div>
                     <h2 className="text-lg font-bold mb-2">Enviar Pedido</h2>
-                    <p className="text-xs text-muted-foreground leading-tight mb-4 font-medium">Compartilhe sua necessidade e receba apoio</p>
+                    <p className="text-[13.5px] text-slate-700 leading-snug mb-4 font-semibold [text-shadow:_0_1px_2px_rgb(255_255_255_/_80%)] px-2">Compartilhe sua necessidade e receba apoio</p>
                   </div>
                   <Button size="sm" className="w-full rounded-full text-xs py-5 font-bold shadow-sm border-0" style={{background: 'linear-gradient(135deg, #b8860b, #d4a017)', color: '#fff8e1'}}>
                     <Send className="w-3 h-3 mr-2" />
@@ -184,13 +184,13 @@ const Index = () => {
 
             <motion.div variants={fadeUp}>
               <Link to="/daily-gospel">
-                <Card className="group p-6 h-full text-center flex flex-col items-center justify-between border-primary/5 soft-shadow hover:bg-white transition-colors rounded-[2rem]">
+                <Card className="group p-6 h-full text-center flex flex-col items-center justify-between bg-transparent border-transparent shadow-none hover:bg-transparent transition-colors">
                   <div className="w-14 h-14 bg-transparent flex items-center justify-center mb-4 overflow-visible relative">
                     <img src="/evangelho_3d.png" alt="Evangelho do Dia" className="w-full h-full object-contain drop-shadow-md transition-all duration-500 group-active:drop-shadow-[0_0_25px_rgba(255,215,0,1)] group-active:brightness-125 group-active:scale-110" />
                   </div>
                   <div>
                     <h2 className="text-lg font-bold mb-2">Evangelho do Dia</h2>
-                    <p className="text-xs text-muted-foreground leading-tight mb-4 font-medium">A palavra sagrada com reflexões da IA</p>
+                    <p className="text-[13.5px] text-slate-700 leading-snug mb-4 font-semibold [text-shadow:_0_1px_2px_rgb(255_255_255_/_80%)] px-2">A palavra sagrada com reflexões da IA</p>
                   </div>
                   <Button size="sm" className="w-full rounded-full text-xs py-5 font-bold shadow-sm border-0" style={{background: 'linear-gradient(135deg, #c8a830, #f0d060)', color: '#3d2800'}}>
                     <Sun className="w-3 h-3 mr-2" />
@@ -202,13 +202,13 @@ const Index = () => {
 
             <motion.div variants={fadeUp}>
               <Link to="/divine-promise">
-                <Card className="group p-6 h-full text-center flex flex-col items-center justify-between border-primary/5 soft-shadow hover:bg-white transition-colors rounded-[2rem] border-dashed">
+                <Card className="group p-6 h-full text-center flex flex-col items-center justify-between bg-transparent border-transparent shadow-none hover:bg-transparent transition-colors">
                   <div className="w-14 h-14 bg-transparent flex items-center justify-center mb-4 overflow-visible relative">
                     <img src="/divinaspromessas_3d.png" alt="Divina Promessa" className="w-full h-full object-contain drop-shadow-md transition-all duration-500 group-active:drop-shadow-[0_0_25px_rgba(255,215,0,1)] group-active:brightness-125 group-active:scale-110" />
                   </div>
                   <div>
                     <h2 className="text-lg font-bold mb-2">Divina Promessa</h2>
-                    <p className="text-xs text-muted-foreground leading-tight mb-4 font-medium">Uma citaçào bíblica para seu coraçào</p>
+                    <p className="text-[13.5px] text-slate-700 leading-snug mb-4 font-semibold [text-shadow:_0_1px_2px_rgb(255_255_255_/_80%)] px-2">Uma citação bíblica para seu coração</p>
                   </div>
                   <Button size="sm" className="w-full rounded-full text-xs py-5 font-bold shadow-sm border-0" style={{background: 'linear-gradient(135deg, #a0720a, #c9951f)', color: '#fff8e1'}}>
                     <Sparkles className="w-3 h-3 mr-2" />
