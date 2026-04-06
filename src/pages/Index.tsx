@@ -1,4 +1,4 @@
-﻿import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Heart, Send, Sparkles, LogOut, User, BookOpen, HandHeart, Sun, Users, Wind, Mail, Home } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
@@ -202,7 +202,7 @@ const Index = () => {
               <Link to="/divine-promise">
                 <Card className="p-6 h-full text-center flex flex-col items-center justify-between border-primary/5 soft-shadow hover:bg-white transition-colors rounded-[2rem] border-dashed">
                   <div className="w-14 h-14 bg-transparent rounded-full flex items-center justify-center mb-4 overflow-hidden">
-                    <img src="/divinaspromessas.png" alt="Divina Promessa" className="w-full h-full object-cover drop-shadow-md rounded-full" />
+                    <img src="/divinaspromessas_3d.png" alt="Divina Promessa" className="w-full h-full object-cover drop-shadow-md rounded-full" />
                   </div>
                   <div>
                     <h2 className="text-lg font-bold mb-2">Divina Promessa</h2>
