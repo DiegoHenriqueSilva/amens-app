@@ -148,9 +148,9 @@ const Index = () => {
           <motion.div className="grid grid-cols-2 gap-5 mb-8" variants={stagger} initial="initial" animate="animate">
             <motion.div variants={fadeUp}>
               <Link to="/pray">
-                <Card className="p-6 h-full text-center flex flex-col items-center justify-between border-primary/5 soft-shadow hover:bg-white transition-colors rounded-[2rem]">
-                  <div className="w-14 h-14 bg-transparent rounded-full flex items-center justify-center mb-4 overflow-hidden">
-                    <img src="/oracao.jpg" alt="Orar por uma causa" className="w-full h-full object-cover drop-shadow-md rounded-full" />
+                <Card className="group p-6 h-full text-center flex flex-col items-center justify-between border-primary/5 soft-shadow hover:bg-white transition-colors rounded-[2rem]">
+                  <div className="w-14 h-14 bg-transparent flex items-center justify-center mb-4 overflow-visible relative">
+                    <img src="/oracao_3d.png" alt="Orar por uma causa" className="w-full h-full object-contain drop-shadow-md transition-all duration-500 group-active:drop-shadow-[0_0_25px_rgba(255,215,0,1)] group-active:brightness-125 group-active:scale-110" />
                   </div>
                   <div>
                     <h2 className="text-lg font-bold mb-2">Orar por uma Causa</h2>
@@ -166,9 +166,9 @@ const Index = () => {
 
             <motion.div variants={fadeUp}>
               <Link to="/submit">
-                <Card className="p-6 h-full text-center flex flex-col items-center justify-between border-primary/5 soft-shadow hover:bg-white transition-colors rounded-[2rem]">
-                  <div className="w-14 h-14 bg-transparent rounded-full flex items-center justify-center mb-4 overflow-hidden">
-                    <img src="/enviaroracao.jpg" alt="Enviar Pedido" className="w-full h-full object-cover drop-shadow-md rounded-full" />
+                <Card className="group p-6 h-full text-center flex flex-col items-center justify-between border-primary/5 soft-shadow hover:bg-white transition-colors rounded-[2rem]">
+                  <div className="w-14 h-14 bg-transparent flex items-center justify-center mb-4 overflow-visible relative">
+                    <img src="/enviaroracao_3d.png" alt="Enviar Pedido" className="w-full h-full object-contain drop-shadow-md transition-all duration-500 group-active:drop-shadow-[0_0_25px_rgba(255,215,0,1)] group-active:brightness-125 group-active:scale-110" />
                   </div>
                   <div>
                     <h2 className="text-lg font-bold mb-2">Enviar Pedido</h2>
@@ -184,9 +184,9 @@ const Index = () => {
 
             <motion.div variants={fadeUp}>
               <Link to="/daily-gospel">
-                <Card className="p-6 h-full text-center flex flex-col items-center justify-between border-primary/5 soft-shadow hover:bg-white transition-colors rounded-[2rem]">
-                  <div className="w-14 h-14 bg-transparent rounded-full flex items-center justify-center mb-4 overflow-hidden">
-                    <img src="/evangelho.jpg" alt="Evangelho do Dia" className="w-full h-full object-cover drop-shadow-md rounded-full" />
+                <Card className="group p-6 h-full text-center flex flex-col items-center justify-between border-primary/5 soft-shadow hover:bg-white transition-colors rounded-[2rem]">
+                  <div className="w-14 h-14 bg-transparent flex items-center justify-center mb-4 overflow-visible relative">
+                    <img src="/evangelho_3d.png" alt="Evangelho do Dia" className="w-full h-full object-contain drop-shadow-md transition-all duration-500 group-active:drop-shadow-[0_0_25px_rgba(255,215,0,1)] group-active:brightness-125 group-active:scale-110" />
                   </div>
                   <div>
                     <h2 className="text-lg font-bold mb-2">Evangelho do Dia</h2>
@@ -203,8 +203,8 @@ const Index = () => {
             <motion.div variants={fadeUp}>
               <Link to="/divine-promise">
                 <Card className="group p-6 h-full text-center flex flex-col items-center justify-between border-primary/5 soft-shadow hover:bg-white transition-colors rounded-[2rem] border-dashed">
-                  <div className="w-14 h-14 bg-transparent rounded-full flex items-center justify-center mb-4 overflow-hidden relative">
-                    <img src="/divinaspromessas_3d.png" alt="Divina Promessa" className="w-full h-full object-cover rounded-full drop-shadow-md transition-all duration-500 group-active:drop-shadow-[0_0_25px_rgba(255,215,0,1)] group-active:brightness-125 group-active:scale-110" />
+                  <div className="w-14 h-14 bg-transparent flex items-center justify-center mb-4 overflow-visible relative">
+                    <img src="/divinaspromessas_3d.png" alt="Divina Promessa" className="w-full h-full object-contain drop-shadow-md transition-all duration-500 group-active:drop-shadow-[0_0_25px_rgba(255,215,0,1)] group-active:brightness-125 group-active:scale-110" />
                   </div>
                   <div>
                     <h2 className="text-lg font-bold mb-2">Divina Promessa</h2>
