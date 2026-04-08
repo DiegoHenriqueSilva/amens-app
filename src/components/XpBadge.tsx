@@ -32,7 +32,7 @@ export function XpBadge({ totalXp, userName, avatarUrl }: XpBadgeProps) {
           </div>
           <div className="flex items-baseline justify-between mb-1">
             <h3 className="font-bold text-foreground text-lg">
-              Nível {levelIndex !== -1 ? levelIndex : 0} {level.name}
+              Nível {levelIndex !== -1 ? levelIndex : 0} "{level.name}"
             </h3>
           </div>
           <Progress value={progress} className="h-2 bg-secondary border border-primary/5" />
