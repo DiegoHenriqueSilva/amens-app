@@ -13,6 +13,8 @@ export function XpBadge({ totalXp, userName, avatarUrl }: XpBadgeProps) {
   const next = getNextLevel(totalXp);
   const progress = getLevelProgress(totalXp);
 
+  const levelIndex = CELESTIAL_LEVELS.findIndex(l => l.name === level.name);
+  
   return (
     <div className="flex flex-col gap-2">
       <div className="flex items-center gap-4">
@@ -30,7 +32,7 @@ export function XpBadge({ totalXp, userName, avatarUrl }: XpBadgeProps) {
           </div>
           <div className="flex items-baseline justify-between mb-1">
             <h3 className="font-bold text-foreground text-lg">
-              Nível {CELESTIAL_LEVELS.indexOf(level)} "{level.name}"
+              Nível {levelIndex !== -1 ? levelIndex : 0} {level.name}
             </h3>
           </div>
           <Progress value={progress} className="h-2 bg-secondary border border-primary/5" />
