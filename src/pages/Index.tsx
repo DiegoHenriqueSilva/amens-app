@@ -101,7 +101,7 @@ const Index = () => {
           
           {/* Header Mobile Style */}
           <motion.div className="text-center mb-8 pt-4" initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
-             <h1 className="text-5xl font-bold text-foreground mb-1 tracking-tight text-glow text-soft-outline">Améns</h1>
+             <h1 className="text-5xl font-bold text-foreground mb-1 tracking-tight text-glow text-soft-outline">Améén</h1>
              <div className="flex items-center justify-center gap-2 text-[#8b6508] text-glow">
                 <Sparkles className="w-3 h-3" />
                 <span className="text-xs uppercase tracking-[0.2em] font-bold">Unidos pela Fé</span>
