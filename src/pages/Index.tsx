@@ -1,18 +1,13 @@
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Heart, Send, Sparkles, LogOut, User, BookOpen, HandHeart, Sun, Users, Wind, Mail, Home } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-  const fetchProfile = async (userId: string) => {
-    const { data } = await supabase.from('profiles').select('full_name, avatar_url').eq('id', userId).single();
-    if (data) setProfile(data);
-  };
-
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import type { User as SupabaseUser } from "@supabase/supabase-js";
 import { useXp } from "@/hooks/use-xp";
 import { XpBadge } from "@/components/XpBadge";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Heart, Send, Sparkles, LogOut, User, BookOpen, HandHeart, Sun, Users, Wind, Mail, Home } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 import PageTransition from "@/components/PageTransition";
 import { NotificationBell } from "@/components/NotificationBell";
 import { motion, AnimatePresence } from "framer-motion";
@@ -34,6 +29,11 @@ const Index = () => {
   const navigate = useNavigate();
   const { totalXp, loading: xpLoading } = useXp();
   const [profile, setProfile] = useState<any>(null);
+
+  const fetchProfile = async (userId: string) => {
+    const { data } = await supabase.from('profiles').select('full_name, avatar_url').eq('id', userId).single();
+    if (data) setProfile(data);
+  };
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -101,7 +101,7 @@ const Index = () => {
           
           {/* Header Mobile Style */}
           <motion.div className="text-center mb-8 pt-4" initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
-             <h1 className="text-5xl font-bold text-foreground mb-1 tracking-tight text-glow text-soft-outline">Améén</h1>
+             <h1 className="text-5xl font-bold text-foreground mb-1 tracking-tight text-glow text-soft-outline">Améns</h1>
              <div className="flex items-center justify-center gap-2 text-[#8b6508] text-glow">
                 <Sparkles className="w-3 h-3" />
                 <span className="text-xs uppercase tracking-[0.2em] font-bold">Unidos pela Fé</span>
