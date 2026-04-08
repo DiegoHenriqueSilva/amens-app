@@ -7,7 +7,7 @@ import { ArrowLeft, Share2, Loader2, BookOpen, Sparkles } from "lucide-react";
 import PageTransition from "@/components/PageTransition";
 import { motion } from "framer-motion";
 import { useXp } from "@/hooks/use-xp";
-import { getLevel } from "@/lib/xp";
+import { getLevel, CELESTIAL_LEVELS } from "@/lib/xp";
 import { toast } from "sonner";
 import type { User as SupabaseUser } from "@supabase/supabase-js";
 

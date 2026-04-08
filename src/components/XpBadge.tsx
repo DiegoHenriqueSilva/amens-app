@@ -1,4 +1,4 @@
-import { getLevel, getNextLevel, getLevelProgress } from "@/lib/xp";
+import { getLevel, getNextLevel, getLevelProgress, CELESTIAL_LEVELS } from "@/lib/xp";
 import { Progress } from "@/components/ui/progress";
 import { BookOpen } from "lucide-react";
 
