@@ -505,7 +505,6 @@ const Profile = () => {
             <p className="text-[10px] uppercase tracking-[0.3em] font-bold">Améns • Versão 1.0.0</p>
           </div>
         </div>
-        </div>
       </div>
     </PageTransition>
   );
