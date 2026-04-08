@@ -302,7 +302,7 @@ Responda APENAS com um objeto JSON válido no formato:
                 {user && (
                   <motion.div className="pt-2" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }}>
                     <p className="text-xs text-muted-foreground">
-                      {level.emoji} Enviando como <span className="font-semibold text-primary">{level.name}</span>. Você pode ganhar +30 XP hoje!
+                      {level.emoji} Enviando como <span className="font-semibold text-primary">Nível {CELESTIAL_LEVELS.indexOf(level)} "{level.name}"</span>. Você pode ganhar +30 XP hoje!
                     </p>
                   </motion.div>
                 )}

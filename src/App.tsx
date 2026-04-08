@@ -20,6 +20,7 @@ import Community from "./pages/Community";
 import Tree from "./pages/Tree";
 import Messages from "./pages/Messages";
 import Friends from "./pages/Friends";
+import BottomNav from "./components/BottomNav";
 
 const queryClient = new QueryClient();
 
@@ -43,23 +44,26 @@ const App = () => {
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/pray" element={<Pray />} />
-          <Route path="/submit" element={<Submit />} />
-          <Route path="/my-prayers" element={<MyPrayers />} />
-          <Route path="/my-intercessions" element={<MyIntercessions />} />
-          <Route path="/auth" element={<Auth />} />
-          <Route path="/daily-gospel" element={<DailyGospel />} />
-          <Route path="/divine-promise" element={<DivinePromise />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/community" element={<Community />} />
-          <Route path="/tree" element={<Tree />} />
-          <Route path="/messages" element={<Messages />} />
-          <Route path="/friends" element={<Friends />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <div className="min-h-screen relative pb-28">
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/pray" element={<Pray />} />
+            <Route path="/submit" element={<Submit />} />
+            <Route path="/my-prayers" element={<MyPrayers />} />
+            <Route path="/my-intercessions" element={<MyIntercessions />} />
+            <Route path="/auth" element={<Auth />} />
+            <Route path="/daily-gospel" element={<DailyGospel />} />
+            <Route path="/divine-promise" element={<DivinePromise />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/community" element={<Community />} />
+            <Route path="/tree" element={<Tree />} />
+            <Route path="/messages" element={<Messages />} />
+            <Route path="/friends" element={<Friends />} />
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+          <BottomNav />
+        </div>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

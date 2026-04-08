@@ -7,6 +7,9 @@ const BottomNav = () => {
   const location = useLocation();
   const { requests, friends } = useFriends();
   
+  // Don't show bottom nav on auth page
+  if (location.pathname === "/auth") return null;
+  
   const navItems = [
     { path: "/", icon: Home, label: "Início" },
     { path: "/community", icon: Users, label: "Comunidade" },

@@ -9,7 +9,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useXp } from "@/hooks/use-xp";
 import { Player } from "@remotion/player";
 import PrayerTree from "@/remotion/PrayerTree/PrayerTree";
-import BottomNav from "@/components/BottomNav";
 
 const Tree = () => {
   const navigate = useNavigate();
@@ -83,7 +82,7 @@ const Tree = () => {
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-background relative overflow-hidden pb-12 flex flex-col items-center">
+      <div className="min-h-screen bg-background relative overflow-hidden flex flex-col items-center">
         {/* Sky / Nature Background */}
         <div className="absolute top-0 left-0 w-full h-[60%] bg-gradient-to-b from-primary/5 to-background pointer-events-none" />
         <div className="absolute top-[10%] left-[10%] opacity-20"><Sun className="w-12 h-12 text-yellow-500 animate-pulse" /></div>
@@ -209,7 +208,6 @@ const Tree = () => {
              </Card>
           </motion.div>
         </div>
-        <BottomNav />
       </div>
     </PageTransition>
   );

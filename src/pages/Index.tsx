@@ -1,4 +1,4 @@
-﻿import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Heart, Send, Sparkles, LogOut, User, BookOpen, HandHeart, Sun, Users, Wind, Mail, Home } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
@@ -18,7 +18,6 @@ import { NotificationBell } from "@/components/NotificationBell";
 import { motion, AnimatePresence } from "framer-motion";
 import { scheduleDailyPromiseNotification } from "@/lib/notifications";
 import { CompleteProfileDialog } from "@/components/CompleteProfileDialog";
-import BottomNav from "@/components/BottomNav";
 
 const stagger = {
   animate: { transition: { staggerChildren: 0.1 } },
@@ -95,7 +94,7 @@ const Index = () => {
 
   return (
     <PageTransition>
-      <div className="min-h-screen pb-24"> {/* Espaço para a bottom nav */}
+      <div className="min-h-screen"> {/* Espaço para a bottom nav agora via App.tsx */}
         <CompleteProfileDialog />
         
         <div className="container mx-auto px-6 py-8 relative z-10 max-w-lg">
@@ -282,7 +281,7 @@ const Index = () => {
           )}
         </div>
 
-        <BottomNav />
+        </div>
       </div>
     </PageTransition>
   );

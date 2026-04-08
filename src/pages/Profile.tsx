@@ -18,7 +18,6 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
-import BottomNav from "@/components/BottomNav";
 import { Camera } from "lucide-react";
 
 const Profile = () => {
@@ -215,7 +214,7 @@ const Profile = () => {
   }
 
   const level = getLevel(totalXp);
-  const levelIndex = CELESTIAL_LEVELS.indexOf(level) + 1;
+  const levelIndex = CELESTIAL_LEVELS.indexOf(level);
   const levelProgress = getLevelProgress(totalXp);
   const fullName = editData.showRealName 
     ? (editData.displayName || editData.fullName.split(' ')[0]) 
@@ -224,7 +223,7 @@ const Profile = () => {
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-background relative overflow-hidden pb-12">
+      <div className="min-h-screen bg-background relative overflow-hidden">
         <div className="absolute top-[-10rem] left-[-10rem] w-[30rem] h-[30rem] rounded-full bg-primary/5 blur-3xl" />
         <div className="absolute bottom-[-10rem] right-[-10rem] w-[30rem] h-[30rem] rounded-full bg-accent/5 blur-3xl" />
 
@@ -288,7 +287,7 @@ const Profile = () => {
                 Nível {levelIndex}
               </span>
             </div>
-            <p className="text-sm text-muted-foreground font-medium uppercase tracking-widest mb-3">{level.name}</p>
+            <p className="text-sm text-muted-foreground font-medium uppercase tracking-widest mb-3">Nível {levelIndex} "{level.name}"</p>
 
             <div className="flex items-center gap-2 text-sm text-muted-foreground opacity-80">
               <MapPin className="w-3.5 h-3.5" />
@@ -506,7 +505,7 @@ const Profile = () => {
             <p className="text-[10px] uppercase tracking-[0.3em] font-bold">Améns • Versão 1.0.0</p>
           </div>
         </div>
-        <BottomNav />
+        </div>
       </div>
     </PageTransition>
   );

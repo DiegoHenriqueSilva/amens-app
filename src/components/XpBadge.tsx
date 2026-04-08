@@ -1,4 +1,4 @@
-﻿import { getLevel, getNextLevel, getLevelProgress } from "@/lib/xp";
+import { getLevel, getNextLevel, getLevelProgress } from "@/lib/xp";
 import { Progress } from "@/components/ui/progress";
 import { BookOpen } from "lucide-react";
 
@@ -29,7 +29,9 @@ export function XpBadge({ totalXp, userName, avatarUrl }: XpBadgeProps) {
             <span className="text-xs text-muted-foreground font-medium ml-auto">{totalXp} XP</span>
           </div>
           <div className="flex items-baseline justify-between mb-1">
-            <h3 className="font-bold text-foreground text-lg">{level.name}</h3>
+            <h3 className="font-bold text-foreground text-lg">
+              Nível {CELESTIAL_LEVELS.indexOf(level)} "{level.name}"
+            </h3>
           </div>
           <Progress value={progress} className="h-2 bg-secondary border border-primary/5" />
           <div className="flex justify-between items-center mt-1">

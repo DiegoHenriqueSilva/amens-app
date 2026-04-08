@@ -11,7 +11,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { formatTimeAgo } from "@/lib/utils";
 import BrazilMap from "@/components/BrazilMap";
 import { fetchCitiesByState, type IBGECity } from "@/lib/ibge";
-import BottomNav from "@/components/BottomNav";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { User as UserIcon } from "lucide-react";
 
@@ -130,7 +129,7 @@ const Community = () => {
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-background relative overflow-hidden pb-12">
+      <div className="min-h-screen bg-background relative overflow-hidden">
         <div className="absolute top-[-8rem] right-[-8rem] w-[25rem] h-[25rem] rounded-full bg-primary/10 blur-3xl opacity-50" />
         <div className="absolute bottom-[-8rem] left-[-8rem] w-[25rem] h-[25rem] rounded-full bg-accent/10 blur-3xl opacity-50" />
 
@@ -329,7 +328,6 @@ const Community = () => {
              </Card>
           </motion.div>
         </div>
-        <BottomNav />
       </div>
     </PageTransition>
   );
