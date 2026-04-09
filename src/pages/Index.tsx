@@ -132,7 +132,7 @@ const Index = () => {
             )}
           </AnimatePresence>
 
-          {/* User / XP Card */}
+          {/* User / Faith Points Card */}
           {user && !xpLoading && (
             <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.1 }}>
               <Card className="p-5 mb-8 soft-shadow border-primary/5 bg-white/70 backdrop-blur-sm rounded-[2rem]">

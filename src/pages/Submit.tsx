@@ -58,7 +58,7 @@ const Submit = () => {
       }]);
       if (error) throw error;
       await addXp("submit");
-      toast.success(`Pedido enviado! +${XP_REWARDS.submit} XP`);
+      toast.success(`Pedido enviado! Ganhou +${XP_REWARDS.submit} pontos de fé`);
       setFormData({ title: "", content: "", location: "" });
       setTimeout(() => navigate("/"), 2000);
     } catch (error: any) {

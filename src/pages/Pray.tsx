@@ -71,7 +71,7 @@ const Pray = () => {
         }
         
         await addXp("pray");
-        toast.success(`+${XP_REWARDS.pray} XP por orar!`);
+        toast.success(`Ganhou +${XP_REWARDS.pray} pontos de fé por orar!`);
       } else {
         toast.info("Não há causas disponíveis no momento");
       }

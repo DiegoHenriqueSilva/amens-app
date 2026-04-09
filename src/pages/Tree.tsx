@@ -66,7 +66,7 @@ const Tree = () => {
   };
 
   // Determine tree growth level (0-5)
-  // Level threshold: 500 XP per level for initial stages to show progress faster
+  // Level threshold: 1000 Pontos de Fé per level for initial stages to show progress faster
   const growthLevel = Math.min(Math.floor(communityXp / 1000), 5); 
   
   const getFlowStage = () => {
@@ -193,7 +193,7 @@ const Tree = () => {
                       />
                    </div>
                    <div className="flex justify-between items-center px-1">
-                      <span className="text-[10px] font-bold text-muted-foreground uppercase">{communityXp.toLocaleString()} XP Coletivo</span>
+                      <span className="text-[10px] font-bold text-muted-foreground uppercase">{communityXp.toLocaleString()} Pontos de Fé Coletivos</span>
                       <span className="text-[10px] font-bold text-primary uppercase">Próxima Fase</span>
                    </div>
                 </div>

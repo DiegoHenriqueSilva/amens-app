@@ -28,7 +28,7 @@ export function XpBadge({ totalXp, userName, avatarUrl }: XpBadgeProps) {
         <div className="flex-1">
           <div className="flex items-baseline justify-between mb-0.5">
             {userName && <p className="text-sm font-black uppercase tracking-widest truncate max-w-[150px]" style={{color: '#5a3e0a'}}>{userName.split(' ')[0]}</p>}
-            <span className="text-xs text-muted-foreground font-medium ml-auto">{totalXp} XP</span>
+            <span className="text-xs text-muted-foreground font-medium ml-auto">{totalXp} Pontos de Fé</span>
           </div>
           <div className="flex items-baseline justify-between mb-1">
             <h3 className="font-bold text-foreground text-lg">
@@ -37,10 +37,10 @@ export function XpBadge({ totalXp, userName, avatarUrl }: XpBadgeProps) {
           </div>
           <Progress value={progress} className="h-2 bg-secondary border border-primary/5" />
           <div className="flex justify-between items-center mt-1">
-             <span className="text-[10px] text-muted-foreground uppercase tracking-wider">{totalXp} XP</span>
+             <span className="text-[10px] text-muted-foreground uppercase tracking-wider">{totalXp} pontos</span>
              {next && (
                <span className="text-[10px] text-muted-foreground uppercase tracking-wider">
-                 Próximo: {next.name} ({next.minXp} XP)
+                 Próximo: {next.name} ({next.minXp} pontos)
                </span>
              )}
           </div>

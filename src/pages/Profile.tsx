@@ -427,7 +427,7 @@ const Profile = () => {
             )}
           </AnimatePresence>
 
-          {/* XP Progress Card */}
+          {/* Faith Points Progress Card */}
           <motion.div 
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -439,7 +439,7 @@ const Profile = () => {
                   <Trophy className="w-5 h-5 text-primary" />
                   <span className="text-sm font-bold">Progresso de Fé</span>
                 </div>
-                <span className="text-xs font-bold text-primary">{totalXp} XP Total</span>
+                <span className="text-xs font-bold text-primary">{totalXp} Pontos de Fé</span>
               </div>
               
               <div className="w-full h-4 bg-secondary/30 rounded-full overflow-hidden mb-2 p-1 border border-primary/5">
@@ -451,7 +451,7 @@ const Profile = () => {
                 />
               </div>
               <p className="text-[10px] text-center text-muted-foreground font-medium uppercase tracking-widest">
-                Próximo nível em {1000 - (totalXp % 1000)} XP
+                Próximo nível em {1000 - (totalXp % 1000)} pontos
               </p>
             </Card>
           </motion.div>
