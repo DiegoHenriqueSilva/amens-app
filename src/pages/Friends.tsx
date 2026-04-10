@@ -151,7 +151,7 @@ const Friends = () => {
                         </div>
                         <div className="flex-1">
                           <h3 className="text-sm font-bold text-foreground">
-                            {friend.show_real_name ? (friend.display_name || friend.full_name?.split(" ")[0]) : "Um intercessor"}
+                            {friend.display_name || friend.full_name?.split(" ")[0] || "Um intercessor"}
                           </h3>
                           <p className="text-[10px] text-muted-foreground font-medium flex items-center gap-1">
                              {friend.city || "Lugar Sagrado"} â€¢ {friend.state || "Brasil"}
@@ -194,9 +194,7 @@ const Friends = () => {
                         </div>
                         <div className="flex-1">
                           <h3 className="text-[13px] font-bold">
-                            {request.profiles?.show_real_name
-                              ? (request.profiles?.display_name || request.profiles?.full_name?.split(" ")[0])
-                              : "Um intercessor"}
+                            {request.profiles?.display_name || request.profiles?.full_name?.split(" ")[0] || "Um intercessor"}
                           </h3>
                           <p className="text-[10px] text-muted-foreground mt-0.5">
                             {request.profiles?.city

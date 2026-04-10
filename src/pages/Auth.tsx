@@ -64,7 +64,8 @@ const Auth = () => {
           else if (session.user.user_metadata?.full_name) setFullName(session.user.user_metadata.full_name);
           setShowIncompleteProfile(true);
         } else {
-          navigate("/");
+          const redirect = searchParams.get("redirect");
+          navigate(redirect || "/");
         }
       }
     });
@@ -78,7 +79,8 @@ const Auth = () => {
           else if (session.user.user_metadata?.full_name) setFullName(session.user.user_metadata.full_name);
           setShowIncompleteProfile(true);
         } else {
-          navigate("/");
+          const redirect = searchParams.get("redirect");
+          navigate(redirect || "/");
         }
       }
     });
@@ -230,7 +232,8 @@ const Auth = () => {
     } else {
       toast({ title: "Sucesso!", description: "Informações completadas. Bem-vindo!" });
       setShowIncompleteProfile(false);
-      navigate("/");
+      const redirect = searchParams.get("redirect");
+      navigate(redirect || "/");
     }
   };
 

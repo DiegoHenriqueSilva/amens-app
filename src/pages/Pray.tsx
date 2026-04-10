@@ -1,14 +1,16 @@
 import { useState, useEffect } from "react";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Sparkles, Heart, ArrowLeft } from "lucide-react";
+import { Sparkles, Heart, ArrowLeft, Users, Share2, MessageCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 import { useXp } from "@/hooks/use-xp";
 import { XP_REWARDS } from "@/lib/xp";
 import PageTransition from "@/components/PageTransition";
 import { motion, AnimatePresence } from "framer-motion";
+import { FriendSelector } from "@/components/FriendSelector";
 
 const fadeUp = {
   initial: { opacity: 0, y: 20 },
@@ -22,14 +24,67 @@ const Pray = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [activeReaction, setActiveReaction] = useState<string | null>(null);
+  const [friendSelectorOpen, setFriendSelectorOpen] = useState(false);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const prayerIdParam = searchParams.get("id");
   const { addXp } = useXp();
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) navigate("/auth");
+      if (!session) {
+        navigate(`/auth?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`);
+      }
     });
   }, [navigate]);
+
+  useEffect(() => {
+    if (prayerIdParam) {
+      fetchPrayerById(prayerIdParam);
+    } else {
+      fetchRandomPrayerRequest();
+    }
+  }, [prayerIdParam]);
+
+  const fetchPrayerById = async (id: string) => {
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('prayer_requests')
+        .select('*')
+        .eq('id', id)
+        .maybeSingle();
+
+      if (error) throw error;
+      if (data) {
+        setPrayerRequest(data);
+        setActiveReaction(null);
+        setSuggestedPrayer("");
+
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+          const { data: existingReaction } = await supabase
+            .from('prayer_reactions')
+            .select('reaction_type')
+            .eq('prayer_request_id', data.id)
+            .eq('reactor_user_id', session.user.id)
+            .maybeSingle();
+
+          if (existingReaction) {
+            setActiveReaction(existingReaction.reaction_type);
+          }
+        }
+      } else {
+        toast.error("Causa não encontrada.");
+        fetchRandomPrayerRequest();
+      }
+    } catch (error) {
+      console.error('Error fetching prayer by id:', error);
+      toast.error("Erro ao buscar pedido de oração");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const fetchRandomPrayerRequest = async () => {
     setIsLoading(true);
@@ -81,6 +136,44 @@ const Pray = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleInviteFriends = async (selectedIds: string[]) => {
+    if (!prayerRequest || selectedIds.length === 0) return;
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
+      const profile = session.user.user_metadata;
+      const inviterName = profile.display_name || profile.full_name?.split(" ")[0] || "Um amigo";
+
+      const notifications = selectedIds.map(friendId => ({
+        user_id: friendId,
+        message: `🙏 ${inviterName} te convidou para interceder por uma causa!`,
+        prayer_request_id: prayerRequest.id,
+        is_read: false
+      }));
+
+      const { error } = await supabase.from("notifications").insert(notifications);
+      if (error) throw error;
+
+      toast.success(`Convite enviado para ${selectedIds.length} ${selectedIds.length === 1 ? 'amigo' : 'amigos'}! 🙏`);
+      setFriendSelectorOpen(false);
+    } catch (error) {
+      console.error("Error sending invites:", error);
+      toast.error("Erro ao enviar convites.");
+    }
+  };
+
+  const handleShareWhatsApp = () => {
+    if (!prayerRequest) return;
+
+    const APP_URL = window.location.origin;
+    const shareUrl = `${APP_URL}/auth?redirect=${encodeURIComponent(`/pray?id=${prayerRequest.id}`)}`;
+    const text = `✦ Preciso da sua intercessão ✦\n\n"${prayerRequest.content}"\n\n🙏 Una-se a mim em oração através do Améns:\n${shareUrl}`;
+    
+    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
   };
 
   const generatePrayer = async () => {
@@ -225,8 +318,34 @@ REGRAS ADICIONAIS:
                       <Button onClick={fetchRandomPrayerRequest} variant="outline" disabled={isLoading} className="border-primary/20">
                         Próxima Causa
                       </Button>
+
+                      <div className="flex gap-2 w-full mt-2">
+                         <Button 
+                           variant="outline" 
+                           onClick={() => setFriendSelectorOpen(true)}
+                           className="flex-1 rounded-xl border-primary/20 text-primary hover:bg-primary/5"
+                         >
+                           <Users className="w-4 h-4 mr-2" />
+                           Convidar Amigo
+                         </Button>
+                         
+                         <Button 
+                           variant="outline" 
+                           onClick={handleShareWhatsApp}
+                           className="flex-1 rounded-xl border-green-200 text-green-600 hover:bg-green-50"
+                         >
+                           <Share2 className="w-4 h-4 mr-2" />
+                           Compartilhar
+                         </Button>
+                      </div>
                     </div>
                   </Card>
+
+                  <FriendSelector 
+                    open={friendSelectorOpen}
+                    onOpenChange={setFriendSelectorOpen}
+                    onSelect={handleInviteFriends}
+                  />
 
                   <AnimatePresence>
                     {suggestedPrayer && (

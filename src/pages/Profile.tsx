@@ -18,7 +18,8 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Camera } from "lucide-react";
+import { Camera, Users } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -45,6 +46,8 @@ const Profile = () => {
     avatarUrl: ""
   });
   const [uploading, setUploading] = useState(false);
+  const [invitedUsers, setInvitedUsers] = useState<any[]>([]);
+  const [loadingInvited, setLoadingInvited] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -55,9 +58,38 @@ const Profile = () => {
       setUser(session.user);
       fetchProfile(session.user.id);
       fetchStats(session.user.id);
+      fetchReferrals(session.user.id);
     });
     fetchStates().then(setStates);
   }, [navigate]);
+
+  const fetchReferrals = async (userId: string) => {
+    setLoadingInvited(true);
+    try {
+      // Fetch referrals and join with profiles and user_xp
+      const { data, error } = await supabase
+        .from('referrals')
+        .select(`
+          referred_user_id,
+          created_at,
+          profiles:referred_user_id (
+            full_name,
+            avatar_url
+          ),
+          user_xp:referred_user_id (
+            total_xp
+          )
+        `)
+        .eq('referrer_user_id', userId);
+
+      if (error) throw error;
+      if (data) setInvitedUsers(data);
+    } catch (err) {
+      console.error("Error fetching referrals:", err);
+    } finally {
+      setLoadingInvited(false);
+    }
+  };
 
   const fetchProfile = async (userId: string) => {
     const { data: profile } = await supabase
@@ -232,9 +264,16 @@ const Profile = () => {
             <ArrowLeft className="w-5 h-5" />
           </Button>
 
-          {/* Profile Header */}
-          <motion.div 
-            className="flex flex-col items-center text-center mb-10"
+          <Tabs defaultValue="profile" className="w-full mt-6">
+            <TabsList className="grid w-full grid-cols-2 mb-8 bg-white/50 backdrop-blur-sm rounded-full p-1 border border-primary/10 h-14">
+              <TabsTrigger value="profile" className="rounded-full data-[state=active]:bg-primary data-[state=active]:text-primary-foreground font-bold transition-all duration-300">Meu Perfil</TabsTrigger>
+              <TabsTrigger value="invited" className="rounded-full data-[state=active]:bg-primary data-[state=active]:text-primary-foreground font-bold transition-all duration-300">Meus Convidados</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="profile" className="outline-none">
+              {/* Profile Header */}
+              <motion.div 
+                className="flex flex-col items-center text-center mb-10"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
           >
@@ -475,31 +514,102 @@ const Profile = () => {
             </motion.div>
           </div>
 
-          {/* Actions */}
-          <motion.div 
-            className="space-y-4"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.4 }}
-          >
-            <Button 
-              variant="outline" 
-              className="w-full py-7 rounded-[1.5rem] border-primary/10 hover:bg-primary/5 gap-3"
-              onClick={() => navigate("/my-prayers")}
-            >
-              <Sparkles className="w-5 h-5 text-primary/70" />
-              <span className="font-bold">Gerenciar Meus Pedidos</span>
-            </Button>
-            
-            <Button 
-              variant="ghost" 
-              className="w-full py-6 rounded-[1.5rem] text-muted-foreground hover:text-destructive transition-colors gap-3"
-              onClick={handleSignOut}
-            >
-              <LogOut className="w-4 h-4" />
-              <span className="text-sm font-semibold">Sair da Conta</span>
-            </Button>
-          </motion.div>
+            </TabsContent>
+
+            <TabsContent value="invited" className="outline-none">
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="space-y-6"
+              >
+                <Card className="p-8 border-primary/5 soft-shadow bg-white/70 backdrop-blur-sm rounded-[2.5rem]">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="w-10 h-10 bg-primary/10 rounded-2xl flex items-center justify-center">
+                      <Users className="w-5 h-5 text-primary" />
+                    </div>
+                    <div>
+                      <h2 className="text-xl font-bold">Meus Convidados</h2>
+                      <p className="text-xs text-muted-foreground">Pessoas que entraram pelo seu link</p>
+                    </div>
+                  </div>
+
+                  {loadingInvited ? (
+                    <div className="py-12 text-center space-y-4">
+                      <div className="w-8 h-8 border-4 border-primary/30 border-t-primary rounded-full animate-spin mx-auto" />
+                      <p className="text-sm text-muted-foreground">Buscando convidados...</p>
+                    </div>
+                  ) : invitedUsers.length === 0 ? (
+                    <div className="py-12 text-center px-4">
+                      <div className="w-16 h-16 bg-secondary/50 rounded-full flex items-center justify-center mx-auto mb-4 opacity-50">
+                        <Users className="w-8 h-8 text-muted-foreground" />
+                      </div>
+                      <p className="text-sm font-medium text-muted-foreground mb-4">Você ainda não tem convidados registrados.</p>
+                      <Button 
+                        variant="outline" 
+                        onClick={() => navigate('/daily-gospel')}
+                        className="rounded-full h-12 px-6 border-primary/20 text-primary font-bold"
+                      >
+                        Gerar Link de Convite
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {invitedUsers.map((item) => {
+                        const invitedProfile = item.profiles;
+                        const invitedXp = item.user_xp?.total_xp || 0;
+                        const invitedLevel = getLevel(invitedXp);
+                        
+                        return (
+                          <div 
+                            key={item.referred_user_id} 
+                            className="flex items-center gap-4 p-4 rounded-3xl bg-white border border-primary/5 hover:border-primary/20 transition-all hover:translate-x-1"
+                          >
+                            <Avatar className="w-12 h-12 border-2 border-primary/10">
+                              <AvatarImage src={invitedProfile?.avatar_url} />
+                              <AvatarFallback className="bg-secondary text-primary border-primary/20">
+                                <User className="w-6 h-6" />
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="flex-1 min-w-0">
+                              <h3 className="text-sm font-bold truncate leading-tight">
+                                {invitedProfile?.full_name || "Membro da Fé"}
+                              </h3>
+                              <div className="flex items-center gap-1 mt-0.5">
+                                <span className="text-[10px] uppercase font-black tracking-wider text-primary/70">
+                                  Nível {invitedLevel.name}
+                                </span>
+                                <span className="text-[10px] text-muted-foreground">•</span>
+                                <span className="text-[10px] text-muted-foreground">
+                                  {new Date(item.created_at).toLocaleDateString()}
+                                </span>
+                              </div>
+                            </div>
+                            <div className="text-primary/40 font-bold text-lg">
+                              {invitedLevel.emoji}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </Card>
+                
+                <Card className="p-6 border-dashed border-primary/20 bg-primary/5 rounded-[2rem] text-center">
+                  <p className="text-xs text-primary font-semibold mb-3">Ganhe +20 pontos de fé por cada novo amigo!</p>
+                  <Button 
+                    className="gradient-divine w-full rounded-2xl h-11 text-xs font-bold"
+                    onClick={() => {
+                       const link = `${window.location.origin}/auth?ref=${user?.id}`;
+                       navigator.clipboard.writeText(link);
+                       toast.success("Link copiado! Compartilhe com seus amigos. 🙏");
+                    }}
+                  >
+                    Copiar Meu Link
+                  </Button>
+                </Card>
+              </motion.div>
+            </TabsContent>
+          </Tabs>
           
           <div className="text-center mt-12 opacity-30">
             <p className="text-[10px] uppercase tracking-[0.3em] font-bold">Améns • Versão 1.0.0</p>

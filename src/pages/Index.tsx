@@ -13,6 +13,8 @@ import { NotificationBell } from "@/components/NotificationBell";
 import { motion, AnimatePresence } from "framer-motion";
 import { scheduleDailyPromiseNotification } from "@/lib/notifications";
 import { CompleteProfileDialog } from "@/components/CompleteProfileDialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Check, X } from "lucide-react";
 
 const stagger = {
   animate: { transition: { staggerChildren: 0.1 } },
@@ -29,6 +31,9 @@ const Index = () => {
   const navigate = useNavigate();
   const { totalXp, loading: xpLoading } = useXp();
   const [profile, setProfile] = useState<any>(null);
+  const [showFriendPrompt, setShowFriendPrompt] = useState(false);
+  const [referrerName, setReferrerName] = useState("");
+  const [referrerIdToFriend, setReferrerIdToFriend] = useState<string | null>(null);
 
   const fetchProfile = async (userId: string) => {
     const { data } = await supabase.from('profiles').select('full_name, avatar_url').eq('id', userId).single();
@@ -71,9 +76,21 @@ const Index = () => {
           console.log("Processing referral:", storedRef);
           supabase.functions.invoke("process-referral", {
             body: { referrer_user_id: storedRef, referred_user_id: session.user.id },
-          }).then(({ error }) => {
+          }).then(async ({ error }) => {
             if (!error) {
-              toast.success("Referência processada! Que bom ter você aqui. ðŸ™");
+              toast.success("Referência processada! Que bom ter você aqui. 🙏");
+              
+              const { data: refProfile } = await supabase
+                .from('profiles')
+                .select('full_name')
+                .eq('id', storedRef)
+                .single();
+              
+              if (refProfile) {
+                setReferrerName(refProfile.full_name || "Seu amigo");
+                setReferrerIdToFriend(storedRef);
+                setShowFriendPrompt(true);
+              }
             }
           }).catch(e => console.error("Referral processing error:", e));
           localStorage.removeItem("fe_referrer");
@@ -89,13 +106,72 @@ const Index = () => {
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
-    toast.success("Até breve! Que a paz esteja com você. ðŸ™");
+    toast.success("Até breve! Que a paz esteja com você. 🙏");
   };
 
   return (
     <PageTransition>
       <div className="min-h-screen"> {/* Espaço para a bottom nav agora via App.tsx */}
         <CompleteProfileDialog />
+        
+        {/* Friendship Prompt Dialog */}
+        <Dialog open={showFriendPrompt} onOpenChange={setShowFriendPrompt}>
+          <DialogContent className="max-w-md bg-card/95 backdrop-blur-md border-primary/20 soft-shadow rounded-[2rem]">
+            <DialogHeader className="text-center">
+              <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Users className="w-8 h-8 text-primary" />
+              </div>
+              <DialogTitle className="text-2xl font-bold">Nova Amizade? ✨</DialogTitle>
+              <DialogDescription className="text-base pt-2">
+                Você entrou pelo convite de <span className="font-bold text-primary">{referrerName}</span>. 
+                Deseja enviar um pedido de amizade para ele(a)?
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter className="flex gap-3 mt-4 sm:justify-center">
+              <Button 
+                variant="outline" 
+                className="flex-1 rounded-2xl h-12" 
+                onClick={() => setShowFriendPrompt(false)}
+              >
+                <X className="w-4 h-4 mr-2" />
+                Agora não
+              </Button>
+              <Button 
+                className="flex-1 gradient-divine rounded-2xl h-12 text-primary-foreground font-bold"
+                onClick={async () => {
+                  if (referrerIdToFriend && user) {
+                    try {
+                      const { error } = await supabase
+                        .from('friend_requests')
+                        .insert({
+                          sender_id: user.id,
+                          receiver_id: referrerIdToFriend,
+                          status: 'pending'
+                        });
+                      
+                      if (error) {
+                        if (error.code === '23505') {
+                          toast.info("Pedido de amizade já enviado!");
+                        } else {
+                          throw error;
+                        }
+                      } else {
+                        toast.success("Pedido de amizade enviado! 🙏");
+                      }
+                    } catch (err) {
+                      console.error("Error sending friend request:", err);
+                      toast.error("Erro ao enviar pedido de amizade.");
+                    }
+                  }
+                  setShowFriendPrompt(false);
+                }}
+              >
+                <Check className="w-4 h-4 mr-2" />
+                Sim, claro!
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
         
         <div className="container mx-auto px-6 py-8 relative z-10 max-w-lg">
           
