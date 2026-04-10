@@ -43,7 +43,9 @@ const Profile = () => {
     parish: "",
     showRealName: false,
     displayName: "",
-    avatarUrl: ""
+    avatarUrl: "",
+    anonymizeName: false,
+    anonymizeCity: false
   });
   const [uploading, setUploading] = useState(false);
 
@@ -75,7 +77,9 @@ const Profile = () => {
         parish: profile.parish || "",
         showRealName: profile.show_real_name || false,
         displayName: profile.display_name || "",
-        avatarUrl: profile.avatar_url || ""
+        avatarUrl: profile.avatar_url || "",
+        anonymizeName: profile.anonymize_name || false,
+        anonymizeCity: profile.anonymize_city || false
       });
     }
   };
@@ -135,7 +139,9 @@ const Profile = () => {
       city: editData.city,
       parish: editData.parish,
       show_real_name: editData.showRealName,
-      display_name: editData.showRealName ? editData.displayName : null
+      display_name: editData.showRealName ? editData.displayName : null,
+      anonymize_name: editData.anonymizeName,
+      anonymize_city: editData.anonymizeCity
     });
 
     // Update Auth User Metadata
@@ -146,7 +152,9 @@ const Profile = () => {
         city: editData.city, 
         parish: editData.parish,
         show_real_name: editData.showRealName,
-        display_name: editData.showRealName ? editData.displayName : null
+        display_name: editData.showRealName ? editData.displayName : null,
+        anonymize_name: editData.anonymizeName,
+        anonymize_city: editData.anonymizeCity
       },
     });
 
@@ -217,9 +225,11 @@ const Profile = () => {
   const level = getLevel(totalXp);
   const levelIndex = CELESTIAL_LEVELS.indexOf(level) + 1;
   const levelProgress = getLevelProgress(totalXp);
-  const fullName = editData.showRealName 
-    ? (editData.displayName || editData.fullName.split(' ')[0]) 
-    : (editData.fullName || "Usuário Améns");
+  const fullName = editData.anonymizeName 
+    ? "Alguém" 
+    : editData.showRealName 
+      ? (editData.displayName || editData.fullName.split(' ')[0]) 
+      : (editData.fullName || "Usuário Améns");
   const currentCity = user.user_metadata?.city || "";
 
   return (
@@ -292,7 +302,11 @@ const Profile = () => {
 
             <div className="flex items-center gap-2 text-sm text-muted-foreground opacity-80">
               <MapPin className="w-3.5 h-3.5" />
-              <span>{user.user_metadata?.city}, {user.user_metadata?.state}</span>
+              <span>
+                {editData.anonymizeCity 
+                  ? "Cidade em sigilo" 
+                  : `${user.user_metadata?.city || 'Sem cidade'}, ${user.user_metadata?.state || ''}`}
+              </span>
             </div>
             <p className="text-[11px] text-primary/70 font-bold mt-1 uppercase tracking-wider">{user.user_metadata?.parish}</p>
             
@@ -387,36 +401,73 @@ const Profile = () => {
                         </div>
 
                         <div className="space-y-4 pt-4 border-t border-primary/5">
-                            <div className="flex items-center space-x-2">
-                                <input 
-                                    type="checkbox" 
-                                    id="show-real-name-profile" 
-                                    className="w-4 h-4 rounded border-primary/20 text-primary focus:ring-primary"
-                                    checked={editData.showRealName}
-                                    onChange={(e) => setEditData({...editData, showRealName: e.target.checked})}
-                                />
-                                <Label htmlFor="show-real-name-profile" className="text-xs font-medium cursor-pointer">
-                                    Desejo utilizar um apelido ou outro nome para manter o anonimato.
-                                </Label>
+                            <Label className="text-sm font-bold text-foreground">Opções de Privacidade</Label>
+
+                            <div className="space-y-3 p-3 bg-primary/5 rounded-xl border border-primary/10">
+                                <div className="flex items-center space-x-2">
+                                    <input 
+                                        type="checkbox" 
+                                        id="show-real-name-profile" 
+                                        className="w-4 h-4 rounded border-primary/20 text-primary focus:ring-primary"
+                                        checked={editData.showRealName}
+                                        onChange={(e) => {
+                                            const checked = e.target.checked;
+                                            setEditData({...editData, showRealName: checked, anonymizeName: checked ? editData.anonymizeName : false});
+                                        }}
+                                    />
+                                    <Label htmlFor="show-real-name-profile" className="text-xs font-medium cursor-pointer">
+                                        Desejo utilizar um apelido ou outro nome.
+                                    </Label>
+                                </div>
+
+                                <AnimatePresence>
+                                    {editData.showRealName && (
+                                        <motion.div 
+                                            initial={{ opacity: 0, height: 0 }}
+                                            animate={{ opacity: 1, height: "auto" }}
+                                            exit={{ opacity: 0, height: 0 }}
+                                            className="space-y-3 overflow-hidden px-1 py-1"
+                                        >
+                                            <div className="space-y-2 mt-2">
+                                                <Label className="text-[10px] font-bold uppercase tracking-wider text-primary/70">Qual apelido você gostaria de usar?</Label>
+                                                <Input 
+                                                    placeholder="Ex: Pedro, Ana..." 
+                                                    value={editData.displayName} 
+                                                    onChange={(e) => setEditData({...editData, displayName: e.target.value})}
+                                                    disabled={editData.anonymizeName}
+                                                />
+                                            </div>
+                                            <div className="flex items-center space-x-2 mt-2 pt-2 border-t border-primary/10">
+                                                <input 
+                                                    type="checkbox" 
+                                                    id="anonymize-name-profile" 
+                                                    className="w-4 h-4 rounded border-primary/20 text-primary focus:ring-primary"
+                                                    checked={editData.anonymizeName}
+                                                    onChange={(e) => setEditData({...editData, anonymizeName: e.target.checked})}
+                                                />
+                                                <Label htmlFor="anonymize-name-profile" className="text-xs font-medium cursor-pointer text-muted-foreground">
+                                                    Ocultar totalmente meu nome ("Alguém")
+                                                </Label>
+                                            </div>
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
                             </div>
 
-                            <AnimatePresence>
-                                {editData.showRealName && (
-                                    <motion.div 
-                                        initial={{ opacity: 0, height: 0 }}
-                                        animate={{ opacity: 1, height: "auto" }}
-                                        exit={{ opacity: 0, height: 0 }}
-                                        className="space-y-2 overflow-hidden px-1 py-2 bg-primary/5 rounded-xl border border-primary/10"
-                                    >
-                                        <Label className="text-[10px] font-bold uppercase tracking-wider text-primary/70">Qual apelido você gostaria de usar?</Label>
-                                        <Input 
-                                            placeholder="Ex: Pedro, Ana..." 
-                                            value={editData.displayName} 
-                                            onChange={(e) => setEditData({...editData, displayName: e.target.value})}
-                                        />
-                                    </motion.div>
-                                )}
-                            </AnimatePresence>
+                            <div className="space-y-3 p-3 bg-primary/5 rounded-xl border border-primary/10">
+                                <div className="flex items-center space-x-2">
+                                    <input 
+                                        type="checkbox" 
+                                        id="anonymize-city-profile" 
+                                        className="w-4 h-4 rounded border-primary/20 text-primary focus:ring-primary"
+                                        checked={editData.anonymizeCity}
+                                        onChange={(e) => setEditData({...editData, anonymizeCity: e.target.checked})}
+                                    />
+                                    <Label htmlFor="anonymize-city-profile" className="text-xs font-medium cursor-pointer">
+                                        Manter minha cidade em sigilo
+                                    </Label>
+                                </div>
+                            </div>
                         </div>
                         
                         <Button className="w-full gradient-divine h-12 rounded-2xl font-bold mt-4" onClick={handleSaveProfile} disabled={savingCity}>

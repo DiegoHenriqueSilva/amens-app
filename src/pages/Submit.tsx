@@ -16,6 +16,7 @@ import { motion } from "framer-motion";
 const Submit = () => {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isAnonymous, setIsAnonymous] = useState(false);
   const { addXp } = useXp();
 
   useEffect(() => {
@@ -23,12 +24,18 @@ const Submit = () => {
       if (!session) {
         navigate("/auth");
       } else {
-        const city = session.user.user_metadata?.city;
-        const state = session.user.user_metadata?.state;
-        if (city && state) {
-          setFormData(prev => ({ ...prev, location: `${city}, ${state}` }));
-        } else if (city) {
-          setFormData(prev => ({ ...prev, location: city }));
+        const meta = session.user.user_metadata;
+        if (!meta?.anonymize_city) {
+          const city = meta?.city;
+          const state = meta?.state;
+          if (city && state) {
+            setFormData(prev => ({ ...prev, location: `${city}, ${state}` }));
+          } else if (city) {
+            setFormData(prev => ({ ...prev, location: city }));
+          }
+        }
+        if (meta?.anonymize_name) {
+          setIsAnonymous(true);
         }
       }
     });
@@ -45,16 +52,27 @@ const Submit = () => {
     setIsSubmitting(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      const fullName = session?.user?.user_metadata?.full_name || "Anônimo";
-      const firstName = fullName.split(' ')[0];
+      const meta = session?.user?.user_metadata;
+      
+      let authorName = "Alguém";
+      if (!isAnonymous) {
+        if (meta?.show_real_name && meta?.display_name) {
+          authorName = meta.display_name;
+        } else {
+          const fullName = meta?.full_name || "Alguém";
+          authorName = fullName.split(' ')[0];
+        }
+      }
+      
+      const defaultTitle = isAnonymous ? "Pedido de Oração" : `Pedido de ${authorName}`;
       
       const { error } = await supabase.from('prayer_requests').insert([{
-        title: formData.title.trim() || `Pedido de ${firstName}`,
+        title: formData.title.trim() || defaultTitle,
         content: formData.content.trim(),
         location: formData.location.trim() || null,
         prayer_count: 0,
         user_id: session?.user?.id,
-        author_name: firstName,
+        author_name: authorName,
       }]);
       if (error) throw error;
       await addXp("submit");
@@ -102,6 +120,19 @@ const Submit = () => {
                 <div>
                   <Label htmlFor="location" className="text-base">Localização (Opcional)</Label>
                   <Input id="location" placeholder="Ex: São Paulo, SP" value={formData.location} onChange={(e) => setFormData({ ...formData, location: e.target.value })} className="mt-2" maxLength={100} />
+                </div>
+                
+                <div className="flex items-center space-x-2 pt-2 pb-2 bg-primary/5 p-4 rounded-xl border border-primary/10">
+                   <input 
+                      type="checkbox" 
+                      id="is-anonymous" 
+                      className="w-5 h-5 rounded border-primary/20 text-primary focus:ring-primary" 
+                      checked={isAnonymous} 
+                      onChange={(e) => setIsAnonymous(e.target.checked)} 
+                   />
+                   <Label htmlFor="is-anonymous" className="text-sm cursor-pointer text-foreground font-medium">
+                       🌟 Enviar de forma secreta (Seu nome não aparecerá)
+                   </Label>
                 </div>
                 <Button type="submit" disabled={isSubmitting} size="lg" className="w-full gradient-divine text-primary-foreground hover:opacity-90">
                   <Send className="w-4 h-4 mr-2" />

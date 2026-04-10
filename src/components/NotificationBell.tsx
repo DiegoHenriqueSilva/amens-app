@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { formatTimeAgo } from "@/lib/utils";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 type Notification = {
   id: string;
@@ -90,7 +91,26 @@ export const NotificationBell = () => {
           ) : (
             notifications.map(n => (
               <div key={n.id} className={`p-3 border-b border-border last:border-0 ${!n.is_read ? "bg-primary/5" : ""}`}>
-                <p className="text-sm text-foreground">{n.message}</p>
+                <div className="text-sm text-foreground">
+                  {n.message.includes("Alguém") ? (
+                    <>
+                      {n.message.split("Alguém")[0]}
+                      <TooltipProvider delayDuration={100}>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span className="text-primary font-bold cursor-help border-b border-dashed border-primary/50">Alguém ℹ️</span>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p className="text-xs">Esta pessoa solicitou sigilo absoluto do seu nome.</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                      {n.message.split("Alguém")[1]}
+                    </>
+                  ) : (
+                    n.message
+                  )}
+                </div>
                 <p className="text-xs text-muted-foreground mt-1">
                   {formatTimeAgo(n.created_at)}
                 </p>

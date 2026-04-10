@@ -22,12 +22,14 @@ const Pray = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [activeReaction, setActiveReaction] = useState<string | null>(null);
+  const [isAnonymousReaction, setIsAnonymousReaction] = useState(false);
   const navigate = useNavigate();
   const { addXp } = useXp();
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!session) navigate("/auth");
+      else setIsAnonymousReaction(Boolean(session.user.user_metadata?.anonymize_name));
     });
   }, [navigate]);
 
@@ -173,6 +175,12 @@ REGRAS ADICIONAIS:
                       </div>
                     </div>
                     <div className="divider-gold mb-5" />
+                    <div className="flex justify-start mb-4 pr-1">
+                      <div className="flex items-center space-x-2 bg-primary/5 px-3 py-1.5 rounded-lg border border-primary/10">
+                        <input type="checkbox" id="anon-reaction" className="w-4 h-4 rounded border-primary/20 text-primary" checked={isAnonymousReaction} onChange={(e) => setIsAnonymousReaction(e.target.checked)} />
+                        <label htmlFor="anon-reaction" className="text-xs text-foreground font-medium cursor-pointer">✨ Rezar de forma secreta ("Alguém")</label>
+                      </div>
+                    </div>
                     <div className="flex gap-3 flex-wrap">
                       <Button onClick={generatePrayer} disabled={isGenerating} className="gradient-sacred text-foreground hover:opacity-90">
                         <Sparkles className="w-4 h-4 mr-2" />
@@ -187,8 +195,21 @@ REGRAS ADICIONAIS:
 
                             // Resolve sender info for personalized notification
                             const senderFullName = session.user.user_metadata?.full_name || "";
-                            const senderFirstName = senderFullName.split(" ")[0] || "Um irmão";
-                            const senderCity = session.user.user_metadata?.city || "";
+                            let senderFirstName = "Um irmão";
+                            let senderCity = "";
+
+                            if (isAnonymousReaction) {
+                                senderFirstName = "Alguém";
+                            } else {
+                                if (session.user.user_metadata?.show_real_name && session.user.user_metadata?.display_name) {
+                                    senderFirstName = session.user.user_metadata.display_name;
+                                } else {
+                                    senderFirstName = senderFullName.split(" ")[0] || "Um irmão";
+                                }
+                                if (!session.user.user_metadata?.anonymize_city) {
+                                    senderCity = session.user.user_metadata?.city || "";
+                                }
+                            }
                             
                             // Increase count and record intercession
                             await supabase.from('prayer_requests').update({ 
@@ -291,8 +312,21 @@ REGRAS ADICIONAIS:
 
                                   // Resolve sender info for personalized notification
                                   const senderFullName = session.user.user_metadata?.full_name || "";
-                                  const senderFirstName = senderFullName.split(" ")[0] || "Um irmão";
-                                  const senderCity = session.user.user_metadata?.city || "";
+                                  let senderFirstName = "Um irmão";
+                                  let senderCity = "";
+
+                                  if (isAnonymousReaction) {
+                                      senderFirstName = "Alguém";
+                                  } else {
+                                      if (session.user.user_metadata?.show_real_name && session.user.user_metadata?.display_name) {
+                                          senderFirstName = session.user.user_metadata.display_name;
+                                      } else {
+                                          senderFirstName = senderFullName.split(" ")[0] || "Um irmão";
+                                      }
+                                      if (!session.user.user_metadata?.anonymize_city) {
+                                          senderCity = session.user.user_metadata?.city || "";
+                                      }
+                                  }
 
                                   // Upsert — replace any previous reaction
                                   await supabase.from("prayer_reactions").upsert({

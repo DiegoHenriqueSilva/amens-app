@@ -14,6 +14,7 @@ import { fetchCitiesByState, type IBGECity } from "@/lib/ibge";
 import BottomNav from "@/components/BottomNav";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { User as UserIcon } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 const Community = () => {
   const navigate = useNavigate();
@@ -296,9 +297,24 @@ const Community = () => {
                              </Avatar>
                           </div>
                           <div className="flex-1">
-                            <p className="text-[13px] font-medium leading-tight text-foreground/90">
-                              <span className="text-primary font-bold">{firstName}</span> de <span className="font-bold">{city}</span> acabou de interceder por uma causa.
-                            </p>
+                            <div className="text-[13px] font-medium leading-tight text-foreground/90 flex flex-wrap gap-1 items-center">
+                              {firstName === "Alguém" ? (
+                                <TooltipProvider delayDuration={100}>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <span className="text-primary font-bold cursor-help border-b border-dashed border-primary/50">Alguém ℹ️</span>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      <p className="text-xs">Este irmão solicitou sigilo absoluto em suas ações.</p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                              ) : (
+                                <span className="text-primary font-bold">{firstName}</span>
+                              )}
+                              <span>de</span> <span className="font-bold">{city}</span> 
+                              <span>acabou de interceder por uma causa.</span>
+                            </div>
                             <p className="text-[10px] text-muted-foreground mt-1 font-bold">{formatTimeAgo(activity.created_at)}</p>
                           </div>
                           <Heart className="w-4 h-4 text-primary/30 fill-primary/5" />
