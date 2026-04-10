@@ -18,6 +18,7 @@ import { useEffect } from "react";
 import Profile from "./pages/Profile";
 import Community from "./pages/Community";
 import Tree from "./pages/Tree";
+import PrayerChain from "./pages/PrayerChain";
 import Messages from "./pages/Messages";
 import Friends from "./pages/Friends";
 import BottomNav from "./components/BottomNav";
@@ -57,6 +58,7 @@ const App = () => {
             <Route path="/profile" element={<Profile />} />
             <Route path="/community" element={<Community />} />
             <Route path="/tree" element={<Tree />} />
+            <Route path="/prayer-chain" element={<PrayerChain />} />
             <Route path="/messages" element={<Messages />} />
             <Route path="/friends" element={<Friends />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
