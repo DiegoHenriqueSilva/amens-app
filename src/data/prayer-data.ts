@@ -7,9 +7,6 @@ export interface Prayer {
 export const PHRASE_DURATION = 4000; // 4 seconds per phrase
 export const PRAYER_GAP = 4000; // 4 seconds between prayers
 
-export const TOTAL_CYCLE_TIME = PRAYERS.reduce((acc, p) => 
-  acc + (p.phrases.length * PHRASE_DURATION) + PRAYER_GAP, 0
-);
 
 export const PRAYERS: Prayer[] = [
   {
@@ -85,6 +82,10 @@ export const PRAYERS: Prayer[] = [
     ]
   }
 ];
+
+export const TOTAL_CYCLE_TIME = PRAYERS.reduce((acc, p) => 
+  acc + (p.phrases.length * PHRASE_DURATION) + PRAYER_GAP, 0
+);
 
 export const PR_CITIES_100K = [
   "Curitiba", "Londrina", "Maringá", "Ponta Grossa", "Cascavel", 
