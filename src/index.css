@@ -138,3 +138,35 @@
     scrollbar-width: none;
   }
 }
+
+@keyframes shimmer-sweep {
+  0% { transform: translateX(-100%) skewX(-20deg); opacity: 0; }
+  50% { opacity: 0.8; }
+  100% { transform: translateX(200%) skewX(-20deg); opacity: 0; }
+}
+
+.disney-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.disney-shimmer::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(212, 175, 55, 0.1) 20%,
+    rgba(255, 255, 255, 0.7) 50%,
+    rgba(212, 175, 55, 0.1) 80%,
+    transparent 100%
+  );
+  animation: shimmer-sweep 2.5s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 10;
+}
+

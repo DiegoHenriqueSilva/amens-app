@@ -9,6 +9,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import PageTransition from "@/components/PageTransition";
 import { PRAYERS, PHRASE_DURATION, PRAYER_GAP, COMMON_NAMES, PR_CITIES_100K } from "@/data/prayer-data";
 import { motion, AnimatePresence } from "framer-motion";
+import { usePrayerQueue } from "@/hooks/use-prayer-queue";
+import { cn } from "@/lib/utils";
 
 // Configuration for the Eternal Flow
 const EPOCH = new Date("2024-01-01T00:00:00Z").getTime();
@@ -26,7 +28,8 @@ const PrayerChain = () => {
 
   // Calculate the current prayer and phrase based on global time
   const [globalTime, setGlobalTime] = useState(Date.now());
-  const [authorInfo, setAuthorInfo] = useState({ name: "", city: "" });
+  const [sparkles, setSparkles] = useState<{ id: number; x: number; y: number }[]>([]);
+  const { author } = usePrayerQueue(currentPrayer?.id, currentPhraseIndex, globalTime);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -101,13 +104,95 @@ const PrayerChain = () => {
     return { currentPrayer: PRAYERS[0], currentPhraseIndex: 0, progress: 0 };
   }, [globalTime]);
 
-  useEffect(() => {
-    if (currentPhraseIndex >= 0) {
-      const randomName = COMMON_NAMES[Math.floor(Math.random() * COMMON_NAMES.length)] || "Intercessor";
-      const randomCity = PR_CITIES_100K[Math.floor(Math.random() * PR_CITIES_100K.length)] || "Améns";
-      setAuthorInfo({ name: randomName, city: randomCity });
+  // Handle "Orar junto" logic
+  const handleOrarJunto = async () => {
+    if (!currentUser) {
+      toast({ title: "Entrar na Corrente", description: "Faça login para orar junto.", variant: "destructive" });
+      navigate("/auth");
+      return;
     }
-  }, [currentPhraseIndex, currentPrayer]);
+
+    const lastClick = localStorage.getItem('last_pray_click');
+    if (lastClick && Date.now() - parseInt(lastClick) < 15000) {
+      toast({ title: "Sinta a Paz", description: "Aguarde 15 segundos entre suas orações." });
+      return;
+    }
+
+    // Visual feedback: Spawning sparkles
+    const newSparkles = Array.from({ length: 12 }).map((_, i) => ({
+      id: Date.now() + i,
+      x: 0, 
+      y: 0
+    }));
+    setSparkles(prev => [...prev, ...newSparkles]);
+    setTimeout(() => setSparkles([]), 2000);
+
+    try {
+      // Logic to find next available slot
+      const elapsed = globalTime - EPOCH;
+      const totalCycleTime = PRAYERS.length * (PRAYERS[0].phrases.length * PHRASE_DURATION + PRAYER_GAP);
+      const cycleStart = Math.floor(elapsed / totalCycleTime) * totalCycleTime;
+      
+      // We look ahead for the next phrases
+      // Starting from currentPhraseIndex + 1
+      let foundSlot = null;
+      let checkPhraseIndex = currentPhraseIndex + 1;
+      let checkPrayerIndex = PRAYERS.findIndex(p => p.id === currentPrayer?.id);
+      
+      // Search for next 10 slots
+      for (let s = 0; s < 10; s++) {
+        const prayer = PRAYERS[checkPrayerIndex];
+        if (checkPhraseIndex >= prayer.phrases.length) {
+          checkPhraseIndex = 0;
+          checkPrayerIndex = (checkPrayerIndex + 1) % PRAYERS.length;
+          continue;
+        }
+        
+        if (checkPhraseIndex > 0) { // Skip first phrase
+           // Calculate exact start timestamp
+           let accum = 0;
+           for (let p = 0; p < checkPrayerIndex; p++) {
+             accum += (PRAYERS[p].phrases.length * PHRASE_DURATION) + PRAYER_GAP;
+           }
+           const targetTs = EPOCH + cycleStart + accum + (checkPhraseIndex * PHRASE_DURATION);
+           
+           if (targetTs > globalTime + 2000) { // Give some buffer room
+             // Check if already taken in DB
+             const { data: existing } = await supabase
+               .from('prayer_contributions')
+               .select('id')
+               .eq('target_timestamp', targetTs)
+               .maybeSingle();
+               
+             if (!existing) {
+               foundSlot = targetTs;
+               break;
+             }
+           }
+        }
+        checkPhraseIndex++;
+      }
+
+      if (foundSlot) {
+        // Use profile data
+        const { data: profile } = await supabase.from('profiles').select('full_name, city').eq('id', currentUser.id).single();
+        
+        await supabase.from('prayer_contributions').insert({
+          user_id: currentUser.id,
+          target_timestamp: foundSlot,
+          author_name: profile?.full_name || currentUser.user_metadata?.full_name || "Intercessor",
+          author_city: profile?.city || "Améns"
+        });
+        
+        localStorage.setItem('last_pray_click', Date.now().toString());
+        toast({ title: "Voz unida! ✨", description: "Seu nome aparecerá em instantes na corrente." });
+      } else {
+        toast({ title: "Corrente Cheia", description: "Muitas pessoas orando! Tente em breve." });
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
   const handleSubmitIntention = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -172,9 +257,9 @@ const PrayerChain = () => {
             <Button variant="ghost" size="icon" onClick={() => navigate("/")} className="text-[#3d2800] hover:bg-black/5">
               <ArrowLeft className="w-6 h-6" />
             </Button>
-            <div className="flex items-center gap-2 bg-white/60 backdrop-blur-md px-4 py-1.5 rounded-full border border-primary/10 soft-shadow">
-              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-              <span className="text-[10px] font-bold tracking-widest uppercase text-[#3d2800]">
+            <div className="flex items-center gap-2 bg-white/60 backdrop-blur-md px-5 py-2.5 rounded-full border border-primary/20 soft-shadow">
+              <div className="w-2.5 h-2.5 bg-green-500 rounded-full animate-pulse" />
+              <span className="text-[13px] font-bold tracking-[0.2em] uppercase text-[#3d2800]">
                 {currentPrayer ? currentPrayer.name : "Corrente"}
               </span>
             </div>
@@ -236,14 +321,19 @@ const PrayerChain = () => {
                   "{currentPrayer.phrases[currentPhraseIndex]}"
                 </h2>
                 
-                <motion.p 
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.8, duration: 1 }}
-                  className="text-[#a0720a] font-bold mt-10 text-[9px] md:text-[10px] text-center uppercase tracking-[0.2em] opacity-70"
-                >
-                  — {authorInfo.name}, {authorInfo.city}
-                </motion.p>
+                {author && (
+                  <motion.p 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.8, duration: 1 }}
+                    className={cn(
+                      "text-[#a0720a] font-bold mt-10 text-[9px] md:text-[10px] text-center uppercase tracking-[0.2em] opacity-70 px-4 py-2 rounded-full",
+                      author.user_id === currentUser?.id && "disney-shimmer text-primary opacity-100 scale-110 transition-transform"
+                    )}
+                  >
+                    — {author.name}, {author.city}
+                  </motion.p>
+                )}
               </motion.div>
             ) : (
               <motion.div 
@@ -261,21 +351,34 @@ const PrayerChain = () => {
           </AnimatePresence>
         </div>
 
-        {/* Floating Action Button - Write Next Phrase */}
-        <div className="absolute right-6 bottom-24 z-30">
+        {/* Floating Action Button - Orar junto */}
+        <div className="absolute right-6 bottom-24 z-30 flex flex-col items-end">
+           {/* Visual Sparkles */}
+           <AnimatePresence>
+             {sparkles.map((s) => (
+               <motion.div
+                 key={s.id}
+                 initial={{ opacity: 1, scale: 0, x: 0, y: 0 }}
+                 animate={{ 
+                   opacity: 0, 
+                   scale: [0, 1.5, 0], 
+                   x: Math.random() * -300 - 50, 
+                   y: Math.random() * -400 - 100 
+                 }}
+                 transition={{ duration: 1.5, ease: "easeOut" }}
+                 className="absolute pointer-events-none"
+               >
+                 <Sparkles className="text-[#f0c040] w-4 h-4" />
+               </motion.div>
+             ))}
+           </AnimatePresence>
+
            <Button 
-             onClick={() => {
-               if (!currentUser) {
-                 toast({ title: "Inicie sessão", description: "Faça login para adicionar uma frase." });
-                 navigate("/auth");
-               } else {
-                 setIsPhraseDialogOpen(true);
-               }
-             }}
-             className="rounded-full shadow-lg bg-white hover:bg-black/5 text-[#d4a017] border border-[#d4a017]/20 flex items-center gap-2 px-5 py-6 shadow-[#d4a017]/10"
+             onClick={handleOrarJunto}
+             className="rounded-full shadow-lg bg-white hover:bg-black/5 text-[#d4a017] border border-[#d4a017]/20 flex items-center gap-2 px-6 py-7 shadow-[#d4a017]/10 active:scale-95 transition-transform"
            >
-             <span className="text-[11px] font-bold uppercase tracking-wider text-[#3d2800]">Continuar oração</span>
-             <PenLine className="w-4 h-4 text-[#d4a017]" />
+             <span className="text-[12px] font-bold uppercase tracking-wider text-[#3d2800]">Orar junto</span>
+             <Sparkles className="w-5 h-5 text-[#d4a017]" />
            </Button>
         </div>
 
