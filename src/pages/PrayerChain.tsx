@@ -114,10 +114,12 @@ const PrayerChain = () => {
     const stateChannel = supabase
       .channel('prayer_state_changes')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'prayer_state' }, payload => {
-        setPrayerState(payload.new);
-        // Reset votes when state changes
-        setVotes({});
-        setHasVoted(null);
+        if (payload.new) {
+          setPrayerState(payload.new);
+          // Reset votes when state changes
+          setVotes({});
+          setHasVoted(null);
+        }
       })
       .subscribe();
 
@@ -331,21 +333,17 @@ const PrayerChain = () => {
         .slice(0, 3)
         .map(p => p.id);
 
-      // Call the simplified autonomous RPC
-      const { error: rpcError } = await supabase.rpc('advance_prayer_state', {
+      // Call the NEW fast_advance_prayer RPC
+      const { error: rpcError } = await supabase.rpc('fast_advance_prayer', {
         p_winner_id: winner,
         p_next_options: nextOptions
       });
 
       if (rpcError) {
         console.error("RPC Error:", rpcError);
-        toast({ 
-          title: "Sincronia Celeste", 
-          description: "Ajustando o fluxo da oração...", 
-          duration: 2000 
-        });
+        // Silent retry or minimal log
       } else {
-        console.log(`[State Advance] Successfully moved to ${winner}`);
+        console.log(`[State Advance] Successfully Reset & Moved to ${winner}`);
       }
     } catch (e) {
       console.error("State advancement failed:", e);
