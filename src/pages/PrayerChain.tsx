@@ -14,7 +14,7 @@ import { useFriends } from "@/hooks/use-friends";
 import { cn } from "@/lib/utils";
 
 // Configuration for the Eternal Flow
-const EPOCH = new Date("2024-01-01T00:00:00Z").getTime();
+// EPOCH removed as we now use real-time prayerState
 
 const PrayerChain = () => {
   const navigate = useNavigate();
@@ -32,6 +32,9 @@ const PrayerChain = () => {
   const [globalTime, setGlobalTime] = useState(Date.now());
   const [timeOffset, setTimeOffset] = useState<number | null>(null);
   const [sparkles, setSparkles] = useState<{ id: number; x: number; y: number }[]>([]);
+  const [prayerState, setPrayerState] = useState<any>(null);
+  const [votes, setVotes] = useState<Record<string, number>>({});
+  const [hasVoted, setHasVoted] = useState<string | null>(null);
   const { friends } = useFriends();
 
   const friendIds = useMemo(() => new Set(friends?.map(f => f.id)), [friends]);
@@ -101,41 +104,93 @@ const PrayerChain = () => {
         }
       });
 
+    // Fetch and subscribe to prayer_state
+    const fetchPrayerState = async () => {
+      const { data } = await supabase.from('prayer_state').select('*').limit(1).maybeSingle();
+      if (data) setPrayerState(data);
+    };
+    fetchPrayerState();
+
+    const stateChannel = supabase
+      .channel('prayer_state_changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'prayer_state' }, payload => {
+        setPrayerState(payload.new);
+        // Reset votes when state changes
+        setVotes({});
+        setHasVoted(null);
+      })
+      .subscribe();
+
+    // Fetch and subscribe to votes
+    const fetchVotes = async () => {
+      const { data } = await supabase.from('prayer_votes').select('prayer_id');
+      if (data) {
+        const counts = data.reduce((acc: any, v: any) => {
+          acc[v.prayer_id] = (acc[v.prayer_id] || 0) + 1;
+          return acc;
+        }, {});
+        setVotes(counts);
+      }
+    };
+    fetchVotes();
+
+    const voteChannel = supabase
+      .channel('prayer_votes_changes')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'prayer_votes' }, payload => {
+        setVotes(prev => ({
+          ...prev,
+          [payload.new.prayer_id]: (prev[payload.new.prayer_id] || 0) + 1
+        }));
+      })
+      .subscribe();
+
     return () => {
       clearInterval(timer);
       supabase.removeChannel(channel);
+      supabase.removeChannel(stateChannel);
+      supabase.removeChannel(voteChannel);
     };
-  }, []);
+  }, [timeOffset]); // Add timeOffset to restart timer if needed
 
-  const { currentPrayer, currentPhraseIndex, progress } = useMemo(() => {
-    const elapsed = globalTime - EPOCH;
-    const cycleElapsed = elapsed % TOTAL_CYCLE_TIME;
+  const { currentPrayer, currentPhraseIndex, progress, isVoting, votingTimeLeft } = useMemo(() => {
+    if (!prayerState) return { currentPrayer: null, currentPhraseIndex: -1, progress: 0, isVoting: false, votingTimeLeft: 0 };
+
+    const elapsed = globalTime - Number(prayerState.started_at);
+    const prayer = PRAYERS.find(p => p.id === prayerState.current_prayer_id);
     
-    let accumulatedTime = 0;
-    for (let i = 0; i < PRAYERS.length; i++) {
-      const prayer = PRAYERS[i];
-      const prayerDuration = prayer.phrases.length * PHRASE_DURATION;
-      
-      if (cycleElapsed < accumulatedTime + prayerDuration) {
-        const timeInPrayer = cycleElapsed - accumulatedTime;
-        const phraseIndex = Math.floor(timeInPrayer / PHRASE_DURATION);
-        const phraseProgress = (timeInPrayer % PHRASE_DURATION) / PHRASE_DURATION;
-        return { 
-          currentPrayer: prayer, 
-          currentPhraseIndex: phraseIndex,
-          progress: phraseProgress 
-        };
-      }
-      
-      accumulatedTime += prayerDuration;
-      if (cycleElapsed < accumulatedTime + PRAYER_GAP) {
-         return { currentPrayer: null, currentPhraseIndex: -1, progress: 0 };
-      }
-      accumulatedTime += PRAYER_GAP;
+    if (!prayer) return { currentPrayer: null, currentPhraseIndex: -1, progress: 0, isVoting: false, votingTimeLeft: 0 };
+
+    const prayerDuration = prayer.phrases.length * PHRASE_DURATION;
+
+    if (elapsed < prayerDuration) {
+      const phraseIndex = Math.floor(elapsed / PHRASE_DURATION);
+      const phraseProgress = (elapsed % PHRASE_DURATION) / PHRASE_DURATION;
+      return { 
+        currentPrayer: prayer, 
+        currentPhraseIndex: phraseIndex,
+        progress: phraseProgress,
+        isVoting: false,
+        votingTimeLeft: 0
+      };
     }
 
-    return { currentPrayer: PRAYERS[0], currentPhraseIndex: 0, progress: 0 };
-  }, [globalTime]);
+    // Voting phase
+    const timeInVoting = globalTime - (Number(prayerState.started_at) + prayerDuration);
+    const votingDuration = 6000; // 6 seconds
+    
+    if (timeInVoting < votingDuration) {
+      return {
+        currentPrayer: null,
+        currentPhraseIndex: -1,
+        progress: 1,
+        isVoting: true,
+        votingTimeLeft: Math.max(0, Math.ceil((votingDuration - timeInVoting) / 1000))
+      };
+    }
+
+    // If voting time is up, the FIRST CLIENT to see this will advance the state
+    return { currentPrayer: null, currentPhraseIndex: -1, progress: 1, isVoting: true, votingTimeLeft: 0 };
+  }, [globalTime, prayerState]);
 
   const { author } = usePrayerQueue(currentPrayer?.id, currentPhraseIndex, globalTime);
 
@@ -163,58 +218,35 @@ const PrayerChain = () => {
     setTimeout(() => setSparkles([]), 2000);
 
     try {
-      // Logic to find next available slot
-      const elapsed = globalTime - EPOCH;
-      const cycleStart = Math.floor(elapsed / TOTAL_CYCLE_TIME) * TOTAL_CYCLE_TIME;
+      if (!prayerState) return;
+
+      const elapsed = globalTime - Number(prayerState.started_at);
       
-      // We look ahead for the next phrases
-      // Starting from currentPhraseIndex + 1
+      // We look ahead for available slots in the REMAINING time of the CURRENT prayer
       let foundSlot = null;
       let checkPhraseIndex = currentPhraseIndex + 1;
-      let initialPrayerIndex = PRAYERS.findIndex(p => p.id === currentPrayer?.id);
-      let checkPrayerIndex = initialPrayerIndex === -1 ? 0 : initialPrayerIndex;
-      let cycleOffset = 0;
+      const prayer = PRAYERS.find(p => p.id === prayerState.current_prayer_id);
       
-      // Search for next 20 slots to be safe
-      for (let s = 0; s < 20; s++) {
-        const prayer = PRAYERS[checkPrayerIndex];
-        if (!prayer) break;
-        
-        if (checkPhraseIndex >= prayer.phrases.length) {
-          checkPhraseIndex = 0;
-          const prevIndex = checkPrayerIndex;
-          checkPrayerIndex = (checkPrayerIndex + 1) % PRAYERS.length;
-          if (checkPrayerIndex === 0 && prevIndex !== -1) {
-            cycleOffset += TOTAL_CYCLE_TIME;
+      if (prayer) {
+        for (let i = checkPhraseIndex; i < prayer.phrases.length; i++) {
+          const targetTs = Number(prayerState.started_at) + (i * PHRASE_DURATION);
+          
+          if (targetTs > globalTime + 2000) {
+            const { data: existing } = await supabase
+              .from('prayer_contributions')
+              .select('id')
+              .eq('target_timestamp', targetTs)
+              .maybeSingle();
+              
+            if (!existing) {
+              foundSlot = targetTs;
+              break;
+            }
           }
-          continue;
         }
-        
-        if (checkPhraseIndex > 0) { 
-           let accum = 0;
-           for (let p = 0; p < checkPrayerIndex; p++) {
-             accum += (PRAYERS[p].phrases.length * PHRASE_DURATION) + PRAYER_GAP;
-           }
-           const targetTs = EPOCH + cycleStart + cycleOffset + accum + (checkPhraseIndex * PHRASE_DURATION);
-           
-           if (targetTs > globalTime + 2000) { 
-             const { data: existing } = await supabase
-               .from('prayer_contributions')
-               .select('id')
-               .eq('target_timestamp', targetTs)
-               .maybeSingle();
-               
-             if (!existing) {
-               foundSlot = targetTs;
-               break;
-             }
-           }
-        }
-        checkPhraseIndex++;
       }
 
       if (foundSlot) {
-        // Use profile data
         const { data: profile } = await supabase.from('profiles').select('full_name, city').eq('id', currentUser.id).single();
         
         await supabase.from('prayer_contributions').insert({
@@ -224,16 +256,72 @@ const PrayerChain = () => {
           author_city: profile?.city || "Améns"
         });
         
-        console.log(`[Queue Click] Reserved slot at ${foundSlot}`);
-        
         localStorage.setItem('last_pray_click', Date.now().toString());
       } else {
-        toast({ title: "Corrente Cheia", description: "Muitas pessoas orando! Tente em breve." });
+        toast({ title: "Oração Finalizando", description: "Esta oração está quase acabando. Aguarde a próxima!" });
       }
     } catch (e) {
       console.error(e);
     }
   };
+
+  // Handle Voting Logic
+  const handleVote = async (prayerId: string) => {
+    if (!currentUser || hasVoted || !isVoting) return;
+    
+    setHasVoted(prayerId);
+    try {
+      await supabase.rpc('submit_prayer_vote', { p_id: prayerId, u_id: currentUser.id });
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  // State advancement logic (Client-side trigger for global state)
+  useEffect(() => {
+    if (isVoting && votingTimeLeft === 0 && prayerState) {
+      const advanceState = async () => {
+        // Debounce: only one client should successfully update
+        // We use a small random delay per client to reduce collisions
+        await new Promise(r => setTimeout(r, Math.random() * 500));
+        
+        // Refresh state first
+        const { data: latest } = await supabase.from('prayer_state').select('*').limit(1).maybeSingle();
+        if (!latest || Date.now() + (timeOffset || 0) < Number(latest.started_at) + (PRAYERS.find(p => p.id === latest.current_prayer_id)?.phrases.length || 0) * PHRASE_DURATION + 6000) {
+          return;
+        }
+
+        // Logic to pick winner
+        // Add fake votes (social proof)
+        const fakeVotesPerOption = Math.floor((onlineCount + 10) / 4);
+        
+        const finalVotes = latest.voting_options.map((optId: string) => ({
+          id: optId,
+          count: (votes[optId] || 0) + fakeVotesPerOption + Math.floor(Math.random() * 5)
+        }));
+        
+        const winner = finalVotes.sort((a: any, b: any) => b.count - a.count)[0].id;
+        
+        // Pick 3 NEW random options for the NEXT round
+        const nextOptions = [...PRAYERS]
+          .filter(p => p.id !== winner)
+          .sort(() => Math.random() - 0.5)
+          .slice(0, 3)
+          .map(p => p.id);
+
+        await supabase.from('prayer_state').update({
+          current_prayer_id: winner,
+          started_at: Date.now() + (timeOffset || 0),
+          voting_options: nextOptions
+        }).eq('id', latest.id);
+        
+        // Clear old votes
+        await supabase.from('prayer_votes').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+      };
+      
+      advanceState();
+    }
+  }, [isVoting, votingTimeLeft, prayerState, onlineCount, timeOffset, votes]);
 
   const handleSubmitIntention = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -346,7 +434,7 @@ const PrayerChain = () => {
 
         {/* Dynamic Prayer Display */}
         <div className="flex-1 relative flex flex-col items-center justify-center p-6 pb-12">
-          {timeOffset === null ? (
+          {timeOffset === null || !prayerState ? (
             <motion.div 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -357,7 +445,7 @@ const PrayerChain = () => {
             </motion.div>
           ) : (
             <AnimatePresence mode="wait">
-              {currentPrayer && currentPhraseIndex >= 0 ? (
+              {!isVoting && currentPrayer && currentPhraseIndex >= 0 ? (
               <motion.div 
                 key={`${currentPrayer.id}-${currentPhraseIndex}`}
                 initial={{ opacity: 0, y: 20 }}
@@ -393,6 +481,68 @@ const PrayerChain = () => {
                   </motion.p>
                 )}
               </motion.div>
+            ) : isVoting ? (
+              <motion.div 
+                key="voting"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="w-full max-w-md mx-auto space-y-8"
+              >
+                <div className="text-center space-y-2 mb-8">
+                  <h3 className="text-[#a0720a] font-bold text-xs uppercase tracking-widest">Próxima Oração</h3>
+                  <div className="flex items-center justify-center gap-2">
+                    <div className="h-0.5 w-8 bg-[#d4a017]/30" />
+                    <span className="text-[10px] text-[#3d2800]/40 font-bold uppercase tracking-widest">A comunidade decide em {votingTimeLeft}s</span>
+                    <div className="h-0.5 w-8 bg-[#d4a017]/30" />
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  {prayerState.voting_options?.map((optId: string) => {
+                    const p = PRAYERS.find(x => x.id === optId);
+                    if (!p) return null;
+                    
+                    // Social Proof Logic for UI visualization
+                    const socialBase = Math.floor((onlineCount + 10) / 4);
+                    const currentVoteCount = (votes[optId] || 0) + (isVoting ? socialBase : 0);
+                    const totalVotesArray = prayerState.voting_options.map((id: string) => (votes[id] || 0) + (isVoting ? socialBase : 0));
+                    const totalAcross = totalVotesArray.reduce((src: number, next: number) => src + next, 0) || 1;
+                    const percent = Math.floor((currentVoteCount / totalAcross) * 100);
+
+                    return (
+                      <motion.button
+                        key={optId}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => handleVote(optId)}
+                        disabled={!!hasVoted}
+                        className={cn(
+                          "w-full relative h-[60px] bg-white/50 backdrop-blur-sm rounded-full border border-black/5 overflow-hidden transition-all group",
+                          hasVoted === optId && "border-[#d4a017]/40 ring-2 ring-[#d4a017]/10"
+                        )}
+                      >
+                        {/* Vote Progress Bar */}
+                        <motion.div 
+                          initial={{ width: 0 }}
+                          animate={{ width: `${percent}%` }}
+                          className="absolute inset-y-0 left-0 bg-gradient-to-r from-[#d4a017]/10 to-[#f0c040]/10 border-r border-[#d4a017]/20"
+                        />
+                        
+                        <div className="absolute inset-0 px-6 flex items-center justify-between">
+                          <span className={cn(
+                            "text-sm font-bold tracking-wide transition-colors",
+                            hasVoted === optId ? "text-[#a0720a]" : "text-[#3d2800]/70"
+                          )}>
+                            {p.name}
+                          </span>
+                          <span className="text-xs font-bold text-[#a0720a]/80">{percent}%</span>
+                        </div>
+                      </motion.button>
+                    );
+                  })}
+                </div>
+              </motion.div>
             ) : (
               <motion.div 
                 key="gap"
@@ -402,8 +552,7 @@ const PrayerChain = () => {
                 transition={{ duration: 2 }}
                 className="text-center space-y-6"
               >
-                <Wind className="w-16 h-16 text-[#d4a017]/30 mx-auto animate-pulse" />
-                <p className="text-[#3d2800]/50 font-serif italic text-xl">O silêncio é o abraço de Deus...</p>
+                <p className="text-[#3d2800]/50 font-serif italic text-xl">Preparando Corrente...</p>
               </motion.div>
               )}
             </AnimatePresence>
