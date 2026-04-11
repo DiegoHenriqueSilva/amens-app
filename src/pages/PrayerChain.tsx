@@ -281,47 +281,52 @@ const PrayerChain = () => {
   useEffect(() => {
     if (isVoting && votingTimeLeft === 0 && prayerState) {
       const advanceState = async () => {
-        // Debounce: only one client should successfully update
-        // We use a small random delay per client to reduce collisions
-        await new Promise(r => setTimeout(r, Math.random() * 500));
-        
-        // Refresh state first
-        const { data: latest } = await supabase.from('prayer_state').select('*').limit(1).maybeSingle();
-        if (!latest || Date.now() + (timeOffset || 0) < Number(latest.started_at) + (PRAYERS.find(p => p.id === latest.current_prayer_id)?.phrases.length || 0) * PHRASE_DURATION + 6000) {
-          return;
-        }
+        try {
+          // Debounce: only one client should successfully update
+          await new Promise(r => setTimeout(r, Math.random() * 800));
+          
+          // Refresh state first to see if someone else already advanced
+          const { data: latest } = await supabase.from('prayer_state').select('*').limit(1).maybeSingle();
+          const nowMs = Date.now() + (timeOffset || 0);
+          
+          const currentDuration = (PRAYERS.find(p => p.id === latest?.current_prayer_id)?.phrases.length || 0) * PHRASE_DURATION;
+          const totalDuration = currentDuration + 6000;
+          
+          if (!latest || nowMs < Number(latest.started_at) + totalDuration) {
+            return; 
+          }
 
-        // Logic to pick winner
-        // Add fake votes (social proof)
-        const fakeVotesPerOption = Math.floor((onlineCount + 10) / 4);
-        
-        let winner = null;
-        if (latest.voting_options && latest.voting_options.length > 0) {
-          const finalVotes = latest.voting_options.map((optId: string) => ({
-            id: optId,
-            count: (votes[optId] || 0) + fakeVotesPerOption + Math.floor(Math.random() * 5)
-          }));
-          winner = finalVotes.sort((a: any, b: any) => b.count - a.count)[0].id;
-        } else {
-          // Fallback if no options (e.g., initial state)
-          winner = PRAYERS[Math.floor(Math.random() * PRAYERS.length)].id;
-        }
-        
-        // Pick 3 NEW random options for the NEXT round
-        const nextOptions = [...PRAYERS]
-          .filter(p => p.id !== winner)
-          .sort(() => Math.random() - 0.5)
-          .slice(0, 3)
-          .map(p => p.id);
+          // Logic to pick winner
+          const fakeVotesPerOption = Math.floor((onlineCount + 10) / 4);
+          let winner = null;
+          
+          if (latest.voting_options && latest.voting_options.length > 0) {
+            const finalVotes = latest.voting_options.map((optId: string) => ({
+              id: optId,
+              count: (votes[optId] || 0) + fakeVotesPerOption + Math.floor(Math.random() * 5)
+            }));
+            winner = finalVotes.sort((a: any, b: any) => b.count - a.count)[0].id;
+          } else {
+            winner = PRAYERS[Math.floor(Math.random() * PRAYERS.length)].id;
+          }
+          
+          const nextOptions = [...PRAYERS]
+            .filter(p => p.id !== winner)
+            .sort(() => Math.random() - 0.5)
+            .slice(0, 3)
+            .map(p => p.id);
 
-        await supabase.from('prayer_state').update({
-          current_prayer_id: winner,
-          started_at: Date.now() + (timeOffset || 0),
-          voting_options: nextOptions
-        }).eq('id', latest.id);
-        
-        // Clear old votes
-        await supabase.from('prayer_votes').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+          // Use the RPC for a single atomic transaction
+          await supabase.rpc('advance_prayer_state', {
+            p_winner_id: winner,
+            p_next_options: nextOptions,
+            p_current_time: nowMs
+          });
+          
+          console.log(`[State Advance] Successfully moved to ${winner}`);
+        } catch (e) {
+          console.error("State advancement failed:", e);
+        }
       };
       
       advanceState();
