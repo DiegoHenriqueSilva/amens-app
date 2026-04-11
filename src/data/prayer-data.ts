@@ -80,6 +80,35 @@ export const PRAYERS: Prayer[] = [
       "Ó clemente, ó piedosa, ó doce sempre Virgem Maria.",
       "Rogai por nós Santa Mãe de Deus. Para que sejamos dignos das promessas de Cristo. Amém."
     ]
+  },
+  {
+    id: "creio",
+    name: "Creio em Deus Pai",
+    phrases: [
+      "Creio em Deus Pai Todo-Poderoso, Criador do céu e da terra,",
+      "e em Jesus Cristo, seu único Filho, nosso Senhor,",
+      "que foi concebido pelo poder do Espírito Santo,",
+      "nasceu da Virgem Maria, padeceu sob Pôncio Pilatos,",
+      "foi crucificado, morto e sepultado,",
+      "desceu à mansão dos mortos, ressuscitou ao terceiro dia,",
+      "subiu aos céus, está sentado à direita de Deus Pai Todo-Poderoso,",
+      "donde há de vir a julgar os vivos e os mortos.",
+      "Creio no Espírito Santo, na Santa Igreja Católica,",
+      "na comunhão dos Santos, na remissão dos pecados,",
+      "na ressurreição da carne, na vida eterna. Amém."
+    ]
+  },
+  {
+    id: "sao-jose",
+    name: "Oração de São José",
+    phrases: [
+      "Ó glorioso São José, a quem foi dado o poder de tornar possíveis as coisas impossíveis,",
+      "vinde em nosso auxílio nas dificuldades em que nos achamos.",
+      "Tomai sob a vossa proteção a causa importante que vos confiamos,",
+      "para que tenha uma solução favorável. Ó Pai amado,",
+      "toda a nossa confiança está colocada em vós. Que não se diga que vos invocamos em vão.",
+      "Vós que tudo podeis junto a Jesus e Maria, mostrai-nos que a vossa bondade é igual ao vosso poder. Amém."
+    ]
   }
 ];
 
