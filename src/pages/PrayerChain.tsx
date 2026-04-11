@@ -97,8 +97,7 @@ const PrayerChain = () => {
     try {
       const { error } = await supabase.from("prayer_intentions").insert({
         user_id: currentUser.id,
-        content: intention.trim(),
-        status: "pending"
+        content: intention.trim()
       });
 
       if (error) throw error;
@@ -113,14 +112,14 @@ const PrayerChain = () => {
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-background text-foreground flex flex-col relative overflow-hidden">
+      <div className="min-h-screen bg-black text-white flex flex-col relative overflow-hidden">
         
         {/* Header Overlay */}
-        <div className="absolute top-0 left-0 right-0 p-6 z-20 flex justify-between items-center bg-gradient-to-b from-background/90 via-background/60 to-transparent">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/")} className="text-foreground/70 hover:text-foreground">
+        <div className="absolute top-0 left-0 right-0 p-6 z-20 flex justify-between items-center bg-gradient-to-b from-black/90 via-black/60 to-transparent">
+          <Button variant="ghost" size="icon" onClick={() => navigate("/")} className="text-white/70 hover:text-white">
             <ArrowLeft className="w-6 h-6" />
           </Button>
-          <div className="flex items-center gap-2 bg-foreground/10 backdrop-blur-md px-4 py-1.5 rounded-full border border-foreground/10">
+          <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md px-4 py-1.5 rounded-full border border-white/10">
             <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
             <span className="text-xs font-medium tracking-wider uppercase">Sopro Eterno</span>
           </div>
@@ -168,14 +167,14 @@ const PrayerChain = () => {
         </div>
 
         {/* Intention Input Overlay */}
-        <div className="absolute bottom-0 left-0 right-0 p-8 pt-20 bg-gradient-to-t from-background via-background/90 to-transparent z-20">
+        <div className="absolute bottom-0 left-0 right-0 p-8 pt-20 bg-gradient-to-t from-black via-black/90 to-transparent z-20">
           <div className="max-w-md mx-auto">
             <form onSubmit={handleSubmitIntention} className="relative group">
                <Input 
                  placeholder={currentUser ? "Sua intenção para a corrente..." : "Faça login para enviar intenção"}
                  value={intention}
                  onChange={(e) => setIntention(e.target.value)}
-                 className="bg-foreground/5 border-foreground/10 py-7 pl-6 pr-16 rounded-2xl focus:ring-primary/50 text-foreground placeholder:text-foreground/40"
+                 className="bg-white/5 border-white/10 py-7 pl-6 pr-16 rounded-2xl focus:ring-primary/50 text-white placeholder:text-white/40"
                  disabled={!currentUser || isSubmitting}
                />
                <Button 
@@ -187,12 +186,12 @@ const PrayerChain = () => {
                </Button>
             </form>
             
-            <div className="mt-6 flex items-center justify-center gap-6 text-foreground/50">
+            <div className="mt-6 flex items-center justify-center gap-6 text-white/50">
                <div className="flex items-center gap-2">
                   <Users className="w-4 h-4 text-primary/60" />
                   <span className="text-[11px] font-bold uppercase tracking-widest">{onlineCount + 12} Orando</span>
                </div>
-               <div className="w-1 h-1 bg-foreground/20 rounded-full" />
+               <div className="w-1 h-1 bg-white/20 rounded-full" />
                <div className="flex items-center gap-2">
                   <Sparkles className="w-4 h-4 text-primary/60" />
                   <span className="text-[11px] font-bold uppercase tracking-widest">Fluxo Contínuo</span>

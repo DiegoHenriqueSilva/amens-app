@@ -72,7 +72,7 @@ const PrayerWriting: React.FC<PrayerWritingProps> = ({
               className="relative px-6"
             >
               <h2 
-                className="text-[3.5rem] md:text-[5rem] font-serif italic font-medium leading-[1.2] mb-4"
+                className="text-6xl md:text-8xl font-serif italic font-medium leading-[1.2] mb-4"
                 style={{
                   background: "linear-gradient(to bottom, #BF953F, #FCF6BA, #B38728, #FBF5B7, #AA771C)",
                   WebkitBackgroundClip: "text",
