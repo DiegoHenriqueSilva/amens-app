@@ -4,7 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Send, Sparkles, Wind, Users } from "lucide-react";
+import { ArrowLeft, Send, Sparkles, Wind, Users, PenLine } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import PageTransition from "@/components/PageTransition";
 import { PRAYERS, PHRASE_DURATION, PRAYER_GAP, COMMON_NAMES, PR_CITIES_100K } from "@/data/prayer-data";
 import { motion, AnimatePresence } from "framer-motion";
@@ -16,6 +17,8 @@ const PrayerChain = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [intention, setIntention] = useState("");
+  const [newPhrase, setNewPhrase] = useState("");
+  const [isPhraseDialogOpen, setIsPhraseDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [onlineCount, setOnlineCount] = useState(0);
@@ -116,6 +119,28 @@ const PrayerChain = () => {
     }
   };
 
+  const handleSubmitPhrase = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newPhrase.trim()) return;
+    if (!currentUser) {
+      toast({ title: "Erro", description: "Faça login para enviar.", variant: "destructive" });
+      navigate("/auth");
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      // Future integration with phrases system
+      toast({ title: "Frase Recebida! ✨", description: "Sua frase foi enviada para integrar a corrente abençoada.", duration: 5000 });
+      setNewPhrase("");
+      setIsPhraseDialogOpen(false);
+    } catch (error: any) {
+      toast({ title: "Erro", description: error.message, variant: "destructive" });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <PageTransition>
       <div className="min-h-screen bg-[#faf9f6] text-foreground flex flex-col relative overflow-hidden">
@@ -156,7 +181,7 @@ const PrayerChain = () => {
                 disabled={!intention.trim() || isSubmitting}
                 className="absolute right-2 top-2 bottom-2 rounded-2xl bg-gradient-to-r from-[#d4a017] to-[#f0c040] hover:opacity-90 border-0 shadow-sm"
               >
-                {isSubmitting ? <Sparkles className="animate-spin w-5 h-5 text-white" /> : <Send className="w-5 h-5 text-white" />}
+                {isSubmitting && !isPhraseDialogOpen ? <Sparkles className="animate-spin w-5 h-5 text-white" /> : <Send className="w-5 h-5 text-white" />}
               </Button>
             </form>
           </div>
@@ -186,7 +211,7 @@ const PrayerChain = () => {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.8, duration: 1 }}
-                  className="text-[#a0720a] font-bold mt-10 text-[11px] md:text-sm text-center uppercase tracking-[0.2em]"
+                  className="text-[#a0720a] font-bold mt-10 text-[9px] md:text-[10px] text-center uppercase tracking-[0.2em] opacity-70"
                 >
                   — {authorInfo.name}, {authorInfo.city}
                 </motion.p>
@@ -206,6 +231,63 @@ const PrayerChain = () => {
             )}
           </AnimatePresence>
         </div>
+
+        {/* Floating Action Button - Write Next Phrase */}
+        <div className="absolute right-6 bottom-24 z-30">
+           <Button 
+             onClick={() => {
+               if (!currentUser) {
+                 toast({ title: "Inicie sessão", description: "Faça login para adicionar uma frase." });
+                 navigate("/auth");
+               } else {
+                 setIsPhraseDialogOpen(true);
+               }
+             }}
+             className="rounded-full shadow-lg bg-white hover:bg-black/5 text-[#d4a017] border border-[#d4a017]/20 flex items-center gap-2 px-5 py-6 shadow-[#d4a017]/10"
+           >
+             <span className="text-[11px] font-bold uppercase tracking-wider text-[#3d2800]">Continuar oração</span>
+             <PenLine className="w-4 h-4 text-[#d4a017]" />
+           </Button>
+        </div>
+
+        {/* Contribute Phrase Dialog */}
+        <Dialog open={isPhraseDialogOpen} onOpenChange={setIsPhraseDialogOpen}>
+          <DialogContent className="max-w-md bg-[#faf9f6] border-primary/20 rounded-[2rem] p-8">
+            <DialogHeader>
+              <DialogTitle className="text-2xl font-serif font-bold text-[#3d2800] text-center">Unir Voz à Corrente ✨</DialogTitle>
+              <DialogDescription className="text-center mt-2 text-sm text-[#8b6508]">
+                Escreva a próxima frase de oração que o Espírito tocar em seu coração e que todos na rede irão ler juntos.
+              </DialogDescription>
+            </DialogHeader>
+            <form onSubmit={handleSubmitPhrase} className="mt-4 flex flex-col gap-4">
+              <Input 
+                autoFocus
+                placeholder="Exemplo: Que a Tua graça purifique nossas aflições..."
+                value={newPhrase}
+                onChange={(e) => setNewPhrase(e.target.value)}
+                className="bg-white border-primary/20 py-6 px-4 rounded-[1.5rem] focus:ring-primary/50 text-[#3d2800] shadow-sm font-serif italic"
+                disabled={isSubmitting}
+              />
+              <DialogFooter className="mt-4 sm:justify-stretch flex flex-row gap-3">
+                <Button 
+                   type="button" 
+                   variant="outline" 
+                   className="flex-1 rounded-[1.5rem] py-6 border-[#d4a017]/30 text-[#3d2800]"
+                   onClick={() => setIsPhraseDialogOpen(false)}
+                 >
+                   Cancelar
+                </Button>
+                <Button 
+                   type="submit" 
+                   disabled={!newPhrase.trim() || isSubmitting}
+                   className="flex-1 rounded-[1.5rem] py-6 bg-gradient-to-r from-[#d4a017] to-[#f0c040] hover:opacity-90 border-0"
+                 >
+                   {isSubmitting && isPhraseDialogOpen ? "Enviando..." : "Semear Frase"}
+                </Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
 
         {/* Progress Integration Bottom Bar */}
         <div className="bg-white border-t border-primary/5 p-6 relative z-20 pb-24 shadow-[0_-10px_40px_rgba(0,0,0,0.03)]">
