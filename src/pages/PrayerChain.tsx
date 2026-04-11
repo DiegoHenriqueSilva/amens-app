@@ -29,6 +29,7 @@ const PrayerChain = () => {
 
   // Calculate the current prayer and phrase based on global time
   const [globalTime, setGlobalTime] = useState(Date.now());
+  const [timeOffset, setTimeOffset] = useState<number | null>(null);
   const [sparkles, setSparkles] = useState<{ id: number; x: number; y: number }[]>([]);
 
   useEffect(() => {
@@ -51,14 +52,36 @@ const PrayerChain = () => {
       }
     });
 
-    // Fetch user count for the header
+    // Fetch server time to sync clocks globally
+    const syncClock = async () => {
+      try {
+        const { data: serverMs, error } = await supabase.rpc('get_server_time');
+        if (!error && serverMs) {
+          const offset = Number(serverMs) - Date.now();
+          setTimeOffset(offset);
+          setGlobalTime(Date.now() + offset);
+          console.log(`[Clock Sync] Server offset: ${offset}ms`);
+        }
+      } catch (e) {
+        console.error("Failed to sync clock:", e);
+        setTimeOffset(0); // Fallback to local time
+      }
+    };
+    syncClock();
+
     const fetchUserCount = async () => {
       const { count } = await supabase.from('profiles').select('*', { count: 'exact', head: true });
       if (count) setUserCount(count);
     };
     fetchUserCount();
 
-    const timer = setInterval(() => setGlobalTime(Date.now()), 1000);
+    const timer = setInterval(() => {
+      setGlobalTime(prev => {
+        // If we have an offset, keep using it, otherwise fallback to local
+        const currentOffset = timeOffset ?? 0;
+        return Date.now() + currentOffset;
+      });
+    }, 1000);
     
     // Presence check with safety
     const channel = supabase.channel('prayer-chain-presence');
@@ -320,8 +343,18 @@ const PrayerChain = () => {
 
         {/* Dynamic Prayer Display */}
         <div className="flex-1 relative flex flex-col items-center justify-center p-6 pb-12">
-          <AnimatePresence mode="wait">
-            {currentPrayer && currentPhraseIndex >= 0 ? (
+          {timeOffset === null ? (
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="flex flex-col items-center gap-4"
+            >
+              <div className="w-8 h-8 border-4 border-[#d4a017] border-t-transparent rounded-full animate-spin" />
+              <p className="text-[#3d2800]/50 font-medium text-xs uppercase tracking-widest">Sincronizando Corrente...</p>
+            </motion.div>
+          ) : (
+            <AnimatePresence mode="wait">
+              {currentPrayer && currentPhraseIndex >= 0 ? (
               <motion.div 
                 key={`${currentPrayer.id}-${currentPhraseIndex}`}
                 initial={{ opacity: 0, y: 20 }}
@@ -364,8 +397,9 @@ const PrayerChain = () => {
                 <Wind className="w-16 h-16 text-[#d4a017]/30 mx-auto animate-pulse" />
                 <p className="text-[#3d2800]/50 font-serif italic text-xl">O silêncio é o abraço de Deus...</p>
               </motion.div>
-            )}
-          </AnimatePresence>
+              )}
+            </AnimatePresence>
+          )}
         </div>
 
         {/* Floating Action Button - Orar junto */}
