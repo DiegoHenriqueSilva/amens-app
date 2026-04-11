@@ -7,7 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Send, Sparkles, Wind, Users, PenLine } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import PageTransition from "@/components/PageTransition";
-import { PRAYERS, PHRASE_DURATION, PRAYER_GAP, COMMON_NAMES, PR_CITIES_100K } from "@/data/prayer-data";
+import { PRAYERS, PHRASE_DURATION, PRAYER_GAP, COMMON_NAMES, PR_CITIES_100K, TOTAL_CYCLE_TIME } from "@/data/prayer-data";
 import { motion, AnimatePresence } from "framer-motion";
 import { usePrayerQueue } from "@/hooks/use-prayer-queue";
 import { cn } from "@/lib/utils";
@@ -24,6 +24,7 @@ const PrayerChain = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [onlineCount, setOnlineCount] = useState(0);
+  const [userCount, setUserCount] = useState<number>(0);
   const [hasSentIntentionToday, setHasSentIntentionToday] = useState(false);
 
   // Calculate the current prayer and phrase based on global time
@@ -50,6 +51,13 @@ const PrayerChain = () => {
       }
     });
 
+    // Fetch user count for the header
+    const fetchUserCount = async () => {
+      const { count } = await supabase.from('profiles').select('*', { count: 'exact', head: true });
+      if (count) setUserCount(count);
+    };
+    fetchUserCount();
+
     const timer = setInterval(() => setGlobalTime(Date.now()), 1000);
     
     // Presence check with safety
@@ -74,8 +82,7 @@ const PrayerChain = () => {
 
   const { currentPrayer, currentPhraseIndex, progress } = useMemo(() => {
     const elapsed = globalTime - EPOCH;
-    const totalCycleTime = PRAYERS.length * (PRAYERS[0].phrases.length * PHRASE_DURATION + PRAYER_GAP);
-    const cycleElapsed = elapsed % totalCycleTime;
+    const cycleElapsed = elapsed % TOTAL_CYCLE_TIME;
     
     let accumulatedTime = 0;
     for (let i = 0; i < PRAYERS.length; i++) {
@@ -131,41 +138,39 @@ const PrayerChain = () => {
     try {
       // Logic to find next available slot
       const elapsed = globalTime - EPOCH;
-      const totalCycleTime = PRAYERS.length * (PRAYERS[0].phrases.length * PHRASE_DURATION + PRAYER_GAP);
-      const cycleStart = Math.floor(elapsed / totalCycleTime) * totalCycleTime;
+      const cycleStart = Math.floor(elapsed / TOTAL_CYCLE_TIME) * TOTAL_CYCLE_TIME;
       
       // We look ahead for the next phrases
       // Starting from currentPhraseIndex + 1
       let foundSlot = null;
       let checkPhraseIndex = currentPhraseIndex + 1;
-      let checkPrayerIndex = PRAYERS.findIndex(p => p.id === currentPrayer?.id);
+      let initialPrayerIndex = PRAYERS.findIndex(p => p.id === currentPrayer?.id);
+      let checkPrayerIndex = initialPrayerIndex === -1 ? 0 : initialPrayerIndex;
+      let cycleOffset = 0;
       
-      if (checkPrayerIndex === -1) {
-        checkPrayerIndex = 0;
-        checkPhraseIndex = 0;
-      }
-      
-      // Search for next 10 slots
-      for (let s = 0; s < 10; s++) {
+      // Search for next 20 slots to be safe
+      for (let s = 0; s < 20; s++) {
         const prayer = PRAYERS[checkPrayerIndex];
         if (!prayer) break;
         
         if (checkPhraseIndex >= prayer.phrases.length) {
           checkPhraseIndex = 0;
+          const prevIndex = checkPrayerIndex;
           checkPrayerIndex = (checkPrayerIndex + 1) % PRAYERS.length;
+          if (checkPrayerIndex === 0 && prevIndex !== -1) {
+            cycleOffset += TOTAL_CYCLE_TIME;
+          }
           continue;
         }
         
-        if (checkPhraseIndex > 0) { // Skip first phrase
-           // Calculate exact start timestamp
+        if (checkPhraseIndex > 0) { 
            let accum = 0;
            for (let p = 0; p < checkPrayerIndex; p++) {
              accum += (PRAYERS[p].phrases.length * PHRASE_DURATION) + PRAYER_GAP;
            }
-           const targetTs = EPOCH + cycleStart + accum + (checkPhraseIndex * PHRASE_DURATION);
+           const targetTs = EPOCH + cycleStart + cycleOffset + accum + (checkPhraseIndex * PHRASE_DURATION);
            
-           if (targetTs > globalTime + 2000) { // Give some buffer room
-             // Check if already taken in DB
+           if (targetTs > globalTime + 2000) { 
              const { data: existing } = await supabase
                .from('prayer_contributions')
                .select('id')
@@ -179,6 +184,9 @@ const PrayerChain = () => {
            }
         }
         checkPhraseIndex++;
+      }
+      } catch (f) {
+        console.error("Slot search error:", f);
       }
 
       if (foundSlot) {
@@ -261,52 +269,54 @@ const PrayerChain = () => {
 
         {/* Header Overlay */}
         <div className="p-6 relative z-20">
-          <div className="flex justify-between items-center mb-6">
-            <Button variant="ghost" size="icon" onClick={() => navigate("/")} className="text-[#3d2800] hover:bg-black/5">
-              <ArrowLeft className="w-6 h-6" />
-            </Button>
-            <div className="flex items-center gap-2 bg-white/60 backdrop-blur-md px-5 py-2.5 rounded-full border border-primary/20 soft-shadow">
-              <div className="w-2.5 h-2.5 bg-green-500 rounded-full animate-pulse" />
-              <span className="text-[13px] font-bold tracking-[0.2em] uppercase text-[#3d2800]">
-                {currentPrayer ? currentPrayer.name : "Corrente"}
-              </span>
+          <div className="max-w-md mx-auto flex flex-col items-center">
+            <div className="w-full flex justify-between items-center mb-4">
+              <Button variant="ghost" size="icon" onClick={() => navigate("/")} className="text-[#3d2800] hover:bg-black/5 -ml-2">
+                <ArrowLeft className="w-6 h-6" />
+              </Button>
+              <div className="w-10" />
             </div>
-            <div className="w-10" />
-          </div>
 
-          {!hasSentIntentionToday && (
-            <div className="max-w-md mx-auto">
-              <label className="block text-center text-[10px] uppercase tracking-widest font-bold text-[#a0720a] mb-2 drop-shadow-sm">
-                  Envie sua intenção de oração abaixo:
-              </label>
-              <form onSubmit={handleSubmitIntention} className="relative group">
-                <Input 
-                  placeholder={currentUser ? "Pelo que você precisa que oremos hoje?" : "Faça login para enviar intenção"}
-                  value={intention}
-                  onChange={(e) => setIntention(e.target.value)}
-                  className="bg-white border-primary/20 py-7 pl-6 pr-16 rounded-[2rem] focus:ring-primary/50 text-[#3d2800] placeholder:text-[#3d2800]/40 soft-shadow font-medium"
-                  disabled={!currentUser || isSubmitting}
-                />
-                <Button 
-                  type="submit" 
-                  disabled={!intention.trim() || isSubmitting}
-                  className="absolute right-2 top-2 bottom-2 rounded-2xl bg-gradient-to-r from-[#d4a017] to-[#f0c040] hover:opacity-90 border-0 shadow-sm"
-                >
-                  {isSubmitting && !isPhraseDialogOpen ? <Sparkles className="animate-spin w-5 h-5 text-white" /> : <Send className="w-5 h-5 text-white" />}
-                </Button>
-              </form>
-            </div>
-          )}
-
-          {hasSentIntentionToday && (
-            <div className="max-w-md mx-auto bg-white/40 backdrop-blur-sm border border-[#d4a017]/10 soft-shadow rounded-[2rem] py-4 px-6 text-center animate-in fade-in zoom-in duration-500">
-               <div className="flex items-center justify-center gap-2 mb-1">
-                 <Sparkles className="w-4 h-4 text-[#d4a017]" />
-                 <span className="text-[11px] uppercase tracking-[0.2em] font-bold text-[#a0720a]">Graça alcançada</span>
+            <div className="text-center space-y-1 mb-6 animate-in fade-in slide-in-from-top duration-700">
+               <h1 className="text-[#d4a017] text-2xl font-bold tracking-[0.1em] uppercase drop-shadow-sm">Corrente de Oração</h1>
+               <p className="text-[#3d2800]/60 text-[11px] font-medium uppercase tracking-widest">
+                 Estamos orando pelas intenções de <span className="text-[#a0720a] font-bold">{Math.floor(userCount / 2) + 10}</span> pessoas
+               </p>
+               
+               <div className="pt-4 flex justify-center">
+                 <div className="flex items-center gap-2 bg-white/80 backdrop-blur-md px-5 py-2.5 rounded-full border border-[#d4a017]/20 soft-shadow ring-1 ring-[#d4a017]/5">
+                   <div className="w-2.5 h-2.5 bg-green-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.5)]" />
+                   <span className="text-[13px] font-bold tracking-[0.2em] uppercase text-[#3d2800]">
+                     {currentPrayer ? currentPrayer.name : "Momento de Silêncio"}
+                   </span>
+                 </div>
                </div>
-               <p className="text-xs text-[#3d2800]/70 font-medium">Sua intenção de hoje já está na rede do amor infinito. Volte amanhã.</p>
             </div>
-          )}
+
+            {!hasSentIntentionToday && (
+              <div className="w-full">
+                <label className="block text-center text-[10px] uppercase tracking-widest font-bold text-[#a0720a] mb-2 drop-shadow-sm">
+                    Envie sua intenção de oração abaixo:
+                </label>
+                <form onSubmit={handleSubmitIntention} className="relative group">
+                  <Input 
+                    placeholder={currentUser ? "Pelo que você precisa que oremos hoje?" : "Faça login para enviar intenção"}
+                    value={intention}
+                    onChange={(e) => setIntention(e.target.value)}
+                    className="bg-white border-primary/20 py-7 pl-6 pr-16 rounded-[2rem] focus:ring-primary/50 text-[#3d2800] placeholder:text-[#3d2800]/40 soft-shadow font-medium"
+                    disabled={!currentUser || isSubmitting}
+                  />
+                  <Button 
+                    type="submit" 
+                    disabled={!intention.trim() || isSubmitting}
+                    className="absolute right-2 top-2 bottom-2 rounded-2xl bg-gradient-to-r from-[#d4a017] to-[#f0c040] hover:opacity-90 border-0 shadow-sm"
+                  >
+                    {isSubmitting && !isPhraseDialogOpen ? <Sparkles className="animate-spin w-5 h-5 text-white" /> : <Send className="w-5 h-5 text-white" />}
+                  </Button>
+                </form>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Dynamic Prayer Display */}

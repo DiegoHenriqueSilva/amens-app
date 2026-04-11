@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { PRAYERS, PHRASE_DURATION, PRAYER_GAP, COMMON_NAMES, PR_CITIES_100K } from "@/data/prayer-data";
+import { PRAYERS, PHRASE_DURATION, PRAYER_GAP, COMMON_NAMES, PR_CITIES_100K, TOTAL_CYCLE_TIME } from "@/data/prayer-data";
 
 export interface Contributor {
   user_id?: string;
@@ -76,8 +76,7 @@ export const usePrayerQueue = (currentPrayerId: string | undefined, currentPhras
     if (!currentPrayerId || currentPhraseIndex === -1) return null;
     
     const elapsed = globalTime - EPOCH;
-    const totalCycleTime = PRAYERS.length * (PRAYERS[0].phrases.length * PHRASE_DURATION + PRAYER_GAP);
-    const cycleStart = Math.floor(elapsed / totalCycleTime) * totalCycleTime;
+    const cycleStart = Math.floor(elapsed / TOTAL_CYCLE_TIME) * TOTAL_CYCLE_TIME;
     
     let accumulatedTime = 0;
     for (const prayer of PRAYERS) {
