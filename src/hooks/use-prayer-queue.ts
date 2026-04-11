@@ -107,9 +107,12 @@ export const usePrayerQueue = (currentPrayerId: string | undefined, currentPhras
     }
 
     // Default to random fake name if no real contribution
-    const seed = parseInt(currentPhraseTimestamp);
-    const name = COMMON_NAMES[seed % COMMON_NAMES.length];
-    const city = PR_CITIES_100K[seed % PR_CITIES_100K.length];
+    const rawSeed = parseInt(currentPhraseTimestamp);
+    // Use the phrase sequence number as seed to ensure variety
+    const sequenceSeed = Math.floor(rawSeed / PHRASE_DURATION);
+    const name = COMMON_NAMES[sequenceSeed % COMMON_NAMES.length];
+    // Offset city slightly so names and cities don't always pair the same
+    const city = PR_CITIES_100K[(sequenceSeed + 3) % PR_CITIES_100K.length];
     
     return { name, city };
   }, [currentPhraseTimestamp, currentPhraseIndex, contributions]);
