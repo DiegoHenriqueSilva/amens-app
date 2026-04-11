@@ -304,49 +304,27 @@ const PrayerChain = () => {
       const votingDuration = 6000;
       
       // Lenient check: if we are close to the end or past it
-      if (nowMs < Number(latest.started_at) + prayerDuration + votingDuration - 300) {
+      if (nowMs < Number(latest.started_at) + prayerDuration + votingDuration - 200) {
         return; 
       }
 
-      // Logic to pick winner (Social Proof)
-      const totalPessoas = Math.floor(userCount / 2) + 10;
-      const totalFakeVotes = Math.floor(totalPessoas / 2);
-      let winner = null;
-      
-      if (latest.voting_options && latest.voting_options.length > 0) {
-        const finalVotes = latest.voting_options.map((optId: string) => {
-          const baseFake = Math.floor(totalFakeVotes / 3);
-          const optSeed = optId.split('').reduce((a, b) => a + b.charCodeAt(0), 0);
-          return {
-            id: optId,
-            count: (votes[optId] || 0) + baseFake + (optSeed % 3)
-          };
-        });
-        winner = finalVotes.sort((a: any, b: any) => b.count - a.count)[0].id;
-      } else {
-        winner = PRAYERS[Math.floor(Math.random() * PRAYERS.length)].id;
-      }
-      
-      const nextOptions = [...PRAYERS]
-        .filter(p => p.id !== winner)
-        .sort(() => Math.random() - 0.5)
-        .slice(0, 3)
-        .map(p => p.id);
-
-      // Call the NEW fast_advance_prayer RPC
-      const { error: rpcError } = await supabase.rpc('fast_advance_prayer', {
-        p_winner_id: winner,
-        p_next_options: nextOptions
-      });
+      // Call the NEW Autonomous RPC (no arguments needed as the DB decides everything)
+      const { error: rpcError } = await supabase.rpc('autonomous_prayer_advance');
 
       if (rpcError) {
         console.error("RPC Error:", rpcError);
-        // Silent retry or minimal log
+        toast({ 
+          title: "Erro de Sincronia", 
+          description: `Servidor: ${rpcError.message}. Verifique o SQL.`, 
+          variant: "destructive",
+          duration: 5000 
+        });
       } else {
-        console.log(`[State Advance] Successfully Reset & Moved to ${winner}`);
+        console.log(`[State Advance] Autonomous success!`);
       }
-    } catch (e) {
+    } catch (e: any) {
       console.error("State advancement failed:", e);
+      toast({ title: "Erro Local", description: e.message, variant: "destructive" });
     }
   };
 
