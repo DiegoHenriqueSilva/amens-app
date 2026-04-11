@@ -277,61 +277,74 @@ const PrayerChain = () => {
     }
   };
 
-  // State advancement logic (Client-side trigger for global state)
+  // Determine who advances the state (with robustness)
   useEffect(() => {
-    if (isVoting && votingTimeLeft === 0 && prayerState) {
-      const advanceState = async () => {
-        try {
-          // Debounce: only one client should successfully update
-          await new Promise(r => setTimeout(r, Math.random() * 800));
-          
-          // Refresh state first to see if someone else already advanced
-          const { data: latest } = await supabase.from('prayer_state').select('*').limit(1).maybeSingle();
-          const nowMs = Date.now() + (timeOffset || 0);
-          
-          const currentDuration = (PRAYERS.find(p => p.id === latest?.current_prayer_id)?.phrases.length || 0) * PHRASE_DURATION;
-          const totalDuration = currentDuration + 6000;
-          
-          if (!latest || nowMs < Number(latest.started_at) + totalDuration) {
-            return; 
-          }
+    // Check every second if we are stuck at 0s
+    const checkStuck = setInterval(() => {
+      if (isVoting && votingTimeLeft === 0 && prayerState) {
+        advanceState();
+      }
+    }, 2000);
+    return () => clearInterval(checkStuck);
+  }, [isVoting, votingTimeLeft, prayerState]);
 
-          // Logic to pick winner
-          const fakeVotesPerOption = Math.floor((onlineCount + 10) / 4);
-          let winner = null;
-          
-          if (latest.voting_options && latest.voting_options.length > 0) {
-            const finalVotes = latest.voting_options.map((optId: string) => ({
-              id: optId,
-              count: (votes[optId] || 0) + fakeVotesPerOption + Math.floor(Math.random() * 5)
-            }));
-            winner = finalVotes.sort((a: any, b: any) => b.count - a.count)[0].id;
-          } else {
-            winner = PRAYERS[Math.floor(Math.random() * PRAYERS.length)].id;
-          }
-          
-          const nextOptions = [...PRAYERS]
-            .filter(p => p.id !== winner)
-            .sort(() => Math.random() - 0.5)
-            .slice(0, 3)
-            .map(p => p.id);
-
-          // Use the RPC for a single atomic transaction
-          await supabase.rpc('advance_prayer_state', {
-            p_winner_id: winner,
-            p_next_options: nextOptions,
-            p_current_time: nowMs
-          });
-          
-          console.log(`[State Advance] Successfully moved to ${winner}`);
-        } catch (e) {
-          console.error("State advancement failed:", e);
-        }
-      };
+  const advanceState = async () => {
+    try {
+      // Debounce: only one client should successfully update
+      await new Promise(r => setTimeout(r, Math.random() * 1000));
       
-      advanceState();
+      // Refresh state first to see if someone else already advanced
+      const { data: latest } = await supabase.from('prayer_state').select('*').limit(1).maybeSingle();
+      if (!latest) return;
+
+      const nowMs = Date.now() + (timeOffset || 0);
+      const prayer = PRAYERS.find(p => p.id === latest.current_prayer_id);
+      const prayerDuration = (prayer?.phrases.length || 0) * PHRASE_DURATION;
+      const votingDuration = 6000;
+      
+      // Lenient check: if we are within 500ms of the end or past it
+      if (nowMs < Number(latest.started_at) + prayerDuration + votingDuration - 500) {
+        return; 
+      }
+
+      // Logic to pick winner
+      // Fictitious votes: total is half of online count
+      const totalPessoas = Math.floor(userCount / 2) + 10;
+      const totalFakeVotes = Math.floor(totalPessoas / 2);
+      
+      let winner = null;
+      if (latest.voting_options && latest.voting_options.length > 0) {
+        const finalVotes = latest.voting_options.map((optId: string) => {
+          // Subtle distribution: divide totalFakeVotes by 3 and add some randomness
+          const baseFake = Math.floor(totalFakeVotes / 3);
+          const randomExtra = Math.floor(Math.random() * 3);
+          return {
+            id: optId,
+            count: (votes[optId] || 0) + baseFake + randomExtra
+          };
+        });
+        winner = finalVotes.sort((a: any, b: any) => b.count - a.count)[0].id;
+      } else {
+        winner = PRAYERS[Math.floor(Math.random() * PRAYERS.length)].id;
+      }
+      
+      const nextOptions = [...PRAYERS]
+        .filter(p => p.id !== winner)
+        .sort(() => Math.random() - 0.5)
+        .slice(0, 3)
+        .map(p => p.id);
+
+      await supabase.rpc('advance_prayer_state', {
+        p_winner_id: winner,
+        p_next_options: nextOptions,
+        p_current_time: nowMs
+      });
+      
+      console.log(`[State Advance] Successfully moved to ${winner}`);
+    } catch (e) {
+      console.error("State advancement failed:", e);
     }
-  }, [isVoting, votingTimeLeft, prayerState, onlineCount, timeOffset, votes]);
+  };
 
   const handleSubmitIntention = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -514,9 +527,19 @@ const PrayerChain = () => {
                     if (!p) return null;
                     
                     // Social Proof Logic for UI visualization
-                    const socialBase = Math.floor((onlineCount + 10) / 4);
-                    const currentVoteCount = (votes[optId] || 0) + (isVoting ? socialBase : 0);
-                    const totalVotesArray = prayerState.voting_options.map((id: string) => (votes[id] || 0) + (isVoting ? socialBase : 0));
+                    const totalPessoas = Math.floor(userCount / 2) + 10;
+                    const totalFakeVotes = Math.floor(totalPessoas / 2);
+                    const baseFake = Math.floor(totalFakeVotes / 3);
+                    
+                    // Use a more stable 'random' distribution based on option ID
+                    const seed = optId.split('').reduce((a, b) => a + b.charCodeAt(0), 0);
+                    const subtleExtra = seed % 3;
+                    
+                    const currentVoteCount = (votes[optId] || 0) + (isVoting ? (baseFake + subtleExtra) : 0);
+                    const totalVotesArray = prayerState.voting_options.map((id: string) => {
+                      const optSeed = id.split('').reduce((a, b) => a + b.charCodeAt(0), 0);
+                      return (votes[id] || 0) + (isVoting ? (baseFake + (optSeed % 3)) : 0);
+                    });
                     const totalAcross = totalVotesArray.reduce((src: number, next: number) => src + next, 0) || 1;
                     const percent = Math.floor((currentVoteCount / totalAcross) * 100);
 
