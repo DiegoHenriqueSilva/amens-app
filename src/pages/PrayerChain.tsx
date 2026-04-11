@@ -185,9 +185,6 @@ const PrayerChain = () => {
         }
         checkPhraseIndex++;
       }
-      } catch (f) {
-        console.error("Slot search error:", f);
-      }
 
       if (foundSlot) {
         // Use profile data
