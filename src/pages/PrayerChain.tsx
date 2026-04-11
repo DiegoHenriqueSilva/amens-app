@@ -295,12 +295,17 @@ const PrayerChain = () => {
         // Add fake votes (social proof)
         const fakeVotesPerOption = Math.floor((onlineCount + 10) / 4);
         
-        const finalVotes = latest.voting_options.map((optId: string) => ({
-          id: optId,
-          count: (votes[optId] || 0) + fakeVotesPerOption + Math.floor(Math.random() * 5)
-        }));
-        
-        const winner = finalVotes.sort((a: any, b: any) => b.count - a.count)[0].id;
+        let winner = null;
+        if (latest.voting_options && latest.voting_options.length > 0) {
+          const finalVotes = latest.voting_options.map((optId: string) => ({
+            id: optId,
+            count: (votes[optId] || 0) + fakeVotesPerOption + Math.floor(Math.random() * 5)
+          }));
+          winner = finalVotes.sort((a: any, b: any) => b.count - a.count)[0].id;
+        } else {
+          // Fallback if no options (e.g., initial state)
+          winner = PRAYERS[Math.floor(Math.random() * PRAYERS.length)].id;
+        }
         
         // Pick 3 NEW random options for the NEXT round
         const nextOptions = [...PRAYERS]
