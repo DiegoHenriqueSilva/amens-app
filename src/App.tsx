@@ -36,7 +36,10 @@ const App = () => {
       '/bg-tree.png'
     ];
     const randomBg = backgrounds[Math.floor(Math.random() * backgrounds.length)];
-    document.body.style.setProperty('--bg-url', `url(${randomBg})`);
+    // Safe property set
+    try {
+      document.body.style.setProperty('--bg-url', `url(${randomBg})`);
+    } catch(e) {}
   }, []);
 
   return (
@@ -61,7 +64,6 @@ const App = () => {
             <Route path="/prayer-chain" element={<PrayerChain />} />
             <Route path="/messages" element={<Messages />} />
             <Route path="/friends" element={<Friends />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
           <BottomNav />

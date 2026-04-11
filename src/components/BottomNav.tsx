@@ -5,7 +5,7 @@ import { useFriends } from "@/hooks/use-friends";
 
 const BottomNav = () => {
   const location = useLocation();
-  const { requests, friends } = useFriends();
+  const { requests, friends, loading } = useFriends();
   
   // Don't show bottom nav on auth page
   if (location.pathname === "/auth") return null;
@@ -14,7 +14,7 @@ const BottomNav = () => {
     { path: "/", icon: Home, label: "Início" },
     { path: "/community", icon: Users, label: "Comunidade" },
     { path: "/prayer-chain", icon: LinkIcon, label: "Corrente" },
-    { path: "/friends", icon: Users, label: "Amigos", badge: requests.length, friendCount: friends.length },
+    { path: "/friends", icon: Users, label: "Amigos", badge: requests?.length || 0, friendCount: friends?.length || 0 },
     { path: "/profile", icon: User, label: "Perfil" },
   ];
 
@@ -39,14 +39,14 @@ const BottomNav = () => {
                 "w-6 h-6 transition-colors",
                 isActive ? "text-primary" : "text-muted-foreground group-hover:text-primary"
               )} />
-              {/* Pending requests badge (red, top-right) */}
-              {item.badge !== undefined && item.badge > 0 && (
+              {/* Pending requests badge */}
+              {item.badge > 0 && (
                 <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[9px] rounded-full flex items-center justify-center border border-background font-bold animate-pulse">
                   {item.badge}
                 </span>
               )}
-              {/* Friend count badge (gold, bottom-right) */}
-              {item.friendCount !== undefined && (
+              {/* Friend count badge */}
+              {item.friendCount !== undefined && !loading && (
                 <span className={cn(
                   "absolute -bottom-1.5 -right-2.5 min-w-[18px] h-[18px] px-1 text-[9px] rounded-full flex items-center justify-center border font-bold transition-all",
                   item.friendCount > 0

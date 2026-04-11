@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/fixed-client";
 import { toast } from "sonner";
 
 export const useFriends = () => {
@@ -9,78 +9,83 @@ export const useFriends = () => {
   const [myCode, setMyCode] = useState<string | null>(null);
 
   const fetchFriends = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
+    try {
+      if (!import.meta.env.VITE_SUPABASE_URL) return;
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
 
-    // Get friendships and join with profiles
-    const { data, error } = await supabase
-      .from("friendships")
-      .select(`
-        friend_id,
-        profiles!friendships_friend_id_fkey (
-          id,
-          full_name,
-          display_name,
-          show_real_name,
-          city,
-          state,
-          avatar_url
-        )
-      `)
-      .eq("user_id", user.id);
+      const { data, error } = await supabase
+        .from("friendships")
+        .select(`
+          friend_id,
+          profiles!friendships_friend_id_fkey (
+            id,
+            full_name,
+            display_name,
+            show_real_name,
+            city,
+            state,
+            avatar_url
+          )
+        `)
+        .eq("user_id", user.id);
 
-    if (error) {
-      console.error("Error fetching friends:", error);
-    } else {
+      if (error) throw error;
       setFriends(data?.map(f => f.profiles) || []);
+    } catch (e) {
+      console.warn("useFriends: fetchFriends failed:", e);
     }
   };
 
   const fetchRequests = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
+    try {
+      if (!import.meta.env.VITE_SUPABASE_URL) return;
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
 
-    const { data, error } = await supabase
-      .from("friend_requests")
-      .select(`
-        id,
-        sender_id,
-        status,
-        created_at,
-        profiles!friend_requests_sender_id_fkey (
+      const { data, error } = await supabase
+        .from("friend_requests")
+        .select(`
           id,
-          full_name,
-          display_name,
-          show_real_name,
-          city,
-          state,
-          avatar_url
-        )
-      `)
-      .eq("receiver_id", user.id)
-      .eq("status", "pending");
+          sender_id,
+          status,
+          created_at,
+          profiles!friend_requests_sender_id_fkey (
+            id,
+            full_name,
+            display_name,
+            show_real_name,
+            city,
+            state,
+            avatar_url
+          )
+        `)
+        .eq("receiver_id", user.id)
+        .eq("status", "pending");
 
-    if (error) {
-      console.error("Error fetching requests:", error);
-    } else {
+      if (error) throw error;
       setRequests(data || []);
+    } catch (e) {
+      console.warn("useFriends: fetchRequests failed:", e);
     }
   };
 
   const fetchMyCode = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
+    try {
+      if (!import.meta.env.VITE_SUPABASE_URL) return;
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
 
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("friend_code")
-      .eq("id", user.id)
-      .single();
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("friend_code")
+        .eq("id", user.id)
+        .single();
 
-    if (error) {
-      console.error("Error fetching my code:", error);
-    } else {
+      if (error) throw error;
       setMyCode(data?.friend_code || null);
+    } catch (e) {
+      console.warn("useFriends: fetchMyCode failed:", e);
     }
   };
 

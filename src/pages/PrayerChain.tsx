@@ -1,396 +1,205 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { ArrowLeft, Sparkles, MessageCircle, Heart, Users, Clock } from "lucide-react";
-import PageTransition from "@/components/PageTransition";
-import { motion, AnimatePresence } from "framer-motion";
 import { Player } from "@remotion/player";
+import { supabase } from "@/integrations/supabase/fixed-client";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card } from "@/components/ui/card";
+import { useToast } from "@/hooks/use-toast";
+import { ArrowLeft, Send, Sparkles, Wind, Users } from "lucide-react";
+import PageTransition from "@/components/PageTransition";
 import PrayerWriting from "@/remotion/PrayerChain/PrayerWriting";
-import { PRAYERS, PR_CITIES_100K, COMMON_NAMES, type Prayer } from "@/data/prayer-data";
-import { toast } from "sonner";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
-import { Textarea } from "@/components/ui/textarea";
+import { PRAYERS, PHRASE_DURATION, PRAYER_GAP } from "@/data/prayer-data";
+import { motion, AnimatePresence } from "framer-motion";
+
+// Configuration for the Eternal Flow
+const EPOCH = new Date("2024-01-01T00:00:00Z").getTime();
 
 const PrayerChain = () => {
   const navigate = useNavigate();
-  const [session, setSession] = useState<any>(null);
-  const [contributions, setContributions] = useState<any[]>([]);
-  const [intentionsCount, setIntentionsCount] = useState(0);
-  const [myIntention, setMyIntention] = useState<string | null>(null);
-  const [showIntentionModal, setShowIntentionModal] = useState(false);
-  const [intentionInput, setIntentionInput] = useState("");
-  const [isSubmittingIntention, setIsSubmittingIntention] = useState(false);
-  const [loading, setLoading] = useState(true);
-  
-  const lastInteractionRef = useRef<number>(Date.now());
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const { toast } = useToast();
+  const [intention, setIntention] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [onlineCount, setOnlineCount] = useState(0);
+
+  // Calculate the current prayer and phrase based on global time
+  const [globalTime, setGlobalTime] = useState(Date.now());
 
   useEffect(() => {
-    initSession();
-    fetchIntentionsCount();
-    fetchMyIntention();
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setCurrentUser(session?.user ?? null);
+    });
 
-    const channel = supabase
-      .channel("prayer_chain_updates")
-      .on(
-        "postgres_changes",
-        { event: "UPDATE", schema: "public", table: "prayer_chain_sessions" },
-        (payload) => {
-          handleSessionUpdate(payload.new);
+    const timer = setInterval(() => setGlobalTime(Date.now()), 1000);
+    
+    // Presence check with safety
+    const channel = supabase.channel('prayer-chain-presence');
+    channel
+      .on('presence', { event: 'sync' }, () => {
+        try {
+          setOnlineCount(Object.keys(channel.presenceState()).length);
+        } catch(e) {}
+      })
+      .subscribe(async (status) => {
+        if (status === 'SUBSCRIBED') {
+          try { await channel.track({ online_at: new Date().toISOString() }); } catch(e) {}
         }
-      )
-      .subscribe();
+      });
 
     return () => {
+      clearInterval(timer);
       supabase.removeChannel(channel);
-      if (timerRef.current) clearInterval(timerRef.current);
     };
   }, []);
 
-  const initSession = async () => {
-    setLoading(true);
-    // Find active session
-    let { data: sessions, error } = await supabase
-      .from("prayer_chain_sessions")
-      .select("*")
-      .order("created_at", { ascending: false })
-      .limit(1);
+  const { currentPrayer, currentPhraseIndex, progress } = useMemo(() => {
+    const elapsed = globalTime - EPOCH;
+    const totalCycleTime = PRAYERS.length * (PRAYERS[0].phrases.length * PHRASE_DURATION + PRAYER_GAP);
+    const cycleElapsed = elapsed % totalCycleTime;
+    
+    let accumulatedTime = 0;
+    for (let i = 0; i < PRAYERS.length; i++) {
+      const prayer = PRAYERS[i];
+      const prayerDuration = prayer.phrases.length * PHRASE_DURATION;
+      
+      if (cycleElapsed < accumulatedTime + prayerDuration) {
+        const timeInPrayer = cycleElapsed - accumulatedTime;
+        const phraseIndex = Math.floor(timeInPrayer / PHRASE_DURATION);
+        const phraseProgress = (timeInPrayer % PHRASE_DURATION) / PHRASE_DURATION;
+        return { 
+          currentPrayer: prayer, 
+          currentPhraseIndex: phraseIndex,
+          progress: phraseProgress 
+        };
+      }
+      
+      accumulatedTime += prayerDuration;
+      if (cycleElapsed < accumulatedTime + PRAYER_GAP) {
+         return { currentPrayer: null, currentPhraseIndex: -1, progress: 0 };
+      }
+      accumulatedTime += PRAYER_GAP;
+    }
 
-    if (error) {
-      console.error("Error fetching session:", error);
-      setLoading(false);
+    return { currentPrayer: PRAYERS[0], currentPhraseIndex: 0, progress: 0 };
+  }, [globalTime]);
+
+  const handleSubmitIntention = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!intention.trim()) return;
+    if (!currentUser) {
+      toast({ title: "Entrar na Corrente", description: "Faça login para enviar sua intenção.", variant: "destructive" });
+      navigate("/auth");
       return;
     }
 
-    if (!sessions || sessions.length === 0) {
-      // Create a new session
-      const initialPrayer = PRAYERS[0];
-      const { data: newSession, error: createError } = await supabase
-        .from("prayer_chain_sessions")
-        .insert({
-          prayer_type: initialPrayer.id,
-          current_phrase_index: -1,
-          last_interaction_at: new Date().toISOString()
-        })
-        .select()
-        .single();
-      
-      if (newSession) setSession(newSession);
-    } else {
-      setSession(sessions[0]);
-      // Update local timer ref
-      lastInteractionRef.current = new Date(sessions[0].last_interaction_at).getTime();
-    }
-    setLoading(false);
-    startIdleTimer();
-  };
-
-  const handleSessionUpdate = (newSession: any) => {
-    setSession(prev => {
-      // If prayer changed or index reset
-      if (prev?.id !== newSession.id || newSession.current_phrase_index < prev?.current_phrase_index) {
-        setContributions([]);
-      }
-      
-      // If a new phrase was added
-      if (newSession.current_phrase_index !== prev?.current_phrase_index) {
-        const prayer = PRAYERS.find(p => p.id === newSession.prayer_type);
-        if (prayer && newSession.current_phrase_index >= 0) {
-          const newPhrase = {
-            index: newSession.current_phrase_index,
-            text: prayer.phrases[newSession.current_phrase_index],
-            contributorName: newSession.last_contributor_name,
-            contributorCity: newSession.last_contributor_city
-          };
-          setContributions(old => [...old, newPhrase]);
-        }
-      }
-      
-      lastInteractionRef.current = new Date(newSession.last_interaction_at).getTime();
-      return newSession;
-    });
-  };
-
-  const startIdleTimer = () => {
-    if (timerRef.current) clearInterval(timerRef.current);
-    timerRef.current = setInterval(() => {
-      const now = Date.now();
-      if (now - lastInteractionRef.current > 5000) {
-        // Only one of the clients (randomly) will try to push a fake update
-        // to avoid unnecessary requests.
-        if (Math.random() < 0.2) {
-           triggerAutoProgression();
-        }
-      }
-    }, 1000);
-  };
-
-  const triggerAutoProgression = async () => {
-    if (!session) return;
-    
-    const prayer = PRAYERS.find(p => p.id === session.prayer_type);
-    if (!prayer) return;
-
-    const nextIndex = session.current_phrase_index + 1;
-    let nextPrayerId = session.prayer_type;
-    let finalNextIndex = nextIndex;
-
-    if (nextIndex >= prayer.phrases.length) {
-      // Check if 15s passed since the last phrase of the previous prayer
-      const finishedAt = new Date(session.last_interaction_at).getTime();
-      if (Date.now() - finishedAt < 15000) {
-        return; // Still in the 15s cooldown period
-      }
-
-      // Finished! Pick another prayer
-      const otherPrayers = PRAYERS.filter(p => p.id !== session.prayer_type);
-      const randomPrayer = otherPrayers[Math.floor(Math.random() * otherPrayers.length)];
-      nextPrayerId = randomPrayer.id;
-      finalNextIndex = -1; // Reset for next prayer
-    }
-
-    const fakeName = COMMON_NAMES[Math.floor(Math.random() * COMMON_NAMES.length)];
-    const fakeCity = PR_CITIES_100K[Math.floor(Math.random() * PR_CITIES_100K.length)];
-
-    await supabase
-      .from("prayer_chain_sessions")
-      .update({
-        prayer_type: nextPrayerId,
-        current_phrase_index: finalNextIndex,
-        last_interaction_at: new Date().toISOString(),
-        last_contributor_name: fakeName,
-        last_contributor_city: fakeCity
-      })
-      .eq("id", session.id)
-      .lt("last_interaction_at", new Date(Date.now() - 4500).toISOString()); // Row level concurrency check
-  };
-
-  const handleSendPhrase = async () => {
-    if (!session) return;
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-
-    const prayer = PRAYERS.find(p => p.id === session.prayer_type);
-    if (!prayer) return;
-
-    const nextIndex = session.current_phrase_index + 1;
-    if (nextIndex >= prayer.phrases.length) return;
-
-    const myName = user.user_metadata?.display_name || user.user_metadata?.full_name?.split(" ")[0] || "Um fiel";
-    const myCity = user.user_metadata?.city || "Brasil";
-
-    // Optimistic local update as requested: "mesmo que mais pessoas tiverem feito isso ao mesmo tempo que eu, aparecerá o meu nome"
-    const myContr = {
-      index: nextIndex,
-      text: prayer.phrases[nextIndex],
-      contributorName: myName,
-      contributorCity: myCity
-    };
-    setContributions(prev => [...prev, myContr]);
-
-    const { error } = await supabase
-      .from("prayer_chain_sessions")
-      .update({
-        current_phrase_index: nextIndex,
-        last_interaction_at: new Date().toISOString(),
-        last_contributor_name: myName,
-        last_contributor_city: myCity
-      })
-      .eq("id", session.id);
-
-    if (error) {
-      // Revert if error
-      toast.error("Alguém foi mais rápido! 🙏");
-      setContributions(prev => prev.filter(c => c.index !== nextIndex));
-    }
-  };
-
-  const fetchIntentionsCount = async () => {
-    const { data } = await supabase.from("prayer_intentions_count").select("*").single();
-    if (data) setIntentionsCount(data.total_intentions || 0);
-  };
-
-  const fetchMyIntention = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-
-    const today = new Date();
-    today.setHours(0,0,0,0);
-
-    const { data } = await supabase
-      .from("prayer_intentions")
-      .select("*")
-      .eq("user_id", user.id)
-      .gte("created_at", today.toISOString())
-      .limit(1);
-    
-    if (data && data.length > 0) setMyIntention(data[0].content);
-  };
-
-  const handleSubmitIntention = async () => {
-    if (!intentionInput.trim()) return;
-    setIsSubmittingIntention(true);
-    
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-
-    const { error } = await supabase
-      .from("prayer_intentions")
-      .insert({
-        user_id: user.id,
-        content: intentionInput
+    setIsSubmitting(true);
+    try {
+      const { error } = await supabase.from("prayer_intentions").insert({
+        user_id: currentUser.id,
+        content: intention.trim(),
+        status: "pending"
       });
 
-    if (error) {
-      toast.error("Erro ao enviar intenção.");
-    } else {
-      toast.success("Intenção de oração enviada! 🙏");
-      setMyIntention(intentionInput);
-      setShowIntentionModal(false);
-      fetchIntentionsCount();
+      if (error) throw error;
+      toast({ title: "Intenção Enviada!", description: "Sua prece foi unida à corrente eterna." });
+      setIntention("");
+    } catch (error: any) {
+      toast({ title: "Erro", description: error.message, variant: "destructive" });
+    } finally {
+      setIsSubmitting(false);
     }
-    setIsSubmittingIntention(false);
   };
-
-  const currentPrayer = PRAYERS.find(p => p.id === (session?.prayer_type || PRAYERS[0].id));
-  const nextPhrase = currentPrayer?.phrases[session?.current_phrase_index + 1];
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-background relative overflow-hidden flex flex-col items-center">
-        {/* Sky Gradient */}
-        <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-primary/5 via-background to-background pointer-events-none" />
+      <div className="min-h-screen bg-background text-foreground flex flex-col relative overflow-hidden">
         
-        <div className="container mx-auto px-6 py-8 relative z-10 max-w-lg w-full flex flex-col h-full">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/")} className="mb-4 hover:bg-primary/5 rounded-full self-start">
-            <ArrowLeft className="w-5 h-5" />
+        {/* Header Overlay */}
+        <div className="absolute top-0 left-0 right-0 p-6 z-20 flex justify-between items-center bg-gradient-to-b from-background/90 via-background/60 to-transparent">
+          <Button variant="ghost" size="icon" onClick={() => navigate("/")} className="text-foreground/70 hover:text-foreground">
+            <ArrowLeft className="w-6 h-6" />
           </Button>
-
-          <motion.div 
-            className="text-center mb-4"
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-          >
-            <h1 className="text-3xl font-extrabold text-foreground mb-1 tracking-tight text-glow">Corrente de Oração</h1>
-            <div className="w-16 h-1 bg-gradient-to-r from-transparent via-primary/40 to-transparent mx-auto rounded-full" />
-            
-            {currentPrayer && (
-              <motion.h2 
-                key={currentPrayer.id}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="text-primary font-serif italic text-lg mt-3"
-              >
-                {currentPrayer.name}
-              </motion.h2>
-            )}
-
-            <div className="mt-4 flex flex-col items-center">
-               <div className="flex items-center gap-2 text-[11px] text-muted-foreground font-bold uppercase tracking-widest bg-white/40 px-4 py-2 rounded-full border border-primary/10">
-                  <Users className="w-3.5 h-3.5" />
-                  {myIntention ? `Minha Intenção: ${myIntention.substring(0, 15)}...` : "Coloque sua intenção"}
-                  {intentionsCount > 0 && ` e as intenções de mais ${intentionsCount} pessoas`}
-               </div>
-               {!myIntention && (
-                 <Button 
-                   variant="ghost" 
-                   size="sm" 
-                   onClick={() => setShowIntentionModal(true)}
-                   className="text-[10px] text-primary mt-2 font-bold hover:bg-primary/5"
-                 >
-                   <Sparkles className="w-3 h-3 mr-1" /> Enviar Intenção Hoje
-                 </Button>
-               )}
-            </div>
-          </motion.div>
-
-          {/* Core Writing Area */}
-          <div className="flex-1 relative min-h-[400px] mb-8 paper-texture soft-shadow-lg rounded-[2.5rem] border border-primary/5 overflow-hidden">
-             {/* Angelic Light Rays */}
-             <div className="absolute inset-0 bg-radial-gradient from-white/20 via-transparent to-transparent opacity-50" />
-             
-             <div className="absolute inset-0 z-10 overflow-y-auto hide-scrollbar p-8">
-                <Player
-                  component={PrayerWriting as any}
-                  durationInFrames={150} 
-                  compositionWidth={400}
-                  compositionHeight={800}
-                  fps={30}
-                  style={{
-                    width: '100%',
-                    height: 'auto',
-                    minHeight: '100%',
-                    background: 'transparent',
-                  }}
-                  inputProps={{ 
-                    phrases: contributions
-                  }}
-                  autoPlay
-                />
-             </div>
+          <div className="flex items-center gap-2 bg-foreground/10 backdrop-blur-md px-4 py-1.5 rounded-full border border-foreground/10">
+            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+            <span className="text-xs font-medium tracking-wider uppercase">Sopro Eterno</span>
           </div>
-
-          <AnimatePresence>
-            {nextPhrase && (
-              <motion.div 
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                className="w-full pb-8"
-              >
-                <Card className="p-6 bg-white/80 backdrop-blur-md border-primary/20 soft-shadow rounded-3xl text-center">
-                  <p className="text-xs text-muted-foreground uppercase tracking-widest font-bold mb-3 italic opacity-60">Sua vez de elevar a voz:</p>
-                  <Button 
-                    onClick={handleSendPhrase}
-                    className="w-full gradient-sacred text-foreground font-serif text-lg py-8 rounded-2xl shadow-lg active:scale-95 transition-all"
-                  >
-                    {nextPhrase}
-                  </Button>
-                </Card>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {!nextPhrase && session?.current_phrase_index >= 0 && (
-             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center pb-8">
-                <p className="text-primary font-bold animate-pulse italic">Oração concluída. Aguardando o início de uma nova corrente...</p>
-             </motion.div>
-          )}
+          <div className="w-10" />
         </div>
 
-        {/* Intention Modal */}
-        <Dialog open={showIntentionModal} onOpenChange={setShowIntentionModal}>
-          <DialogContent className="sm:max-w-md bg-card/95 backdrop-blur-md border-primary/20 soft-shadow rounded-[2rem]">
-            <DialogHeader>
-              <DialogTitle className="text-2xl font-bold flex items-center gap-2">
-                <Heart className="w-6 h-6 text-primary" />
-                Sua Intenção
-              </DialogTitle>
-              <DialogDescription>
-                Escreva abaixo o que está no seu coração hoje. Sua intenção será elevada nesta corrente.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="py-4">
-              <Textarea 
-                placeholder="Ex: Pela saúde da minha família, por um novo emprego..." 
-                value={intentionInput}
-                onChange={(e) => setIntentionInput(e.target.value)}
-                className="rounded-2xl border-primary/10 bg-white/50 h-32 focus-visible:ring-primary"
-              />
+        {/* Remotion Player Section */}
+        <div className="flex-1 relative flex items-center justify-center">
+          {currentPrayer ? (
+            <Player
+              component={PrayerWriting}
+              durationInFrames={60}
+              compositionWidth={1080}
+              compositionHeight={1920}
+              fps={30}
+              style={{ width: "100%", height: "100%" }}
+              inputProps={{ 
+                phrases: currentPrayer.phrases.slice(0, currentPhraseIndex + 1).map((phrase, idx) => ({
+                  index: idx,
+                  text: phrase,
+                  contributorName: "Intercessor da Fé",
+                  contributorCity: "Améns"
+                })),
+                isEternalFlow: true
+              }}
+              autoPlay
+              loop
+            />
+          ) : (
+            <div className="text-center space-y-4">
+              <Wind className="w-12 h-12 text-primary/40 mx-auto animate-pulse" />
+              <p className="text-primary/60 font-serif italic text-lg text-glow">O silêncio é o intervalo da alma...</p>
             </div>
-            <DialogFooter>
-              <Button 
-                onClick={handleSubmitIntention} 
-                disabled={!intentionInput.trim() || isSubmittingIntention}
-                className="w-full rounded-xl gradient-divine"
-              >
-                {isSubmittingIntention ? "Elevando..." : "Confirmar Intenção"}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+          )}
+          
+          {/* Progress Bar Overlay */}
+          <div className="absolute bottom-32 left-10 right-10 h-0.5 bg-white/10 rounded-full overflow-hidden">
+             <motion.div 
+               className="h-full bg-primary"
+               initial={false}
+               animate={{ width: `${progress * 100}%` }}
+               transition={{ duration: 1, ease: "linear" }}
+             />
+          </div>
+        </div>
+
+        {/* Intention Input Overlay */}
+        <div className="absolute bottom-0 left-0 right-0 p-8 pt-20 bg-gradient-to-t from-background via-background/90 to-transparent z-20">
+          <div className="max-w-md mx-auto">
+            <form onSubmit={handleSubmitIntention} className="relative group">
+               <Input 
+                 placeholder={currentUser ? "Sua intenção para a corrente..." : "Faça login para enviar intenção"}
+                 value={intention}
+                 onChange={(e) => setIntention(e.target.value)}
+                 className="bg-foreground/5 border-foreground/10 py-7 pl-6 pr-16 rounded-2xl focus:ring-primary/50 text-foreground placeholder:text-foreground/40"
+                 disabled={!currentUser || isSubmitting}
+               />
+               <Button 
+                 type="submit" 
+                 disabled={!intention.trim() || isSubmitting}
+                 className="absolute right-2 top-2 bottom-2 rounded-xl gradient-divine"
+               >
+                 {isSubmitting ? <Sparkles className="animate-spin w-5 h-5" /> : <Send className="w-5 h-5" />}
+               </Button>
+            </form>
+            
+            <div className="mt-6 flex items-center justify-center gap-6 text-foreground/50">
+               <div className="flex items-center gap-2">
+                  <Users className="w-4 h-4 text-primary/60" />
+                  <span className="text-[11px] font-bold uppercase tracking-widest">{onlineCount + 12} Orando</span>
+               </div>
+               <div className="w-1 h-1 bg-foreground/20 rounded-full" />
+               <div className="flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-primary/60" />
+                  <span className="text-[11px] font-bold uppercase tracking-widest">Fluxo Contínuo</span>
+               </div>
+            </div>
+          </div>
+        </div>
       </div>
     </PageTransition>
   );

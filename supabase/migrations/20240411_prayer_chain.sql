@@ -12,9 +12,9 @@ CREATE TABLE public.prayer_chain_sessions (
 -- Enable RLS
 ALTER TABLE public.prayer_chain_sessions ENABLE ROW LEVEL SECURITY;
 
--- Allow all authenticated users to read and update
+-- Allow all users (including anonymous) to read
 CREATE POLICY "Allow public read of active sessions" ON public.prayer_chain_sessions
-  FOR SELECT TO authenticated USING (true);
+  FOR SELECT TO public USING (true);
 
 CREATE POLICY "Allow authenticated users to update sessions" ON public.prayer_chain_sessions
   FOR UPDATE TO authenticated USING (true);
@@ -34,7 +34,7 @@ CREATE TABLE public.prayer_intentions (
 ALTER TABLE public.prayer_intentions ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Users can view all intentions from last 7 days" ON public.prayer_intentions
-  FOR SELECT TO authenticated USING (created_at >= now() - interval '7 days');
+  FOR SELECT TO public USING (true);
 
 CREATE POLICY "Users can insert their own intentions" ON public.prayer_intentions
   FOR INSERT TO authenticated WITH CHECK (auth.uid() = user_id);
@@ -45,4 +45,4 @@ SELECT count(*) as total_intentions
 FROM public.prayer_intentions
 WHERE created_at >= now() - interval '7 days';
 
-GRANT SELECT ON public.prayer_intentions_count TO authenticated;
+GRANT SELECT ON public.prayer_intentions_count TO public;
