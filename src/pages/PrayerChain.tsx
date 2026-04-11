@@ -1,15 +1,12 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Player } from "@remotion/player";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Send, Sparkles, Wind, Users } from "lucide-react";
 import PageTransition from "@/components/PageTransition";
-import PrayerWriting from "@/remotion/PrayerChain/PrayerWriting";
-import { PRAYERS, PHRASE_DURATION, PRAYER_GAP } from "@/data/prayer-data";
+import { PRAYERS, PHRASE_DURATION, PRAYER_GAP, COMMON_NAMES, PR_CITIES_100K } from "@/data/prayer-data";
 import { motion, AnimatePresence } from "framer-motion";
 
 // Configuration for the Eternal Flow
@@ -25,6 +22,7 @@ const PrayerChain = () => {
 
   // Calculate the current prayer and phrase based on global time
   const [globalTime, setGlobalTime] = useState(Date.now());
+  const [authorInfo, setAuthorInfo] = useState({ name: "", city: "" });
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -84,6 +82,14 @@ const PrayerChain = () => {
     return { currentPrayer: PRAYERS[0], currentPhraseIndex: 0, progress: 0 };
   }, [globalTime]);
 
+  useEffect(() => {
+    if (currentPhraseIndex >= 0) {
+      const randomName = COMMON_NAMES[Math.floor(Math.random() * COMMON_NAMES.length)] || "Intercessor";
+      const randomCity = PR_CITIES_100K[Math.floor(Math.random() * PR_CITIES_100K.length)] || "Améns";
+      setAuthorInfo({ name: randomName, city: randomCity });
+    }
+  }, [currentPhraseIndex, currentPrayer]);
+
   const handleSubmitIntention = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!intention.trim()) return;
@@ -112,93 +118,120 @@ const PrayerChain = () => {
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-black text-white flex flex-col relative overflow-hidden">
+      <div className="min-h-screen bg-[#faf9f6] text-foreground flex flex-col relative overflow-hidden">
         
+        {/* Subtle Background Elements */}
+        <div className="absolute top-[-10rem] right-[-10rem] w-[30rem] h-[30rem] rounded-full bg-[#e8c547]/5 blur-3xl" />
+        <div className="absolute bottom-[-10rem] left-[-10rem] w-[30rem] h-[30rem] rounded-full bg-[#b8860b]/5 blur-3xl" />
+
         {/* Header Overlay */}
-        <div className="absolute top-0 left-0 right-0 p-6 z-20 flex justify-between items-center bg-gradient-to-b from-black/90 via-black/60 to-transparent">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/")} className="text-white/70 hover:text-white">
-            <ArrowLeft className="w-6 h-6" />
-          </Button>
-          <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md px-4 py-1.5 rounded-full border border-white/10">
-            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-            <span className="text-xs font-medium tracking-wider uppercase">{currentPrayer ? currentPrayer.name : "Corrente"}</span>
-          </div>
-          <div className="w-10" />
-        </div>
-
-        {/* Remotion Player Section */}
-        <div className="flex-1 relative flex items-center justify-center">
-          {currentPrayer ? (
-            <Player
-              component={PrayerWriting}
-              durationInFrames={60}
-              compositionWidth={1080}
-              compositionHeight={1920}
-              fps={30}
-              style={{ width: "100%", height: "100%" }}
-              inputProps={{ 
-                phrases: currentPrayer.phrases.slice(0, currentPhraseIndex + 1).map((phrase, idx) => ({
-                  index: idx,
-                  text: phrase,
-                  contributorName: "Intercessor da Fé",
-                  contributorCity: "Améns"
-                })),
-                isEternalFlow: true
-              }}
-              autoPlay
-              loop
-            />
-          ) : (
-            <div className="text-center space-y-4">
-              <Wind className="w-12 h-12 text-primary/40 mx-auto animate-pulse" />
-              <p className="text-primary/60 font-serif italic text-lg text-glow">O silêncio é o intervalo da alma...</p>
+        <div className="p-6 relative z-20">
+          <div className="flex justify-between items-center mb-6">
+            <Button variant="ghost" size="icon" onClick={() => navigate("/")} className="text-[#3d2800] hover:bg-black/5">
+              <ArrowLeft className="w-6 h-6" />
+            </Button>
+            <div className="flex items-center gap-2 bg-white/60 backdrop-blur-md px-4 py-1.5 rounded-full border border-primary/10 soft-shadow">
+              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+              <span className="text-[10px] font-bold tracking-widest uppercase text-[#3d2800]">
+                {currentPrayer ? currentPrayer.name : "Corrente"}
+              </span>
             </div>
-          )}
-          
-          {/* Progress Bar Overlay */}
-          <div className="absolute bottom-32 left-10 right-10 h-0.5 bg-white/10 rounded-full overflow-hidden">
-             <motion.div 
-               className="h-full bg-primary"
-               initial={false}
-               animate={{ width: `${progress * 100}%` }}
-               transition={{ duration: 1, ease: "linear" }}
-             />
+            <div className="w-10" />
           </div>
-        </div>
 
-        {/* Intention Input Overlay */}
-        <div className="absolute bottom-0 left-0 right-0 p-8 pt-20 bg-gradient-to-t from-black via-black/90 to-transparent z-20">
           <div className="max-w-md mx-auto">
+            <label className="block text-center text-[10px] uppercase tracking-widest font-bold text-[#a0720a] mb-2 drop-shadow-sm">
+                Envie sua intenção de oração abaixo:
+            </label>
             <form onSubmit={handleSubmitIntention} className="relative group">
-               <Input 
-                 placeholder={currentUser ? "Sua intenção para a corrente..." : "Faça login para enviar intenção"}
-                 value={intention}
-                 onChange={(e) => setIntention(e.target.value)}
-                 className="bg-white/5 border-white/10 py-7 pl-6 pr-16 rounded-2xl focus:ring-primary/50 text-white placeholder:text-white/40"
-                 disabled={!currentUser || isSubmitting}
-               />
-               <Button 
-                 type="submit" 
-                 disabled={!intention.trim() || isSubmitting}
-                 className="absolute right-2 top-2 bottom-2 rounded-xl gradient-divine"
-               >
-                 {isSubmitting ? <Sparkles className="animate-spin w-5 h-5" /> : <Send className="w-5 h-5" />}
-               </Button>
+              <Input 
+                placeholder={currentUser ? "Pelo que você precisa que oremos hoje?" : "Faça login para enviar intenção"}
+                value={intention}
+                onChange={(e) => setIntention(e.target.value)}
+                className="bg-white border-primary/20 py-7 pl-6 pr-16 rounded-[2rem] focus:ring-primary/50 text-[#3d2800] placeholder:text-[#3d2800]/40 soft-shadow font-medium"
+                disabled={!currentUser || isSubmitting}
+              />
+              <Button 
+                type="submit" 
+                disabled={!intention.trim() || isSubmitting}
+                className="absolute right-2 top-2 bottom-2 rounded-2xl bg-gradient-to-r from-[#d4a017] to-[#f0c040] hover:opacity-90 border-0 shadow-sm"
+              >
+                {isSubmitting ? <Sparkles className="animate-spin w-5 h-5 text-white" /> : <Send className="w-5 h-5 text-white" />}
+              </Button>
             </form>
+          </div>
+        </div>
+
+        {/* Dynamic Prayer Display */}
+        <div className="flex-1 relative flex flex-col items-center justify-center p-6 pb-12">
+          <AnimatePresence mode="wait">
+            {currentPrayer && currentPhraseIndex >= 0 ? (
+              <motion.div 
+                key={`${currentPrayer.id}-${currentPhraseIndex}`}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 1.5, ease: "easeInOut" }}
+                className="w-full flex flex-col items-center -mt-10"
+              >
+                <div className="w-16 h-16 bg-gradient-to-tr from-[#d4a017] to-[#f0c040] rounded-full flex items-center justify-center mx-auto mb-10 shadow-lg shadow-[#d4a017]/20 border border-white/40">
+                  <Sparkles className="text-white w-8 h-8" />
+                </div>
+                
+                <h2 className="font-serif italic font-bold text-[1.7rem] md:text-4xl text-center leading-[1.6] text-[#3d2800] max-w-2xl mx-auto drop-shadow-sm px-4">
+                  "{currentPrayer.phrases[currentPhraseIndex]}"
+                </h2>
+                
+                <motion.p 
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.8, duration: 1 }}
+                  className="text-[#a0720a] font-bold mt-10 text-[11px] md:text-sm text-center uppercase tracking-[0.2em]"
+                >
+                  — {authorInfo.name}, {authorInfo.city}
+                </motion.p>
+              </motion.div>
+            ) : (
+              <motion.div 
+                key="gap"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 2 }}
+                className="text-center space-y-6"
+              >
+                <Wind className="w-16 h-16 text-[#d4a017]/30 mx-auto animate-pulse" />
+                <p className="text-[#3d2800]/50 font-serif italic text-xl">O silêncio é o abraço de Deus...</p>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
+        {/* Progress Integration Bottom Bar */}
+        <div className="bg-white border-t border-primary/5 p-6 relative z-20 pb-24 shadow-[0_-10px_40px_rgba(0,0,0,0.03)]">
+          <div className="max-w-md mx-auto flex flex-col gap-4">
+            <div className="flex items-center justify-between text-[#3d2800]/50 px-2">
+              <div className="flex items-center gap-2">
+                <Users className="w-4 h-4 text-[#d4a017]" />
+                <span className="text-[10px] font-bold uppercase tracking-widest">{onlineCount + 12} Orando agora</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-[#d4a017]" />
+                <span className="text-[10px] font-bold uppercase tracking-widest">Fluxo Divino</span>
+              </div>
+            </div>
             
-            <div className="mt-6 flex items-center justify-center gap-6 text-white/50">
-               <div className="flex items-center gap-2">
-                  <Users className="w-4 h-4 text-primary/60" />
-                  <span className="text-[11px] font-bold uppercase tracking-widest">{onlineCount + 12} Orando</span>
-               </div>
-               <div className="w-1 h-1 bg-white/20 rounded-full" />
-               <div className="flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-primary/60" />
-                  <span className="text-[11px] font-bold uppercase tracking-widest">Fluxo Contínuo</span>
-               </div>
+            <div className="w-full h-1 bg-black/5 rounded-full overflow-hidden">
+               <motion.div 
+                 className="h-full bg-gradient-to-r from-[#d4a017] to-[#f0c040]"
+                 initial={{ width: "0%" }}
+                 animate={{ width: `${progress * 100}%` }}
+                 transition={{ duration: 1, ease: "linear" }}
+               />
             </div>
           </div>
         </div>
+
       </div>
     </PageTransition>
   );
