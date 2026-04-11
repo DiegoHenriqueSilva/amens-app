@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { PRAYERS, PHRASE_DURATION, PRAYER_GAP, COMMON_NAMES, PR_CITIES_100K } from "@/data/prayer-data";
 
@@ -16,22 +16,31 @@ export const usePrayerQueue = (currentPrayerId: string | undefined, currentPhras
   useEffect(() => {
     // Fetch recent contributions to populate the queue
     const fetchContributions = async () => {
-      const { data } = await supabase
-        .from('prayer_contributions')
-        .select('*')
-        .gte('target_timestamp', globalTime - 10000)
-        .lte('target_timestamp', globalTime + 60000);
-      
-      if (data) {
-        const mapped = data.reduce((acc, curr) => ({
-          ...acc,
-          [curr.target_timestamp]: {
-            user_id: curr.user_id,
-            name: curr.author_name,
-            city: curr.author_city
-          }
-        }), {});
-        setContributions(prev => ({ ...prev, ...mapped }));
+      try {
+        const { data, error } = await supabase
+          .from('prayer_contributions')
+          .select('*')
+          .gte('target_timestamp', globalTime - 10000)
+          .lte('target_timestamp', globalTime + 60000);
+        
+        if (error) {
+          console.warn("Table prayer_contributions might be missing:", error);
+          return;
+        }
+
+        if (data) {
+          const mapped = data.reduce((acc, curr) => ({
+            ...acc,
+            [curr.target_timestamp]: {
+              user_id: curr.user_id,
+              name: curr.author_name,
+              city: curr.author_city
+            }
+          }), {});
+          setContributions(prev => ({ ...prev, ...mapped }));
+        }
+      } catch (e) {
+        console.error("Contribution fetch error:", e);
       }
     };
 
@@ -63,7 +72,6 @@ export const usePrayerQueue = (currentPrayerId: string | undefined, currentPhras
   }, []);
 
   // Calculate the timestamp of the CURRENT phrase to find the author
-  // We need to re-calculate it to match the logic in PrayerChain
   const currentPhraseTimestamp = useMemo(() => {
     if (!currentPrayerId || currentPhraseIndex === -1) return null;
     
@@ -89,7 +97,6 @@ export const usePrayerQueue = (currentPrayerId: string | undefined, currentPhras
     if (contrib) return contrib;
 
     // Default to random fake name if no real contribution
-    // We use the timestamp as a seed to keep it consistent for everyone
     const seed = currentPhraseTimestamp;
     const name = COMMON_NAMES[seed % COMMON_NAMES.length];
     const city = PR_CITIES_100K[seed % PR_CITIES_100K.length];
@@ -99,5 +106,3 @@ export const usePrayerQueue = (currentPrayerId: string | undefined, currentPhras
 
   return { author };
 };
-
-import { useMemo } from "react";

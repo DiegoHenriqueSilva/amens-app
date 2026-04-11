@@ -29,7 +29,6 @@ const PrayerChain = () => {
   // Calculate the current prayer and phrase based on global time
   const [globalTime, setGlobalTime] = useState(Date.now());
   const [sparkles, setSparkles] = useState<{ id: number; x: number; y: number }[]>([]);
-  const { author } = usePrayerQueue(currentPrayer?.id, currentPhraseIndex, globalTime);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -104,6 +103,8 @@ const PrayerChain = () => {
     return { currentPrayer: PRAYERS[0], currentPhraseIndex: 0, progress: 0 };
   }, [globalTime]);
 
+  const { author } = usePrayerQueue(currentPrayer?.id, currentPhraseIndex, globalTime);
+
   // Handle "Orar junto" logic
   const handleOrarJunto = async () => {
     if (!currentUser) {
@@ -139,9 +140,16 @@ const PrayerChain = () => {
       let checkPhraseIndex = currentPhraseIndex + 1;
       let checkPrayerIndex = PRAYERS.findIndex(p => p.id === currentPrayer?.id);
       
+      if (checkPrayerIndex === -1) {
+        checkPrayerIndex = 0;
+        checkPhraseIndex = 0;
+      }
+      
       // Search for next 10 slots
       for (let s = 0; s < 10; s++) {
         const prayer = PRAYERS[checkPrayerIndex];
+        if (!prayer) break;
+        
         if (checkPhraseIndex >= prayer.phrases.length) {
           checkPhraseIndex = 0;
           checkPrayerIndex = (checkPrayerIndex + 1) % PRAYERS.length;
