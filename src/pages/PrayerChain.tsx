@@ -22,6 +22,7 @@ const PrayerChain = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [onlineCount, setOnlineCount] = useState(0);
+  const [hasSentIntentionToday, setHasSentIntentionToday] = useState(false);
 
   // Calculate the current prayer and phrase based on global time
   const [globalTime, setGlobalTime] = useState(Date.now());
@@ -30,6 +31,21 @@ const PrayerChain = () => {
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setCurrentUser(session?.user ?? null);
+      if (session?.user) {
+        const checkIntention = async () => {
+          const today = new Date().toISOString().split('T')[0];
+          const { data } = await supabase
+            .from('prayer_intentions')
+            .select('created_at')
+            .eq('user_id', session.user.id)
+            .gte('created_at', `${today}T00:00:00Z`)
+            .limit(1);
+          if (data && data.length > 0) {
+            setHasSentIntentionToday(true);
+          }
+        };
+        checkIntention();
+      }
     });
 
     const timer = setInterval(() => setGlobalTime(Date.now()), 1000);
@@ -112,6 +128,7 @@ const PrayerChain = () => {
       if (error) throw error;
       toast({ title: "Intenção Enviada!", description: "Sua prece foi unida à corrente eterna." });
       setIntention("");
+      setHasSentIntentionToday(true);
     } catch (error: any) {
       toast({ title: "Erro", description: error.message, variant: "destructive" });
     } finally {
@@ -164,27 +181,39 @@ const PrayerChain = () => {
             <div className="w-10" />
           </div>
 
-          <div className="max-w-md mx-auto">
-            <label className="block text-center text-[10px] uppercase tracking-widest font-bold text-[#a0720a] mb-2 drop-shadow-sm">
-                Envie sua intenção de oração abaixo:
-            </label>
-            <form onSubmit={handleSubmitIntention} className="relative group">
-              <Input 
-                placeholder={currentUser ? "Pelo que você precisa que oremos hoje?" : "Faça login para enviar intenção"}
-                value={intention}
-                onChange={(e) => setIntention(e.target.value)}
-                className="bg-white border-primary/20 py-7 pl-6 pr-16 rounded-[2rem] focus:ring-primary/50 text-[#3d2800] placeholder:text-[#3d2800]/40 soft-shadow font-medium"
-                disabled={!currentUser || isSubmitting}
-              />
-              <Button 
-                type="submit" 
-                disabled={!intention.trim() || isSubmitting}
-                className="absolute right-2 top-2 bottom-2 rounded-2xl bg-gradient-to-r from-[#d4a017] to-[#f0c040] hover:opacity-90 border-0 shadow-sm"
-              >
-                {isSubmitting && !isPhraseDialogOpen ? <Sparkles className="animate-spin w-5 h-5 text-white" /> : <Send className="w-5 h-5 text-white" />}
-              </Button>
-            </form>
-          </div>
+          {!hasSentIntentionToday && (
+            <div className="max-w-md mx-auto">
+              <label className="block text-center text-[10px] uppercase tracking-widest font-bold text-[#a0720a] mb-2 drop-shadow-sm">
+                  Envie sua intenção de oração abaixo:
+              </label>
+              <form onSubmit={handleSubmitIntention} className="relative group">
+                <Input 
+                  placeholder={currentUser ? "Pelo que você precisa que oremos hoje?" : "Faça login para enviar intenção"}
+                  value={intention}
+                  onChange={(e) => setIntention(e.target.value)}
+                  className="bg-white border-primary/20 py-7 pl-6 pr-16 rounded-[2rem] focus:ring-primary/50 text-[#3d2800] placeholder:text-[#3d2800]/40 soft-shadow font-medium"
+                  disabled={!currentUser || isSubmitting}
+                />
+                <Button 
+                  type="submit" 
+                  disabled={!intention.trim() || isSubmitting}
+                  className="absolute right-2 top-2 bottom-2 rounded-2xl bg-gradient-to-r from-[#d4a017] to-[#f0c040] hover:opacity-90 border-0 shadow-sm"
+                >
+                  {isSubmitting && !isPhraseDialogOpen ? <Sparkles className="animate-spin w-5 h-5 text-white" /> : <Send className="w-5 h-5 text-white" />}
+                </Button>
+              </form>
+            </div>
+          )}
+
+          {hasSentIntentionToday && (
+            <div className="max-w-md mx-auto bg-white/40 backdrop-blur-sm border border-[#d4a017]/10 soft-shadow rounded-[2rem] py-4 px-6 text-center animate-in fade-in zoom-in duration-500">
+               <div className="flex items-center justify-center gap-2 mb-1">
+                 <Sparkles className="w-4 h-4 text-[#d4a017]" />
+                 <span className="text-[11px] uppercase tracking-[0.2em] font-bold text-[#a0720a]">Graça alcançada</span>
+               </div>
+               <p className="text-xs text-[#3d2800]/70 font-medium">Sua intenção de hoje já está na rede do amor infinito. Volte amanhã.</p>
+            </div>
+          )}
         </div>
 
         {/* Dynamic Prayer Display */}
