@@ -611,55 +611,7 @@ const Profile = () => {
             </TabsContent>
           </Tabs>
           
-          {/* Actions */}
-          <motion.div 
-            className="space-y-3 mt-10"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.4 }}
-          >
-            <Button 
-              variant="outline" 
-              className="w-full py-6 rounded-[1.5rem] border-primary/10 hover:bg-primary/5 flex items-center justify-between px-6"
-              onClick={() => navigate("/my-prayers")}
-            >
-              <div className="flex items-center gap-3">
-                <Send className="w-5 h-5 text-primary/70" />
-                <span className="font-bold">Meus Pedidos</span>
-              </div>
-            </Button>
-            
-            <Button 
-              variant="outline" 
-              className="w-full py-6 rounded-[1.5rem] border-primary/10 hover:bg-primary/5 flex items-center justify-between px-6"
-              onClick={() => navigate("/my-intercessions")}
-            >
-              <div className="flex items-center gap-3">
-                <Heart className="w-5 h-5 text-primary/70 fill-primary/10" />
-                <span className="font-bold">Minhas Intercessões</span>
-              </div>
-            </Button>
-
-            <Button 
-              variant="outline" 
-              className="w-full py-6 rounded-[1.5rem] border-primary/10 hover:bg-primary/5 flex items-center justify-between px-6"
-              onClick={() => navigate("/friends")}
-            >
-              <div className="flex items-center gap-3">
-                <Users className="w-5 h-5 text-primary/70" />
-                <span className="font-bold">Amigos da Fé</span>
-              </div>
-            </Button>
-            
-            <Button 
-              variant="ghost" 
-              className="w-full py-6 mt-4 rounded-[1.5rem] text-muted-foreground hover:text-destructive/80 transition-colors gap-3"
-              onClick={handleSignOut}
-            >
-              <LogOut className="w-4 h-4" />
-              <span className="text-sm font-semibold">Sair da Conta</span>
-            </Button>
-          </motion.div>
+          {/* Actions foram movidas para a Home */}
           
           <div className="text-center mt-12 opacity-30">
             <p className="text-[10px] uppercase tracking-[0.3em] font-bold">Améns • Versão 1.0.0</p>

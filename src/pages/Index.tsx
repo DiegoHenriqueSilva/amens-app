@@ -193,12 +193,12 @@ const Index = () => {
 
           <motion.div className="grid grid-cols-2 gap-5 mb-8" variants={stagger} initial="initial" animate="animate">
             <motion.div variants={fadeUp}>
-              <Link to="/prayer-chain">
+              <Link to="/pray">
                 <Card className="p-6 h-full text-center flex flex-col items-center justify-between border-primary/5 soft-shadow hover:bg-white transition-colors rounded-[2rem]">
                   <div className="w-14 h-14 bg-transparent rounded-full flex items-center justify-center mb-4 overflow-hidden">
-                    <img src="/oracao.jpg" alt="Corrente" className="w-full h-full object-cover rounded-full" />
+                    <img src="/pray-icon.png" alt="Orar por uma causa" className="w-full h-full object-contain drop-shadow-md" />
                   </div>
-                  <h2 className="text-lg font-bold mb-2">Corrente de Oração</h2>
+                  <h2 className="text-lg font-bold mb-2">Orar por uma causa</h2>
                   <Button size="sm" className="w-full rounded-full text-xs py-5 font-bold shadow-sm" style={{background: 'linear-gradient(135deg, #c9a227, #e8c547)', color: '#3d2800'}}>
                     Entrar
                   </Button>
@@ -247,6 +247,54 @@ const Index = () => {
                 </Card>
               </Link>
             </motion.div>
+          </motion.div>
+
+          {/* Secondary Actions List */}
+          <motion.div className="space-y-4 mb-10" variants={stagger} initial="initial" animate="animate">
+             <motion.div variants={fadeUp}>
+               <Link to="/my-prayers">
+                 <Card className="p-4 flex items-center gap-4 border-primary/5 soft-shadow bg-white/60 rounded-3xl hover:bg-white transition-colors">
+                    <div className="w-10 h-10 bg-secondary/50 rounded-2xl flex items-center justify-center text-primary/60">
+                       <BookOpen className="w-5 h-5" />
+                    </div>
+                    <div className="flex-1">
+                       <h3 className="text-sm font-bold">Minhas Preces</h3>
+                       <p className="text-[11px] text-muted-foreground font-medium">Veja quem orou por você</p>
+                    </div>
+                    <Button variant="outline" size="sm" className="rounded-full text-[10px] h-8 px-4 border-primary/20 text-primary">Ver Histórico</Button>
+                 </Card>
+               </Link>
+             </motion.div>
+
+             <motion.div variants={fadeUp}>
+               <Link to="/my-intercessions">
+                 <Card className="p-4 flex items-center gap-4 border-primary/5 soft-shadow bg-white/60 rounded-3xl hover:bg-white transition-colors">
+                    <div className="w-10 h-10 bg-secondary/50 rounded-2xl flex items-center justify-center text-primary/60">
+                       <HandHeart className="w-5 h-5" />
+                    </div>
+                    <div className="flex-1">
+                       <h3 className="text-sm font-bold">Minhas Intercessões</h3>
+                       <p className="text-[11px] text-muted-foreground font-medium">Causas que você apoiou</p>
+                    </div>
+                    <Button variant="outline" size="sm" className="rounded-full text-[10px] h-8 px-4 border-primary/20 text-primary">Ver Lista</Button>
+                 </Card>
+               </Link>
+             </motion.div>
+
+              <motion.div variants={fadeUp}>
+                <Link to='/friends'>
+                  <Card className='p-4 flex items-center gap-4 border-primary/5 soft-shadow bg-white/60 rounded-3xl hover:bg-white transition-colors'>
+                     <div className='w-10 h-10 bg-secondary/50 rounded-2xl flex items-center justify-center text-primary/60'>
+                        <Users className='w-5 h-5' />
+                     </div>
+                     <div className='flex-1'>
+                        <h3 className='text-sm font-bold'>Amigos da Fé</h3>
+                        <p className='text-[11px] text-muted-foreground font-medium'>Conecte-se com outros intercessores</p>
+                     </div>
+                     <Button variant='outline' size='sm' className='rounded-full text-[10px] h-8 px-4 border-primary/20 text-primary'>Conectar</Button>
+                  </Card>
+                </Link>
+              </motion.div>
           </motion.div>
 
           {!user && (
