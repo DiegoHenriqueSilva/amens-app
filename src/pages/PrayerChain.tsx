@@ -479,10 +479,7 @@ const PrayerChain = () => {
                 <Users className="w-4 h-4 text-[#d4a017]" />
                 <span className="text-[10px] font-bold uppercase tracking-widest">{onlineCount + 12} Orando agora</span>
               </div>
-              <div className="flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-[#d4a017]" />
-                <span className="text-[10px] font-bold uppercase tracking-widest">Fluxo Divino</span>
-              </div>
+              <div className="flex-1" />
             </div>
             
             <div className="w-full h-1 bg-black/5 rounded-full overflow-hidden">
