@@ -196,11 +196,15 @@ const Index = () => {
               <Link to="/pray">
                 <Card className="p-6 h-full text-center flex flex-col items-center justify-between border-primary/5 soft-shadow hover:bg-white transition-colors rounded-[2rem]">
                   <div className="w-14 h-14 bg-transparent rounded-full flex items-center justify-center mb-4 overflow-hidden">
-                    <img src="/pray-icon.png" alt="Orar por uma causa" className="w-full h-full object-contain drop-shadow-md" />
+                    <img src="/oracao.jpg" alt="Orar por uma causa" className="w-full h-full object-cover rounded-full drop-shadow-md" />
                   </div>
-                  <h2 className="text-lg font-bold mb-2">Orar por uma causa</h2>
+                  <div>
+                    <h2 className="text-lg font-bold mb-2">Orar por uma Causa</h2>
+                    <p className="text-xs text-muted-foreground leading-tight mb-4 font-medium">Receba um pedido e seja um instrumento de graça</p>
+                  </div>
                   <Button size="sm" className="w-full rounded-full text-xs py-5 font-bold shadow-sm" style={{background: 'linear-gradient(135deg, #c9a227, #e8c547)', color: '#3d2800'}}>
-                    Entrar
+                    <Sparkles className="w-3 h-3 mr-2 text-[#3d2800]" />
+                    Começar
                   </Button>
                 </Card>
               </Link>
@@ -210,10 +214,14 @@ const Index = () => {
               <Link to="/submit">
                 <Card className="p-6 h-full text-center flex flex-col items-center justify-between border-primary/5 soft-shadow hover:bg-white transition-colors rounded-[2rem]">
                   <div className="w-14 h-14 bg-transparent rounded-full flex items-center justify-center mb-4 overflow-hidden">
-                    <img src="/enviaroracao.jpg" alt="Enviar" className="w-full h-full object-cover rounded-full" />
+                    <img src="/enviaroracao.jpg" alt="Enviar Pedido" className="w-full h-full object-cover rounded-full drop-shadow-md" />
                   </div>
-                  <h2 className="text-lg font-bold mb-2">Pedir Oração</h2>
+                  <div>
+                    <h2 className="text-lg font-bold mb-2">Enviar Pedido</h2>
+                    <p className="text-xs text-muted-foreground leading-tight mb-4 font-medium">Compartilhe sua necessidade e receba apoio</p>
+                  </div>
                   <Button size="sm" className="w-full rounded-full text-xs py-5 font-bold shadow-sm border-0" style={{background: 'linear-gradient(135deg, #b8860b, #d4a017)', color: '#fff8e1'}}>
+                    <Send className="w-3 h-3 mr-2" />
                     Enviar
                   </Button>
                 </Card>
@@ -224,10 +232,14 @@ const Index = () => {
               <Link to="/daily-gospel">
                 <Card className="p-6 h-full text-center flex flex-col items-center justify-between border-primary/5 soft-shadow hover:bg-white transition-colors rounded-[2rem]">
                   <div className="w-14 h-14 bg-transparent rounded-full flex items-center justify-center mb-4 overflow-hidden">
-                    <img src="/evangelho.jpg" alt="Gospel" className="w-full h-full object-cover rounded-full" />
+                    <img src="/evangelho.jpg" alt="Evangelho do Dia" className="w-full h-full object-cover rounded-full drop-shadow-md" />
                   </div>
-                  <h2 className="text-lg font-bold mb-2">Evangelho</h2>
+                  <div>
+                    <h2 className="text-lg font-bold mb-2">Evangelho do Dia</h2>
+                    <p className="text-xs text-muted-foreground leading-tight mb-4 font-medium">A palavra sagrada com reflexões da IA</p>
+                  </div>
                   <Button size="sm" className="w-full rounded-full text-xs py-5 font-bold shadow-sm border-0" style={{background: 'linear-gradient(135deg, #c8a830, #f0d060)', color: '#3d2800'}}>
+                    <Sun className="w-3 h-3 mr-2" />
                     Ler
                   </Button>
                 </Card>
@@ -238,10 +250,14 @@ const Index = () => {
               <Link to="/divine-promise">
                 <Card className="p-6 h-full text-center flex flex-col items-center justify-between border-primary/5 soft-shadow hover:bg-white transition-colors rounded-[2rem] border-dashed">
                   <div className="w-14 h-14 bg-transparent rounded-full flex items-center justify-center mb-4 overflow-hidden">
-                    <img src="/divinaspromessas.png" alt="Promise" className="w-full h-full object-cover rounded-full" />
+                    <img src="/divinaspromessas.png" alt="Divina Promessa" className="w-full h-full object-cover rounded-full drop-shadow-md" />
                   </div>
-                  <h2 className="text-lg font-bold mb-2">Promessa</h2>
-                  <Button size="sm" className="rounded-full text-xs py-5 font-bold shadow-sm border-0" style={{background: 'linear-gradient(135deg, #a0720a, #c9951f)', color: '#fff8e1'}}>
+                  <div>
+                    <h2 className="text-lg font-bold mb-2">Divina Promessa</h2>
+                    <p className="text-xs text-muted-foreground leading-tight mb-4 font-medium">Uma citação bíblica para seu coração</p>
+                  </div>
+                  <Button size="sm" className="w-full rounded-full text-xs py-5 font-bold shadow-sm border-0" style={{background: 'linear-gradient(135deg, #a0720a, #c9951f)', color: '#fff8e1'}}>
+                    <Sparkles className="w-3 h-3 mr-2" />
                     Sortear
                   </Button>
                 </Card>
