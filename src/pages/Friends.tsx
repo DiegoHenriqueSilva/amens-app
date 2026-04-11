@@ -61,7 +61,7 @@ const Friends = () => {
             </div>
             <h1 className="text-4xl font-bold text-foreground mb-2 text-glow">Amigos da Fé</h1>
             <div className="divider-gold max-w-[8rem] mx-auto mb-4" />
-            <p className="text-sm text-muted-foreground font-medium uppercase tracking-[0.2em]">Conectados em Intercessào</p>
+            <p className="text-sm text-muted-foreground font-medium uppercase tracking-[0.2em]">Conectados em Intercessão</p>
           </motion.div>
 
           {/* My Code Section */}
@@ -166,7 +166,7 @@ const Friends = () => {
                 ) : (
                   <div className="text-center py-12 opacity-40 italic flex flex-col items-center">
                     <Users className="w-12 h-12 mb-3 text-muted-foreground" />
-                    <p className="text-sm">Você ainda nào possui Amigos da Fé.</p>
+                    <p className="text-sm">Você ainda não possui Amigos da Fé.</p>
                     <p className="text-[11px] mt-1">Envie seu código para começar!</p>
                   </div>
                 )}
@@ -226,7 +226,7 @@ const Friends = () => {
                 ) : (
                   <div className="text-center py-12 opacity-40 italic flex flex-col items-center">
                     <Sparkles className="w-12 h-12 mb-3 text-muted-foreground" />
-                    <p className="text-sm">Nenhuma solicitaçào pendente.</p>
+                    <p className="text-sm">Nenhuma solicitação pendente.</p>
                   </div>
                 )}
               </AnimatePresence>

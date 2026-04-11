@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { Home, Users, Link, User } from "lucide-react";
+import { Home, Users, Link as LinkIcon, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useFriends } from "@/hooks/use-friends";
 
@@ -13,7 +13,7 @@ const BottomNav = () => {
   const navItems = [
     { path: "/", icon: Home, label: "Início" },
     { path: "/community", icon: Users, label: "Comunidade" },
-    { path: "/prayer-chain", icon: Link, label: "Corrente" },
+    { path: "/prayer-chain", icon: LinkIcon, label: "Corrente" },
     { path: "/friends", icon: Users, label: "Amigos", badge: requests.length, friendCount: friends.length },
     { path: "/profile", icon: User, label: "Perfil" },
   ];
