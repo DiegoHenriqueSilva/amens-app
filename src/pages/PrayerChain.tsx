@@ -197,6 +197,8 @@ const PrayerChain = () => {
           author_city: profile?.city || "Améns"
         });
         
+        console.log(`[Queue Click] Reserved slot at ${foundSlot}`);
+        
         localStorage.setItem('last_pray_click', Date.now().toString());
         toast({ title: "Voz unida! ✨", description: "Seu nome aparecerá em instantes na corrente." });
       } else {

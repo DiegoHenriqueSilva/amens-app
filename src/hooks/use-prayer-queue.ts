@@ -11,9 +11,11 @@ export interface Contributor {
 const EPOCH = new Date("2024-01-01T00:00:00Z").getTime();
 
 export const usePrayerQueue = (currentPrayerId: string | undefined, currentPhraseIndex: number, globalTime: number) => {
-  const [contributions, setContributions] = useState<Record<number, Contributor>>({});
+  const [contributions, setContributions] = useState<Record<string, Contributor>>({});
 
   useEffect(() => {
+    let refreshTimer: NodeJS.Timeout;
+
     // Fetch recent contributions to populate the queue
     const fetchContributions = async () => {
       try {
@@ -21,17 +23,17 @@ export const usePrayerQueue = (currentPrayerId: string | undefined, currentPhras
           .from('prayer_contributions')
           .select('*')
           .gte('target_timestamp', globalTime - 10000)
-          .lte('target_timestamp', globalTime + 60000);
+          .lte('target_timestamp', globalTime + 120000); // 2 min window
         
         if (error) {
-          console.warn("Table prayer_contributions might be missing:", error);
+          console.warn("Table prayer_contributions issue:", error);
           return;
         }
 
         if (data) {
           const mapped = data.reduce((acc, curr) => ({
             ...acc,
-            [curr.target_timestamp]: {
+            [String(curr.target_timestamp)]: {
               user_id: curr.user_id,
               name: curr.author_name,
               city: curr.author_city
@@ -45,6 +47,9 @@ export const usePrayerQueue = (currentPrayerId: string | undefined, currentPhras
     };
 
     fetchContributions();
+    
+    // Refresh window every 30s to keep future slots loaded
+    refreshTimer = setInterval(fetchContributions, 30000);
 
     // Subscribe to new contributions
     const channel = supabase
@@ -57,7 +62,7 @@ export const usePrayerQueue = (currentPrayerId: string | undefined, currentPhras
         const newContrib = payload.new;
         setContributions(prev => ({
           ...prev,
-          [newContrib.target_timestamp]: {
+          [String(newContrib.target_timestamp)]: {
             user_id: newContrib.user_id,
             name: newContrib.author_name,
             city: newContrib.author_city
@@ -68,6 +73,7 @@ export const usePrayerQueue = (currentPrayerId: string | undefined, currentPhras
 
     return () => {
       supabase.removeChannel(channel);
+      clearInterval(refreshTimer);
     };
   }, []);
 
@@ -81,7 +87,8 @@ export const usePrayerQueue = (currentPrayerId: string | undefined, currentPhras
     let accumulatedTime = 0;
     for (const prayer of PRAYERS) {
       if (prayer.id === currentPrayerId) {
-        return EPOCH + cycleStart + accumulatedTime + (currentPhraseIndex * PHRASE_DURATION);
+        const ts = EPOCH + cycleStart + accumulatedTime + (currentPhraseIndex * PHRASE_DURATION);
+        return String(ts);
       }
       accumulatedTime += (prayer.phrases.length * PHRASE_DURATION) + PRAYER_GAP;
     }
@@ -93,10 +100,14 @@ export const usePrayerQueue = (currentPrayerId: string | undefined, currentPhras
     if (!currentPhraseTimestamp) return null;
 
     const contrib = contributions[currentPhraseTimestamp];
-    if (contrib) return contrib;
+    
+    if (contrib) {
+      console.log(`[Queue Match] Found contribution for ${currentPhraseTimestamp}:`, contrib.name);
+      return contrib;
+    }
 
     // Default to random fake name if no real contribution
-    const seed = currentPhraseTimestamp;
+    const seed = parseInt(currentPhraseTimestamp);
     const name = COMMON_NAMES[seed % COMMON_NAMES.length];
     const city = PR_CITIES_100K[seed % PR_CITIES_100K.length];
     
