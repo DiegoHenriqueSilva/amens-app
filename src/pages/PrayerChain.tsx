@@ -293,34 +293,31 @@ const PrayerChain = () => {
       // Debounce: only one client should successfully update
       await new Promise(r => setTimeout(r, Math.random() * 1000));
       
-      // Refresh state first to see if someone else already advanced
-      const { data: latest } = await supabase.from('prayer_state').select('*').limit(1).maybeSingle();
-      if (!latest) return;
+      const { data: latest, error: fetchError } = await supabase.from('prayer_state').select('*').limit(1).maybeSingle();
+      if (fetchError || !latest) return;
 
       const nowMs = Date.now() + (timeOffset || 0);
       const prayer = PRAYERS.find(p => p.id === latest.current_prayer_id);
       const prayerDuration = (prayer?.phrases.length || 0) * PHRASE_DURATION;
       const votingDuration = 6000;
       
-      // Lenient check: if we are within 500ms of the end or past it
-      if (nowMs < Number(latest.started_at) + prayerDuration + votingDuration - 500) {
+      // Lenient check: if we are close to the end or past it
+      if (nowMs < Number(latest.started_at) + prayerDuration + votingDuration - 300) {
         return; 
       }
 
-      // Logic to pick winner
-      // Fictitious votes: total is half of online count
+      // Logic to pick winner (Social Proof)
       const totalPessoas = Math.floor(userCount / 2) + 10;
       const totalFakeVotes = Math.floor(totalPessoas / 2);
-      
       let winner = null;
+      
       if (latest.voting_options && latest.voting_options.length > 0) {
         const finalVotes = latest.voting_options.map((optId: string) => {
-          // Subtle distribution: divide totalFakeVotes by 3 and add some randomness
           const baseFake = Math.floor(totalFakeVotes / 3);
-          const randomExtra = Math.floor(Math.random() * 3);
+          const optSeed = optId.split('').reduce((a, b) => a + b.charCodeAt(0), 0);
           return {
             id: optId,
-            count: (votes[optId] || 0) + baseFake + randomExtra
+            count: (votes[optId] || 0) + baseFake + (optSeed % 3)
           };
         });
         winner = finalVotes.sort((a: any, b: any) => b.count - a.count)[0].id;
@@ -334,13 +331,22 @@ const PrayerChain = () => {
         .slice(0, 3)
         .map(p => p.id);
 
-      await supabase.rpc('advance_prayer_state', {
+      // Call the simplified autonomous RPC
+      const { error: rpcError } = await supabase.rpc('advance_prayer_state', {
         p_winner_id: winner,
-        p_next_options: nextOptions,
-        p_current_time: nowMs
+        p_next_options: nextOptions
       });
-      
-      console.log(`[State Advance] Successfully moved to ${winner}`);
+
+      if (rpcError) {
+        console.error("RPC Error:", rpcError);
+        toast({ 
+          title: "Sincronia Celeste", 
+          description: "Ajustando o fluxo da oração...", 
+          duration: 2000 
+        });
+      } else {
+        console.log(`[State Advance] Successfully moved to ${winner}`);
+      }
     } catch (e) {
       console.error("State advancement failed:", e);
     }
