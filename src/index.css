@@ -170,3 +170,22 @@
   z-index: 10;
 }
 
+@keyframes halo-glow {
+  0%, 100% { box-shadow: 0 0 10px rgba(212, 175, 55, 0), 0 0 20px rgba(212, 175, 55, 0); }
+  50% { box-shadow: 0 0 20px rgba(212, 175, 55, 0.3), 0 0 35px rgba(212, 175, 55, 0.1); }
+}
+
+.halo-angelical {
+  border-radius: 1rem;
+  padding: 1rem;
+  background: radial-gradient(circle at center, rgba(212, 175, 55, 0.05), transparent 70%);
+  animation: halo-glow 3s infinite ease-in-out;
+}
+
+.text-friend-accent {
+  color: #b8860b;
+  font-weight: 800;
+  text-shadow: 0 0 8px rgba(212, 175, 55, 0.2);
+  letter-spacing: 0.25em !important;
+}
+

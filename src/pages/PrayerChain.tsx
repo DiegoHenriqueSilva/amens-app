@@ -10,6 +10,7 @@ import PageTransition from "@/components/PageTransition";
 import { PRAYERS, PHRASE_DURATION, PRAYER_GAP, COMMON_NAMES, PR_CITIES_100K, TOTAL_CYCLE_TIME } from "@/data/prayer-data";
 import { motion, AnimatePresence } from "framer-motion";
 import { usePrayerQueue } from "@/hooks/use-prayer-queue";
+import { useFriends } from "@/hooks/use-friends";
 import { cn } from "@/lib/utils";
 
 // Configuration for the Eternal Flow
@@ -31,6 +32,9 @@ const PrayerChain = () => {
   const [globalTime, setGlobalTime] = useState(Date.now());
   const [timeOffset, setTimeOffset] = useState<number | null>(null);
   const [sparkles, setSparkles] = useState<{ id: number; x: number; y: number }[]>([]);
+  const { friends } = useFriends();
+
+  const friendIds = useMemo(() => new Set(friends?.map(f => f.id)), [friends]);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -366,7 +370,11 @@ const PrayerChain = () => {
                   <Sparkles className="text-white w-8 h-8" />
                 </div>
                 
-                <h2 className="font-serif italic font-bold text-[1.7rem] md:text-4xl text-center leading-[1.6] text-[#3d2800] max-w-2xl mx-auto drop-shadow-sm px-4">
+                <h2 className={cn(
+                  "font-serif italic font-bold text-[1.7rem] md:text-4xl text-center leading-[1.6] text-[#3d2800] max-w-2xl mx-auto drop-shadow-sm px-4 py-4 transition-all duration-700",
+                  author.user_id === currentUser?.id && "disney-shimmer scale-105",
+                  author.user_id && friendIds.has(author.user_id) && "halo-angelical"
+                )}>
                   "{currentPrayer.phrases[currentPhraseIndex]}"
                 </h2>
                 
@@ -376,8 +384,9 @@ const PrayerChain = () => {
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.8, duration: 1 }}
                     className={cn(
-                      "text-[#a0720a] font-bold mt-10 text-[9px] md:text-[10px] text-center uppercase tracking-[0.2em] opacity-70 px-4 py-2 rounded-full",
-                      author.user_id === currentUser?.id && "disney-shimmer text-primary opacity-100 scale-110 transition-transform"
+                      "text-[#a0720a] font-bold mt-10 text-[9px] md:text-[10px] text-center uppercase tracking-[0.2em] opacity-70 px-4 py-2 rounded-full transition-all",
+                      author.user_id === currentUser?.id && "disney-shimmer text-primary opacity-100 scale-110",
+                      author.user_id && friendIds.has(author.user_id) && "text-friend-accent opacity-100 scale-110"
                     )}
                   >
                     — {author.name}, {author.city}
