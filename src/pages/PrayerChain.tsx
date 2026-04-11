@@ -372,8 +372,8 @@ const PrayerChain = () => {
                 
                 <h2 className={cn(
                   "font-serif italic font-bold text-[1.7rem] md:text-4xl text-center leading-[1.6] text-[#3d2800] max-w-2xl mx-auto drop-shadow-sm px-4 py-4 transition-all duration-700",
-                  author.user_id === currentUser?.id && "disney-shimmer scale-105",
-                  author.user_id && friendIds.has(author.user_id) && "halo-angelical"
+                  author?.user_id === currentUser?.id && "disney-shimmer scale-105",
+                  author?.user_id && friendIds.has(author.user_id) && "halo-angelical"
                 )}>
                   "{currentPrayer.phrases[currentPhraseIndex]}"
                 </h2>
@@ -385,8 +385,8 @@ const PrayerChain = () => {
                     transition={{ delay: 0.8, duration: 1 }}
                     className={cn(
                       "text-[#a0720a] font-bold mt-10 text-[9px] md:text-[10px] text-center uppercase tracking-[0.2em] opacity-70 px-4 py-2 rounded-full transition-all",
-                      author.user_id === currentUser?.id && "disney-shimmer text-primary opacity-100 scale-110",
-                      author.user_id && friendIds.has(author.user_id) && "text-friend-accent opacity-100 scale-110"
+                      author?.user_id === currentUser?.id && "disney-shimmer text-primary opacity-100 scale-110",
+                      author?.user_id && friendIds.has(author.user_id) && "text-friend-accent opacity-100 scale-110"
                     )}
                   >
                     — {author.name}, {author.city}
