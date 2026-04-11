@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Player } from "@remotion/player";
-import { supabase } from "@/integrations/supabase/fixed-client";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -121,7 +121,7 @@ const PrayerChain = () => {
           </Button>
           <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md px-4 py-1.5 rounded-full border border-white/10">
             <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-            <span className="text-xs font-medium tracking-wider uppercase">Sopro Eterno</span>
+            <span className="text-xs font-medium tracking-wider uppercase">{currentPrayer ? currentPrayer.name : "Corrente"}</span>
           </div>
           <div className="w-10" />
         </div>
