@@ -227,6 +227,70 @@ export type Database = {
         }
         Relationships: []
       }
+      prayer_contributions: {
+        Row: {
+          id: string
+          user_id: string | null
+          target_timestamp: number
+          author_name: string
+          author_city: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id?: string | null
+          target_timestamp: number
+          author_name: string
+          author_city?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string | null
+          target_timestamp?: number
+          author_name?: string
+          author_city?: string | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prayer_contributions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      prayer_intentions: {
+        Row: {
+          id: string
+          user_id: string | null
+          content: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id?: string | null
+          content: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string | null
+          content?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prayer_intentions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       referrals: {
         Row: {
           created_at: string

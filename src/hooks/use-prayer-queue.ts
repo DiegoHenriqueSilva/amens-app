@@ -12,21 +12,21 @@ const EPOCH = new Date("2024-01-01T00:00:00Z").getTime();
 
 export const usePrayerQueue = (currentPrayerId: string | undefined, currentPhraseIndex: number, globalTime: number) => {
   const [contributions, setContributions] = useState<Record<string, Contributor>>({});
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     let refreshTimer: NodeJS.Timeout;
 
-    // Fetch recent contributions to populate the queue
     const fetchContributions = async () => {
       try {
         const { data, error } = await supabase
           .from('prayer_contributions')
-          .select('*')
-          .gte('target_timestamp', globalTime - 10000)
-          .lte('target_timestamp', globalTime + 120000); // 2 min window
+          .select('user_id, target_timestamp, author_name, author_city')
+          .gte('target_timestamp', globalTime - 20000)
+          .lte('target_timestamp', globalTime + 180000); // 3 min window
         
         if (error) {
-          console.warn("Table prayer_contributions issue:", error);
+          console.warn("[Queue] Feed error:", error);
           return;
         }
 
@@ -39,35 +39,44 @@ export const usePrayerQueue = (currentPrayerId: string | undefined, currentPhras
               city: curr.author_city
             }
           }), {});
+          // Merging ensures we don't lose updates from Realtime
           setContributions(prev => ({ ...prev, ...mapped }));
         }
+        setIsLoading(false);
       } catch (e) {
-        console.error("Contribution fetch error:", e);
+        console.error("[Queue] Fetch error:", e);
       }
     };
 
     fetchContributions();
-    
-    // Refresh window every 30s to keep future slots loaded
-    refreshTimer = setInterval(fetchContributions, 30000);
+    refreshTimer = setInterval(fetchContributions, 45000);
 
-    // Subscribe to new contributions
     const channel = supabase
-      .channel('prayer_contributions_changes')
+      .channel('prayer_contributions_live')
       .on('postgres_changes', { 
-        event: 'INSERT', 
+        event: '*', // Listen to INSERT and DELETE
         schema: 'public', 
         table: 'prayer_contributions' 
       }, payload => {
-        const newContrib = payload.new;
-        setContributions(prev => ({
-          ...prev,
-          [String(newContrib.target_timestamp)]: {
-            user_id: newContrib.user_id,
-            name: newContrib.author_name,
-            city: newContrib.author_city
-          }
-        }));
+        if (payload.eventType === 'INSERT') {
+          const newContrib = payload.new;
+          setContributions(prev => ({
+            ...prev,
+            [String(newContrib.target_timestamp)]: {
+              user_id: newContrib.user_id,
+              name: newContrib.author_name,
+              city: newContrib.author_city
+            }
+          }));
+        } else if (payload.eventType === 'DELETE') {
+          // In case of any cleanup/cancelation
+          const oldTimestamp = String(payload.old.target_timestamp);
+          setContributions(prev => {
+            const next = { ...prev };
+            delete next[oldTimestamp];
+            return next;
+          });
+        }
       })
       .subscribe();
 
@@ -86,36 +95,37 @@ export const usePrayerQueue = (currentPrayerId: string | undefined, currentPhras
     
     let accumulatedTime = 0;
     for (const prayer of PRAYERS) {
+      const prayerPeriod = (prayer.phrases.length * PHRASE_DURATION) + PRAYER_GAP;
       if (prayer.id === currentPrayerId) {
         const ts = EPOCH + cycleStart + accumulatedTime + (currentPhraseIndex * PHRASE_DURATION);
         return String(ts);
       }
-      accumulatedTime += (prayer.phrases.length * PHRASE_DURATION) + PRAYER_GAP;
+      accumulatedTime += prayerPeriod;
     }
     return null;
   }, [currentPrayerId, currentPhraseIndex, globalTime]);
 
   const author = useMemo(() => {
-    if (currentPhraseIndex === 0) return null; // Rule 1: First phrase has no author
+    if (currentPhraseIndex === 0) return null; // Rule 1: First phrase has no author (The Liturgy)
     if (!currentPhraseTimestamp) return null;
 
     const contrib = contributions[currentPhraseTimestamp];
     
     if (contrib) {
-      console.log(`[Queue Match] Found contribution for ${currentPhraseTimestamp}:`, contrib.name);
       return contrib;
     }
 
-    // Default to random fake name if no real contribution
-    const rawSeed = parseInt(currentPhraseTimestamp);
-    // Use the phrase sequence number as seed to ensure variety
-    const sequenceSeed = Math.floor(rawSeed / PHRASE_DURATION);
-    const name = COMMON_NAMES[sequenceSeed % COMMON_NAMES.length];
-    // Offset city slightly so names and cities don't always pair the same
-    const city = PR_CITIES_100K[(sequenceSeed + 3) % PR_CITIES_100K.length];
+    // Default to random fake name if no real contribution (Pilot Logic)
+    // Seed using the timestamp to ensure everyone sees the SAME random name
+    const seed = parseInt(currentPhraseTimestamp);
+    const nameIndex = Math.floor(seed / PHRASE_DURATION) % COMMON_NAMES.length;
+    const cityIndex = (Math.floor(seed / PHRASE_DURATION) + 5) % PR_CITIES_100K.length;
     
-    return { name, city };
+    return { 
+      name: COMMON_NAMES[nameIndex], 
+      city: PR_CITIES_100K[cityIndex] 
+    };
   }, [currentPhraseTimestamp, currentPhraseIndex, contributions]);
 
-  return { author };
+  return { author, isLoading };
 };
