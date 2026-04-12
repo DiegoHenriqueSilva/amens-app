@@ -443,5 +443,3 @@ const PrayerChain = () => {
 };
 
 export default PrayerChain;
-
-export default PrayerChain;
