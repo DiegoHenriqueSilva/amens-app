@@ -421,7 +421,7 @@ const PrayerChain = () => {
               <div className="flex items-center gap-3 bg-white/40 backdrop-blur-sm px-4 py-1.5 rounded-full border border-black/5">
                 <Users className="w-4 h-4 text-[#d4a017]" />
                 <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#3d2800]/70">
-                  {onlineCount + 12} pessoas orando agora
+                  {onlineCount + 12} pessoas orando junto
                 </span>
               </div>
               
