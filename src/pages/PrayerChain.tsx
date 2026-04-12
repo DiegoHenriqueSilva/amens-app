@@ -234,7 +234,7 @@ const PrayerChain = () => {
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-[#faf9f6] text-foreground flex flex-col relative overflow-hidden paper-texture">
+      <div className="h-screen w-full bg-[#faf9f6] text-foreground flex flex-col relative overflow-hidden paper-texture">
         
         {/* Divine Glow Elements */}
         <motion.div 
@@ -248,37 +248,31 @@ const PrayerChain = () => {
           className="absolute bottom-[-10rem] left-[-10rem] w-[40rem] h-[40rem] rounded-full bg-[#b8860b] blur-[120px] pointer-events-none" 
         />
 
-        <div className="p-6 relative z-20">
+        {/* Header Section */}
+        <div className="pt-4 pb-2 px-6 relative z-20 shrink-0">
           <div className="max-w-md mx-auto flex flex-col items-center">
-            <div className="w-full flex justify-between items-center mb-4">
-              <Button variant="ghost" size="icon" onClick={() => navigate("/")} className="text-[#3d2800] hover:bg-black/5 -ml-2 rounded-full h-12 w-12">
-                <ArrowLeft className="w-6 h-6" />
+            <div className="w-full flex justify-between items-center mb-2">
+              <Button variant="ghost" size="icon" onClick={() => navigate("/")} className="text-[#3d2800] hover:bg-black/5 -ml-2 rounded-full h-10 w-10">
+                <ArrowLeft className="w-5 h-5" />
               </Button>
             </div>
 
-            <div className="text-center space-y-1 mb-8">
+            <div className="text-center space-y-1 mb-4">
                <motion.h1 
                  initial={{ opacity: 0, y: -10 }} 
                  animate={{ opacity: 1, y: 0 }}
-                 className="text-[#d4a017] text-3xl font-bold tracking-[0.15em] uppercase drop-shadow-sm"
+                 className="text-[#d4a017] text-2xl font-bold tracking-[0.15em] uppercase drop-shadow-sm"
                >
                  Corrente de Oração
                </motion.h1>
-               <motion.p 
-                 initial={{ opacity: 0 }} 
-                 animate={{ opacity: 0.6 }}
-                 className="text-[#3d2800]/60 text-[11px] font-bold uppercase tracking-[0.25em]"
-               >
-                 Unindo corações de <span className="text-[#a0720a] font-black">{Math.floor(userCount / 2) + 12}</span> fiéis
-               </motion.p>
                
-               <div className="pt-6 flex justify-center">
+               <div className="pt-3 flex justify-center">
                  <motion.div 
-                   className="flex items-center gap-3 bg-white/90 backdrop-blur-xl px-7 py-3 rounded-full border border-[#d4a017]/30 soft-shadow ring-4 ring-[#d4a017]/5"
+                   className="flex items-center gap-3 bg-white/90 backdrop-blur-xl px-6 py-2 rounded-full border border-[#d4a017]/30 soft-shadow ring-4 ring-[#d4a017]/5"
                    whileHover={{ scale: 1.05 }}
                  >
-                   <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse shadow-[0_0_15px_rgba(34,197,94,0.6)]" />
-                   <span className="text-[14px] font-black tracking-[0.25em] uppercase text-[#3d2800] text-glow-gold">
+                   <div className="w-2.5 h-2.5 bg-green-500 rounded-full animate-pulse shadow-[0_0_15px_rgba(34,197,94,0.6)]" />
+                   <span className="text-[12px] font-black tracking-[0.25em] uppercase text-[#3d2800] text-glow-gold">
                      {currentPrayer ? currentPrayer.name : "Momento de Silêncio"}
                    </span>
                  </motion.div>
@@ -293,20 +287,20 @@ const PrayerChain = () => {
                   exit={{ opacity: 0, height: 0 }}
                   className="w-full overflow-hidden"
                 >
-                  <form onSubmit={handleSubmitIntention} className="relative group mb-4">
+                  <form onSubmit={handleSubmitIntention} className="relative group mb-2">
                     <Input 
-                      placeholder={currentUser ? "Pelo que oramos hoje?" : "Fazer login para enviar intenção"}
+                      placeholder={currentUser ? "Pelo que oramos hoje?" : "Entrar para enviar intenção"}
                       value={intention}
                       onChange={(e) => setIntention(e.target.value)}
-                      className="bg-white/80 border-[#d4a017]/20 py-8 pl-8 pr-16 rounded-[2.5rem] text-[#3d2800] soft-shadow font-semibold text-base focus-visible:ring-[#d4a017]/30"
+                      className="bg-white/80 border-[#d4a017]/20 py-6 pl-6 pr-14 rounded-[2rem] text-[#3d2800] soft-shadow font-semibold text-sm focus-visible:ring-[#d4a017]/30"
                       disabled={!currentUser || isSubmitting}
                     />
                     <Button 
                       type="submit" 
                       disabled={!intention.trim() || isSubmitting}
-                      className="absolute right-3 top-3 bottom-3 w-12 rounded-full bg-gradient-to-r from-[#d4a017] to-[#f0c040] border-0 shadow-lg hover:shadow-xl transition-all"
+                      className="absolute right-2 top-2 bottom-2 w-10 rounded-full bg-gradient-to-r from-[#d4a017] to-[#f0c040] border-0 shadow-sm"
                     >
-                      <Send className="w-5 h-5 text-white" />
+                      <Send className="w-4 h-4 text-white" />
                     </Button>
                   </form>
                 </motion.div>
@@ -315,33 +309,30 @@ const PrayerChain = () => {
           </div>
         </div>
 
-        <div className="flex-1 relative flex flex-col items-center justify-center p-8 pb-16">
+        {/* Main Prayer Text Section */}
+        <div className="flex-1 relative flex flex-col items-center justify-center px-8 text-center min-h-0">
           {isSyncing ? (
-            <div className="flex flex-col items-center gap-5">
-              <div className="w-10 h-10 border-4 border-[#d4a017] border-t-transparent rounded-full animate-spin shadow-sm" />
-              <p className="text-[#3d2800]/40 text-xs font-black uppercase tracking-[0.3em] animate-pulse">Sincronizando Corrente...</p>
+            <div className="flex flex-col items-center gap-4">
+              <div className="w-8 h-8 border-3 border-[#d4a017] border-t-transparent rounded-full animate-spin shadow-sm" />
+              <p className="text-[#3d2800]/40 text-[10px] font-black uppercase tracking-[0.3em] animate-pulse">Sincronizando...</p>
             </div>
           ) : (
             <AnimatePresence mode="wait">
               {currentPrayer && currentPhraseIndex >= 0 ? (
               <motion.div 
                 key={`${currentPrayer.id}-${currentPhraseIndex}`}
-                initial={{ opacity: 0, scale: 0.92, filter: "blur(10px)" }}
+                initial={{ opacity: 0, scale: 0.95, filter: "blur(8px)" }}
                 animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
-                exit={{ opacity: 0, scale: 1.08, filter: "blur(10px)" }}
-                transition={{ duration: 1.8, ease: [0.22, 1, 0.36, 1] }}
-                className="w-full flex flex-col items-center -mt-16"
+                exit={{ opacity: 0, scale: 1.05, filter: "blur(8px)" }}
+                transition={{ duration: 1.5, ease: [0.22, 1, 0.36, 1] }}
+                className="w-full flex flex-col items-center"
               >
-                <motion.div 
-                  animate={{ y: [0, -8, 0], scale: [1, 1.05, 1] }}
-                  transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                  className="w-20 h-20 bg-gradient-to-tr from-[#d4a017] to-[#f0c040] rounded-full flex items-center justify-center mx-auto mb-14 shadow-2xl border-4 border-white/50 ring-8 ring-[#d4a017]/5"
-                >
-                  <Sparkles className="text-white w-10 h-10" />
-                </motion.div>
+                <div className="w-14 h-14 bg-gradient-to-tr from-[#d4a017] to-[#f0c040] rounded-full flex items-center justify-center mx-auto mb-8 shadow-xl border-2 border-white/50 ring-4 ring-[#d4a017]/5">
+                  <Sparkles className="text-white w-7 h-7" />
+                </div>
                 
                 <h2 className={cn(
-                  "font-serif italic font-bold text-[2.2rem] md:text-[3.2rem] text-center leading-[1.3] text-[#3d2800] max-w-3xl mx-auto drop-shadow-sm px-6 py-6 transition-all duration-1000",
+                  "font-serif italic font-bold text-[1.8rem] md:text-[3.2rem] text-center leading-[1.3] text-[#3d2800] max-w-3xl mx-auto drop-shadow-sm px-4 py-2 transition-all duration-700",
                   author?.user_id === currentUser?.id && "disney-shimmer scale-105 text-[#a0720a]",
                   author?.user_id && friendIds.has(author.user_id) && "halo-angelical"
                 )}>
@@ -350,106 +341,107 @@ const PrayerChain = () => {
                 
                 {author && !queueLoading && (
                   <motion.div
-                    initial={{ opacity: 0, y: 15 }}
+                    initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    key={`author-${author.name}`}
-                    className="mt-14 space-y-2 flex flex-col items-center"
+                    className="mt-8 flex flex-col items-center"
                   >
-                    <div className="w-8 h-px bg-gradient-to-r from-transparent via-[#d4a017]/40 to-transparent" />
                     <p className={cn(
                       "text-[#a0720a] font-black text-[10px] md:text-[12px] text-center uppercase tracking-[0.4em] opacity-80 px-4 py-2 transition-all",
-                      author?.user_id === currentUser?.id && "disney-shimmer text-primary opacity-100 scale-110",
+                      author?.user_id === currentUser?.id && "text-primary opacity-100 scale-110 font-bold",
                       author?.user_id && friendIds.has(author.user_id) && "text-friend-accent opacity-100 scale-110"
                     )}>
                       — {author.name}, {author.city} —
                     </p>
                   </motion.div>
                 )}
-                {queueLoading && (
-                  <div className="mt-14 h-4 w-40 bg-[#d4a017]/10 animate-pulse rounded-full" />
-                )}
               </motion.div>
             ) : (
               <motion.div 
                 key="gap"
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 1.1 }}
-                transition={{ duration: 3, ease: "easeInOut" }}
-                className="text-center space-y-8"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="text-center space-y-6"
               >
-                <Wind className="w-20 h-20 text-[#d4a017]/20 mx-auto animate-pulse" />
-                <p className="text-[#3d2800]/50 font-serif italic text-2xl md:text-3xl tracking-wide">O silêncio é o abraço de Deus...</p>
+                <Wind className="w-16 h-16 text-[#d4a017]/20 mx-auto animate-pulse" />
+                <p className="text-[#3d2800]/50 font-serif italic text-xl md:text-2xl tracking-wide">O silêncio é o abraço de Deus...</p>
               </motion.div>
               )}
             </AnimatePresence>
           )}
         </div>
 
-        {/* Action Button Container */}
-        <div className="absolute right-8 bottom-32 z-30 flex flex-col items-end">
-           <AnimatePresence>
-              {sparkles.map((s) => (
-                <motion.div
-                  key={s.id}
-                  initial={{ opacity: 1, scale: 0, x: 0, y: 0 }}
-                  animate={{ 
-                    opacity: 0, 
-                    scale: [0, 2, 0], 
-                    x: Math.random() * -400 - 50, 
-                    y: Math.random() * -500 - 100 
-                  }}
-                  transition={{ duration: 2, ease: "easeOut" }}
-                  className="absolute pointer-events-none"
-                >
-                  <Sparkles className="text-[#f0c040] w-5 h-5" />
-                </motion.div>
-              ))}
-           </AnimatePresence>
-           
-           <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.9 }}>
+        {/* Action Button & Online Info Section */}
+        <div className="shrink-0 relative z-30 flex flex-col items-center pb-8 pt-4">
+           {/* Sparkles Emitter Container */}
+           <div className="absolute top-0 left-1/2 -translate-x-1/2 pointer-events-none w-full h-full overflow-visible">
+            <AnimatePresence>
+                {sparkles.map((s) => (
+                  <motion.div
+                    key={s.id}
+                    initial={{ opacity: 1, scale: 0, x: 0, y: 0 }}
+                    animate={{ 
+                      opacity: 0, 
+                      scale: [0, 2, 0], 
+                      x: (Math.random() - 0.5) * 300, 
+                      y: -(Math.random() * 200 + 100)
+                    }}
+                    transition={{ duration: 2, ease: "easeOut" }}
+                    className="absolute"
+                  >
+                    <Sparkles className="text-[#f0c040] w-5 h-5" />
+                  </motion.div>
+                ))}
+            </AnimatePresence>
+           </div>
+
+           <motion.div 
+             whileHover={{ scale: 1.05 }} 
+             whileTap={{ scale: 0.95 }}
+             className="relative z-30 mb-6"
+           >
              <Button 
                onClick={handleOrarJunto}
-               className="rounded-full shadow-2xl bg-white/95 backdrop-blur-md hover:bg-white text-[#d4a017] border-2 border-[#d4a017]/30 flex items-center gap-3 px-8 py-9 active:shadow-inner transition-all group"
+               className="rounded-full shadow-2xl bg-white/95 backdrop-blur-md hover:bg-white text-[#d4a017] border-2 border-[#d4a017]/30 flex items-center gap-4 px-10 py-8 group transition-all"
              >
                <div className="flex flex-col items-center">
-                 <span className="text-[14px] font-black uppercase tracking-[0.2em] text-[#3d2800] group-hover:text-primary">Orar junto</span>
-                 <span className="text-[9px] font-bold uppercase tracking-widest opacity-40">Unir sua voz</span>
+                 <span className="text-[16px] font-black uppercase tracking-[0.2em] text-[#3d2800] group-hover:text-primary">Orar junto</span>
+                 <span className="text-[10px] font-bold uppercase tracking-widest opacity-40">Unir sua voz</span>
                </div>
-               <div className="w-10 h-10 bg-[#d4a017]/10 rounded-full flex items-center justify-center group-hover:bg-[#d4a017]/20 transition-colors">
+               <div className="w-11 h-11 bg-[#d4a017]/10 rounded-full flex items-center justify-center group-hover:bg-[#d4a017]/20 transition-colors">
                  <Heart className="w-6 h-6 text-[#d4a017] fill-current" />
                </div>
              </Button>
            </motion.div>
-        </div>
 
-        {/* Footer info & Progress */}
-        <div className="bg-white/80 backdrop-blur-2xl border-t border-[#d4a017]/10 p-8 relative z-20 pb-28 shadow-[0_-15px_50px_rgba(212,175,55,0.08)]">
-          <div className="max-w-md mx-auto flex flex-col gap-6">
-            <div className="flex items-center justify-between text-[#3d2800]/60 px-2">
-              <div className="flex items-center gap-3">
-                <Users className="w-5 h-5 text-[#d4a017]" />
-                <span className="text-[11px] font-bold uppercase tracking-[0.2em]">{onlineCount + 12} Orando agora</span>
+           <div className="flex flex-col items-center gap-3">
+              <div className="flex items-center gap-3 bg-white/40 backdrop-blur-sm px-4 py-1.5 rounded-full border border-black/5">
+                <Users className="w-4 h-4 text-[#d4a017]" />
+                <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#3d2800]/70">
+                  {onlineCount + 12} pessoas orando agora
+                </span>
               </div>
-              <span className="text-[10px] font-black uppercase tracking-widest text-[#a0720a] bg-[#d4a017]/10 px-3 py-1 rounded-full">Fluxo Sagrado</span>
-            </div>
-            
-            <div className="w-full h-2.5 bg-black/5 rounded-full overflow-hidden shadow-inner ring-1 ring-[#d4a017]/5">
-               <motion.div 
-                 className="h-full bg-gradient-to-r from-[#d4a017] via-[#f0c040] to-[#d4a017]"
-                 initial={{ width: "0%" }}
-                 animate={{ width: `${progress * 100}%` }}
-                 transition={{ duration: 1, ease: "linear" }}
-               >
-                 <div className="w-full h-full bg-[url('https://www.transparenttextures.com/patterns/shimmer.png')] opacity-20" />
-               </motion.div>
-            </div>
-          </div>
+              
+              <div className="w-48 h-1.5 bg-black/5 rounded-full overflow-hidden shadow-inner flex shrink-0">
+                <motion.div 
+                  className="h-full bg-gradient-to-r from-[#d4a017] via-[#f0c040] to-[#d4a017] relative"
+                  initial={{ width: "0%" }}
+                  animate={{ width: `${progress * 100}%` }}
+                  transition={{ duration: 1, ease: "linear" }}
+                >
+                  <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/shimmer.png')] opacity-20" />
+                </motion.div>
+              </div>
+           </div>
         </div>
 
+        {/* Global Progress Indicator (Hidden or reduced) */}
+        <div className="h-2 shrink-0 bg-transparent" />
       </div>
     </PageTransition>
   );
 };
+
+export default PrayerChain;
 
 export default PrayerChain;
