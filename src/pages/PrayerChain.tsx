@@ -381,14 +381,18 @@ const PrayerChain = () => {
                     initial={{ opacity: 1, scale: 0, x: 0, y: 0 }}
                     animate={{ 
                       opacity: 0, 
-                      scale: [0, 2, 0], 
-                      x: (Math.random() - 0.5) * 300, 
-                      y: -(Math.random() * 200 + 100)
+                      scale: [0, 2.5, 0], 
+                      x: (Math.random() - 0.5) * 350, 
+                      y: -window.innerHeight * 0.45 // Moves towards the vertical center
                     }}
-                    transition={{ duration: 2, ease: "easeOut" }}
+                    transition={{ 
+                      duration: 2.5, 
+                      ease: [0.22, 1, 0.36, 1],
+                      delay: Math.random() * 0.2
+                    }}
                     className="absolute"
                   >
-                    <Sparkles className="text-[#f0c040] w-5 h-5" />
+                    <Sparkles className="text-[#f0c040] w-6 h-6 drop-shadow-[0_0_10px_rgba(240,192,64,0.6)]" />
                   </motion.div>
                 ))}
             </AnimatePresence>
