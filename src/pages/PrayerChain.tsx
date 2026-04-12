@@ -199,7 +199,6 @@ const PrayerChain = () => {
 
              if (!error && success) {
                foundSlot = targetTs;
-               toast({ title: "Lugar Reservado!", description: "Sua voz se unirá à corrente em instantes." });
                break;
              }
            }
