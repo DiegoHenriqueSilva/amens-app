@@ -93,11 +93,11 @@ const Submit = () => {
                 <div>
                   <div className="flex items-center justify-between mb-2">
                     <Label htmlFor="title" className="text-base">Título (Opcional)</Label>
-                    <div className="w-10 h-10 group cursor-pointer overflow-visible relative flex-shrink-0">
+                    <div className="w-10 h-10 overflow-visible relative flex-shrink-0">
                       <img 
                         src="/enviar_pergaminho_3d.png" 
                         alt="Pergaminho solitário" 
-                        className={`w-full h-full object-contain transition-all duration-500 group-active:drop-shadow-[0_0_25px_rgba(255,215,0,1)] group-active:brightness-125 group-active:scale-110 ${isSubmitting ? 'drop-shadow-[0_0_25px_rgba(255,215,0,1)] brightness-125 scale-110' : 'drop-shadow-sm'}`} 
+                        className={`w-full h-full object-contain transition-all duration-500 ${isSubmitting ? 'drop-shadow-[0_0_25px_rgba(255,215,0,1)] brightness-125 scale-110' : 'drop-shadow-sm'}`} 
                       />
                     </div>
                   </div>
