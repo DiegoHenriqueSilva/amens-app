@@ -5,7 +5,6 @@ import { Card } from "@/components/ui/card";
 import { Sparkles, Heart, ArrowLeft, Users, Share2, MessageCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { toast } from "sonner";
 import { useXp } from "@/hooks/use-xp";
 import { XP_REWARDS } from "@/lib/xp";
 import PageTransition from "@/components/PageTransition";

@@ -247,6 +247,24 @@ const Index = () => {
             </motion.div>
 
             <motion.div variants={fadeUp}>
+              <Link to="/rosary-selection">
+                <Card className="p-6 h-full text-center flex flex-col items-center justify-between border-primary/5 soft-shadow hover:bg-white transition-colors rounded-[2rem] border-dashed border-primary/20">
+                  <div className="w-14 h-14 bg-transparent rounded-full flex items-center justify-center mb-4 overflow-hidden">
+                    <img src="/backgrounds/bg-3.png" alt="Sagrado Terço" className="w-full h-full object-cover rounded-full drop-shadow-md" />
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-bold mb-2">Sagrado Terço</h2>
+                    <p className="text-xs text-muted-foreground leading-tight mb-4 font-medium">Reze seus mistérios com auxílio de voz</p>
+                  </div>
+                  <Button size="sm" className="w-full rounded-full text-xs py-5 font-bold shadow-sm border-0" style={{background: 'linear-gradient(135deg, #d4a017, #f0c040)', color: '#3d2800'}}>
+                    <Sparkles className="w-3 h-3 mr-2" />
+                    Iniciar
+                  </Button>
+                </Card>
+              </Link>
+            </motion.div>
+
+            <motion.div variants={fadeUp}>
               <Link to="/divine-promise">
                 <Card className="p-6 h-full text-center flex flex-col items-center justify-between border-primary/5 soft-shadow hover:bg-white transition-colors rounded-[2rem] border-dashed">
                   <div className="w-14 h-14 bg-transparent rounded-full flex items-center justify-center mb-4 overflow-hidden">

@@ -21,6 +21,8 @@ import Tree from "./pages/Tree";
 import PrayerChain from "./pages/PrayerChain";
 import Messages from "./pages/Messages";
 import Friends from "./pages/Friends";
+import RosarySelection from "./pages/RosarySelection";
+import RosaryPrayer from "./pages/RosaryPrayer";
 import BottomNav from "./components/BottomNav";
 
 const queryClient = new QueryClient();
@@ -62,6 +64,8 @@ const App = () => {
             <Route path="/community" element={<Community />} />
             <Route path="/tree" element={<Tree />} />
             <Route path="/prayer-chain" element={<PrayerChain />} />
+            <Route path="/rosary-selection" element={<RosarySelection />} />
+            <Route path="/rosary/:type" element={<RosaryPrayer />} />
             <Route path="/messages" element={<Messages />} />
             <Route path="/friends" element={<Friends />} />
             <Route path="*" element={<NotFound />} />
