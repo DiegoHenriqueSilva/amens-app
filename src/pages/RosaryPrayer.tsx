@@ -23,18 +23,18 @@ const RosaryPrayer = () => {
   const { type } = useParams();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isVoiceActive, setIsVoiceActive] = useState(false);
+  const [isSwayEnabled, setIsSwayEnabled] = useState(true);
 
   const mysteries = useMemo(() => {
     if (type === "misterios") return getMysteriesByDay();
     return [];
   }, [type]);
 
-  // Generate beads sequence based on Devotion Type
   const beads = useMemo(() => {
     const sequence: Partial<Bead>[] = [];
     
+    // --- Define the sequence based on type ---
     if (type === 'misterios') {
-        // --- Traditional Marian Rosary ---
         sequence.push({ type: "cross", prayer: PRAYERS.SINAL_CRUZ });
         sequence.push({ type: "large", prayer: PRAYERS.CREDO });
         sequence.push({ type: "large", prayer: PRAYERS.PAI_NOSSO });
@@ -54,12 +54,10 @@ const RosaryPrayer = () => {
         sequence.push({ type: "cross", prayer: PRAYERS.SINAL_CRUZ });
     } 
     else if (type === 'misericordia') {
-        // --- Mercy Rosary ---
         sequence.push({ type: "cross", prayer: PRAYERS.SINAL_CRUZ });
         sequence.push({ type: "large", prayer: PRAYERS.PAI_NOSSO });
         sequence.push({ type: "small", prayer: PRAYERS.AVE_MARIA });
         sequence.push({ type: "large", prayer: PRAYERS.CREDO });
-
         for (let i = 0; i < 5; i++) {
             sequence.push({ type: "large", prayer: PRAYERS.MISERICORDIA_PAI });
             for (let j = 0; j < 10; j++) sequence.push({ type: "small", prayer: PRAYERS.MISERICORDIA_DEZENA });
@@ -68,11 +66,9 @@ const RosaryPrayer = () => {
         sequence.push({ type: "cross", prayer: PRAYERS.SINAL_CRUZ });
     }
     else if (type === 'libertacao') {
-        // --- Liberation Rosary ---
         sequence.push({ type: "cross", prayer: PRAYERS.SINAL_CRUZ });
         sequence.push({ type: "large", prayer: PRAYERS.CREDO });
         sequence.push({ type: "medal", prayer: PRAYERS.SALVE_RAINHA });
-
         for (let i = 0; i < 5; i++) {
             sequence.push({ type: "large", prayer: PRAYERS.LIBERTACAO_GRANDE });
             for (let j = 0; j < 10; j++) sequence.push({ type: "small", prayer: PRAYERS.LIBERTACAO_PEQUENA });
@@ -81,19 +77,16 @@ const RosaryPrayer = () => {
         sequence.push({ type: "cross", prayer: PRAYERS.SINAL_CRUZ });
     }
     else if (type === 'miguel') {
-        // --- St. Michael Arcanjo Crown (9x3 Structure) ---
         sequence.push({ type: "cross", prayer: PRAYERS.SINAL_CRUZ });
         sequence.push({ type: "large", prayer: PRAYERS.MIGUEL_INICIO });
         sequence.push({ type: "large", prayer: PRAYERS.GLORIA });
         sequence.push({ type: "medal", prayer: PRAYERS.MIGUEL_CONCLUSAO });
-
         const coros = ["Serafins", "Querubins", "Tronos", "Dominações", "Potestades", "Virtudes", "Principados", "Arcanjos", "Anjos"];
         for (let i = 0; i < 9; i++) {
             sequence.push({ type: "large", prayer: COROS_ANJOS[i], mysteryTitle: `Saudação aos ${coros[i]}` });
             sequence.push({ type: "large", prayer: PRAYERS.PAI_NOSSO });
             for (let j = 0; j < 3; j++) sequence.push({ type: "small", prayer: PRAYERS.AVE_MARIA });
         }
-        // 4 Final beads
         sequence.push({ type: "large", prayer: PRAYERS.MIGUEL_HONRA_MIGUEL });
         sequence.push({ type: "large", prayer: PRAYERS.MIGUEL_HONRA_GABRIEL });
         sequence.push({ type: "large", prayer: PRAYERS.MIGUEL_HONRA_RAFAEL });
@@ -102,25 +95,50 @@ const RosaryPrayer = () => {
         sequence.push({ type: "cross", prayer: PRAYERS.SINAL_CRUZ });
     }
 
-    // Calculate dynamic layout coordinates (Stem + Loop)
+    // --- Frame Layout Calculation ---
+    const stemCount = type === 'miguel' ? 4 : (type === 'libertacao' ? 3 : 7);
+    const loopCount = sequence.length - stemCount;
+
     return sequence.map((b, i) => {
       let x = 50, y = 50;
       
-      const stemCount = type === 'miguel' ? 4 : (type === 'libertacao' ? 3 : 7);
-      
       if (i < stemCount) {
+        // Vertical stem at the bottom center
         x = 50;
-        y = 92 - (i * 5); // Stem at the bottom
+        y = 94 - (i * 4.5);
       } else {
-        const loopIdx = i - (stemCount - 1);
-        const totalInLoop = sequence.length - (stemCount - 1);
-        const angle = (Math.PI / 2) + (loopIdx / totalInLoop) * Math.PI * 2;
+        // Distribute around the screen frame
+        // Width: 10% to 90%, Height: 12% to 80%
+        const loopIdx = i - stemCount;
+        const totalInLoop = loopCount;
         
-        const radiusX = type === 'miguel' ? 38 : 34; // Slightly wider for Miguel
-        const radiusY = 24;
+        // We calculate points along a rounded terminal rectangle
+        // Total perimeter 
+        const w = 84; // 92 - 8
+        const h = 65; // 78 - 13
+        const perimeter = 2 * (w + h);
+        const distance = (loopIdx / totalInLoop) * perimeter;
         
-        x = 50 + Math.cos(angle) * radiusX;
-        y = 32 + Math.sin(angle) * radiusY;
+        // Starting from bottom center (50, 80) and moving counter-clockwise or clockwise
+        // Let's start from bottom right and go around
+        const startX = 50, startY = 78;
+        
+        if (distance <= w/2) {
+          x = 50 + distance;
+          y = 78;
+        } else if (distance <= w/2 + h) {
+          x = 92;
+          y = 78 - (distance - w/2);
+        } else if (distance <= w/2 + h + w) {
+          x = 92 - (distance - (w/2 + h));
+          y = 13;
+        } else if (distance <= w/2 + h + w + h) {
+          x = 8;
+          y = 13 + (distance - (w/2 + h + w));
+        } else {
+          x = 8 + (distance - (w/2 + h + w + h));
+          y = 78;
+        }
       }
       return { ...b, id: i, x, y } as Bead;
     });
@@ -128,6 +146,7 @@ const RosaryPrayer = () => {
 
   const handleNext = () => {
     if (currentIndex < beads.length - 1) {
+      if (navigator.vibrate) navigator.vibrate(40);
       setCurrentIndex(prev => prev + 1);
     } else {
       toast.success("Terço finalizado. Que a paz esteja com você! 🙏");
@@ -136,146 +155,210 @@ const RosaryPrayer = () => {
   };
 
   const handlePrevious = () => {
-    if (currentIndex > 0) setCurrentIndex(prev => prev - 1);
+    if (currentIndex > 0) {
+        if (navigator.vibrate) navigator.vibrate(20);
+        setCurrentIndex(prev => prev - 1);
+    }
   };
 
   const { listening } = useRosaryVoice(handleNext, isVoiceActive, beads[currentIndex]?.prayer);
 
+  // --- Ornate Cross Component (Refined to avoid star-look) ---
+  const OrnateCross = ({ isActive }: { isActive: boolean }) => (
+    <div className={cn("relative w-14 h-20 flex items-center justify-center transition-all duration-700", isActive && "scale-110")}>
+        <svg viewBox="0 0 100 140" className="w-full h-full drop-shadow-2xl">
+            {/* Soft Glow */}
+            <path d="M50 10 C55 35 65 40 95 50 C65 60 55 65 50 130 C45 65 35 60 5 50 C35 40 45 35 50 10" 
+                  fill={isActive ? "rgba(251, 191, 36, 0.4)" : "transparent"} 
+                  className={cn(isActive && "gold-glow")} />
+            
+            {/* Main Body - More Robust and Rounded Ends */}
+            <g className="gold-gradient" stroke="#8b7355" strokeWidth="1.5">
+                {/* Vertical Bar with rounded ends */}
+                <rect x="42" y="10" width="16" height="120" rx="8" />
+                {/* Horizontal Bar with rounded ends */}
+                <rect x="10" y="42" width="80" height="16" rx="8" />
+                {/* Decorative Center */}
+                <circle cx="50" cy="50" r="10" fill="url(#gold-line)" />
+                <circle cx="50" cy="50" r="5" fill="white" opacity="0.3" />
+            </g>
+
+            {/* Shimmer Overlay */}
+            {isActive && (
+                <g className="shimmer-effect" style={{mixBlendMode: 'overlay'}}>
+                    <rect x="42" y="10" width="16" height="120" rx="8" />
+                    <rect x="10" y="42" width="80" height="16" rx="8" />
+                </g>
+            )}
+        </svg>
+    </div>
+  );
+
   return (
     <PageTransition>
-      <div className="h-screen w-full bg-[#faf9f6] flex flex-col relative overflow-hidden paper-texture">
-        {/* Divine Background Glow */}
-        <div className="absolute top-[-5rem] left-[10%] w-[80%] h-[40%] rounded-full bg-primary/5 blur-[80px] pointer-events-none" />
+      <div className="h-screen w-full bg-white flex flex-col relative overflow-hidden">
+        {/* Divine Ripples Background */}
+        <div className="absolute inset-0 pointer-events-none opacity-30">
+           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[140%] h-[140%] sacred-ripple rounded-full border border-primary/5" />
+           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[100%] h-[100%] sacred-ripple rounded-full border border-primary/5 [animation-delay:-2.s]" />
+           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60%] h-[60%] sacred-ripple rounded-full border border-primary/5 [animation-delay:-4s]" />
+        </div>
         
         {/* Header */}
-        <div className="pt-6 px-6 flex justify-between items-center z-20">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/rosary-selection")} className="rounded-full bg-white/50 backdrop-blur-sm shadow-sm border border-primary/10">
-            <ArrowLeft className="w-5 h-5" />
+        <div className="pt-8 px-8 flex justify-between items-center z-50">
+          <Button variant="ghost" size="icon" onClick={() => navigate("/rosary-selection")} className="rounded-full bg-white/40 hover:bg-white/80 backdrop-blur-sm border border-primary/5">
+            <ArrowLeft className="w-5 h-5 text-stone-400" />
           </Button>
-          <div className="text-center flex-1">
-             <h2 className="text-[10px] font-black uppercase tracking-[0.4em] text-primary/70 mb-0.5">Sagrado Terço</h2>
-             <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">
-                {ROSARY_TYPES.find(t => t.id === type)?.name || 'Devocional'}
-             </p>
+          <div className="text-center">
+             <h2 className="text-[11px] font-bold uppercase tracking-[0.5em] text-primary/60">Sagrado Terço</h2>
+             <p className="font-serif italic text-stone-400 text-[10px]">{ROSARY_TYPES.find(t => t.id === type)?.name}</p>
           </div>
           <Button 
-            variant={isVoiceActive ? "default" : "outline"} 
+            variant="ghost" 
             size="icon" 
             onClick={() => setIsVoiceActive(!isVoiceActive)}
-            className={cn(
-                "rounded-full transition-all border-primary/20", 
-                isVoiceActive ? "bg-amber-500 text-white animate-pulse shadow-lg shadow-amber-500/30" : "bg-white/50 backdrop-blur-sm shadow-sm"
-            )}
+            className={cn("rounded-full border transition-all", isVoiceActive ? "bg-amber-100 border-amber-300 text-amber-600" : "bg-white/40 border-primary/5 text-stone-300")}
           >
             {isVoiceActive ? <Mic className="w-4 h-4" /> : <MicOff className="w-4 h-4" />}
           </Button>
         </div>
 
-        {/* Visual Rosary Section (The Core) */}
-        <div className="flex-1 relative">
-           <div className="absolute inset-0">
-              {/* Central Prayer Text */}
-              <div className="absolute top-[35%] left-1/2 -translate-x-1/2 -translate-y-1/2 w-[78%] text-center z-0 min-h-[160px] flex items-center justify-center">
-                <AnimatePresence mode="wait">
-                    <motion.div
-                    key={currentIndex}
-                    initial={{ opacity: 0, scale: 0.98 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 1.02 }}
-                    transition={{ duration: 0.2, ease: "easeOut" }}
-                    className="w-full"
-                    >
-                        {beads[currentIndex].mysteryTitle && (
-                            <div className="mb-2">
-                                <span className="text-[7px] font-black uppercase tracking-[0.5em] text-amber-600/50 block mb-0.5">Mistério</span>
-                                <h3 className="text-[10px] font-bold text-stone-700 leading-tight px-6 uppercase tracking-widest">{beads[currentIndex].mysteryTitle}</h3>
-                            </div>
-                        )}
-                        
-                        <p className="font-serif italic text-base md:text-lg text-stone-900 leading-relaxed px-3">
-                            {beads[currentIndex].prayer}
-                        </p>
-                    </motion.div>
-                </AnimatePresence>
-              </div>
-
-              {/* The Beads */}
-              {beads.map((bead, i) => (
+        {/* Central Space for Prayers */}
+        <div className="flex-1 relative flex items-center justify-center p-14 lg:p-28 z-10">
+           <AnimatePresence mode="wait">
                 <motion.div
-                  key={bead.id}
-                  initial={false}
-                  animate={{
-                    scale: currentIndex === i ? 1.3 : (bead.type === 'large' ? 1.1 : 1),
-                    opacity: 1,
-                    // Golden Glow for current bead
-                    boxShadow: currentIndex === i 
-                        ? "0 0 20px 4px rgba(251, 191, 36, 0.6)" 
-                        : "0 2px 4px rgba(0,0,0,0.1)",
-                    // 3D Spherical Gradient
-                    background: currentIndex === i 
-                        ? "radial-gradient(circle at 30% 30%, #fff 0%, #fbbf24 40%, #d97706 100%)" 
-                        : (currentIndex > i 
-                            ? "radial-gradient(circle at 30% 30%, #d4a017 0%, #92400e 100%)" 
-                            : "radial-gradient(circle at 30% 30%, #fff 0%, #e5e7eb 40%, #9ca3af 100%)"
-                        )
-                  }}
-                  onClick={() => setCurrentIndex(i)}
-                  className={cn(
-                    "absolute transition-all duration-500 border border-black/5 z-10",
-                    bead.type === "large" ? "w-4 h-4 -ml-2 -mt-2 rounded-full" : 
-                    bead.type === "cross" ? "w-8 h-8 -ml-4 -mt-4 bg-transparent border-0 z-20" : 
-                    bead.type === "medal" ? "w-6 h-6 -ml-3 -mt-3 ring-2 ring-amber-300/30 ring-offset-1 p-0.5 rounded-full" :
-                    "w-2.5 h-2.5 -ml-1.25 -mt-1.25 rounded-full"
-                  )}
-                  style={{ left: `${bead.x}%`, top: `${bead.y}%` }}
+                key={currentIndex}
+                initial={{ opacity: 0, scale: 0.95, filter: "blur(10px)" }}
+                animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
+                exit={{ opacity: 0, scale: 1.05, filter: "blur(10px)" }}
+                transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+                className="max-w-md w-full text-center space-y-6"
                 >
-                   {bead.type === "cross" && (
-                    <div className="w-full h-full flex items-center justify-center filter drop-shadow-md">
-                        <div className="absolute w-1.5 h-full bg-gradient-to-b from-amber-200 via-amber-500 to-amber-700 rounded-px" />
-                        <div className="absolute h-1.5 w-full bg-gradient-to-r from-amber-200 via-amber-500 to-amber-700 rounded-px" />
-                    </div>
-                   )}
-                   {bead.type === "medal" && (
-                    <div className="w-full h-full bg-gradient-to-tr from-amber-600 to-amber-200 rounded-full flex items-center justify-center p-0.5 shadow-inner">
-                        <Heart className="w-full h-full text-amber-900/40 fill-current" />
-                    </div>
-                   )}
+                    {beads[currentIndex].mysteryTitle && (
+                        <div className="mb-4">
+                            <span className="text-[8px] font-black uppercase tracking-[0.6em] text-amber-500/60 block mb-2">Mistério</span>
+                            <h3 className="text-sm font-bold text-stone-800 uppercase tracking-[0.2em] leading-relaxed px-4">{beads[currentIndex].mysteryTitle}</h3>
+                            <div className="divider-gold w-12 mx-auto mt-4 opacity-50" />
+                        </div>
+                    )}
+                    
+                    <p className="font-serif italic text-2xl md:text-3xl text-stone-900 leading-tight px-2 font-medium">
+                        "{beads[currentIndex].prayer}"
+                    </p>
                 </motion.div>
-              ))}
-           </div>
+            </AnimatePresence>
         </div>
 
-        {/* Floating Controls (Bottom) */}
-        <div className="pb-12 px-8 flex flex-col items-center gap-6 z-40">
-           <div className="bg-white/40 backdrop-blur-xl rounded-full border border-white/50 p-2 shadow-xl flex items-center gap-6">
-                <Button variant="ghost" size="icon" onClick={handlePrevious} disabled={currentIndex === 0} className="w-10 h-10 rounded-full hover:bg-black/5">
-                    <ChevronLeft className="w-5 h-5 text-stone-400" />
+        {/* Rosary Visualization Layer */}
+        <div className="absolute inset-0 pointer-events-none z-20">
+            {/* Realistic Chain Layer */}
+            <svg className="w-full h-full absolute inset-0">
+                <defs>
+                    <linearGradient id="gold-line" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" stopColor="#8b7355" />
+                        <stop offset="50%" stopColor="#d4af37" />
+                        <stop offset="100%" stopColor="#8b7355" />
+                    </linearGradient>
+                </defs>
+                {beads.map((bead, i) => {
+                    if (i === 0) return null;
+                    const prev = beads[i-1];
+                    const dx = (bead.x - prev.x);
+                    const dy = (bead.y - prev.y);
+                    const dist = Math.sqrt(dx*dx + dy*dy);
+                    const steps = Math.floor(dist * 1.8);
+                    
+                    const links = [];
+                    for(let s=1; s<steps; s++) {
+                        const px = prev.x + (dx * s/steps);
+                        const py = prev.y + (dy * s/steps);
+                        links.push(
+                            <ellipse 
+                                key={`link-${i}-${s}`}
+                                cx={`${px}%`} cy={`${py}%`}
+                                rx="0.8" ry="0.4"
+                                fill="none"
+                                stroke="#d4af37"
+                                strokeWidth="0.3"
+                                opacity="0.6"
+                                transform={`rotate(${Math.atan2(dy, dx) * 180 / Math.PI}, ${px}, ${py})`}
+                            />
+                        );
+                    }
+                    return <g key={`group-${i}`}>{links}</g>;
+                })}
+            </svg>
+
+            {/* Inactive & Active Beads */}
+            <div className={cn("w-full h-full relative", isSwayEnabled && "sway")}>
+                {beads.map((bead, i) => {
+                    const isActive = currentIndex === i;
+                    const isPassed = currentIndex > i;
+                    
+                    return (
+                        <motion.div
+                            key={`bead-${bead.id}`}
+                            className="absolute pointer-events-auto cursor-pointer"
+                            style={{ left: `${bead.x}%`, top: `${bead.y}%` }}
+                            onClick={() => setCurrentIndex(i)}
+                            initial={false}
+                            animate={{
+                                scale: isActive ? 1.4 : 1,
+                                opacity: 1
+                            }}
+                        >
+                            <div className="relative -translate-x-1/2 -translate-y-1/2">
+                                {bead.type === "cross" ? (
+                                    <OrnateCross isActive={isActive} />
+                                ) : bead.type === "medal" ? (
+                                    <div className={cn("w-8 h-8 rounded-full flex items-center justify-center gold-border transition-all", isActive ? "gold-gradient gold-glow scale-125" : "bg-white/60 shadow-inner")}>
+                                        <Heart className={cn("w-4 h-4", isActive ? "text-white fill-current" : "text-amber-600/20")} />
+                                    </div>
+                                ) : (
+                                    <div className={cn(
+                                        "transition-all duration-500 rounded-full shadow-md",
+                                        bead.type === "large" ? "w-5 h-5" : "w-3.5 h-3.5",
+                                        isActive ? "gold-gradient gold-glow scale-125" : 
+                                        (isPassed ? "gold-gradient opacity-70" : "gold-border bg-white/60")
+                                    )}>
+                                        {isActive && <div className="absolute inset-0 rounded-full shimmer-effect" style={{mixBlendMode: 'overlay'}} />}
+                                    </div>
+                                )}
+                            </div>
+                        </motion.div>
+                    );
+                })}
+            </div>
+        </div>
+
+        {/* Global Controls */}
+        <div className="pb-16 px-12 flex flex-col items-center gap-8 z-50">
+            <div className="flex items-center gap-10">
+                <Button variant="ghost" size="icon" onClick={handlePrevious} disabled={currentIndex === 0} className="w-12 h-12 rounded-full hover:bg-stone-50 disabled:opacity-20">
+                    <ChevronLeft className="w-6 h-6 text-stone-400" />
                 </Button>
                 
-                <div className="relative w-12 h-12 flex items-center justify-center">
-                    <svg className="w-full h-full -rotate-90">
-                        <circle cx="24" cy="24" r="20" stroke="currentColor" strokeWidth="2" fill="transparent" className="text-stone-100/50" />
-                        <circle cx="24" cy="24" r="20" stroke="currentColor" strokeWidth="2.5" fill="transparent" className="text-amber-500"
-                            strokeDasharray={125} strokeDashoffset={125 - (currentIndex / (beads.length - 1)) * 125} strokeLinecap="round" />
-                    </svg>
-                    <div className="absolute inset-0 flex items-center justify-center">
-                        <span className="text-xs font-black text-amber-700">{currentIndex + 1}</span>
+                <div className="group relative" onClick={() => setIsSwayEnabled(!isSwayEnabled)}>
+                    <div className="w-14 h-14 bg-white rounded-full shadow-xl border border-primary/10 flex items-center justify-center transition-transform group-active:scale-95 cursor-pointer">
+                        <span className="text-sm font-black text-amber-700">{currentIndex + 1}</span>
+                        <svg className="absolute inset-0 w-full h-full -rotate-90">
+                            <circle cx="28" cy="28" r="24" stroke="#f8f8f8" strokeWidth="2" fill="transparent" />
+                            <circle cx="28" cy="28" r="24" stroke="#d4af37" strokeWidth="3" fill="transparent"
+                                strokeDasharray={151} strokeDashoffset={151 - (currentIndex / (beads.length - 1)) * 151} strokeLinecap="round" />
+                        </svg>
                     </div>
                 </div>
 
-                <Button variant="ghost" size="icon" onClick={handleNext} className="w-10 h-10 rounded-full bg-amber-500/10 hover:bg-amber-500/20 group">
-                    <ChevronRight className="w-6 h-6 text-amber-600 group-hover:scale-110 transition-transform" />
+                <Button variant="ghost" size="icon" onClick={handleNext} className="w-12 h-12 rounded-full bg-amber-500/5 hover:bg-amber-500/10 group">
+                    <ChevronRight className="w-7 h-7 text-amber-600 transition-transform group-hover:scale-110" />
                 </Button>
-           </div>
-           
-           {listening && isVoiceActive && (
-                <motion.div 
-                    initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-                    className="flex items-center gap-2 px-4 py-1.5 bg-amber-500/10 backdrop-blur-md rounded-full border border-amber-500/20 shadow-sm"
-                >
-                    <Sparkles className="w-3 h-3 text-amber-500" />
-                    <span className="text-[9px] font-black text-amber-700 uppercase tracking-widest animate-pulse">Ouvindo...</span>
-                </motion.div>
+            </div>
+            
+            {listening && isVoiceActive && (
+                <div className="flex items-center gap-3 px-6 py-2 bg-white/90 backdrop-blur-md rounded-full border border-amber-100 shadow-sm animate-in fade-in slide-in-from-bottom-2">
+                    <div className="w-2 h-2 bg-amber-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(245,158,11,0.5)]" />
+                    <span className="text-[10px] font-black text-amber-700 uppercase tracking-[0.25em]">Ouvindo prece...</span>
+                </div>
             )}
         </div>
       </div>
