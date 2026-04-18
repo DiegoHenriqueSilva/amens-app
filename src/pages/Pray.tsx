@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Sparkles, Heart, ArrowLeft, Users, Share2, MessageCircle } from "lucide-react";
+import { Sparkles, Heart, ArrowLeft, Users, Share2, MessageCircle, Clock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useXp } from "@/hooks/use-xp";
@@ -10,6 +10,15 @@ import { XP_REWARDS } from "@/lib/xp";
 import PageTransition from "@/components/PageTransition";
 import { motion, AnimatePresence } from "framer-motion";
 import { FriendSelector } from "@/components/FriendSelector";
+import { formatTimeAgo } from "@/lib/utils";
+
+const FEEDBACK_OPTIONS: Record<string, { label: string; emoji: string }> = {
+  success: { label: "Deu certo, obrigado pelas orações!", emoji: "🎉" },
+  not_this_time: { label: "Não foi desta vez, mas obrigado pelas preces!", emoji: "🙏" },
+  keep_trying: { label: "Não deu certo mas vou continuar tentando", emoji: "💪" },
+  god_knows: { label: "Não deu certo mas Deus sabe o que faz, obrigado pelas orações", emoji: "✝️" },
+  grace_received: { label: "Consegui a graça solicitada, obrigado!", emoji: "⭐" },
+};
 
 const fadeUp = {
   initial: { opacity: 0, y: 20 },
@@ -24,10 +33,64 @@ const Pray = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [activeReaction, setActiveReaction] = useState<string | null>(null);
   const [friendSelectorOpen, setFriendSelectorOpen] = useState(false);
+  const [intercessions, setIntercessions] = useState<any[]>([]);
+  const [isIntercessionsLoading, setIsIntercessionsLoading] = useState(false);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const prayerIdParam = searchParams.get("id");
+  const [showHistory, setShowHistory] = useState(false);
   const { addXp } = useXp();
+
+  const fetchIntercessions = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return;
+    
+    setIsIntercessionsLoading(true);
+    try {
+      const { data: intData, error } = await supabase
+        .from("prayer_intercessions")
+        .select("id, prayer_request_id, created_at")
+        .eq("user_id", session.user.id)
+        .order("created_at", { ascending: false })
+        .limit(20); // Increased limit for integrated history
+      
+      if (error) throw error;
+      if (!intData || intData.length === 0) {
+        setIntercessions([]);
+        return;
+      }
+
+      const prayerIds = intData.map(i => i.prayer_request_id);
+      const { data: prayerData } = await supabase
+        .from("prayer_requests")
+        .select("id, title, content, location, feedback")
+        .in("id", prayerIds);
+
+      const prayerMap: Record<string, any> = {};
+      prayerData?.forEach(p => { prayerMap[p.id] = p; });
+
+      setIntercessions(intData.map(i => {
+        const p = prayerMap[i.prayer_request_id] || {};
+        return {
+          id: i.id,
+          prayer_request_id: i.prayer_request_id,
+          created_at: i.created_at,
+          prayer_title: p.title || null,
+          prayer_content: p.content || "Pedido removido",
+          prayer_location: p.location || null,
+          prayer_feedback: p.feedback || null,
+        };
+      }));
+    } catch (e) {
+      console.error("Error loading intercessions history:", e);
+    } finally {
+      setIsIntercessionsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchIntercessions();
+  }, []);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -453,6 +516,78 @@ REGRAS ADICIONAIS:
                 </motion.div>
               )}
             </AnimatePresence>
+          </div>
+
+          {/* History Section */}
+          <div className="max-w-2xl mx-auto mt-16 pb-20 px-2">
+             {!showHistory ? (
+                <div className="text-center">
+                   <Button 
+                     variant="ghost" 
+                     onClick={() => setShowHistory(true)}
+                     className="text-primary/60 hover:text-primary text-[11px] uppercase tracking-widest font-black py-8 bg-primary/5 rounded-[2rem] border border-dashed border-primary/20 w-full hover:bg-primary/10 transition-all"
+                   >
+                     <Clock className="w-4 h-4 mr-2" />
+                     Ver meu histórico de intercessões
+                   </Button>
+                </div>
+             ) : (
+                <motion.div 
+                   initial={{ opacity: 0, scale: 0.95 }}
+                   animate={{ opacity: 1, scale: 1 }}
+                   className="space-y-6"
+                >
+                   <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-3">
+                         <Clock className="w-5 h-5 text-primary opacity-60" />
+                         <h2 className="text-xl font-bold text-foreground opacity-80 uppercase tracking-widest text-[14px]">Intercessões Recentes</h2>
+                      </div>
+                      <Button variant="ghost" size="sm" onClick={() => setShowHistory(false)} className="text-[10px] uppercase font-bold text-muted-foreground">Ocultar</Button>
+                   </div>
+
+                   {isIntercessionsLoading ? (
+                     <div className="text-center py-6 opacity-40">
+                        <div className="animate-spin w-5 h-5 border-2 border-primary border-t-transparent rounded-full mx-auto mb-2" />
+                        <p className="text-xs">Carregando histórico...</p>
+                     </div>
+                   ) : intercessions.length === 0 ? (
+                     <p className="text-center text-sm text-muted-foreground py-8 border border-dashed border-primary/10 rounded-3xl">
+                       Você ainda não orou por nenhuma causa.
+                     </p>
+                   ) : (
+                     <div className="space-y-4">
+                        {intercessions.map((item, i) => (
+                          <motion.div 
+                            key={item.id} 
+                            initial={{ opacity: 0, x: -10 }} 
+                            animate={{ opacity: 1, x: 0 }} 
+                            transition={{ delay: i * 0.1 }}
+                          >
+                            <Card className="p-5 soft-shadow border-primary/5 bg-white/50 backdrop-blur-sm rounded-3xl">
+                              <div className="flex justify-between items-start gap-4">
+                                <div className="flex-1">
+                                  {item.prayer_title && <h4 className="text-sm font-bold mb-1 line-clamp-1">{item.prayer_title}</h4>}
+                                  <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed mb-3">{item.prayer_content}</p>
+                                  <div className="flex items-center gap-2 text-[10px] text-amber-600/60 font-black uppercase tracking-wider">
+                                     <Clock className="w-3 h-3" />
+                                     {formatTimeAgo(item.created_at)}
+                                  </div>
+                                </div>
+                                
+                                {item.prayer_feedback && (
+                                  <div className="bg-primary/5 p-2 rounded-2xl flex flex-col items-center justify-center min-w-[60px] border border-primary/10">
+                                     <span className="text-xl mb-1">{FEEDBACK_OPTIONS[item.prayer_feedback]?.emoji}</span>
+                                     <span className="text-[8px] font-bold text-primary uppercase text-center leading-none">Graça!</span>
+                                  </div>
+                                )}
+                              </div>
+                            </Card>
+                          </motion.div>
+                        ))}
+                     </div>
+                   )}
+                </motion.div>
+             )}
           </div>
         </div>
       </div>

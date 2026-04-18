@@ -115,34 +115,57 @@ const DivinePromise = () => {
                 </Button>
               </motion.div>
             ) : (
-              <motion.div key="open" initial={{ opacity: 0, scale: 0.9, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ type: "spring", stiffness: 100 }}>
-                <div className="relative">
-                  <motion.div id="promise-card" className="p-10 soft-shadow border-primary/20 text-center bg-card/60 backdrop-blur-md relative overflow-hidden rounded-3xl border-2">
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-2xl flex -translate-y-1/2 translate-x-1/2" />
+              <motion.div 
+                key="open" 
+                initial={{ opacity: 0, scale: 0.8, rotateY: 90 }} 
+                animate={{ opacity: 1, scale: 1, rotateY: 0 }} 
+                transition={{ duration: 0.8, type: "spring", damping: 12 }}
+                className="perspective-1000"
+              >
+                <div className="relative group">
+                  <div className="absolute -inset-0.5 bg-gradient-to-r from-[#d4a017] via-[#f0c040] to-[#d4a017] rounded-[2.5rem] blur opacity-30 group-hover:opacity-50 transition duration-1000 group-hover:duration-200 animate-pulse" />
+                  <Card id="promise-card" className="p-10 soft-shadow border-primary/20 text-center bg-white/40 backdrop-blur-xl relative overflow-hidden rounded-[2.5rem] border-2 shadow-2xl min-h-[400px] flex flex-col justify-center">
+                    <div className="absolute top-0 right-0 w-48 h-48 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+                    <div className="absolute bottom-0 left-0 w-48 h-48 bg-accent/5 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
                     
-                    <div className="w-16 h-16 mx-auto gradient-divine rounded-full flex items-center justify-center mb-6 shadow-inner">
-                      <Sparkles className="w-8 h-8 text-primary-foreground" />
+                    <div className="w-20 h-20 mx-auto gradient-divine rounded-full flex items-center justify-center mb-8 shadow-xl border-4 border-white/50 ring-4 ring-primary/5">
+                      <Sparkles className="w-10 h-10 text-primary-foreground" />
                     </div>
                     
-                    <motion.blockquote className="text-xl md:text-2xl leading-relaxed text-foreground italic font-serif mb-6" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
+                    <motion.blockquote 
+                      className="text-2xl md:text-3xl leading-relaxed text-[#3d2800] italic font-serif mb-8 text-glow-sm"
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.4 }}
+                    >
                       "{promise.verse}"
                     </motion.blockquote>
                     
-                    <motion.p className="text-base font-semibold text-primary mb-8 tracking-wide" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6 }}>
-                      — {promise.ref}
+                    <motion.p 
+                      className="text-lg font-bold text-[#b8860b] mb-10 tracking-[0.2em] uppercase"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: 0.7 }}
+                    >
+                      — {promise.ref} —
                     </motion.p>
                     
                     {promise.context && (
-                      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.8 }} className="mb-8 p-5 rounded-xl bg-accent/10 border border-accent/20 text-center relative overflow-hidden">
-                        <p className="text-sm text-foreground/90 leading-relaxed italic">
+                      <motion.div 
+                        initial={{ opacity: 0, scale: 0.9 }} 
+                        animate={{ opacity: 1, scale: 1 }} 
+                        transition={{ delay: 1 }} 
+                        className="mb-8 p-6 rounded-2xl bg-white/60 border border-primary/10 text-center relative overflow-hidden shadow-inner"
+                      >
+                        <p className="text-sm text-stone-700/80 leading-relaxed font-medium">
                           {promise.context}
                         </p>
                       </motion.div>
                     )}
                     
-                    <div className="divider-gold mx-auto mb-4" />
-                    <p className="text-[10px] uppercase tracking-widest text-muted-foreground opacity-50">✦ App Améns ✦</p>
-                  </motion.div>
+                    <div className="divider-gold mx-auto mb-6 w-32" />
+                    <p className="text-[11px] uppercase tracking-[0.4em] text-primary/40 font-black">Améns</p>
+                  </Card>
                 </div>
 
                 <div className="flex flex-col gap-3 mt-8">

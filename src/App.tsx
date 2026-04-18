@@ -6,8 +6,6 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import Pray from "./pages/Pray";
 import Submit from "./pages/Submit";
-import MyPrayers from "./pages/MyPrayers";
-import MyIntercessions from "./pages/MyIntercessions";
 import Auth from "./pages/Auth";
 import DailyGospel from "./pages/DailyGospel";
 import DivinePromise from "./pages/DivinePromise";
@@ -55,8 +53,6 @@ const App = () => {
             <Route path="/" element={<Index />} />
             <Route path="/pray" element={<Pray />} />
             <Route path="/submit" element={<Submit />} />
-            <Route path="/my-prayers" element={<MyPrayers />} />
-            <Route path="/my-intercessions" element={<MyIntercessions />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/daily-gospel" element={<DailyGospel />} />
             <Route path="/divine-promise" element={<DivinePromise />} />

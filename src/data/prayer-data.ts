@@ -119,11 +119,23 @@ export const TOTAL_CYCLE_TIME = PRAYERS.reduce((acc, p) =>
 export const PR_CITIES_100K = [
   "Curitiba", "Londrina", "Maringá", "Ponta Grossa", "Cascavel", 
   "São José dos Pinhais", "Foz do Iguaçu", "Colombo", "Guarapuava", 
-  "Paranaguá", "Araucária", "Toledo", "Apucarana", "Pinhais", "Campo Largo"
+  "Paranaguá", "Araucária", "Toledo", "Apucarana", "Pinhais", "Campo Largo",
+  "São Paulo", "Rio de Janeiro", "Belo Horizonte", "Salvador", "Fortaleza",
+  "Brasília", "Manaus", "Recife", "Porto Alegre", "Belém", "Goiânia",
+  "Campinas", "Guarulhos", "São Luís", "Maceió", "Natal", "Teresina",
+  "Campo Grande", "João Pessoa", "Cuiabá", "Aracaju", "Florianópolis",
+  "Vitória", "Caxias do Sul", "Joinville", "Uberlândia", "Sorocaba",
+  "Ribeirão Preto", "Feira de Santana", "Juiz de Fora", "Londrina"
 ];
 
 export const COMMON_NAMES = [
   "Maria", "João", "Diego", "Matheus", "Fernando", 
   "Ana", "Paulo", "Ricardo", "Luiza", "Gabriel",
-  "Beatriz", "Lucas", "Julia", "Rafael", "Mariana"
+  "Beatriz", "Lucas", "Julia", "Rafael", "Mariana",
+  "Pedro", "Tiago", "André", "Felipe", "Bartholomeu",
+  "Tomé", "Mateus", "Simão", "Judas", "Matias",
+  "Isabel", "Marta", "Verônica", "Inês", "Clara",
+  "Tereza", "Rita", "Lúcia", "Cecília", "Mônica",
+  "Benedito", "Expedito", "Jorge", "Sebastião", "Lázaro",
+  "Francisco", "Antônio", "José", "Carlos", "Roberto"
 ];
