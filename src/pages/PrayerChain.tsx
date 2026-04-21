@@ -318,56 +318,66 @@ const PrayerChain = () => {
               <p className="text-[#3d2800]/40 text-[10px] font-black uppercase tracking-[0.3em] animate-pulse">Sincronizando...</p>
             </div>
           ) : (
-            <AnimatePresence mode="wait">
-              {currentPrayer && currentPhraseIndex >= 0 ? (
-              <motion.div 
-                key={`${currentPrayer.id}-${currentPhraseIndex}`}
-                initial={{ opacity: 0, scale: 0.95, filter: "blur(8px)" }}
-                animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
-                exit={{ opacity: 0, scale: 1.05, filter: "blur(8px)" }}
-                transition={{ duration: 1.5, ease: [0.22, 1, 0.36, 1] }}
-                className="w-full flex flex-col items-center"
-              >
-                <div className="w-14 h-14 bg-gradient-to-tr from-[#d4a017] to-[#f0c040] rounded-full flex items-center justify-center mx-auto mb-8 shadow-xl border-2 border-white/50 ring-4 ring-[#d4a017]/5">
-                  <Sparkles className="text-white w-7 h-7" />
-                </div>
-                
-                <h2 className="font-serif italic font-bold text-[1.8rem] md:text-[3.2rem] text-center leading-[1.3] text-[#3d2800] max-w-3xl mx-auto drop-shadow-sm px-4 py-2 transition-all duration-700">
-                  "{currentPrayer.phrases[currentPhraseIndex]}"
-                </h2>
-                
-                {recentContributors.length > 0 && !queueLoading && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="mt-8 flex flex-col items-center gap-1.5"
-                  >
-                    <p className="text-[#a0720a] text-[10px] uppercase tracking-[0.3em] font-bold mb-1 opacity-70">Unidos em oração agora:</p>
-                    {recentContributors.map((contrib, i) => (
-                      <p key={i} className={cn(
-                        "text-[#3d2800]/70 font-bold text-[12px] md:text-[14px] text-center tracking-wide px-4 transition-all",
-                        contrib?.user_id === currentUser?.id && "text-primary scale-105 drop-shadow-sm",
-                        contrib?.user_id && friendIds.has(contrib.user_id) && "text-friend-accent scale-105 drop-shadow-sm"
-                      )}>
-                        {contrib.name} — entrou na oração
-                      </p>
-                    ))}
-                  </motion.div>
+            <div className="flex-1 flex flex-col justify-center items-center w-full mt-4">
+              <AnimatePresence mode="wait">
+                {currentPrayer && currentPhraseIndex >= 0 ? (
+                <motion.div 
+                  key={`${currentPrayer.id}-${currentPhraseIndex}`}
+                  initial={{ opacity: 0, scale: 0.95, filter: "blur(8px)" }}
+                  animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
+                  exit={{ opacity: 0, scale: 1.05, filter: "blur(8px)" }}
+                  transition={{ duration: 1.5, ease: [0.22, 1, 0.36, 1] }}
+                  className="w-full flex flex-col items-center mb-6"
+                >
+                  <div className="w-14 h-14 bg-gradient-to-tr from-[#d4a017] to-[#f0c040] rounded-full flex items-center justify-center mx-auto mb-6 shadow-xl border-2 border-white/50 ring-4 ring-[#d4a017]/5">
+                    <Sparkles className="text-white w-7 h-7" />
+                  </div>
+                  
+                  <h2 className="font-serif italic font-bold text-[1.4rem] md:text-[2.2rem] text-center leading-[1.3] text-[#3d2800] max-w-3xl mx-auto drop-shadow-sm px-4 transition-all duration-700">
+                    "{currentPrayer.phrases[currentPhraseIndex]}"
+                  </h2>
+                </motion.div>
+              ) : (
+                <motion.div 
+                  key="gap"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="text-center space-y-4 mb-6"
+                >
+                  <Wind className="w-14 h-14 text-[#d4a017]/20 mx-auto animate-pulse" />
+                  <p className="text-[#3d2800]/50 font-serif italic text-lg md:text-xl tracking-wide">O silêncio é o abraço de Deus...</p>
+                </motion.div>
                 )}
-              </motion.div>
-            ) : (
-              <motion.div 
-                key="gap"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="text-center space-y-6"
-              >
-                <Wind className="w-16 h-16 text-[#d4a017]/20 mx-auto animate-pulse" />
-                <p className="text-[#3d2800]/50 font-serif italic text-xl md:text-2xl tracking-wide">O silêncio é o abraço de Deus...</p>
-              </motion.div>
+              </AnimatePresence>
+
+              {/* Fixed List (Outside AnimatePresence) */}
+              {recentContributors.length > 0 && !queueLoading && (
+                <div className="mt-2 flex flex-col items-center w-full max-w-xs shrink-0">
+                  <p className="text-[#a0720a] text-[10px] uppercase tracking-[0.3em] font-bold mb-3 opacity-60 border-b border-[#a0720a]/20 pb-1 w-full text-center">
+                    Unidos em oração agora
+                  </p>
+                  <div className="flex flex-col gap-1.5 w-full justify-end h-[160px] overflow-hidden" style={{ maskImage: 'linear-gradient(to bottom, transparent, black 10%, black 100%)', WebkitMaskImage: 'linear-gradient(to bottom, transparent, black 10%, black 100%)' }}>
+                    <AnimatePresence initial={false}>
+                      {recentContributors.map((contrib) => (
+                        <motion.div 
+                          key={contrib.id || `${contrib.name}-${contrib.timestamp}`}
+                          initial={{ opacity: 0, scale: 0.9, y: -10 }}
+                          animate={{ opacity: 1, scale: 1, y: 0 }}
+                          className={cn(
+                            "text-[#3d2800]/70 font-semibold text-[11px] md:text-[13px] text-center tracking-wide px-2 py-1 rounded-full transition-all",
+                            contrib?.user_id === currentUser?.id && "text-primary font-bold bg-[#d4a017]/10 soft-shadow",
+                            contrib?.user_id && friendIds.has(contrib.user_id) && "text-friend-accent font-bold bg-friend-accent/10 soft-shadow"
+                          )}
+                        >
+                          {contrib.name} — entrou na oração
+                        </motion.div>
+                      ))}
+                    </AnimatePresence>
+                  </div>
+                </div>
               )}
-            </AnimatePresence>
+            </div>
           )}
         </div>
 

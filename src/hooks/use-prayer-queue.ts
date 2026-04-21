@@ -105,6 +105,30 @@ export const usePrayerQueue = (currentPrayerId: string | undefined, currentPhras
     return null;
   }, [currentPrayerId, currentPhraseIndex, globalTime]);
 
+  useEffect(() => {
+    const genFake = () => {
+      const name = COMMON_NAMES[Math.floor(Math.random() * COMMON_NAMES.length)];
+      const city = PR_CITIES_100K[Math.floor(Math.random() * PR_CITIES_100K.length)];
+      setContributions(prev => ({
+        ...prev,
+        [String(Date.now() + Math.random())]: { name, city } // Unique pseudo-timestamp
+      }));
+    };
+
+    // Preenchendo a tela inicialmente com alguns fakes
+    setTimeout(genFake, 500);
+    setTimeout(genFake, 1500);
+    setTimeout(genFake, 2500);
+    setTimeout(genFake, 3500);
+
+    // 2 fakes a cada 3 minutos = 1 a cada 90s em média
+    const interval = setInterval(() => {
+      genFake();
+    }, 90000);
+
+    return () => clearInterval(interval);
+  }, []);
+
   const recentContributors = useMemo(() => {
     const all = Object.entries(contributions)
       .map(([ts, c]) => ({ ...c, timestamp: parseInt(ts) }))
@@ -118,7 +142,7 @@ export const usePrayerQueue = (currentPrayerId: string | undefined, currentPhras
         seen.add(key);
         unique.push(c);
       }
-      if (unique.length >= 3) break; // Mostra até 3 pessoas recentes
+      if (unique.length >= 10) break; // Mostra até 10 pessoas recentes
     }
     
     return unique;
