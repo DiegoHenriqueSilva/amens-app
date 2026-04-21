@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, ChevronRight, CheckCircle2, Sparkles, BookOpen, Quote, Heart, HandsPraying, ShieldCheck } from "lucide-react";
+import { ArrowLeft, ChevronRight, CheckCircle2, Sparkles, BookOpen, Quote, Heart, HandHeart, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { NOVENAS, UNIVERSAL_PRAYERS } from "@/data/novenas";
@@ -52,7 +52,7 @@ const NovenaPrayer = () => {
     },
     { 
       title: novena.type === "mercy" ? "Passo 5: Terço da Misericórdia" : "Passo 5: Pedido e Confiança", 
-      icon: HandsPraying, 
+      icon: HandHeart, 
       content: novena.prayers.petition || "(Faça aqui o seu pedido em silêncio)",
       subtitle: novena.type === "mercy" ? "Interativo" : "Pessoal"
     },
@@ -64,7 +64,7 @@ const NovenaPrayer = () => {
     },
     { 
       title: "Passo 7: Orações Comuns", 
-      icon: HandsPraying, 
+      icon: HandHeart, 
       content: UNIVERSAL_PRAYERS.common,
       subtitle: "Pai Nosso, Ave Maria e Glória"
     },
