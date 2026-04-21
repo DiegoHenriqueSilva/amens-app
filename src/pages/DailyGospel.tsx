@@ -30,6 +30,11 @@ const DailyGospel = () => {
   const [gospel, setGospel] = useState<GospelData | null>(null);
   const [videoId, setVideoId] = useState<string | null>(null);
   const [loadingVideo, setLoadingVideo] = useState(false);
+  const [viewingYesterday, setViewingYesterday] = useState(false);
+
+  const now = new Date();
+  const hour = now.getHours();
+  const isBeforeSix = hour < 6;
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -39,18 +44,22 @@ const DailyGospel = () => {
 
   useEffect(() => {
     fetchDailyGospel();
-    fetchLatestReflectionVideo();
+    // Só busca vídeo hoje se já for mais de 6h da manhã
+    if (!isBeforeSix) {
+      fetchLatestReflectionVideo();
+    }
   }, []);
 
-  const fetchLatestReflectionVideo = async () => {
+  const fetchLatestReflectionVideo = async (dateOffset: number = 0) => {
     const API_KEY = "AIzaSyAvWJ3SdQa6yaEFe5CPTzX7CWJ-65_tiXg";
     const CHANNEL_ID = "UCjWxeXfmtOnv1MndaSEWFew";
     setLoadingVideo(true);
     
     try {
-      // Pega a data de hoje no formato DD/MM/YYYY
-      const today = new Date().toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" });
-      const query = encodeURIComponent(`"Evangelho do dia" ${today}`);
+      const targetDate = new Date();
+      targetDate.setDate(targetDate.getDate() + dateOffset);
+      const dateStr = targetDate.toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" });
+      const query = encodeURIComponent(`"Evangelho do dia" ${dateStr}`);
       
       const response = await fetch(
         `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${CHANNEL_ID}&maxResults=1&order=relevance&q=${query}&type=video&key=${API_KEY}`
@@ -59,13 +68,17 @@ const DailyGospel = () => {
       if (!response.ok) throw new Error("YouTube API Error");
       
       const data = await response.json();
-      const latestVideoId = data.items?.[0]?.id?.videoId;
+      const resultVideoId = data.items?.[0]?.id?.videoId;
       
-      if (latestVideoId) {
-        setVideoId(latestVideoId);
+      if (resultVideoId) {
+        setVideoId(resultVideoId);
+        if (dateOffset === -1) setViewingYesterday(true);
+      } else {
+        setVideoId(null);
       }
     } catch (err) {
       console.warn("Could not fetch YouTube reflection", err);
+      setVideoId(null);
     } finally {
       setLoadingVideo(false);
     }
@@ -368,6 +381,19 @@ Responda APENAS com um objeto JSON válido no formato:
                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                         allowFullScreen
                       />
+                    </div>
+                  ) : isBeforeSix && !viewingYesterday ? (
+                    <div className="p-8 text-center border-2 border-dashed border-primary/20 rounded-3xl bg-primary/5">
+                       <p className="text-sm text-foreground font-medium mb-4">
+                         O evangelho do dia estará disponível após as 6h da manhã.
+                       </p>
+                       <Button 
+                         variant="outline" 
+                         onClick={() => fetchLatestReflectionVideo(-1)}
+                         className="rounded-full border-primary/20 text-primary hover:bg-primary/10 font-bold"
+                       >
+                         Assista ao vídeo do evangelho de ontem
+                       </Button>
                     </div>
                   ) : (
                     <div className="p-6 text-center border-2 border-dashed border-primary/10 rounded-2xl">
