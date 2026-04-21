@@ -343,11 +343,10 @@ Responda APENAS com um objeto JSON válido no formato:
                   <Button
                     onClick={() => handleShare('full')}
                     disabled={generating}
-                    variant="outline"
-                    className="border-primary/20 text-primary hover:bg-primary/5 w-full rounded-full py-6 text-sm"
+                    className="gradient-divine w-full rounded-full py-6 text-sm font-bold shadow-lg shadow-primary/20 hover:opacity-90"
                   >
-                    <Share2 className="w-4 h-4 mr-3" />
-                    Compartilhar
+                    <Share2 className="w-5 h-5 mr-3" />
+                    Compartilhar Evangelho do Dia
                   </Button>
                 </div>
                 

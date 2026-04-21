@@ -238,7 +238,7 @@ const Pray = () => {
     }
   };
 
-  const handleShareWhatsApp = () => {
+  const handleShareCompartilhar = () => {
     if (!prayerRequest) return;
 
     const APP_URL = window.location.origin;
@@ -375,11 +375,11 @@ REGRAS ADICIONAIS:
                          
                          <Button 
                            variant="outline" 
-                           onClick={handleShareWhatsApp}
+                           onClick={handleShareCompartilhar}
                            className="flex-1 rounded-xl border-green-200 text-green-600 hover:bg-green-50"
                          >
                            <Share2 className="w-4 h-4 mr-2" />
-                           WhatsApp
+                           Compartilhar
                          </Button>
                       </div>
                     </div>

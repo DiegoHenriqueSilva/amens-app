@@ -101,12 +101,14 @@ const DivinePromise = () => {
           text: shareText,
         });
         toast.success("Pronto!");
+        completeTask("share_promise");
       } catch (err) {
         // Ignorar cancelamento
       }
     } else {
       await navigator.clipboard.writeText(shareText);
       toast.success("Texto copiado! 📋");
+      completeTask("share_promise");
     }
   };
 
