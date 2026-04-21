@@ -26,8 +26,8 @@ export interface Novena {
 export const UNIVERSAL_PRAYERS = {
   opening: "Pelo sinal da Santa Cruz, livrai-nos, Deus, nosso Senhor, dos nossos inimigos. Em nome do Pai, do Filho e do Espírito Santo. Amém.",
   contrition: "Meu Deus, eu me arrependo de todo o coração de vos ter ofendido, porque sois infinitamente bom. Prometo, com o auxílio da vossa graça, esforçar-me para não mais pecar. Amém.",
-  common: "Rezar 1 Pai Nosso, 1 Ave Maria e 1 Glória ao Pai.",
-  blessing: "O Senhor nos abençoe, nos livre de todo o mal e nos conduza à vida eterna. Amém."
+  common: `Pai Nosso: "Pai nosso que estais nos céus, santificado seja o vosso nome, venha a nós o vosso reino, seja feita a vossa vontade assim na terra como no céu. O pão nosso de cada dia nos dai hoje, perdoai-nos as nossas ofensas assim como nós perdoamos a quem nos tem ofendido, e não nos deixeis cair em tentação, mas livrai-nos do mal. Amém."\n\nAve Maria (Rezar 3 vezes): "Ave Maria, cheia de graça, o Senhor é convosco, bendita sois vós entre as mulheres e bendito é o fruto do vosso ventre, Jesus. Santa Maria, Mãe de Deus, rogai por nós pecadores, agora e na hora da nossa morte. Amém."\n\nGlória ao Pai: "Glória ao Pai, ao Filho e ao Espírito Santo. Como era no princípio, agora e sempre. Amém."`,
+  blessing: "O Senhor nos abençoe, nos livre de todo o mal e nos conduza à vida eterna. Amém. Em nome do Pai, do Filho e do Espírito Santo. Amém."
 };
 
 export const NOVENAS: Novena[] = [
@@ -38,20 +38,64 @@ export const NOVENAS: Novena[] = [
     image: "https://upload.wikimedia.org/wikipedia/commons/1/15/Mary%2C_Untier_of_Knots_by_Schmidtner.png",
     colors: { from: "#2563eb", to: "#60a5fa" },
     prayers: {
-      initial: "Santa Maria, cheia da presença de Deus, durante os dias de tua vida aceitaste com toda a humildade a vontade do Pai, e o maligno nunca foi capaz de envolver-te com suas confusões. Junto a Teu Filho intercedeste por nossas dificuldades e, com toda a paciência, nos deste o exemplo de como desenrolar as linhas de nossa vida. Mãe, desata os nós que nos impedem de nos unirmos a Deus. Amém.",
-      petition: "Maria, ouve o meu clamor. (Faça aqui o seu pedido em silêncio). Mãe, que eu tenha a sabedoria para aceitar a vontade de Deus.",
-      final: "Virgem Maria, Mãe do belo amor, Mãe que jamais deixa de vir em socorro de um filho aflito. Lança teu olhar compassivo sobre mim, vê o emaranhado de nós que há em minha vida. Maria, Desatadora dos Nós, rogai por nós! Amém."
+      initial: "Santa Maria, cheia da presença de Deus, durante os dias de tua vida aceitaste com toda a humildade a vontade do Pai, e o maligno nunca foi capaz de envolver-te com suas confusões. Junto a Teu Filho intercedeste por nossas dificuldades e, com toda a paciência, nos deste o exemplo de como desenrolar as linhas de nossa vida. E, ao se dar para sempre como nossa Mãe, pões em ordem e fazes mais claros os laços que nos unem ao Senhor. Santa Maria, Mãe de Deus e nossa Mãe, Tu que com o coração materno desatas os nós que atrapalham nossa vida, te pedimos que recebas em tuas mãos este nó [pedir a graça aqui] e que me livres das amarras e confusões com que me castiga aquele que é meu inimigo. Amém.",
+      final: "Virgem Maria, Mãe do belo amor, Mãe que jamais deixa de vir em socorro de um filho aflito. Lança teu olhar compassivo sobre mim, vê o emaranhado de nós que há em minha vida. Tu bem conheces o meu desespero, a minha dor e o quanto estou amarrado por causa destes nós. Maria, Mãe a quem Deus encarregou de desatar os nós da vida de seus filhos, confio hoje a fita da minha vida em tuas mãos. Ninguém, nem mesmo o maligno poderá tirá-la do teu precioso amparo materno. Em tuas mãos não há nó que não poderá ser desfeito. Maria, Desatadora dos Nós, rogai por nós! Amém."
     },
     days: [
-      { day: 1, title: "O nó da desobediência", reading: "Gênesis 3, 15", content: "Mãe amada, ajuda-me a desatar o nó dos meus pecados que me afastam de Deus." },
-      { day: 2, title: "O nó das mágoas", reading: "Mateus 6, 14-15", content: "Maria, desata o nó das mágoas acumuladas. Ajuda-me a perdoar de coração." },
-      { day: 3, title: "A falta de paz", reading: "Colossenses 3, 13-15", content: "Mãe querida, desata os nós da incompreensão e da discórdia em meu lar." },
-      { day: 4, title: "Problemas financeiros", reading: "Filipenses 4, 19", content: "Mãe da Providência, desata o nó das dívidas e do medo do futuro." },
-      { day: 5, title: "Doenças", reading: "Tiago 5, 14-15", content: "Saúde dos enfermos, desata o nó da enfermidade que aflige meu corpo ou alma." },
-      { day: 6, title: "Depressão e medo", reading: "Salmo 34, 17-18", content: "Consoladora dos aflitos, desata o nó da tristeza profunda e da ansiedade." },
-      { day: 7, title: "Vícius", reading: "Romanos 6, 12-14", content: "Refúgio dos pecadores, desata o nó das dependências que escravizam a vontade." },
-      { day: 8, title: "Solidão", reading: "Isaías 41, 10", content: "Mãe de todos nós, desata o nó da solidão. Faz-me sentir que nunca estou sozinho." },
-      { day: 9, title: "Ação de graças", reading: "Lucas 1, 46-55", content: "Agradeço por todos os nós desatados em minha vida, visíveis e invisíveis." }
+      { 
+        day: 1, 
+        title: "O nó da desobediência", 
+        reading: "Gênesis 3, 15", 
+        content: '"Porei inimizade entre ti e a mulher, entre a tua descendência e a dela. Esta te ferirá a cabeça e tu lhe ferirás o calcanhar."\n\nMeditação: "Hoje, trago-te este nó da desobediência e do pecado em minha vida. Mãe, por causa da desobediência de Eva, o pecado entrou no mundo. Mas pela tua obediência, a salvação chegou a nós. Ensina-me a ser obediente à vontade de Deus, desatando o nó do meu orgulho."' 
+      },
+      { 
+        day: 2, 
+        title: "O nó das mágoas e ressentimentos", 
+        reading: "Mateus 6, 14-15", 
+        content: '"Porque, se perdoardes aos homens as suas ofensas, vosso Pai celeste também vos perdoará. Mas, se não perdoardes aos homens, tampouco vosso Pai vos perdoará."\n\nMeditação: "Mãe amável, hoje trago o nó das mágoas, do rancor e da falta de perdão que aprisionam o meu coração. Peço-te que desates esse nó que me impede de amar. Dá-me a graça de perdoar a todos que me ofenderam, para que a paz de Cristo reine em minha vida."' 
+      },
+      { 
+        day: 3, 
+        title: "O nó da falta de paz na família", 
+        reading: "Colossenses 3, 13-14", 
+        content: '"Suportai-vos uns aos outros e perdoai-vos mutuamente, se um tiver queixa contra o outro. Como o Senhor vos perdoou, assim perdoai vós também. Mas, acima de tudo, revesti-vos da caridade, que é o vínculo da perfeição."\n\nMeditação: "Mãe Desatadora dos Nós, apresento-te hoje os nós que estão destruindo a minha família e os meus relacionamentos. Tu que és a Rainha da Paz, desata os nós das brigas, da incompreensão e da desunião. Que a nossa casa seja um refúgio de amor e respeito."' 
+      },
+      { 
+        day: 4, 
+        title: "O nó dos problemas financeiros", 
+        reading: "Filipenses 4, 19", 
+        content: '"O meu Deus proverá a todas as vossas necessidades, segundo a sua gloriosa riqueza, em Cristo Jesus."\n\nMeditação: "Mãe provendente, entrego em tuas mãos os nós da minha vida financeira, das dívidas e da falta de trabalho. Desata as amarras da aflição e da miséria. Ajuda-me a encontrar caminhos justos e abençoados para sustentar minha família com dignidade."' 
+      },
+      { 
+        day: 5, 
+        title: "O nó das doenças", 
+        reading: "Tiago 5, 14-15", 
+        content: '"Alguém entre vós está doente? Mande chamar os presbíteros da Igreja, para que orem sobre ele e o unjam com óleo no nome do Senhor. A oração da fé salvará o doente, e o Senhor o levantará."\n\nMeditação: "Nossa Senhora, Saúde dos Enfermos, trago-te hoje os nós das doenças que afligem o meu corpo e a minha alma, ou de pessoas que eu amo. Desata esse nó de dor. Que a cura de Jesus flua sobre nós, restaurando nossa saúde e nossas forças para continuarmos a servir."' 
+      },
+      { 
+        day: 6, 
+        title: "O nó da depressão e da angústia", 
+        reading: "Salmo 34, 17-18", 
+        content: '"Os justos clamam, e o Senhor os ouve; livra-os de todas as suas angústias. O Senhor está perto dos que têm o coração quebrantado e salva os de espírito abatido."\n\nMeditação: "Mãe de Misericórdia, olha para os nós da tristeza profunda, da depressão e da ansiedade que sufocam a minha mente. Afasta de mim todo sentimento de abandono e desesperança. Traz para a minha vida a luz do Espírito Santo e a alegria de viver."' 
+      },
+      { 
+        day: 7, 
+        title: "O nó dos vícios", 
+        reading: "Romanos 6, 12-14", 
+        content: '"Portanto, não reine o pecado em vosso corpo mortal, de modo que obedeçais às suas paixões. O pecado não terá domínio sobre vós, porque não estais debaixo da lei, mas debaixo da graça."\n\nMeditação: "Mãe Libertadora, coloco em tuas mãos os terríveis nós dos vícios (álcool, drogas, impurezas, jogos ou qualquer outra dependência) que destroem vidas. Rompe essas correntes diabólicas! Que a graça do teu Filho me liberte e me purifique inteiramente."' 
+      },
+      { 
+        day: 8, 
+        title: "O nó da solidão", 
+        reading: "Isaías 41, 10", 
+        content: '"Não temas, porque eu sou contigo; não te assombres, porque eu sou o teu Deus; eu te fortaleço, e te ajudo, e te sustento com a minha destra fiel."\n\nMeditação: "Mãe consoladora, rogo que desates os nós da solidão, do abandono e do medo intenso do que está por vir. Ensina-me a confiar cegamente na providência de Deus, sabendo que nunca estou sozinho, pois tu caminhas sempre ao meu lado."' 
+      },
+      { 
+        day: 9, 
+        title: "Ação de graças e consagração", 
+        reading: "Lucas 1, 46-49", 
+        content: '"Minha alma glorifica ao Senhor, e meu espírito exulta de alegria em Deus, meu Salvador, porque olhou para a humilhação de sua serva. Doravante todas as gerações me chamarão bem-aventurada, porque o Todo-poderoso fez grandes coisas em meu favor."\n\nMeditação: "Mãe admirável, hoje chego ao fim desta novena não para pedir, mas para agradecer. Agradeço por estares desatando todos os nós da minha vida. Consagro a ti o meu coração, a minha família e o meu futuro. Abriga-me sob o teu manto de amor, hoje e sempre."' 
+      }
     ]
   },
   {

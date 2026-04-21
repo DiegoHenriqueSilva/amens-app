@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, ChevronRight, CheckCircle2, Sparkles, BookOpen, Quote, Heart, HandHeart, ShieldCheck } from "lucide-react";
@@ -27,52 +27,46 @@ const NovenaPrayer = () => {
 
   const steps = [
     { 
-      title: "Passo 1: Abertura", 
+      title: "Sinal da Cruz", 
       icon: Sparkles, 
       content: UNIVERSAL_PRAYERS.opening,
-      subtitle: "Sinal da Cruz"
+      subtitle: "Passo 1"
     },
     { 
-      title: "Passo 2: Ato de Contrição", 
+      title: "Ato de Contrição", 
       icon: BookOpen, 
       content: UNIVERSAL_PRAYERS.contrition,
-      subtitle: "Arrependimento"
+      subtitle: "Passo 2"
     },
     { 
-      title: "Passo 3: Oração Inicial", 
+      title: "Oração Inicial", 
       icon: Sparkles, 
       content: novena.prayers.initial,
-      subtitle: "Fixo"
+      subtitle: "Passo 3"
     },
     { 
-      title: novena.type === "michael" ? "Passo 4: Saudação Angélica" : novena.type === "mercy" ? "Passo 4: Intenção" : "Passo 4: Meditação e Leitura", 
+      title: novena.type === "michael" ? "Saudação Angélica" : novena.type === "mercy" ? "Intenção do Dia" : "Leitura e Meditação", 
       icon: novena.type === "michael" ? ShieldCheck : Quote, 
-      content: currentDayData.reading ? `*Leitura: ${currentDayData.reading}*\n\n${currentDayData.content}` : currentDayData.content,
-      subtitle: `Dia ${state.currentDay}`
+      content: currentDayData.content,
+      subtitle: `Passo 4 - Dia ${state.currentDay}`
     },
     { 
-      title: novena.type === "mercy" ? "Passo 5: Terço da Misericórdia" : "Passo 5: Pedido e Confiança", 
+      title: novena.type === "mercy" ? "Terço da Misericórdia" : "Orações Comuns", 
       icon: HandHeart, 
-      content: novena.prayers.petition || "(Faça aqui o seu pedido em silêncio)",
-      subtitle: novena.type === "mercy" ? "Interativo" : "Pessoal"
+      content: novena.type === "mercy" ? novena.prayers.petition : UNIVERSAL_PRAYERS.common,
+      subtitle: "Passo 5"
     },
     { 
-      title: "Passo 6: Oração Final", 
+      title: "Oração Final", 
       icon: Heart, 
       content: novena.prayers.final,
-      subtitle: "Conclusão"
+      subtitle: "Passo 6"
     },
     { 
-      title: "Passo 7: Orações Comuns", 
-      icon: HandHeart, 
-      content: UNIVERSAL_PRAYERS.common,
-      subtitle: "Pai Nosso, Ave Maria e Glória"
-    },
-    { 
-      title: "Passo 8: Bênção Final", 
+      title: "Bênção Final", 
       icon: ShieldCheck, 
       content: UNIVERSAL_PRAYERS.blessing,
-      subtitle: "Envio"
+      subtitle: "Passo 7"
     },
   ];
 
@@ -152,7 +146,7 @@ const NovenaPrayer = () => {
         {/* Header */}
         <div className="bg-white/90 backdrop-blur-md sticky top-0 z-30 border-b border-primary/5 pt-12 pb-4 px-6">
           <div className="flex items-center gap-4 max-w-2xl mx-auto">
-            <Button variant="ghost" size="icon" onClick={() => navigate("/novenas")} className="rounded-full hover:bg-primary/5">
+            <Button variant="ghost" size="icon" onClick={() => navigate("/novenas")} className="rounded-full hover:bg-primary/10">
               <ArrowLeft className="w-5 h-5 text-primary" />
             </Button>
             <div className="flex-1 min-w-0">
@@ -201,7 +195,7 @@ const NovenaPrayer = () => {
                 <div className="flex-1 flex flex-col justify-center">
                    <p className={cn(
                      "text-lg leading-relaxed text-foreground/90 whitespace-pre-wrap text-center py-4",
-                     step === 3 && currentDayData.reading ? "italic border-l-4 border-primary/20 pl-6 text-left" : ""
+                     step === 3 ? "italic border-l-4 border-primary/20 pl-6 text-left" : ""
                    )}>
                      {steps[step].content}
                    </p>
