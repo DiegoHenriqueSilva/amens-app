@@ -259,7 +259,7 @@ export const NOVENAS: Novena[] = [
       },
       { 
         day: 3, 
-        title: "A Dor da Perda e o Consolo Divino", 
+        title: "A Doc da Perda e o Consolo Divino", 
         reading: "Mateus 5, 4", 
         content: '"Bem-aventurados os que choram, porque serão consolados."\n\nMeditação: "Ó Santa Rita, viúva e mãe enlutada, que chorastes a morte de vosso marido e, logo depois, de vossos dois filhos, vós conheceis a dor da perda e o vazio da solidão. Consolais o meu coração nas minhas tristezas e lutos. Alcançai-me a graça da conformidade com a vontade divina e fortalecei a minha esperança no Céu."' 
       },
@@ -308,20 +308,64 @@ export const NOVENAS: Novena[] = [
     image: "https://upload.wikimedia.org/wikipedia/commons/d/dc/Benedict_of_Nursia.jpg",
     colors: { from: "#3d2b1f", to: "#8b6508" },
     prayers: {
-      initial: "Ó glorioso Patriarca São Bento, que vos mostrastes sempre compassivo com os necessitados, fazei que também nós, recorrendo à vossa poderosa intercessão, obtenhamos socorro em todas as nossas aflições.",
-      petition: "São Bento, protegei minha família de todo o mal e intercedei por esta graça que vos peço. (Faça o pedido).",
+      initial: "Ó glorioso Patriarca São Bento, que vos mostrastes sempre compassivo com os necessitados, fazei que também nós, recorrendo à vossa poderosa intercessão, obtenhamos socorro em todas as nossas aflições. Que nas famílias reine a paz e a tranquilidade; afastai todas as desgraças, tanto corporais como espirituais, especialmente o pecado. Alcançai-me do Senhor a graça específica que agora vos peço [Fazer o pedido da graça aqui]. Ó São Bento, rogai por nós, para que sejamos dignos das promessas de Cristo. Amém.",
       final: "A Cruz Sagrada seja a minha luz, não seja o dragão o meu guia. Retira-te, satanás! Nunca me aconselhes coisas vãs. É mau o que tu me ofereces, bebe tu mesmo os teus venenos! São Bento, rogai por nós. Amém."
     },
     days: [
-      { day: 1, title: "Escutar", reading: "Provérbios 1, 33", content: "Ajuda-me a silenciar as vozes do mundo para escutar o que o Senhor deseja dizer." },
-      { day: 2, title: "Renúncia", reading: "Efésios 6, 10-12", content: "Protege-me de todo mal. Que eu tenha coragem de renunciar ao que me afasta da luz." },
-      { day: 3, title: "Trabalho", reading: "1 Tessalonicenses 5, 16-18", content: "Ensina-me a equilibrar minha vida entre a oração e o trabalho." },
-      { day: 4, title: "Acolhimento", reading: "Hebreus 13, 1-2", content: "Abre meu coração para acolher o próximo com bondade, vendo em cada um a face do Mestre." },
-      { day: 5, title: "Pequenez", reading: "Lucas 14, 11", content: "Livra-me do desejo de ser exaltado. Que eu me alegre em ser pequeno aos olhos dos homens." },
-      { day: 6, title: "Silêncio", reading: "Lamentações 3, 26-28", content: "Ajuda-me a cultivar momentos de silêncio interior, onde Deus possa habitar." },
-      { day: 7, title: "Docilidade", reading: "João 14, 21", content: "Intercede para que eu tenha um coração dócil às inspirações do Espírito Santo." },
-      { day: 8, title: "Paz profunda", reading: "João 14, 27", content: "Ajuda-me a encontrar a paz profunda que vem da amizade com Deus." },
-      { day: 9, title: "Sinal de salvação", reading: "Gálatas 6, 14", content: "Que o sinal da nossa redenção me proteja sempre e me guie para a pátria celestial." }
+      { 
+        day: 1, 
+        title: "Escutar a voz de Deus", 
+        reading: "Provérbios 1, 33", 
+        content: '"Mas o que me escuta viverá em segurança, tranquilo e sem o temor do mal."\n\nMeditação: "A Regra de São Bento começa com a palavra: \'Escuta, filho, os preceitos do Mestre\'. Glorioso São Bento, ensinai-me a silenciar as vozes do mundo e os meus próprios ruídos internos para ouvir a vontade de Deus. Que o meu coração esteja sempre atento aos sussurros do Espírito Santo, guiando-me nas decisões difíceis e neste pedido que hoje vos apresento."' 
+      },
+      { 
+        day: 2, 
+        title: "A Renúncia ao Mal e o Combate Espiritual", 
+        reading: "Efésios 6, 11-12", 
+        content: '"Revesti-vos da armadura de Deus, para que possais resistir às ciladas do demônio. Pois não é contra homens de carne e sangue que temos de lutar, mas contra os principados e potestades, contra os príncipes deste mundo tenebroso."\n\nMeditação: "São Bento, vós que vencestes as tentações e destruístes ídolos pela força da Cruz, defendei-me dos ataques do inimigo. Quebrantai toda inveja, feitiçaria, maldição ou energia negativa lançada contra mim, minha família e meus negócios. Que a vossa intercessão seja um escudo impenetrável ao meu redor."' 
+      },
+      { 
+        day: 3, 
+        title: "O Trabalho e a Oração (Ora et Labora)", 
+        reading: "1 Tessalonicenses 5, 16-18", 
+        content: '"Alegrai-vos sempre. Orai sem cessar. Em todas as circunstâncias, dai graças, porque esta é a vosso respeito a vontade de Deus em Jesus Cristo."\n\nMeditação: "Com o vosso lema \'Ora et Labora\', ensinastes que o trabalho honesto é também uma forma de oração. São Bento, abençoai o meu trabalho, os meus projetos e o meu sustento. Ajudai-me a não ser escravo da preguiça nem do ativismo exagerado, mas a encontrar o equilíbrio perfeito, santificando o meu dia a dia."' 
+      },
+      { 
+        day: 4, 
+        title: "A Hospitalidade e o Cuidado com o Próximo", 
+        reading: "Hebreus 13, 1-2", 
+        content: '"Persevere o amor fraterno. Não vos esqueçais da hospitalidade, pela qual alguns, sem o saberem, hospedaram anjos."\n\nMeditação: "Na vossa Regra, São Bento, ordenais que \'todos os hóspedes sejam recebidos como o próprio Cristo\'. Dai-me a graça de ter um coração acolhedor e generoso. Que eu saiba enxergar Jesus nas pessoas que cruzam o meu caminho, tratando a todos, especialmente os mais necessitados, com respeito, caridade e paciência."' 
+      },
+      { 
+        day: 5, 
+        title: "A Humildade de Coração", 
+        reading: "Lucas 14, 11", 
+        content: '"Pois todo o que se exaltar será humilhado, e o que se humilhar será exaltado."\n\nMeditação: "São Bento, vós que escrevestes sobre os degraus da humildade, sabeis que o orgulho é a raiz de todos os pecados. Ajudai-me a reconhecer as minhas fraquezas e a depender inteiramente da graça de Deus. Libertai-me da arrogância, da vaidade e do desejo de ser sempre o dono da razão."' 
+      },
+      { 
+        day: 6, 
+        title: "O Silêncio e a Paz Interior", 
+        reading: "Lamentações 3, 26", 
+        content: '"É bom esperar em silêncio a salvação do Senhor."\n\nMeditação: "O mundo moderno é cheio de distrações e agitação, mas vós, São Bento, encontrastes Deus no silêncio da caverna de Subiaco. Dai-me a capacidade de fazer silêncio interior diante das tribulações. Que eu não me desespere nem fale precipitadamente nos momentos de crise, mas espere com confiança a salvação que vem de Deus."' 
+      },
+      { 
+        day: 7, 
+        title: "A Obediência", 
+        reading: "João 14, 21", 
+        content: '"Aquele que tem os meus mandamentos e os guarda, esse é que me ama. E aquele que me ama será amado por meu Pai, e eu o amarei e me manifestarei a ele."\n\nMeditação: "São Bento, mestre da obediência, intercedei por mim para que eu submeta a minha vontade aos mandamentos de Deus e aos ensinamentos da Igreja. Que eu não me rebele contra a vontade divina quando ela for contrária aos meus planos, pois sei que Deus sempre quer o melhor para a minha salvação."' 
+      },
+      { 
+        day: 8, 
+        title: "A Paz (Pax Benedictina)", 
+        reading: "João 14, 27", 
+        content: '"Deixo-vos a paz, dou-vos a minha paz. Não vo-la dou como o mundo a dá. Não se perturbe o vosso coração, nem se atemorize."\n\nMeditação: "A paz é o selo da Ordem Beneditina. Glorioso São Bento, levai a paz verdadeira ao meu coração angustiado, à minha família fragmentada e aos meus relacionamentos difíceis. Afastai o espírito de discórdia e fofoca, e plantai a semente da união e da fraternidade onde houver divisão."' 
+      },
+      { 
+        day: 9, 
+        title: "A Cruz como Sinal de Salvação", 
+        reading: "Gálatas 6, 14", 
+        content: '"Quanto a mim, que eu não me glorie a não ser na cruz de nosso Senhor Jesus Cristo, pela qual o mundo está crucificado para mim e eu para o mundo."\n\nMeditação: "No fim desta novena, São Bento, olho para o poder libertador da Santa Cruz, o sinal com o qual operastes tantos milagres e quebrastes cálices envenenados. Que a Cruz de Cristo seja sempre a minha luz e a minha proteção. Confio-vos este meu pedido final, certo de que me acompanhareis todos os dias da minha vida. Amém."' 
+      }
     ]
   },
   {
