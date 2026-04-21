@@ -19,6 +19,8 @@ import Tree from "./pages/Tree";
 import PrayerChain from "./pages/PrayerChain";
 import Messages from "./pages/Messages";
 import Friends from "./pages/Friends";
+import Novenas from "./pages/Novenas";
+import NovenaPrayer from "./pages/NovenaPrayer";
 import RosarySelection from "./pages/RosarySelection";
 import RosaryPrayer from "./pages/RosaryPrayer";
 import BottomNav from "./components/BottomNav";
@@ -64,6 +66,8 @@ const App = () => {
             <Route path="/rosary/:type" element={<RosaryPrayer />} />
             <Route path="/messages" element={<Messages />} />
             <Route path="/friends" element={<Friends />} />
+            <Route path="/novenas" element={<Novenas />} />
+            <Route path="/novena/:id" element={<NovenaPrayer />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           <BottomNav />

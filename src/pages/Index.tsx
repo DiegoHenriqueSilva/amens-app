@@ -236,11 +236,29 @@ const Index = () => {
                   </div>
                   <div>
                     <h2 className="text-lg font-bold mb-2">Evangelho do Dia</h2>
-                    <p className="text-xs text-muted-foreground leading-tight mb-4 font-medium">A palavra sagrada com reflexões da IA</p>
+                    <p className="text-xs text-muted-foreground leading-tight mb-4 font-medium">A palavra sagrada com reflexões e orações</p>
                   </div>
                   <Button size="sm" className="w-full rounded-full text-xs py-5 font-bold shadow-sm border-0" style={{background: 'linear-gradient(135deg, #c8a830, #f0d060)', color: '#3d2800'}}>
                     <Sun className="w-3 h-3 mr-2" />
                     Ler
+                  </Button>
+                </Card>
+              </Link>
+            </motion.div>
+
+            <motion.div variants={fadeUp}>
+              <Link to="/novenas">
+                <Card className="p-6 h-full text-center flex flex-col items-center justify-between border-primary/5 soft-shadow hover:bg-white transition-colors rounded-[2rem]">
+                  <div className="w-14 h-14 bg-transparent rounded-full flex items-center justify-center mb-4 overflow-hidden">
+                    <img src="/backgrounds/bg-2.png" alt="Novenas" className="w-full h-full object-cover rounded-full drop-shadow-md" />
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-bold mb-2">Novenas</h2>
+                    <p className="text-xs text-muted-foreground leading-tight mb-4 font-medium">Jorneis de 9 dias de fé e perseverança</p>
+                  </div>
+                  <Button size="sm" className="w-full rounded-full text-xs py-5 font-bold shadow-sm border-0" style={{background: 'linear-gradient(135deg, #8b4513, #a0522d)', color: '#fff8e1'}}>
+                    <BookOpen className="w-3 h-3 mr-2" />
+                    Iniciar
                   </Button>
                 </Card>
               </Link>
