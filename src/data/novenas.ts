@@ -38,7 +38,7 @@ export const NOVENAS: Novena[] = [
     image: "https://upload.wikimedia.org/wikipedia/commons/1/15/Mary%2C_Untier_of_Knots_by_Schmidtner.png",
     colors: { from: "#2563eb", to: "#60a5fa" },
     prayers: {
-      initial: "Santa Maria, cheia da presença de Deus, durante os dias de tua vida aceitaste com toda a humildade a vontade do Pai, e o maligno nunca foi capaz de envolver-te com suas confusões. Junto a Teu Filho intercedeste por nossas dificuldades e, com toda a paciência, nos deste o exemplo de como desenrolar as linhas de nossa vida. E, ao se dar para sempre como nossa Mãe, pões em ordem e fazes mais claros os laços que nos unem ao Senhor. Santa Maria, Mãe de Deus e nossa Mãe, Tu que com o coração materno desatas os nós que atrapalham nossa vida, te pedimos que recebas em tuas mãos este nó [pedir a graça aqui] e que me livres das amarras e confusões com que me castiga aquele que é meu inimigo. Amém.",
+      initial: "Santa Maria, cheia da presença de Deus, durante os dias de tua vida aceitaste com toda a humildade a vontade do Pai, e o maligno nunca foi capaz de envolver-te com suas confusões. Junto a Teu Filho intercedeste por nossas dificuldades e, com toda a paciência, nos deste o exemplo de como desenrolar as lines de nossa vida. E, ao se dar para sempre como nossa Mãe, pões em ordem e fazes mais claros os laços que nos unem ao Senhor. Santa Maria, Mãe de Deus e nossa Mãe, Tu que com o coração materno desatas os nós que atrapalham nossa vida, te pedimos que recebas em tuas mãos este nó [pedir a graça aqui] e que me livres das amarras e confusões com que me castiga aquele que é meu inimigo. Amém.",
       final: "Virgem Maria, Mãe do belo amor, Mãe que jamais deixa de vir em socorro de um filho aflito. Lança teu olhar compassivo sobre mim, vê o emaranhado de nós que há em minha vida. Tu bem conheces o meu desespero, a minha dor e o quanto estou amarrado por causa destes nós. Maria, Mãe a quem Deus encarregou de desatar os nós da vida de seus filhos, confio hoje a fita da minha vida em tuas mãos. Ninguém, nem mesmo o maligno poderá tirá-la do teu precioso amparo materno. Em tuas mãos não há nó que não poderá ser desfeito. Maria, Desatadora dos Nós, rogai por nós! Amém."
     },
     days: [
@@ -161,7 +161,7 @@ export const NOVENAS: Novena[] = [
         day: 9, 
         title: "A Glória Celestial e Ação de Graças", 
         reading: "Apocalipse 21, 1-4", 
-        content: '"Ele enxugará toda lágrima dos seus olhos. Não haverá mais morte, nem luto, nem clamor, nem doc, porque as primeiras coisas passaram."\n\nMeditação: "Neste último dia da novena, glorioso São Judas Tadeu, venho te agradecer. Entrego em tuas mãos o meu futuro. Seja qual for o desfecho deste meu pedido, que ele me aproxime da glória do Céu, onde não haverá mais dor nem sofrimento, e onde poderei louvar a Deus junto contigo por toda a eternidade."' 
+        content: '"Ele enxugará toda lágrima dos seus olhos. Não haverá mais morte, nem luto, nem clamor, nem dor, porque as primeiras coisas passaram."\n\nMeditação: "Neste último dia da novena, glorioso São Judas Tadeu, venho te agradecer. Entrego em tuas mãos o meu futuro. Seja qual for o desfecho deste meu pedido, que ele me aproxime da glória do Céu, onde não haverá mais dor nem sofrimento, e onde poderei louvar a Deus junto contigo por toda a eternidade."' 
       }
     ]
   },
@@ -259,7 +259,7 @@ export const NOVENAS: Novena[] = [
       },
       { 
         day: 3, 
-        title: "A Doc da Perda e o Consolo Divino", 
+        title: "A Dor da Perda e o Consolo Divino", 
         reading: "Mateus 5, 4", 
         content: '"Bem-aventurados os que choram, porque serão consolados."\n\nMeditação: "Ó Santa Rita, viúva e mãe enlutada, que chorastes a morte de vosso marido e, logo depois, de vossos dois filhos, vós conheceis a dor da perda e o vazio da solidão. Consolais o meu coração nas minhas tristezas e lutos. Alcançai-me a graça da conformidade com a vontade divina e fortalecei a minha esperança no Céu."' 
       },
@@ -376,20 +376,64 @@ export const NOVENAS: Novena[] = [
     colors: { from: "#1e3a8a", to: "#3b82f6" },
     type: "michael",
     prayers: {
-      initial: "São Miguel Arcanjo, defendei-nos no combate, sede o nosso refúgio contra as maldades e ciladas do demônio. Ordene-lhe Deus, instantemente o pedimos, e vós, príncipe da milícia celeste, pelo poder divino, precipitai no inferno a satanás e a todos os espíritos malignos que andam pelo mundo para perder as almas.",
-      petition: "São Miguel, protegei-me nas batalhas deste dia e alcançai-me de Deus a graça que vos suplico. (Faça o pedido).",
-      final: "Glorioso São Miguel, chefe e príncipe dos exércitos celestes, fiel guardião das almas, vencedor dos espíritos rebeldes. Vinde, ó Príncipe Santíssimo, socorrei-me em minhas necessidades. Amém."
+      initial: "São Miguel Arcanjo, defendei-nos no combate, sede o nosso refúgio contra as maldades e ciladas do demônio. Ordene-lhe Deus, instantemente o pedimos, e vós, príncipe da milícia celeste, pelo poder divino, precipitai no inferno a satanás e a todos os espíritos malignos que andam pelo mundo para perder as almas. Glorioso São Miguel, recorro à vossa poderosa intercessão nesta novena para vos pedir a seguinte graça: [Fazer o pedido da graça aqui]. Amém.",
+      final: "Glorioso São Miguel, chefe e príncipe dos exércitos celestes, fiel guardião das almas, vencedor dos espíritos rebeldes, amado da casa de Deus. Vinde, ó Príncipe Santíssimo, socorrei-me em minhas necessidades e livrai-me de todo mal. Fazei, por vossa incomparável proteção, que eu progrida a cada dia no serviço de Deus e alcance a graça que vos suplico. Amém."
     },
     days: [
-      { day: 1, title: "Serafins", reading: "", content: "Saudação ao Coro dos Serafins: Que o amor de Deus consuma todas as nossas impurezas." },
-      { day: 2, title: "Querubins", reading: "", content: "Saudação ao Coro dos Querubins: Que o Senhor nos conceda a graça de abandonar o caminho do pecado." },
-      { day: 3, title: "Tronos", reading: "", content: "Saudação ao Coro dos Tronos: Que o Senhor derrame em nossos corações o espírito de verdadeira humildade." },
-      { day: 4, title: "Dominações", reading: "", content: "Saudação ao Coro das Dominações: Que o Senhor nos conceda a graça de dominar nossos sentidos." },
-      { day: 5, title: "Potestades", reading: "", content: "Saudação ao Coro das Potestades: Protegei nossas almas contra as ciladas e as tentações do demônio." },
-      { day: 6, title: "Virtudes", reading: "", content: "Saudação ao Coro das Virtudes: Que o Senhor nos dê força para obedecer seus mandamentos." },
-      { day: 7, title: "Principados", reading: "", content: "Saudação ao Coro dos Principados: Encha nossas almas do espírito de verdadeira obediência e serviço." },
-      { day: 1, title: "Arcanjos", reading: "", content: "Saudação ao Coro dos Arcanjos: Conceda-nos o dom da perseverança na fé e nas boas obras." },
-      { day: 9, title: "Anjos", reading: "", content: "Saudação ao Coro dos Anjos: Que sejamos conduzidos pelos anjos à glória eterna de Deus. Amém." }
+      { 
+        day: 1, 
+        title: "Saudação ao Coro dos Serafins (Amor Ardente)", 
+        reading: "Isaías 6, 1-3", 
+        content: '"Eu vi o Senhor sentado num trono alto e elevado... Serafins estavam de pé acima dele; cada um tinha seis asas... E clamavam uns para os outros, dizendo: Santo, Santo, Santo é o Senhor dos Exércitos; toda a terra está cheia da sua glória."\n\nMeditação: "Pela intercessão de São Miguel e do coro celeste dos Serafins, para que o Senhor Jesus nos torne dignos de ser abrasados de uma perfeita caridade. Que o fogo do amor de Deus consuma todo o egoísmo do meu coração e me dê forças para suportar os combates desta vida."' 
+      },
+      { 
+        day: 2, 
+        title: "Saudação ao Coro dos Querubins (Sabedoria Divina)", 
+        reading: "Salmo 80, 2", 
+        content: '"Ó pastor de Israel, presta ouvidos; tu, que conduzes José como um rebanho; tu, que estás entronizado acima dos querubins, resplandece."\n\nMeditação: "Pela intercessão de São Miguel e do coro celeste dos Querubins, para que o Senhor nos conceda a graça de abandonar o caminho do pecado e seguir o caminho da perfeição cristã. Que a sabedoria de Deus ilumine a minha mente nas decisões difíceis que preciso tomar."' 
+      },
+      { 
+        day: 3, 
+        title: "Saudação ao Coro dos Tronos (Paz e Humildade)", 
+        reading: "Colossenses 1, 16", 
+        content: '"Pois nele foram criadas todas as coisas nos céus e na terra, as visíveis e as invisíveis, sejam tronos ou soberanias, principados ou autoridades; todas as coisas foram criadas por ele e para ele."\n\nMeditação: "Pela intercessão de São Miguel e do coro celeste dos Tronos, para que Deus derrame em nossos corações o espírito de verdadeira e sincera humildade. Quebrando todo o orgulho, que eu possa descansar na paz que só o Senhor pode dar às almas atribuladas."' 
+      },
+      { 
+        day: 4, 
+        title: "Saudação ao Coro das Dominações (Domínio sobre as paixões)", 
+        reading: "Efésios 1, 20-21", 
+        content: '"Ele o ressuscitou dentre os mortos e o fez sentar-se à sua direita nas regiões celestiais, muito acima de todo principado, autoridade, poder, domínio..."\n\nMeditação: "Pela intercessão de São Miguel e do coro celeste das Dominações, para que o Senhor nos conceda a graça de dominar nossos sentidos e de nos corrigir das nossas más paixões. Livrai-me dos impulsos que me afastam da vontade de Deus."' 
+      },
+      { 
+        day: 5, 
+        title: "Saudação ao Coro das Potestades (Defesa contra o mal)", 
+        reading: "1 Pedro 3, 22", 
+        content: '"Jesus Cristo, que, tendo subido ao céu, está à direita de Deus, e a quem estão submissos os anjos, as autoridades e os poderes."\n\nMeditação: "Pela intercessão de São Miguel e do coro celeste das Potestades, para que o Senhor Jesus se digne de proteger nossas almas contra as ciladas e as tentações do demônio. Que toda a força da feitiçaria, inveja e maldição seja quebrada diante do poder da Cruz."' 
+      },
+      { 
+        day: 6, 
+        title: "Saudação ao Coro das Virtudes (Força para não cair)", 
+        reading: "Salmo 103, 20-21", 
+        content: '"Bendizei ao Senhor, vós, seus anjos, valorosos em poder, que executais as suas ordens... Bendizei ao Senhor, vós, todos os seus exércitos, vós, ministros seus, que fazeis a sua vontade."\n\nMeditação: "Pela intercessão de São Miguel e do coro celeste das Virtudes, para que o Senhor não nos deixe cair em tentação, mas que nos livre de todo o mal. Fortalecei a minha vontade, Príncipe Celeste, para que eu não vacile nas provações que estou enfrentando."' 
+      },
+      { 
+        day: 7, 
+        title: "Saudação ao Coro dos Principados (Obediência e Fervor)", 
+        reading: "Efésios 3, 10", 
+        content: '"Para que agora, pela igreja, a multiforme sabedoria de Deus se torne conhecida dos principados e potestades nas regiões celestiais."\n\nMeditação: "Pela intercessão de São Miguel e do coro celeste dos Principados, para que o Senhor encha nossas almas do espírito de uma verdadeira e sincera obediência. Dai-me o fervor na oração e a constância na fé, para não abandonar a minha cruz."' 
+      },
+      { 
+        day: 8, 
+        title: "Saudação ao Coro dos Arcanjos (Firmeza na Fé)", 
+        reading: "Judas 1, 9", 
+        content: '"Contudo, o arcanjo Miguel, quando contendia com o diabo e disputava a respeito do corpo de Moisés, não se atreveu a proferir juízo infamante contra ele; pelo contrário, disse: O Senhor te repreenda!"\n\nMeditação: "Pela intercessão de São Miguel e do coro celeste dos Arcanjos, para que o Senhor nos conceda o dom da perseverança na fé e nas boas obras, a fim de que possamos chegar a possuir a glória do Paraíso. Combatei ao meu lado, São Miguel, e sê meu escudo invisível."' 
+      },
+      { 
+        day: 9, 
+        title: "Saudação ao Coro dos Anjos (Proteção diária)", 
+        reading: "Salmo 91, 11-12", 
+        content: '"Porque aos seus anjos dará ordens a teu respeito, para que te guardem em todos os teus caminhos. Eles te sustentarão nas suas mãos, para que não tropeces nalguma pedra."\n\nMeditação: "Pela intercessão de São Miguel e do coro celeste de todos os Anjos, para que sejamos guardados por eles nesta vida mortal, e por eles conduzidos à glória eterna do Céu. Agradeço-vos, glorioso Arcanjo, por ouvirdes as minhas preces nesta novena. Coloco minha vida e minha família sob a vossa guarda."' 
+      }
     ]
   }
 ];
