@@ -48,8 +48,12 @@ const DailyGospel = () => {
     setLoadingVideo(true);
     
     try {
+      // Pega a data de hoje no formato DD/MM/YYYY
+      const today = new Date().toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" });
+      const query = encodeURIComponent(`"Evangelho do dia" ${today}`);
+      
       const response = await fetch(
-        `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${CHANNEL_ID}&maxResults=1&order=date&q=Evangelho%20do%20dia&type=video&key=${API_KEY}`
+        `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${CHANNEL_ID}&maxResults=1&order=relevance&q=${query}&type=video&key=${API_KEY}`
       );
       
       if (!response.ok) throw new Error("YouTube API Error");
