@@ -190,8 +190,7 @@ const Pray = () => {
           }
         }
         
-        await addXp("pray");
-        toast.success(`Ganhou +${XP_REWARDS.pray} pontos de fé por interceder!`);
+        // completeTask handles XP award + toast + daily limit (1x per day)
         completeTask("pray_cause");
         
         // Trigger push prompt
@@ -473,7 +472,15 @@ REGRAS ADICIONAIS:
                                     });
                                   }
 
-                                  if (!activeReaction) await addXp("react");
+                                  if (!activeReaction) {
+                                    // Daily gate - only award XP for reacting once per day total
+                                    const today = new Date().toISOString().split("T")[0];
+                                    const reactKey = `amens_react_xp_${session.user.id}_${today}`;
+                                    if (!localStorage.getItem(reactKey)) {
+                                      await addXp("react");
+                                      localStorage.setItem(reactKey, "1");
+                                    }
+                                  }
                                   toast.success(`${reaction.emoji} Reação enviada!`);
                                 } catch {
                                   toast.error("Erro ao enviar reação");

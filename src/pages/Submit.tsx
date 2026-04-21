@@ -232,8 +232,17 @@ const Submit = () => {
         await notifyFriends(data.id, data.title);
       }
 
-      await addXp("submit");
-      toast.success(`Pedido enviado! Ganhou +${XP_REWARDS.submit} pontos de fé`);
+      // Daily XP gate — award submit XP only once per day
+      const userId = session?.user?.id;
+      const today = new Date().toISOString().split("T")[0];
+      const submitXpKey = `amens_submit_xp_${userId}_${today}`;
+      if (userId && !localStorage.getItem(submitXpKey)) {
+        await addXp("submit");
+        localStorage.setItem(submitXpKey, "1");
+        toast.success(`Pedido enviado! Ganhou +${XP_REWARDS.submit} pontos de fé`);
+      } else {
+        toast.success("Pedido enviado com sucesso!");
+      }
       setFormData({ title: "", content: "", location: "" });
       
       // Trigger push prompt
@@ -241,7 +250,7 @@ const Submit = () => {
          triggerPushPrompt("Saiba quando alguém orar por seu pedido, autorize as notificações");
       }, 800);
 
-      setTimeout(() => navigate("/"), 3000); // give a bit more time before navigating
+      setTimeout(() => navigate("/"), 3000);
     } catch (error: any) {
       console.error('Error submitting prayer request:', error);
       toast.error(`Erro técnico: ${error.message || JSON.stringify(error)}`);
