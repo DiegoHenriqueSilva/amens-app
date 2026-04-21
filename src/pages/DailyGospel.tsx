@@ -261,9 +261,7 @@ Responda APENAS com um objeto JSON válido no formato:
           ) : gospel ? (
             <motion.div initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.5, delay: 0.2 }}>
               <Card className="p-8 soft-shadow border-primary/15 text-center space-y-6 bg-card/80 backdrop-blur-md">
-                <div className="w-14 h-14 mx-auto gradient-divine rounded-full flex items-center justify-center">
-                  <BookOpen className="w-7 h-7 text-primary-foreground" />
-                </div>
+
 
                 {gospel.liturgicalDay && (
                   <p className="text-xs uppercase tracking-[0.2em] text-primary font-medium">
@@ -271,9 +269,7 @@ Responda APENAS com um objeto JSON válido no formato:
                   </p>
                 )}
 
-                {gospel.title && (
-                  <h2 className="text-lg font-semibold text-foreground">{gospel.title}</h2>
-                )}
+
 
                 {gospel.imageUrl && (
                   <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.3 }} className="w-full relative rounded-2xl overflow-hidden aspect-square border-2 border-primary/20 shadow-lg my-6">
