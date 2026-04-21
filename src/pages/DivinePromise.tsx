@@ -11,6 +11,8 @@ import { divine_promises } from "@/data/divine_promises";
 
 const DivinePromise = () => {
   const navigate = useNavigate();
+  const [promise, setPromise] = useState<any>(null);
+  const [isDrawing, setIsDrawing] = useState(false);
   const [hasShined, setHasShined] = useState(false);
 
   useEffect(() => {
