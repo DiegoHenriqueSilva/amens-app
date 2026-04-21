@@ -357,7 +357,7 @@ const PrayerChain = () => {
                   <p className="text-[#a0720a] text-[10px] uppercase tracking-[0.3em] font-bold mb-3 opacity-60 border-b border-[#a0720a]/20 pb-1 w-full text-center">
                     Unidos em oração agora
                   </p>
-                  <div className="flex flex-col gap-1.5 w-full justify-end h-[160px] overflow-hidden" style={{ maskImage: 'linear-gradient(to bottom, transparent, black 10%, black 100%)', WebkitMaskImage: 'linear-gradient(to bottom, transparent, black 10%, black 100%)' }}>
+                  <div className="flex flex-col gap-1.5 w-full justify-end h-[240px] overflow-hidden pt-6" style={{ maskImage: 'linear-gradient(to bottom, transparent 0%, black 25%, black 100%)', WebkitMaskImage: 'linear-gradient(to bottom, transparent 0%, black 25%, black 100%)' }}>
                     <AnimatePresence initial={false}>
                       {recentContributors.map((contrib) => (
                         <motion.div 
