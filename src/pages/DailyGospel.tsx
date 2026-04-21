@@ -44,7 +44,7 @@ const DailyGospel = () => {
 
   const fetchLatestReflectionVideo = async () => {
     const API_KEY = "AIzaSyAvWJ3SdQa6yaEFe5CPTzX7CWJ-65_tiXg";
-    const CHANNEL_ID = "UCLOqStDCKZNvN_8Oqu2emGA";
+    const CHANNEL_ID = "UCjWxeXfmtOnv1MndaSEWFew";
     setLoadingVideo(true);
     
     try {
