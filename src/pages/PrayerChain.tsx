@@ -370,7 +370,7 @@ const PrayerChain = () => {
                             contrib?.user_id && friendIds.has(contrib.user_id) && "text-friend-accent font-bold bg-friend-accent/10 soft-shadow"
                           )}
                         >
-                          {contrib.name} — entrou na oração
+                          {contrib.name} ({contrib.city}) — entrou na oração
                         </motion.div>
                       ))}
                     </AnimatePresence>

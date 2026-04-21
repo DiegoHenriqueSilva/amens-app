@@ -116,16 +116,16 @@ export const TOTAL_CYCLE_TIME = PRAYERS.reduce((acc, p) =>
   acc + (p.phrases.length * PHRASE_DURATION) + PRAYER_GAP, 0
 );
 
-export const PR_CITIES_100K = [
-  "Curitiba", "Londrina", "Maringá", "Ponta Grossa", "Cascavel", 
-  "São José dos Pinhais", "Foz do Iguaçu", "Colombo", "Guarapuava", 
-  "Paranaguá", "Araucária", "Toledo", "Apucarana", "Pinhais", "Campo Largo",
-  "São Paulo", "Rio de Janeiro", "Belo Horizonte", "Salvador", "Fortaleza",
-  "Brasília", "Manaus", "Recife", "Porto Alegre", "Belém", "Goiânia",
-  "Campinas", "Guarulhos", "São Luís", "Maceió", "Natal", "Teresina",
-  "Campo Grande", "João Pessoa", "Cuiabá", "Aracaju", "Florianópolis",
-  "Vitória", "Caxias do Sul", "Joinville", "Uberlândia", "Sorocaba",
-  "Ribeirão Preto", "Feira de Santana", "Juiz de Fora", "Londrina"
+export const BR_CITIES_200K = [
+  "São Paulo", "Rio de Janeiro", "Brasília", "Fortaleza", "Salvador", "Belo Horizonte", "Manaus", "Curitiba", "Recife", "Goiânia",
+  "Belém", "Porto Alegre", "Guarulhos", "Campinas", "São Luís", "São Gonçalo", "Maceió", "Duque de Caxias", "Campo Grande", "Natal",
+  "Teresina", "São Bernardo do Campo", "Nova Iguaçu", "João Pessoa", "São José dos Campos", "Santo André", "Ribeirão Preto",
+  "Jaboatão dos Guararapes", "Osasco", "Uberlândia", "Sorocaba", "Contagem", "Aracaju", "Feira de Santana", "Cuiabá", "Joinville",
+  "Aparecida de Goiânia", "Londrina", "Juiz de Fora", "Ananindeua", "Porto Velho", "Niterói", "Belford Roxo", "Serra", "Caxias do Sul",
+  "Macapá", "Florianópolis", "Vila Velha", "Mauá", "São João de Meriti", "São José do Rio Preto", "Mogi das Cruzes", "Betim",
+  "Santos", "Diadema", "Maringá", "Jundiaí", "Campina Grande", "Montes Claros", "Piracicaba", "Carapicuíba", "Olinda", "Cariacica",
+  "Rio Branco", "Anápolis", "Bauru", "Vitória", "Caucaia", "Itaquaquecetuba", "São Vicente", "Pelotas", "Canoas", "Franca",
+  "Ponta Grossa", "Blumenau", "Petrolina", "Paulista", "Ribeirão das Neves", "Uberaba", "Boa Vista", "Cascavel", "Guarujá"
 ];
 
 export const COMMON_NAMES = [

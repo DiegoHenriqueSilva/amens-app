@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { PRAYERS, PHRASE_DURATION, PRAYER_GAP, COMMON_NAMES, PR_CITIES_100K, TOTAL_CYCLE_TIME } from "@/data/prayer-data";
+import { PRAYERS, PHRASE_DURATION, PRAYER_GAP, COMMON_NAMES, BR_CITIES_200K, TOTAL_CYCLE_TIME } from "@/data/prayer-data";
 
 export interface Contributor {
   user_id?: string;
@@ -108,7 +108,7 @@ export const usePrayerQueue = (currentPrayerId: string | undefined, currentPhras
   useEffect(() => {
     const genFake = () => {
       const name = COMMON_NAMES[Math.floor(Math.random() * COMMON_NAMES.length)];
-      const city = PR_CITIES_100K[Math.floor(Math.random() * PR_CITIES_100K.length)];
+      const city = BR_CITIES_200K[Math.floor(Math.random() * BR_CITIES_200K.length)];
       setContributions(prev => ({
         ...prev,
         [String(Date.now() + Math.random())]: { name, city } // Unique pseudo-timestamp
