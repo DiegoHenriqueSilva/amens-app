@@ -37,10 +37,10 @@ export function XpBadge({ totalXp, userName, avatarUrl }: XpBadgeProps) {
           </div>
           <Progress value={progress} className="h-2 bg-secondary border border-primary/5" />
           <div className="flex justify-between items-center mt-1">
-             <span className="text-[10px] text-muted-foreground uppercase tracking-wider">{totalXp} pontos</span>
+             <div />
              {next && (
                <span className="text-[10px] text-muted-foreground uppercase tracking-wider">
-                 Próximo: {next.name} ({next.minXp} pontos)
+                 Próximo: {next.name}
                </span>
              )}
           </div>
