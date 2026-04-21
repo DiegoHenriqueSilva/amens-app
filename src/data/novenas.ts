@@ -10,7 +10,10 @@ export interface Novena {
   name: string;
   focus: string;
   image: string;
-  themeColor: string;
+  colors: {
+    from: string;
+    to: string;
+  };
   prayers: {
     initial: string;
     final: string;
@@ -23,8 +26,8 @@ export const NOVENAS: Novena[] = [
     id: "ns-desatadora",
     name: "Desatadora dos Nós",
     focus: "Problemas difíceis e paz familiar",
-    image: "https://upload.wikimedia.org/wikipedia/commons/e/e0/Nossa_Senhora_Desatadora_dos_N%C3%B3s.jpg",
-    themeColor: "from-blue-600 to-blue-400",
+    image: "https://upload.wikimedia.org/wikipedia/commons/1/15/Mary%2C_Untier_of_Knots_by_Schmidtner.png",
+    colors: { from: "#2563eb", to: "#60a5fa" },
     prayers: {
       initial: "Sinal da Cruz. Fazer o Ato de Contrição.\n\n\"Santa Maria, cheia da presença de Deus, durante os dias de tua vida aceitaste com toda a humildade a vontade do Pai, e o maligno nunca foi capaz de envolver-te com suas confusões...\"",
       final: "\"Virgem Maria, Mãe do belo amor, Mãe que jamais deixa de vir em socorro de um filho aflito... Maria, Desatadora dos Nós, rogai por nós! Amém.\""
@@ -45,8 +48,8 @@ export const NOVENAS: Novena[] = [
     id: "sao-judas",
     name: "São Judas Tadeu",
     focus: "Causas impossíveis e desesperadas",
-    image: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/ca/Saint_Jude_Thaddeus.jpg/800px-Saint_Jude_Thaddeus.jpg",
-    themeColor: "from-green-700 to-green-500",
+    image: "https://upload.wikimedia.org/wikipedia/commons/3/3d/Saint_Judas_Thaddeus.jpg",
+    colors: { from: "#15803d", to: "#22c55e" },
     prayers: {
       initial: "\"São Judas, glorioso Apóstolo, fiel servo e amigo de Jesus, o padroeiro dos casos desesperados...\"",
       final: "\"Eu vos prometo, ó bendito São Judas, lembrar-me sempre deste grande favor. Amém.\""
@@ -67,8 +70,8 @@ export const NOVENAS: Novena[] = [
     id: "divina-misericordia",
     name: "Divina Misericórdia",
     focus: "Salvação das almas e confiança",
-    image: "https://upload.wikimedia.org/wikipedia/commons/0/0e/Divine_Mercy_Painting.jpg",
-    themeColor: "from-red-600 to-red-400",
+    image: "https://upload.wikimedia.org/wikipedia/commons/f/fa/Kazimirowski_Eugeniusz%2C_Divine_Mercy_1934.jpg",
+    colors: { from: "#dc2626", to: "#f87171" },
     prayers: {
       initial: "\"Deus, Pai Misericordioso, confiamos-Te hoje o destino do mundo e de cada homem...\"",
       final: "\"Jesus, eu confio em Vós!\""
@@ -89,15 +92,15 @@ export const NOVENAS: Novena[] = [
     id: "santa-rita",
     name: "Santa Rita",
     focus: "Causas impossíveis e pacificação",
-    image: "https://upload.wikimedia.org/wikipedia/commons/d/dc/Saint_Rita_of_Cascia_by_Sassoferrato.jpg",
-    themeColor: "from-purple-700 to-purple-500",
+    image: "https://upload.wikimedia.org/wikipedia/commons/6/6d/Santa_Rita_Cascia.jpg",
+    colors: { from: "#7e22ce", to: "#a855f7" },
     prayers: {
       initial: "\"Ó poderosa Santa Rita, advogada dos casos desesperados, recorro a vós no caso difícil...\"",
       final: "\"Santa Rita, rogai por nós! Amém.\""
     },
     days: [
       { day: 1, title: "Perdão", reading: "Mateus 5, 43-48", content: "Dá-me a força para perdoar os que me ofenderam, assim como tu perdoaste." },
-      { day: 2, title: "Família", reading: "Efésios 5, 21-33", content: "Que haja diálogo, respeito e amor verdadeiro entre os esposos." },
+      { day: 2, title: "Família", reading: "Efésios 5, 21-33", content: "Que haja diálogo, respect amor verdadeiro entre os esposos." },
       { day: 3, title: "Consolo", reading: "Mateus 5, 4", content: "Consola os que hoje choram a ausência de seus entes queridos." },
       { day: 4, title: "Persistência", reading: "Salmo 27, 4", content: "Ensina-me a ser persistente em meus bons propósitos e a buscar a vontade do Pai." },
       { day: 5, title: "Humildade", reading: "1 Pedro 5, 5-7", content: "Ajuda-me a ser humilde de coração, reconhecendo que tudo vem da bondade divina." },
@@ -111,8 +114,8 @@ export const NOVENAS: Novena[] = [
     id: "sao-bento",
     name: "São Bento",
     focus: "Proteção contra o mal e paz",
-    image: "https://upload.wikimedia.org/wikipedia/commons/c/c5/Benedict_of_Nursia.jpg",
-    themeColor: "from-amber-900 to-amber-700",
+    image: "https://upload.wikimedia.org/wikipedia/commons/d/dc/Benedict_of_Nursia.jpg",
+    colors: { from: "#3d2b1f", to: "#8b6508" },
     prayers: {
       initial: "\"Ó glorioso Patriarca São Bento, afastai de nós todas as ciladas do inimigo...\"",
       final: "\"A Cruz Sagrada seja a minha luz... São Bento, rogai por nós! Amém.\""
@@ -133,8 +136,8 @@ export const NOVENAS: Novena[] = [
     id: "sao-miguel",
     name: "São Miguel",
     focus: "Combate espiritual e proteção",
-    image: "https://upload.wikimedia.org/wikipedia/commons/e/e9/Guido_Reni_031.jpg",
-    themeColor: "from-indigo-600 to-blue-800",
+    image: "https://upload.wikimedia.org/wikipedia/commons/d/df/Saint_Michael_the_Archangel_by_Cesare_Dandini.jpg",
+    colors: { from: "#1e3a8a", to: "#3b82f6" },
     prayers: {
       initial: "\"São Miguel Arcanjo, defendei-nos no combate, sede o nosso refúgio contra o demônio...\"",
       final: "\"São Miguel, com vossa luz, iluminai-nos. Com vossas asas, protegei-nos. Amém.\""

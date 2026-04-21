@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, BookOpen, ChevronRight, RotateCcw, Play, Sparkles } from "lucide-react";
+import { motion } from "framer-motion";
+import { ArrowLeft, BookOpen, ChevronRight, RotateCcw, Play, Sparkles, Image as ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { NOVENAS } from "@/data/novenas";
@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
 
 const NovenaCard = ({ novena, onSelect }: { novena: typeof NOVENAS[0], onSelect: (id: string) => void }) => {
   const { state } = useNovenaState(novena.id);
+  const [imgError, setImgError] = useState(false);
   
   return (
     <motion.div
@@ -25,12 +26,17 @@ const NovenaCard = ({ novena, onSelect }: { novena: typeof NOVENAS[0], onSelect:
         className="p-6 h-full text-center flex flex-col items-center justify-between border-primary/5 soft-shadow hover:bg-white transition-colors rounded-[2.5rem] bg-white/70 backdrop-blur-sm group"
       >
         <div className="relative">
-          <div className="w-20 h-20 bg-transparent rounded-full flex items-center justify-center mb-4 overflow-hidden border-2 border-primary/10 shadow-md">
-            <img 
-              src={novena.image} 
-              alt={novena.name}
-              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-            />
+          <div className="w-20 h-20 bg-primary/5 rounded-full flex items-center justify-center mb-4 overflow-hidden border-2 border-primary/10 shadow-md">
+            {!imgError ? (
+              <img 
+                src={novena.image} 
+                alt={novena.name}
+                onError={() => setImgError(true)}
+                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+              />
+            ) : (
+              <ImageIcon className="w-8 h-8 text-primary/30" />
+            )}
           </div>
           {state.isCompleted && (
             <div className="absolute -top-1 -right-1 bg-green-500 text-white p-1 rounded-full shadow-lg">
@@ -54,11 +60,10 @@ const NovenaCard = ({ novena, onSelect }: { novena: typeof NOVENAS[0], onSelect:
         <Button 
           size="sm" 
           className={cn(
-            "w-full rounded-full text-[10px] py-4 h-auto font-bold shadow-sm border-0 uppercase tracking-widest",
-            state.isCompleted ? "opacity-80" : ""
+            "w-full rounded-full text-[10px] py-4 h-auto font-bold shadow-sm border-0 uppercase tracking-widest transition-opacity active:opacity-90",
           )}
           style={{ 
-            background: `linear-gradient(135deg, ${novena.themeColor.split(' ')[0].replace('from-', '#')}, ${novena.themeColor.split(' ')[1].replace('to-', '#')})`,
+            background: `linear-gradient(135deg, ${novena.colors.from}, ${novena.colors.to})`,
             color: '#fff'
           }}
         >
@@ -67,21 +72,6 @@ const NovenaCard = ({ novena, onSelect }: { novena: typeof NOVENAS[0], onSelect:
       </Card>
     </motion.div>
   );
-};
-
-// Mapeamento de cores da Tailwind para HEX aproximado para os botões
-const tailwindColors: Record<string, string> = {
-  "blue-600": "#2563eb", "blue-400": "#60a5fa",
-  "green-700": "#15803d", "green-500": "#22c55e",
-  "red-600": "#dc2626", "red-400": "#f87171",
-  "purple-700": "#7e22ce", "purple-500": "#a855f7",
-  "amber-900": "#78350f", "amber-700": "#b45309",
-  "indigo-600": "#4f46e5", "blue-800": "#1e40af"
-};
-
-const getHex = (tw: string) => {
-  const color = tw.replace('from-', '').replace('to-', '');
-  return tailwindColors[color] || "#c9a227";
 };
 
 const Novenas = () => {
@@ -142,15 +132,7 @@ const Novenas = () => {
             }}
           >
             {NOVENAS.map((novena) => (
-              <NovenaCard 
-                key={novena.id} 
-                novena={{
-                  ...novena,
-                  // Convert themes to Hex for style prop
-                  themeColor: `from-${getHex(novena.themeColor.split(' ')[0])} to-${getHex(novena.themeColor.split(' ')[1])}`
-                }} 
-                onSelect={handleSelect} 
-              />
+              <NovenaCard key={novena.id} novena={novena} onSelect={handleSelect} />
             ))}
           </motion.div>
         </div>
