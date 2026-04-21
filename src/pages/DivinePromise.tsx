@@ -7,6 +7,7 @@ import PageTransition from "@/components/PageTransition";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { divine_promises } from "@/data/divine_promises";
+import { cn } from "@/lib/utils";
 
 const DivinePromise = () => {
   const navigate = useNavigate();
