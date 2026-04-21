@@ -40,6 +40,7 @@ const Pray = () => {
   const prayerIdParam = searchParams.get("id");
   const { addXp } = useXp();
   const [hasRequestedCause, setHasRequestedCause] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
 
   const fetchIntercessions = async () => {
     const { data: { session } } = await supabase.auth.getSession();
