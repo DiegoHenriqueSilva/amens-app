@@ -28,6 +28,8 @@ const DailyGospel = () => {
   const [generating, setGenerating] = useState(false);
   const [loadingGospel, setLoadingGospel] = useState(true);
   const [gospel, setGospel] = useState<GospelData | null>(null);
+  const [videoId, setVideoId] = useState<string | null>(null);
+  const [loadingVideo, setLoadingVideo] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -37,7 +39,33 @@ const DailyGospel = () => {
 
   useEffect(() => {
     fetchDailyGospel();
+    fetchLatestReflectionVideo();
   }, []);
+
+  const fetchLatestReflectionVideo = async () => {
+    const API_KEY = "AIzaSyAvWJ3SdQa6yaEFe5CPTzX7CWJ-65_tiXg";
+    const CHANNEL_ID = "UCm9-B4r_1Y2oQ5n-pI2f6xQ";
+    setLoadingVideo(true);
+    
+    try {
+      const response = await fetch(
+        `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${CHANNEL_ID}&maxResults=1&order=date&q=Evangelho%20do%20dia&type=video&key=${API_KEY}`
+      );
+      
+      if (!response.ok) throw new Error("YouTube API Error");
+      
+      const data = await response.json();
+      const latestVideoId = data.items?.[0]?.id?.videoId;
+      
+      if (latestVideoId) {
+        setVideoId(latestVideoId);
+      }
+    } catch (err) {
+      console.warn("Could not fetch YouTube reflection", err);
+    } finally {
+      setLoadingVideo(false);
+    }
+  };
 
   const fetchDailyGospel = async () => {
     setLoadingGospel(true);
@@ -307,6 +335,52 @@ Responda APENAS com um objeto JSON válido no formato:
                   </motion.div>
                 )}
               </Card>
+
+              {/* Bloco Separado para Vídeo de Reflexão */}
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }} 
+                animate={{ opacity: 1, y: 0 }} 
+                transition={{ duration: 0.5, delay: 0.4 }}
+                className="mt-6"
+              >
+                <Card className="p-6 soft-shadow border-primary/10 bg-card/80 backdrop-blur-md overflow-hidden">
+                  <div className="flex items-center gap-3 mb-4">
+                     <div className="w-8 h-8 bg-red-500/10 rounded-full flex items-center justify-center">
+                        <Sparkles className="w-4 h-4 text-red-600" />
+                     </div>
+                     <h3 className="text-sm font-bold uppercase tracking-widest text-foreground">
+                        Reflexão em Vídeo
+                     </h3>
+                  </div>
+
+                  {loadingVideo ? (
+                    <div className="aspect-video bg-muted/50 rounded-2xl flex flex-col items-center justify-center animate-pulse">
+                       <Loader2 className="w-6 h-6 animate-spin text-primary mb-2" />
+                       <p className="text-[10px] text-muted-foreground uppercase font-bold">Buscando vídeo...</p>
+                    </div>
+                  ) : videoId ? (
+                    <div className="relative aspect-video rounded-2xl overflow-hidden shadow-inner bg-black">
+                      <iframe
+                        className="absolute inset-0 w-full h-full"
+                        src={`https://www.youtube.com/embed/${videoId}`}
+                        title="Padre Reginaldo Manzotti - Evangelho do Dia"
+                        frameBorder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                      />
+                    </div>
+                  ) : (
+                    <div className="p-6 text-center border-2 border-dashed border-primary/10 rounded-2xl">
+                       <p className="text-sm text-muted-foreground">Vídeo indisponível no momento.</p>
+                       <p className="text-[10px] uppercase font-bold text-primary/40 mt-1">Tente novamente mais tarde</p>
+                    </div>
+                  )}
+
+                  <p className="text-[10px] text-center mt-4 text-muted-foreground uppercase tracking-widest font-medium">
+                    Pe. Reginaldo Manzotti • Oficial
+                  </p>
+                </Card>
+              </motion.div>
             </motion.div>
           ) : null}
         </div>
