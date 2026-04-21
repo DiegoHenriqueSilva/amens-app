@@ -169,7 +169,7 @@ export const NOVENAS: Novena[] = [
     id: "divina-misericordia",
     name: "Divina Misericórdia",
     focus: "Salvação das almas e confiança",
-    image: "https://upload.wikimedia.org/wikipedia/commons/f/fa/Kazimirowski_Eugeniusz%2C_Divine_Mercy_1934.jpg",
+    image: "https://diocese-sjc.org.br/wp-content/uploads/2021/04/jesusmisericordioso-Copia-300x169.jpg",
     colors: { from: "#dc2626", to: "#f87171" },
     type: "mercy",
     prayers: {
