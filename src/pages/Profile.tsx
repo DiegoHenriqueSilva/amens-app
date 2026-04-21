@@ -565,6 +565,7 @@ const Profile = () => {
                           </div>
                         ) : (
                           <div className="space-y-3 mb-6 max-h-[300px] overflow-y-auto style-scrollbar px-1">
+                            <h3 className="text-xs uppercase font-bold text-primary/70 tracking-widest mb-1 ml-2">Histórico de Convites</h3>
                             {invitedUsers.map((item) => {
                               const invitedProfile = item.profiles;
                               const invitedXp = item.user_xp?.total_xp || 0;

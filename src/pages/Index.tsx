@@ -142,10 +142,9 @@ const Index = () => {
               <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Users className="w-8 h-8 text-primary" />
               </div>
-              <DialogTitle className="text-2xl font-bold">Nova Amizade? ✨</DialogTitle>
-              <DialogDescription className="text-base pt-2">
-                Você entrou pelo convite de <span className="font-bold text-primary">{referrerName}</span>. 
-                Deseja enviar um pedido de amizade?
+              <DialogTitle className="text-2xl font-bold">Convite Recebido ✨</DialogTitle>
+              <DialogDescription className="text-base pt-2 text-center">
+                <span className="font-bold text-primary">{referrerName}</span> te convidou para o Amens, quer incluir ele/ela na sua lista de amigos?
               </DialogDescription>
             </DialogHeader>
             <DialogFooter className="flex gap-3 mt-4 sm:justify-center">
