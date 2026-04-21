@@ -18,7 +18,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Camera, Users } from "lucide-react";
+import { Camera, Users, Lock, Ticket } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const Profile = () => {
@@ -267,7 +267,7 @@ const Profile = () => {
           <Tabs defaultValue="profile" className="w-full mt-6">
             <TabsList className="grid w-full grid-cols-2 mb-8 bg-white/50 backdrop-blur-sm rounded-full p-1 border border-primary/10 h-14">
               <TabsTrigger value="profile" className="rounded-full data-[state=active]:bg-primary data-[state=active]:text-primary-foreground font-bold transition-all duration-300">Meu Perfil</TabsTrigger>
-              <TabsTrigger value="invited" className="rounded-full data-[state=active]:bg-primary data-[state=active]:text-primary-foreground font-bold transition-all duration-300">Meus Convidados</TabsTrigger>
+              <TabsTrigger value="invited" className="rounded-full data-[state=active]:bg-primary data-[state=active]:text-primary-foreground font-bold transition-all duration-300">Cofre de Convites</TabsTrigger>
             </TabsList>
 
             <TabsContent value="profile" className="outline-none">
@@ -516,7 +516,7 @@ const Profile = () => {
 
             </TabsContent>
 
-            <TabsContent value="invited" className="outline-none">
+             <TabsContent value="invited" className="outline-none">
               <motion.div 
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -525,87 +525,102 @@ const Profile = () => {
                 <Card className="p-8 border-primary/5 soft-shadow bg-white/70 backdrop-blur-sm rounded-[2.5rem]">
                   <div className="flex items-center gap-3 mb-6">
                     <div className="w-10 h-10 bg-primary/10 rounded-2xl flex items-center justify-center">
-                      <Users className="w-5 h-5 text-primary" />
+                      <Ticket className="w-5 h-5 text-primary" />
                     </div>
                     <div>
-                      <h2 className="text-xl font-bold">Meus Convidados</h2>
-                      <p className="text-xs text-muted-foreground">Pessoas que entraram pelo seu link</p>
+                      <h2 className="text-xl font-bold">Cofre de Convites</h2>
+                      <p className="text-xs text-muted-foreground">O Améns é uma comunidade exclusiva.</p>
                     </div>
                   </div>
 
-                  {loadingInvited ? (
-                    <div className="py-12 text-center space-y-4">
-                      <div className="w-8 h-8 border-4 border-primary/30 border-t-primary rounded-full animate-spin mx-auto" />
-                      <p className="text-sm text-muted-foreground">Buscando convidados...</p>
-                    </div>
-                  ) : invitedUsers.length === 0 ? (
-                    <div className="py-12 text-center px-4">
-                      <div className="w-16 h-16 bg-secondary/50 rounded-full flex items-center justify-center mx-auto mb-4 opacity-50">
-                        <Users className="w-8 h-8 text-muted-foreground" />
-                      </div>
-                      <p className="text-sm font-medium text-muted-foreground mb-4">Você ainda não tem convidados registrados.</p>
-                      <Button 
-                        variant="outline" 
-                        onClick={() => navigate('/daily-gospel')}
-                        className="rounded-full h-12 px-6 border-primary/20 text-primary font-bold"
-                      >
-                        Gerar Link de Convite
-                      </Button>
-                    </div>
-                  ) : (
-                    <div className="space-y-3">
-                      {invitedUsers.map((item) => {
-                        const invitedProfile = item.profiles;
-                        const invitedXp = item.user_xp?.total_xp || 0;
-                        const invitedLevel = getLevel(invitedXp);
-                        
-                        return (
-                          <div 
-                            key={item.referred_user_id} 
-                            className="flex items-center gap-4 p-4 rounded-3xl bg-white border border-primary/5 hover:border-primary/20 transition-all hover:translate-x-1"
-                          >
-                            <Avatar className="w-12 h-12 border-2 border-primary/10">
-                              <AvatarImage src={invitedProfile?.avatar_url} />
-                              <AvatarFallback className="bg-secondary text-primary border-primary/20">
-                                <User className="w-6 h-6" />
-                              </AvatarFallback>
-                            </Avatar>
-                            <div className="flex-1 min-w-0">
-                              <h3 className="text-sm font-bold truncate leading-tight">
-                                {invitedProfile?.full_name || "Membro da Fé"}
-                              </h3>
-                              <div className="flex items-center gap-1 mt-0.5">
-                                <span className="text-[10px] uppercase font-black tracking-wider text-primary/70">
-                                  Nível {invitedLevel.name}
-                                </span>
-                                <span className="text-[10px] text-muted-foreground">•</span>
-                                <span className="text-[10px] text-muted-foreground">
-                                  {new Date(item.created_at).toLocaleDateString()}
-                                </span>
-                              </div>
-                            </div>
-                            <div className="text-primary/40 font-bold text-lg">
-                              {invitedLevel.emoji}
-                            </div>
+                  {(() => {
+                    const totalEarnedInvites = 2 + (levelIndex * 2);
+                    const usedInvites = invitedUsers.length;
+                    const availableInvites = Math.max(0, totalEarnedInvites - usedInvites);
+
+                    return (
+                      <>
+                        <div className="flex justify-between items-center bg-primary/5 p-4 rounded-2xl border border-primary/10 mb-6">
+                           <div>
+                              <p className="text-xs uppercase font-bold text-primary/70 tracking-widest">Disponíveis</p>
+                              <h3 className="text-3xl font-black text-foreground">{availableInvites}</h3>
+                           </div>
+                           <div className="text-right">
+                              <p className="text-[10px] text-muted-foreground uppercase tracking-widest">Usados: {usedInvites}</p>
+                              <p className="text-[10px] text-muted-foreground uppercase tracking-widest">Ganhos (Nível {levelIndex}): {totalEarnedInvites}</p>
+                           </div>
+                        </div>
+
+                        {loadingInvited ? (
+                          <div className="py-12 text-center space-y-4">
+                            <div className="w-8 h-8 border-4 border-primary/30 border-t-primary rounded-full animate-spin mx-auto" />
+                            <p className="text-sm text-muted-foreground">Buscando convidados...</p>
                           </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </Card>
-                
-                <Card className="p-6 border-dashed border-primary/20 bg-primary/5 rounded-[2rem] text-center">
-                  <p className="text-xs text-primary font-semibold mb-3">Ganhe +20 pontos de fé por cada novo amigo!</p>
-                  <Button 
-                    className="gradient-divine w-full rounded-2xl h-11 text-xs font-bold"
-                    onClick={() => {
-                       const link = `${window.location.origin}/auth?ref=${user?.id}`;
-                       navigator.clipboard.writeText(link);
-                       toast.success("Link copiado! Compartilhe com seus amigos. 🙏");
-                    }}
-                  >
-                    Copiar Meu Link
-                  </Button>
+                        ) : invitedUsers.length === 0 ? (
+                          <div className="py-8 text-center px-4">
+                            <div className="w-16 h-16 bg-secondary/50 rounded-full flex items-center justify-center mx-auto mb-4 opacity-50">
+                              <Users className="w-8 h-8 text-muted-foreground" />
+                            </div>
+                            <p className="text-sm font-medium text-muted-foreground mb-4">Você ainda não enviou convites com sucesso.</p>
+                          </div>
+                        ) : (
+                          <div className="space-y-3 mb-6 max-h-[300px] overflow-y-auto style-scrollbar px-1">
+                            {invitedUsers.map((item) => {
+                              const invitedProfile = item.profiles;
+                              const invitedXp = item.user_xp?.total_xp || 0;
+                              const invitedLevel = getLevel(invitedXp);
+                              
+                              return (
+                                <div 
+                                  key={item.referred_user_id} 
+                                  className="flex items-center gap-4 p-4 rounded-3xl bg-white border border-primary/5 hover:border-primary/20 transition-all hover:translate-x-1"
+                                >
+                                  <Avatar className="w-12 h-12 border-2 border-primary/10">
+                                    <AvatarImage src={invitedProfile?.avatar_url} />
+                                    <AvatarFallback className="bg-secondary text-primary border-primary/20">
+                                      <User className="w-6 h-6" />
+                                    </AvatarFallback>
+                                  </Avatar>
+                                  <div className="flex-1 min-w-0">
+                                    <h3 className="text-sm font-bold truncate leading-tight">
+                                      {invitedProfile?.full_name || "Membro da Fé"}
+                                    </h3>
+                                    <div className="flex items-center gap-1 mt-0.5">
+                                      <span className="text-[10px] uppercase font-black tracking-wider text-primary/70">
+                                        Nível {invitedLevel.name}
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+
+                        {availableInvites > 0 ? (
+                           <Card className="p-6 border-dashed border-primary/20 bg-primary/5 rounded-[2rem] text-center">
+                             <p className="text-xs text-primary font-semibold mb-3">Envie um convite exclusivo e expanda a comunidade!</p>
+                             <Button 
+                               className="gradient-divine w-full rounded-2xl h-11 text-xs font-bold"
+                               onClick={() => {
+                                  const link = `${window.location.origin}/auth?ref=${user?.id}`;
+                                  navigator.clipboard.writeText(link);
+                                  toast.success("Convite copiado! Envie por WhatsApp. 🙏");
+                               }}
+                             >
+                               Copiar Link de Convite
+                             </Button>
+                           </Card>
+                        ) : (
+                           <Card className="p-6 border border-red-100 bg-red-50/50 rounded-[2rem] text-center opacity-80">
+                             <Lock className="w-6 h-6 text-red-400 mx-auto mb-2" />
+                             <p className="text-xs text-red-600 font-semibold mb-1">Você esgotou seus convites no momento.</p>
+                             <p className="text-[10px] text-red-500/80">Suba de nível para ganhar +2 novos convites exclusivos!</p>
+                           </Card>
+                        )}
+                      </>
+                    );
+                  })()}
                 </Card>
               </motion.div>
             </TabsContent>

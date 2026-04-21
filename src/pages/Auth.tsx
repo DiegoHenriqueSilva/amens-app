@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Lock } from "lucide-react";
 import PageTransition from "@/components/PageTransition";
 import { motion, AnimatePresence } from "framer-motion";
 import { fetchStates, fetchCitiesByState, IBGEState, IBGECity } from "@/lib/ibge";
@@ -431,7 +431,29 @@ const Auth = () => {
                 </form>
               </TabsContent>
               <TabsContent value="signup">
-                {/* O container tem q ter overflow-y-auto e max-h para evitar de fugir da tela na versão mobile */}
+                {!referrerId ? (
+                   <div className="py-8 text-center px-4 space-y-4">
+                      <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-2 text-primary">
+                          <Lock className="w-8 h-8" />
+                      </div>
+                      <h3 className="text-lg font-bold text-foreground">Acesso Exclusivo</h3>
+                      <p className="text-sm text-muted-foreground leading-relaxed">
+                         O Améns está em fase de expansão divina, solicite um convite para algum amigo ou familiar ou envie uma mensagem para dieguh@gmail.com para solicitar um convite. Obrigado!
+                      </p>
+                      <div className="pt-4 space-y-2 text-left">
+                        <Label className="text-xs text-center block mb-2">Já possui um link ou código?</Label>
+                        <Input 
+                           placeholder="Cole seu código de convite..." 
+                           className="text-center"
+                           onChange={(e) => {
+                             if(e.target.value.length > 5) {
+                               window.location.href = `/auth?ref=${e.target.value}`;
+                             }
+                           }} 
+                        />
+                      </div>
+                   </div>
+                ) : (
                 <div className="max-h-[50vh] overflow-y-auto px-1 pb-2 pt-2 -mx-1 hide-scrollbar">
                   <form onSubmit={handleSignUp} className="space-y-4">
                     <div className="space-y-2">
@@ -565,6 +587,7 @@ const Auth = () => {
                     </Button>
                   </form>
                 </div>
+                )}
               </TabsContent>
             </Tabs>
           </Card>

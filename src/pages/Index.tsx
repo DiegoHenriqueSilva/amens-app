@@ -15,6 +15,7 @@ import { scheduleDailyPromiseNotification } from "@/lib/notifications";
 import { CompleteProfileDialog } from "@/components/CompleteProfileDialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Check, X } from "lucide-react";
+import { JornadaFe } from "@/components/JornadaFe";
 
 const stagger = {
   animate: { transition: { staggerChildren: 0.1 } },
@@ -181,6 +182,13 @@ const Index = () => {
                 <Sparkles className="w-3 h-3" />
              </div>
           </motion.div>
+
+          {/* Jornada da Fé Diária */}
+          {user && (
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="mb-6 -mx-2">
+              <JornadaFe />
+            </motion.div>
+          )}
 
           {/* User / Faith Points Card */}
           {user && !xpLoading && (
