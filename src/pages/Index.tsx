@@ -254,7 +254,7 @@ const Index = () => {
                   </div>
                   <div>
                     <h2 className="text-lg font-bold mb-2">Novenas</h2>
-                    <p className="text-xs text-muted-foreground leading-tight mb-4 font-medium">Jorneis de 9 dias de fé e perseverança</p>
+                    <p className="text-xs text-muted-foreground leading-tight mb-4 font-medium">Escolha uma novena para seguir com fé</p>
                   </div>
                   <Button size="sm" className="w-full rounded-full text-xs py-5 font-bold shadow-sm border-0" style={{background: 'linear-gradient(135deg, #8b4513, #a0522d)', color: '#fff8e1'}}>
                     <BookOpen className="w-3 h-3 mr-2" />
