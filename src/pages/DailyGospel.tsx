@@ -71,7 +71,7 @@ const DailyGospel = () => {
       let verseResumo = evangelhoTextoCompleto;
       let curiosidade = "";
       
-      // Inteligência Artificial resume o pão diário e gera o extra!
+      // O sistema resume o pão diário e gera o extra!
       if (GEMINI_API_KEY && evangelhoTextoCompleto.length > 50) {
           const promptDaily = `Abaixo está o texto do Evangelho Católico do dia de hoje (${evangelhoReferencia}).
 Texto Oficial: "${evangelhoTextoCompleto}"
@@ -104,7 +104,7 @@ Responda APENAS com um objeto JSON válido no formato:
               if (parsed.curiosidade) curiosidade = parsed.curiosidade;
             }
           } catch(e) { 
-            console.error("Falha ao processar IA", e);
+            console.error("Falha ao processar resumo", e);
           }
       }
 
@@ -222,13 +222,13 @@ Responda APENAS com um objeto JSON válido no formato:
             <p className="text-xs uppercase tracking-[0.25em] text-primary mb-2 text-glow font-bold">✦</p>
             <h1 className="text-4xl font-bold text-foreground mb-2 text-glow text-soft-outline">Evangelho do Dia</h1>
             <div className="divider-gold max-w-[6rem] mx-auto my-3" />
-            <p className="text-sm text-muted-foreground text-glow font-medium">Catálogo e Liturgia Católica com IA</p>
+            <p className="text-sm text-muted-foreground text-glow font-medium">Catálogo e Liturgia Católica Diária</p>
           </motion.div>
 
           {loadingGospel ? (
             <Card className="p-8 soft-shadow border-primary/15 text-center">
               <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto mb-4" />
-              <p className="text-sm text-muted-foreground">Sua inteligência está lendo os ritos de hoje e compilando o resumo perfeito...</p>
+              <p className="text-sm text-muted-foreground">Buscando as leituras de hoje e preparando seu pão diário...</p>
             </Card>
           ) : gospel ? (
             <motion.div initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.5, delay: 0.2 }}>

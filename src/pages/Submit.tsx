@@ -170,10 +170,43 @@ const Submit = () => {
 
   const [formData, setFormData] = useState({ title: "", content: "", location: "" });
 
+  const notifyFriends = async (prayerId: string, title: string) => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
+      const userName = session.user.user_metadata?.full_name || "Um amigo";
+      const userFirstName = userName.split(" ")[0];
+
+      // Fetch all friends
+      const { data: friendsData } = await supabase
+        .from("friendships")
+        .select("friend_id")
+        .eq("user_id", session.user.id);
+
+      if (!friendsData || friendsData.length === 0) return;
+
+      const notifications = friendsData.map(f => ({
+        user_id: f.friend_id,
+        prayer_request_id: prayerId,
+        message: `🙏 ${userFirstName} acabou de enviar um novo pedido de oração: "${title}"`,
+        is_read: false
+      }));
+
+      await supabase.from("notifications").insert(notifications);
+    } catch (err) {
+      console.error("Error notifying friends:", err);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.content.trim()) {
       toast.error("Por favor, descreva seu pedido de oração");
+      return;
+    }
+    if (formData.title.trim().length < 5) {
+      toast.error("O título do pedido deve ter pelo menos 5 letras");
       return;
     }
     setIsSubmitting(true);
@@ -182,15 +215,21 @@ const Submit = () => {
       const fullName = session?.user?.user_metadata?.full_name || "Anônimo";
       const firstName = fullName.split(' ')[0];
       
-      const { error } = await supabase.from('prayer_requests').insert([{
-        title: formData.title.trim() || `Pedido de ${firstName}`,
+      const { data, error } = await supabase.from('prayer_requests').insert([{
+        title: formData.title.trim(),
         content: formData.content.trim(),
         location: formData.location.trim() || null,
         prayer_count: 0,
         user_id: session?.user?.id,
         author_name: firstName,
-      }]);
+      }]).select().single();
+
       if (error) throw error;
+      
+      if (data) {
+        await notifyFriends(data.id, data.title);
+      }
+
       await addXp("submit");
       toast.success(`Pedido enviado! Ganhou +${XP_REWARDS.submit} pontos de fé`);
       setFormData({ title: "", content: "", location: "" });
@@ -225,19 +264,15 @@ const Submit = () => {
             <Card className="max-w-2xl mx-auto p-8 soft-shadow border-primary/10">
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div>
-                  <Label htmlFor="title" className="text-base">Título (Opcional)</Label>
-                  <Input id="title" placeholder="Ex: Cura para meu filho Miguel" value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })} className="mt-2" maxLength={100} />
+                  <Label htmlFor="title" className="text-base">Título do Pedido *</Label>
+                  <Input id="title" placeholder="Ex: Cura para meu filho Miguel" value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })} className="mt-2" maxLength={100} required />
                 </div>
                 <div>
                   <Label htmlFor="content" className="text-base">Seu Pedido de Oração *</Label>
                   <Textarea id="content" placeholder="Descreva seu pedido de oração com detalhes..." value={formData.content} onChange={(e) => setFormData({ ...formData, content: e.target.value })} className="mt-2 min-h-[180px]" required maxLength={1000} />
                   <p className="text-sm text-muted-foreground mt-1">{formData.content.length}/1000 caracteres</p>
                 </div>
-                <div>
-                  <Label htmlFor="location" className="text-base">Localização (Opcional)</Label>
-                  <Input id="location" placeholder="Ex: São Paulo, SP" value={formData.location} onChange={(e) => setFormData({ ...formData, location: e.target.value })} className="mt-2" maxLength={100} />
-                </div>
-                <Button type="submit" disabled={isSubmitting} size="lg" className="w-full gradient-divine text-primary-foreground hover:opacity-90">
+                <Button type="submit" disabled={isSubmitting} size="lg" className="w-full gradient-divine text-black hover:opacity-90 font-bold">
                   <Send className="w-4 h-4 mr-2" />
                   {isSubmitting ? "Enviando..." : "Enviar Pedido"}
                 </Button>
@@ -252,7 +287,7 @@ const Submit = () => {
                    <Button 
                      variant="ghost" 
                      onClick={() => setShowHistory(true)}
-                     className="text-primary/60 hover:text-primary text-[11px] uppercase tracking-widest font-black py-8 bg-primary/5 rounded-[2rem] border border-dashed border-primary/20 w-full hover:bg-primary/10 transition-all font-serif italic"
+                     className="text-black hover:text-primary text-[11px] uppercase tracking-widest font-black py-8 bg-primary/5 rounded-[2rem] border border-dashed border-primary/20 w-full hover:bg-primary/10 transition-all font-serif italic"
                    >
                      <Clock className="w-4 h-4 mr-2" />
                      Ver meus pedidos anteriores

@@ -11,14 +11,14 @@ import { divine_promises } from "@/data/divine_promises";
 
 const DivinePromise = () => {
   const navigate = useNavigate();
-  const [promise, setPromise] = useState<{verse:string, ref:string, context?:string} | null>(null);
-  const [isDrawing, setIsDrawing] = useState(false);
+  const [hasShined, setHasShined] = useState(false);
 
   useEffect(() => {
     const cached = localStorage.getItem("last_divine_promise");
     if (cached) {
       try {
         setPromise(JSON.parse(cached));
+        setHasShined(true); // Se já carregou do cache, não precisa brilhar de novo? Ou talvez sim.
       } catch (e) {
         console.error("Erro ao carregar cache de promessa", e);
       }
@@ -29,12 +29,12 @@ const DivinePromise = () => {
     if (isDrawing) return;
     setIsDrawing(true);
     setPromise(null);
+    setHasShined(false); // Reseta o brilho para o novo sorteio
 
     // Simula um tempo de "sorteio" para o feedback visual
     await new Promise(resolve => setTimeout(resolve, 1500));
 
     try {
-      // Sorteia da base local para garantir variedade e evitar repetições imediatas
       const lastPromiseVerese = promise?.verse;
       let availablePromises = divine_promises;
       
@@ -57,6 +57,20 @@ const DivinePromise = () => {
       setIsDrawing(false);
     }
   };
+
+  const WhatsAppIcon = () => (
+    <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L0 24l6.335-1.662c1.72.94 3.659 1.437 5.63 1.438h.005c6.505 0 11.84-5.335 11.842-11.892a11.757 11.757 0 00-3.473-8.413"/>
+    </svg>
+  );
+
+  const InstagramIcon = () => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+      <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+      <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+      <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+    </svg>
+  );
 
   const handleShare = async () => {
     if (!promise) return;
@@ -82,99 +96,102 @@ const DivinePromise = () => {
   return (
     <PageTransition>
       <div className="min-h-screen bg-background relative overflow-hidden">
-        <div className="absolute top-[-8rem] right-[-6rem] w-[28rem] h-[28rem] rounded-full bg-primary/5 blur-3xl" />
-        <div className="absolute bottom-[-6rem] left-[-6rem] w-[24rem] h-[24rem] rounded-full bg-accent/5 blur-3xl" />
+        <div className="absolute top-[-8rem] right-[-6rem] w-[28rem] h-[28rem] rounded-full bg-primary/2" />
+        <div className="absolute bottom-[-6rem] left-[-6rem] w-[24rem] h-[24rem] rounded-full bg-accent/2" />
 
         <div className="container mx-auto px-4 py-8 relative z-10 max-w-lg">
           <Button variant="ghost" size="icon" onClick={() => navigate("/")} className="mb-6">
             <ArrowLeft className="w-5 h-5" />
           </Button>
 
-          <motion.div className="text-center mb-10" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-            <p className="text-xs uppercase tracking-[0.25em] text-primary mb-2 text-glow font-bold">✦ Caixinha de Promessas ✦</p>
-            <h1 className="text-4xl font-bold text-foreground mb-3 text-glow text-soft-outline">Divina Promessa</h1>
-            <div className="divider-gold max-w-[6rem] mx-auto mb-4" />
-            <p className="text-sm text-muted-foreground leading-relaxed text-glow font-medium">
-              Deus tem uma palavra especial para o seu coração hoje. Sorteie uma promessa e receba força.
+          <motion.div className="text-center mb-10" initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }}>
+            <h1 className="text-3xl font-bold mb-3">Divina Promessa</h1>
+            <p className="text-muted-foreground text-sm">
+              Toque para retirar uma palavra de Deus para você
             </p>
           </motion.div>
 
           <AnimatePresence mode="wait">
             {!promise ? (
               <motion.div key="closed" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col items-center mt-12">
-                <motion.div animate={isDrawing ? { scale: [1, 1.1, 1], rotate: [0, -5, 5, -5, 0] } : { y: [0, -10, 0] }} transition={isDrawing ? { duration: 0.5, repeat: Infinity } : { duration: 4, repeat: Infinity, ease: "easeInOut" }}>
-                  <div className="w-40 h-40 gradient-sacred rounded-2xl flex items-center justify-center soft-shadow mb-8 relative border-2 border-primary/20 cursor-pointer shadow-lg hover:shadow-xl transition-all" onClick={drawPromise}>
-                    <Sparkles className="w-16 h-16 text-foreground/80 absolute top-4 left-4 opacity-30" />
-                    <BookOpen className="w-20 h-20 text-foreground" />
-                    <Sparkles className="w-12 h-12 text-foreground/80 absolute bottom-4 right-4 opacity-30" />
-                  </div>
-                </motion.div>
+                <div 
+                  className="w-40 h-40 bg-muted rounded-2xl flex items-center justify-center cursor-pointer mb-8 hover:bg-muted/80 transition-colors" 
+                  onClick={drawPromise}
+                >
+                  <BookOpen className="w-16 h-16 text-muted-foreground" />
+                </div>
                 
-                <Button onClick={drawPromise} disabled={isDrawing} size="lg" className="gradient-divine text-primary-foreground hover:opacity-90 px-8 py-6 text-lg rounded-full mt-4">
-                  {isDrawing ? "Buscando Promessa..." : "Retirar uma Promessa"}
+                <Button onClick={drawPromise} disabled={isDrawing} size="lg" className="w-full max-w-xs h-14">
+                  {isDrawing ? "Buscando..." : "Retirar uma Promessa"}
                 </Button>
               </motion.div>
             ) : (
-              <motion.div 
-                key="open" 
-                initial={{ opacity: 0, scale: 0.8, rotateY: 90 }} 
-                animate={{ opacity: 1, scale: 1, rotateY: 0 }} 
-                transition={{ duration: 0.8, type: "spring", damping: 12 }}
-                className="perspective-1000"
-              >
-                <div className="relative group">
-                  <div className="absolute -inset-0.5 bg-gradient-to-r from-[#d4a017] via-[#f0c040] to-[#d4a017] rounded-[2.5rem] blur opacity-30 group-hover:opacity-50 transition duration-1000 group-hover:duration-200 animate-pulse" />
-                  <Card id="promise-card" className="p-10 soft-shadow border-primary/20 text-center bg-white/40 backdrop-blur-xl relative overflow-hidden rounded-[2.5rem] border-2 shadow-2xl min-h-[400px] flex flex-col justify-center">
-                    <div className="absolute top-0 right-0 w-48 h-48 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-                    <div className="absolute bottom-0 left-0 w-48 h-48 bg-accent/5 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
-                    
-                    <div className="w-20 h-20 mx-auto gradient-divine rounded-full flex items-center justify-center mb-8 shadow-xl border-4 border-white/50 ring-4 ring-primary/5">
-                      <Sparkles className="w-10 h-10 text-primary-foreground" />
-                    </div>
-                    
+              <motion.div key="open" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+                <div className="relative">
+                  <AnimatePresence>
+                    {!hasShined && (
+                      <motion.div 
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1.5 }}
+                        exit={{ opacity: 0, scale: 2 }}
+                        onAnimationComplete={() => setHasShined(true)}
+                        className="absolute inset-0 bg-primary/10 rounded-3xl blur-3xl pointer-events-none"
+                      />
+                    )}
+                  </AnimatePresence>
+                  
+                  <Card className="p-8 text-center min-h-[300px] flex flex-col justify-center border-primary/10">
                     <motion.blockquote 
-                      className="text-2xl md:text-3xl leading-relaxed text-[#3d2800] italic font-serif mb-8 text-glow-sm"
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.4 }}
+                      className="text-xl md:text-2xl font-bold mb-6 italic"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: 0.3 }}
                     >
                       "{promise.verse}"
                     </motion.blockquote>
                     
                     <motion.p 
-                      className="text-lg font-bold text-[#b8860b] mb-10 tracking-[0.2em] uppercase"
+                      className="text-sm font-bold text-primary mb-4"
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
-                      transition={{ delay: 0.7 }}
+                      transition={{ delay: 0.5 }}
                     >
-                      — {promise.ref} —
+                      {promise.ref}
                     </motion.p>
                     
                     {promise.context && (
                       <motion.div 
-                        initial={{ opacity: 0, scale: 0.9 }} 
-                        animate={{ opacity: 1, scale: 1 }} 
-                        transition={{ delay: 1 }} 
-                        className="mb-8 p-6 rounded-2xl bg-white/60 border border-primary/10 text-center relative overflow-hidden shadow-inner"
+                        initial={{ opacity: 0 }} 
+                        animate={{ opacity: 1 }} 
+                        transition={{ delay: 0.7 }} 
+                        className="text-sm text-muted-foreground bg-muted/30 p-4 rounded-xl italic"
                       >
-                        <p className="text-sm text-stone-700/80 leading-relaxed font-medium">
-                          {promise.context}
-                        </p>
+                        {promise.context}
                       </motion.div>
                     )}
-                    
-                    <div className="divider-gold mx-auto mb-6 w-32" />
-                    <p className="text-[11px] uppercase tracking-[0.4em] text-primary/40 font-black">Améns</p>
                   </Card>
                 </div>
 
-                <div className="flex flex-col gap-3 mt-8">
-                  <Button onClick={handleShare} className="gradient-divine text-primary-foreground rounded-full px-6 py-6 shadow-md hover:scale-[1.02] transition-transform">
-                    <Share2 className="w-5 h-5 mr-3" />
-                    Compartilhar no Instagram/WhatsApp
+                <div className="space-y-4">
+                  <Button onClick={handleShare} className="w-full h-14 flex items-center justify-center gap-3">
+                    <Share2 className="w-5 h-5" />
+                    Compartilhar
                   </Button>
                   
-                  <Button onClick={() => { localStorage.removeItem("last_divine_promise"); setPromise(null); }} variant="outline" className="border-primary/30 hover:bg-primary/5 rounded-full px-6 text-primary">
+                  <div className="flex gap-2">
+                    <Button onClick={handleShare} variant="outline" className="flex-1 h-12 flex items-center justify-center gap-2">
+                      <WhatsAppIcon />
+                    </Button>
+                    <Button onClick={handleShare} variant="outline" className="flex-1 h-12 flex items-center justify-center gap-2">
+                      <InstagramIcon />
+                    </Button>
+                  </div>
+                  
+                  <Button 
+                    onClick={() => { localStorage.removeItem("last_divine_promise"); setPromise(null); }} 
+                    variant="ghost" 
+                    className="w-full text-muted-foreground h-12"
+                  >
                     Retirar Novamente
                   </Button>
                 </div>

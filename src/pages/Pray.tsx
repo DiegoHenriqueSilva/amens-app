@@ -38,8 +38,8 @@ const Pray = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const prayerIdParam = searchParams.get("id");
-  const [showHistory, setShowHistory] = useState(false);
   const { addXp } = useXp();
+  const [hasRequestedCause, setHasRequestedCause] = useState(false);
 
   const fetchIntercessions = async () => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -102,9 +102,8 @@ const Pray = () => {
 
   useEffect(() => {
     if (prayerIdParam) {
+      setHasRequestedCause(true);
       fetchPrayerById(prayerIdParam);
-    } else {
-      fetchRandomPrayerRequest();
     }
   }, [prayerIdParam]);
 
@@ -150,6 +149,7 @@ const Pray = () => {
 
   const fetchRandomPrayerRequest = async () => {
     setIsLoading(true);
+    setHasRequestedCause(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
       const { data, error } = await supabase
@@ -162,19 +162,17 @@ const Pray = () => {
       if (data && data.length > 0) {
         const randomRequest = data[Math.floor(Math.random() * data.length)];
         setPrayerRequest(randomRequest);
-        setActiveReaction(null); // Reset reação ao trocar de causa
+        setActiveReaction(null);
         setSuggestedPrayer("");
 
         await supabase.from('prayer_requests').update({ prayer_count: randomRequest.prayer_count + 1 }).eq('id', randomRequest.id);
         
-        // Record intercession
         if (session) {
           await supabase.from('prayer_intercessions').upsert({
             prayer_request_id: randomRequest.id,
             user_id: session.user.id,
           }, { onConflict: 'prayer_request_id,user_id' });
 
-          // Check if user already reacted to this prayer
           const { data: existingReaction } = await supabase
             .from('prayer_reactions')
             .select('reaction_type')
@@ -188,7 +186,7 @@ const Pray = () => {
         }
         
         await addXp("pray");
-        toast.success(`Ganhou +${XP_REWARDS.pray} pontos de fé por orar!`);
+        toast.success(`Ganhou +${XP_REWARDS.pray} pontos de fé por interceder!`);
       } else {
         toast.info("Não há causas disponíveis no momento");
       }
@@ -270,7 +268,7 @@ REGRAS ADICIONAIS:
       const data = await response.json();
       const prayerText = data.candidates?.[0]?.content?.parts?.[0]?.text;
       
-      setSuggestedPrayer(prayerText || "Erro ao conectar com a IA da Graça.");
+      setSuggestedPrayer(prayerText || "Desculpe, não conseguimos gerar a sugestão agora.");
     } catch (error) {
       console.error('Error generating prayer:', error);
       toast.error("Erro ao gerar sugestão de oração");
@@ -299,16 +297,28 @@ REGRAS ADICIONAIS:
 
           <div className="max-w-2xl mx-auto space-y-6">
             <AnimatePresence mode="wait">
-              {!prayerRequest ? (
+              {!hasRequestedCause ? (
+                <motion.div key="initial" variants={fadeUp} initial="initial" animate="animate" exit="exit" className="space-y-4">
+                  <Card className="p-10 text-center soft-shadow border-primary/10">
+                    <motion.div animate={{ scale: [1, 1.05, 1] }} transition={{ duration: 4, repeat: Infinity }}>
+                       <Sparkles className="w-12 h-12 text-primary mx-auto mb-6 opacity-30" />
+                    </motion.div>
+                    <div className="flex flex-col sm:flex-row gap-4">
+                      <Button onClick={fetchRandomPrayerRequest} disabled={isLoading} size="lg" className="flex-1 h-16 gradient-divine text-black font-bold text-lg rounded-2xl shadow-lg">
+                        {isLoading ? "Buscando..." : "Receber uma Causa"}
+                      </Button>
+                      <Button onClick={() => setShowHistory(true)} variant="outline" size="lg" className="flex-1 h-16 border-primary/20 rounded-2xl transition-all">
+                        <Clock className="w-5 h-5 mr-3" />
+                        Histórico
+                      </Button>
+                    </div>
+                  </Card>
+                </motion.div>
+              ) : !prayerRequest ? (
                 <motion.div key="empty" variants={fadeUp} initial="initial" animate="animate" exit="exit">
                   <Card className="p-12 text-center soft-shadow border-primary/10">
-                    <motion.div animate={{ scale: [1, 1.08, 1] }} transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}>
-                      <Sparkles className="w-14 h-14 mx-auto mb-5 text-primary" />
-                    </motion.div>
-                    <h2 className="text-2xl font-semibold mb-4 text-foreground">Clique para receber uma causa</h2>
-                    <Button onClick={fetchRandomPrayerRequest} disabled={isLoading} size="lg" className="gradient-divine text-primary-foreground hover:opacity-90">
-                      {isLoading ? "Buscando..." : "Sortear Causa e Orar"}
-                    </Button>
+                    <Loader2 className="w-10 h-10 animate-spin text-primary mx-auto mb-4" />
+                    <p className="text-muted-foreground">Buscando uma causa para você interceder...</p>
                   </Card>
                 </motion.div>
               ) : (
@@ -334,50 +344,7 @@ REGRAS ADICIONAIS:
                         {isGenerating ? "Gerando..." : "Sugestão de Oração"}
                       </Button>
                       
-                      <Button 
-                        onClick={async () => {
-                          try {
-                            const { data: { session } } = await supabase.auth.getSession();
-                            if (!session) return;
-
-                            // Resolve sender info for personalized notification
-                            const senderFullName = session.user.user_metadata?.full_name || "";
-                            const senderFirstName = senderFullName.split(" ")[0] || "Um irmão";
-                            const senderCity = session.user.user_metadata?.city || "";
-                            
-                            // Increase count and record intercession
-                            await supabase.from('prayer_requests').update({ 
-                              prayer_count: prayerRequest.prayer_count + 1 
-                            }).eq('id', prayerRequest.id);
-                            
-                            await supabase.from('prayer_intercessions').upsert({
-                              prayer_request_id: prayerRequest.id,
-                              user_id: session.user.id,
-                            }, { onConflict: 'prayer_request_id,user_id' });
-
-                            // Notify the author with personalized info
-                            if (prayerRequest.user_id) {
-                              await supabase.from('notifications').insert({
-                                user_id: prayerRequest.user_id,
-                                prayer_request_id: prayerRequest.id,
-                                message: `🙏 ${senderFirstName}${senderCity ? ` (${senderCity})` : ""} acabou de interceder pela sua causa!`,
-                              });
-                            }
-
-                            await addXp("pray");
-                            toast.success("Amém! Sua intercessão foi enviada. O autor sentirá sua paz. 🙏");
-                            fetchRandomPrayerRequest(); // Carrega a próxima
-                          } catch (err) {
-                            toast.error("Erro ao registrar oração");
-                          }
-                        }}
-                        className="gradient-divine text-primary-foreground hover:opacity-90 flex-1 min-w-[140px]"
-                      >
-                        <Heart className="w-4 h-4 mr-2 fill-current" />
-                        Eu orei por isso
-                      </Button>
-
-                      <Button onClick={fetchRandomPrayerRequest} variant="outline" disabled={isLoading} className="border-primary/20">
+                      <Button onClick={fetchRandomPrayerRequest} variant="outline" disabled={isLoading} className="border-primary/20 flex-1">
                         Próxima Causa
                       </Button>
 
@@ -388,7 +355,7 @@ REGRAS ADICIONAIS:
                            className="flex-1 rounded-xl border-primary/20 text-primary hover:bg-primary/5"
                          >
                            <Users className="w-4 h-4 mr-2" />
-                           Convidar Amigo
+                           Enviar a um amigo
                          </Button>
                          
                          <Button 
@@ -397,7 +364,7 @@ REGRAS ADICIONAIS:
                            className="flex-1 rounded-xl border-green-200 text-green-600 hover:bg-green-50"
                          >
                            <Share2 className="w-4 h-4 mr-2" />
-                           Compartilhar
+                           WhatsApp
                          </Button>
                       </div>
                     </div>
@@ -518,20 +485,9 @@ REGRAS ADICIONAIS:
             </AnimatePresence>
           </div>
 
-          {/* History Section */}
-          <div className="max-w-2xl mx-auto mt-16 pb-20 px-2">
-             {!showHistory ? (
-                <div className="text-center">
-                   <Button 
-                     variant="ghost" 
-                     onClick={() => setShowHistory(true)}
-                     className="text-primary/60 hover:text-primary text-[11px] uppercase tracking-widest font-black py-8 bg-primary/5 rounded-[2rem] border border-dashed border-primary/20 w-full hover:bg-primary/10 transition-all"
-                   >
-                     <Clock className="w-4 h-4 mr-2" />
-                     Ver meu histórico de intercessões
-                   </Button>
-                </div>
-             ) : (
+          {/* History Section Integrated above or hidden */}
+          <div className="max-w-2xl mx-auto mt-8 pb-20 px-2">
+             {showHistory && (
                 <motion.div 
                    initial={{ opacity: 0, scale: 0.95 }}
                    animate={{ opacity: 1, scale: 1 }}
@@ -542,7 +498,7 @@ REGRAS ADICIONAIS:
                          <Clock className="w-5 h-5 text-primary opacity-60" />
                          <h2 className="text-xl font-bold text-foreground opacity-80 uppercase tracking-widest text-[14px]">Intercessões Recentes</h2>
                       </div>
-                      <Button variant="ghost" size="sm" onClick={() => setShowHistory(false)} className="text-[10px] uppercase font-bold text-muted-foreground">Ocultar</Button>
+                      <Button variant="ghost" size="sm" onClick={() => setShowHistory(false)} className="text-[10px] uppercase font-bold text-muted-foreground">Fechar</Button>
                    </div>
 
                    {isIntercessionsLoading ? (
@@ -563,12 +519,12 @@ REGRAS ADICIONAIS:
                             animate={{ opacity: 1, x: 0 }} 
                             transition={{ delay: i * 0.1 }}
                           >
-                            <Card className="p-5 soft-shadow border-primary/5 bg-white/50 backdrop-blur-sm rounded-3xl">
+                            <Card className="p-5 soft-shadow border-primary/5 rounded-3xl">
                               <div className="flex justify-between items-start gap-4">
                                 <div className="flex-1">
                                   {item.prayer_title && <h4 className="text-sm font-bold mb-1 line-clamp-1">{item.prayer_title}</h4>}
                                   <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed mb-3">{item.prayer_content}</p>
-                                  <div className="flex items-center gap-2 text-[10px] text-amber-600/60 font-black uppercase tracking-wider">
+                                  <div className="flex items-center gap-2 text-[10px] text-primary/40 font-bold uppercase tracking-wider">
                                      <Clock className="w-3 h-3" />
                                      {formatTimeAgo(item.created_at)}
                                   </div>
