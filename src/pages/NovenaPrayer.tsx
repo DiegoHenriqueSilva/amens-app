@@ -146,9 +146,21 @@ const NovenaPrayer = () => {
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-background pb-32">
+      <div className="min-h-screen w-full bg-[#faf9f6] text-foreground flex flex-col relative overflow-hidden paper-texture pb-32">
+        {/* Divine Glow Elements */}
+        <motion.div 
+          animate={{ opacity: [0.03, 0.08, 0.03], scale: [1, 1.2, 1] }}
+          transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute top-[-10rem] right-[-10rem] w-[40rem] h-[40rem] rounded-full bg-[#e8c547] blur-[120px] pointer-events-none" 
+        />
+        <motion.div 
+          animate={{ opacity: [0.02, 0.06, 0.02], scale: [1, 1.1, 1] }}
+          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut", delay: 2 }}
+          className="absolute bottom-[-10rem] left-[-10rem] w-[40rem] h-[40rem] rounded-full bg-[#b8860b] blur-[120px] pointer-events-none" 
+        />
+
         {/* Header */}
-        <div className="bg-white/90 backdrop-blur-md sticky top-0 z-30 border-b border-primary/5 pt-12 pb-4 px-6">
+        <div className="bg-[#faf9f6]/90 backdrop-blur-md sticky top-0 z-30 border-b border-[#a0720a]/10 pt-12 pb-4 px-6">
           <div className="flex items-center gap-4 max-w-2xl mx-auto">
             <Button variant="ghost" size="icon" onClick={() => navigate("/novenas")} className="rounded-full hover:bg-primary/10">
               <ArrowLeft className="w-5 h-5 text-primary" />
@@ -182,17 +194,14 @@ const NovenaPrayer = () => {
               exit={{ opacity: 0, x: -20 }}
               transition={{ duration: 0.3 }}
             >
-              <Card className="p-8 soft-shadow border-primary/5 rounded-[3rem] bg-white/80 min-h-[450px] flex flex-col relative overflow-hidden">
-                {/* Background Decoration */}
-                <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-bl-[100%] pointer-events-none" />
-
-                <div className="flex items-center gap-4 mb-8 pb-6 border-b border-primary/5">
-                   <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center shadow-inner">
-                      <CurrentIcon className="w-6 h-6 text-primary" />
+              <div className="p-4 sm:p-8 min-h-[450px] flex flex-col relative overflow-hidden z-10">
+                <div className="flex items-center gap-4 mb-8 pb-6 border-b border-[#a0720a]/10">
+                   <div className="w-12 h-12 bg-[#d4a017]/10 rounded-2xl flex items-center justify-center shadow-inner">
+                      <CurrentIcon className="w-6 h-6 text-[#d4a017]" />
                    </div>
                    <div>
-                      <h2 className="text-xl font-black text-foreground tracking-tight">{steps[step].title}</h2>
-                      <p className="text-[10px] uppercase font-bold tracking-[0.2em] text-primary/60">{steps[step].subtitle}</p>
+                      <h2 className="text-xl font-black text-[#3d2800] tracking-tight">{steps[step].title}</h2>
+                      <p className="text-[10px] uppercase font-bold tracking-[0.2em] text-[#a0720a]/70">{steps[step].subtitle}</p>
                    </div>
                 </div>
 
@@ -201,8 +210,8 @@ const NovenaPrayer = () => {
                      <MercyChaplet onComplete={handleNext} />
                    ) : (
                      <p className={cn(
-                       "text-lg leading-relaxed text-foreground/90 whitespace-pre-wrap text-center py-4",
-                       step === 3 ? "italic border-l-4 border-primary/20 pl-6 text-left" : ""
+                       "text-lg leading-relaxed text-[#3d2800]/90 whitespace-pre-wrap text-center py-4",
+                       step === 3 ? "italic border-l-4 border-[#d4a017]/20 pl-6 text-left" : ""
                      )}>
                        {steps[step].content}
                      </p>
@@ -210,14 +219,14 @@ const NovenaPrayer = () => {
                 </div>
 
                 {!isInteractiveStep && (
-                  <div className="mt-12 pt-8 border-t border-primary/5 flex flex-col sm:flex-row items-center justify-between gap-4">
+                  <div className="mt-12 pt-8 border-t border-[#a0720a]/10 flex flex-col sm:flex-row items-center justify-between gap-4">
                     <div className="flex flex-col">
-                        <p className="text-[10px] text-muted-foreground font-black uppercase tracking-[0.25em]">
+                        <p className="text-[10px] text-[#3d2800]/50 font-black uppercase tracking-[0.25em]">
                           Passo {step + 1} de {steps.length}
                         </p>
                         <div className="flex gap-1 mt-1">
                           {steps.map((_, i) => (
-                            <div key={i} className={cn("h-1 rounded-full transition-all duration-300", i === step ? "w-4 bg-primary" : "w-1.5 bg-primary/10")} />
+                            <div key={i} className={cn("h-1 rounded-full transition-all duration-300", i === step ? "w-4 bg-[#d4a017]" : "w-1.5 bg-[#d4a017]/20")} />
                           ))}
                         </div>
                     </div>
@@ -227,7 +236,7 @@ const NovenaPrayer = () => {
                         <Button 
                           variant="outline"
                           onClick={() => setStep(step - 1)} 
-                          className="flex-1 sm:flex-none rounded-2xl h-14 px-6 border-primary/10 hover:bg-primary/5 text-primary flex items-center justify-center gap-2 group transition-all active:scale-95 font-bold"
+                          className="flex-1 sm:flex-none rounded-2xl h-14 px-6 border-[#d4a017]/20 hover:bg-[#d4a017]/10 text-[#d4a017] flex items-center justify-center gap-2 group transition-all active:scale-95 font-bold"
                         >
                           <ChevronLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
                           <span className="sm:inline">Voltar</span>
@@ -244,7 +253,7 @@ const NovenaPrayer = () => {
                     </div>
                   </div>
                 )}
-              </Card>
+              </div>
             </motion.div>
           </AnimatePresence>
         </div>
