@@ -152,7 +152,7 @@ export const NOVENAS: Novena[] = [
         content: '"Aproximemo-nos, portanto, com confiança do trono da graça, a fim de alcançarmos misericórdia e acharmos graça para sermos ajudados no momento oportuno."\n\nMeditação: "Apóstolo glorioso, reconheço que sou pecador e muitas vezes falhei. Mas confiando no trono da graça, recorro a ti. Alcança-me de Deus o perdão para as minhas faltas e a misericórdia para a minha situação que parece humanamente impossível de ser resolvida."' 
       },
       { 
-        day: 1, 
+        day: 8, 
         title: "Perseverança na Oração", 
         reading: "Lucas 18, 1-8", 
         content: '"Jesus contou-lhes uma parábola para mostrar a necessidade de orar sempre e nunca desfalecer... Acaso Deus não fará justiça aos seus escolhidos, que clamam por ele dia e noite?"\n\nMeditação: "São Judas Tadeu, padroeiro dos casos sem solução, não me deixes desistir de rezar. Mesmo que a resposta demore, que eu clame a Deus dia e noite com insistência. Sei que a tua poderosa intercessão diante do trono divino não me desamparará."' 
@@ -161,7 +161,7 @@ export const NOVENAS: Novena[] = [
         day: 9, 
         title: "A Glória Celestial e Ação de Graças", 
         reading: "Apocalipse 21, 1-4", 
-        content: '"Ele enxugará toda lágrima dos seus olhos. Não haverá mais morte, nem luto, nem clamor, nem dor, porque as primeiras coisas passaram."\n\nMeditação: "Neste último dia da novena, glorioso São Judas Tadeu, venho te agradecer. Entrego em tuas mãos o meu futuro. Seja qual for o desfecho deste meu pedido, que ele me aproxime da glória do Céu, onde não haverá mais dor nem sofrimento, e onde poderei louvar a Deus junto contigo por toda a eternidade."' 
+        content: '"Ele enxugará toda lágrima dos seus olhos. Não haverá mais morte, nem luto, nem clamor, nem doc, porque as primeiras coisas passaram."\n\nMeditação: "Neste último dia da novena, glorioso São Judas Tadeu, venho te agradecer. Entrego em tuas mãos o meu futuro. Seja qual for o desfecho deste meu pedido, que ele me aproxime da glória do Céu, onde não haverá mais dor nem sofrimento, e onde poderei louvar a Deus junto contigo por toda a eternidade."' 
       }
     ]
   },
@@ -241,20 +241,64 @@ export const NOVENAS: Novena[] = [
     image: "https://upload.wikimedia.org/wikipedia/commons/6/6d/Santa_Rita_Cascia.jpg",
     colors: { from: "#7e22ce", to: "#a855f7" },
     prayers: {
-      initial: "Ó poderosa e gloriosa Santa Rita, chamada Santa das causas impossíveis, advogada dos casos desesperados, refúgio na dor. Venho a vós com confiança, esperando alcançar a graça de que tanto necessito.",
-      petition: "Pelo vosso sofrimento e pela vossa obediência a Deus, ajudai-me a carregar a minha cruz. (Faça o pedido).",
-      final: "Alcançai-me a graça que vos peço, se for para a glória de Deus e salvação de minha alma. Ó Deus, que concedestes a Santa Rita a graça de amar os inimigos e de trazer na fronte os sinais da vossa paixão, concedei-nos a graça de perdoar e de sofrer por vosso amor. Por Cristo nosso Senhor. Amém."
+      initial: "Ó poderosa e gloriosa Santa Rita de Cássia, chamada Santa das causas impossíveis, advogada dos casos desesperados, auxiliadora da última hora, refúgio e abrigo na dor que arrasta para o abismo do pecado e do desespero. Com toda a confiança em vosso celestial poder, recorro a vós no caso difícil e imprevisto que oprime dolorosamente o meu coração. [Fazer o pedido da graça aqui]. Dizei-me, ó Santa Rita, não me quereis ajudar e consolar? Afastareis o vosso olhar e a vossa piedade do meu coração tão provado por esta dor? Vós, que passastes por tantas aflições, conheceis o martírio do meu coração. Alcançai-me a graça que vos peço, se for para a glória de Deus e salvação de minha alma. Amém.",
+      final: "Ó Deus, que concedestes a Santa Rita a graça de amar os inimigos e de trazer na fronte e no coração os sinais da vossa caridade e da vossa Paixão, concedei-nos a graça de perdoar aos nossos ofensores e de sofrer por vosso amor as aflições desta vida. Por Cristo, nosso Senhor. Santa Rita de Cássia, advogada das causas impossíveis, rogai por nós. Amém."
     },
     days: [
-      { day: 1, title: "Perdão", reading: "Mateus 5, 43-48", content: "Dá-me a força para perdoar os que me ofenderam, assim como tu perdoaste." },
-      { day: 2, title: "Família", reading: "Efésios 5, 21-33", content: "Que haja diálogo, respect amor verdadeiro entre os esposos." },
-      { day: 3, title: "Consolo", reading: "Mateus 5, 4", content: "Consola os que hoje choram a ausência de seus entes queridos." },
-      { day: 4, title: "Persistência", reading: "Salmo 27, 4", content: "Ensina-me a ser persistente em meus bons propósitos e a buscar a vontade do Pai." },
-      { day: 5, title: "Humildade", reading: "1 Pedro 5, 5-7", content: "Ajuda-me a ser humilde de coração, reconhecendo que tudo vem da bondade divina." },
-      { day: 6, title: "Aceitação", reading: "Colossenses 1, 24", content: "Dá-me a graça de não reclamar dos meus sofrimentos, mas de oferecê-los a Jesus." },
-      { day: 7, title: "Eucaristia", reading: "João 6, 51-58", content: "Intercede para que eu tenha um amor ardente pelo Pão do Céu." },
-      { day: 8, title: "Enfermos", reading: "Marcos 6, 53-56", content: "Olha para os que hoje sofrem no corpo e no espírito. Que a saúde lhes seja restaurada." },
-      { day: 9, title: "Fidelidade", reading: "2 Timóteo 4, 7-8", content: "Ajuda-me a ser fiel até o fim, para que possa cantar as glórias de Deus contigo." }
+      { 
+        day: 1, 
+        title: "O Perdão às Ofensas", 
+        reading: "Mateus 5, 43-44", 
+        content: '"Ouvistes que foi dito: Amarás o teu próximo e odiarás o teu inimigo. Eu, porém, vos digo: amai os vossos inimigos e orai por aqueles que vos perseguem."\n\nMeditação: "Gloriosa Santa Rita, que tivestes a força heroica de perdoar os assassinos de vosso marido e ensinar vossos filhos a fazerem o mesmo, alcançai-me de Deus a graça de um coração purificado de todo ódio e rancor. Ajudai-me a perdoar quem me ofendeu, para que eu possa também ser perdoado por Deus e minhas preces sejam ouvidas nesta causa tão difícil."' 
+      },
+      { 
+        day: 2, 
+        title: "A Vida Familiar e Matrimonial", 
+        reading: "Efésios 5, 21.25", 
+        content: '"Sujeitai-vos uns aos outros no temor de Cristo... Maridos, amai as vossas mulheres, como Cristo amou a Igreja e se entregou por ela."\n\nMeditação: "Amável Santa Rita, vós suportastes um matrimônio difícil com paciência, doçura e oração incessante, conseguindo por fim a conversão de vosso esposo. Olhai para as famílias em crise e para os casais desunidos. Intercedei pelo meu lar, para que reine a paz, a fidelidade e o amor cristão."' 
+      },
+      { 
+        day: 3, 
+        title: "A Dor da Perda e o Consolo Divino", 
+        reading: "Mateus 5, 4", 
+        content: '"Bem-aventurados os que choram, porque serão consolados."\n\nMeditação: "Ó Santa Rita, viúva e mãe enlutada, que chorastes a morte de vosso marido e, logo depois, de vossos dois filhos, vós conheceis a dor da perda e o vazio da solidão. Consolais o meu coração nas minhas tristezas e lutos. Alcançai-me a graça da conformidade com a vontade divina e fortalecei a minha esperança no Céu."' 
+      },
+      { 
+        day: 4, 
+        title: "O Desejo de Consagração a Deus", 
+        reading: "Salmo 27, 4", 
+        content: '"Uma só coisa pedi ao Senhor, só isto desejo: poder morar na casa do Senhor todos os dias da minha vida, para contemplar a beleza do Senhor e frequentar o seu templo."\n\nMeditação: "Após perderdes a vossa família, ó Santa Rita, o vosso coração voltou-se inteiramente para Deus, buscando a consagração no convento. Mesmo diante das recusas iniciais, não desististes. Inspirai em mim esse mesmo desejo ardente pelas coisas do alto e uma fé inabalável de que Deus abre portas onde o mundo fecha."' 
+      },
+      { 
+        day: 5, 
+        title: "A Obediência e a Humildade", 
+        reading: "1 Pedro 5, 5-6", 
+        content: '"Revesti-vos todos de humildade no trato mútuo, porque Deus resiste aos soberbos, mas dá a sua graça aos humildes. Humilhai-vos, pois, debaixo da poderosa mão de Deus."\n\nMeditação: "Exemplo de obediência, Santa Rita, regastes uma madeira seca no jardim do convento apenas para obedecer à vossa superiora, e Deus fez dali brotar uma videira frutífera. Ensinai-me a obedecer a Deus nas pequenas coisas e a ser humilde, confiando que Ele pode fazer florir até mesmo os desertos da minha vida."' 
+      },
+      { 
+        day: 6, 
+        title: "A Aceitação do Sofrimento e a Cruz", 
+        reading: "Colossenses 1, 24", 
+        content: '"Agora me alegro nos meus sofrimentos por vós e completo na minha carne o que falta às tribulações de Cristo pelo seu Corpo, que é a Igreja."\n\nMeditação: "Santa Rita, de tanto meditar na Paixão de Cristo, recebestes na testa a ferida de um dos espinhos de Sua coroa, suportando dores terríveis por muitos anos. Dai-me a graça de não fugir das minhas cruzes, mas de abraçá-las com amor, sabendo que o sofrimento unido a Jesus é fonte de purificação e salvação."' 
+      },
+      { 
+        day: 7, 
+        title: "O Amor à Eucaristia e à Oração", 
+        reading: "João 6, 51", 
+        content: '"Eu sou o pão vivo que desceu do céu. Quem comer deste pão viverá eternamente. E o pão que eu darei é a minha carne para a salvação do mundo."\n\nMeditação: "No final da vossa vida, Santa Rita, vosso único alimento e sustento era a Sagrada Eucaristia. Despertai em mim uma fome e sede pelo Corpo e Sangue de Jesus. Que a Missa e a oração sejam a minha força motriz para enfrentar os casos desesperados e as provações do dia a dia."' 
+      },
+      { 
+        day: 8, 
+        title: "A Intercessão pelos Doentes", 
+        reading: "Marcos 6, 56", 
+        content: '"Onde quer que ele entrasse, em aldeias, cidades ou campos, colocavam os doentes nas praças e suplicavam-lhe que os deixasse tocar ao menos na orla de sua veste. E todos os que a tocavam ficavam curados."\n\nMeditação: "Santa Rita, que no frio do inverno fizestes brotar rosas e figos frescos para alegrar os que vos visitavam, mostrai o vosso poder intercessor em favor dos doentes. Olhai para a minha enfermidade ou para os enfermos da minha família, e alcançai-nos a cura física e espiritual, conforme a vontade do Pai."' 
+      },
+      { 
+        day: 9, 
+        title: "A Vitória Final e a Glória Celestial", 
+        reading: "2 Timóteo 4, 7-8", 
+        content: '"Combati o bom combate, terminei a corrida, guardei a fé. Agora me está reservada a coroa da justiça, que o Senhor, justo Juiz, me dará naquele dia."\n\nMeditação: "Neste último dia da novena, gloriosa Santa Rita, contemplo a vossa entrada triunfal no Céu, coroada por Jesus e Maria. Intercedei pelo meu pedido impossível, mas, acima de tudo, rogai para que eu viva de tal maneira que um dia possa juntar-me a vós na glória eterna, louvando a Deus para todo o sempre. Amém."' 
+      }
     ]
   },
   {
@@ -300,7 +344,7 @@ export const NOVENAS: Novena[] = [
       { day: 5, title: "Potestades", reading: "", content: "Saudação ao Coro das Potestades: Protegei nossas almas contra as ciladas e as tentações do demônio." },
       { day: 6, title: "Virtudes", reading: "", content: "Saudação ao Coro das Virtudes: Que o Senhor nos dê força para obedecer seus mandamentos." },
       { day: 7, title: "Principados", reading: "", content: "Saudação ao Coro dos Principados: Encha nossas almas do espírito de verdadeira obediência e serviço." },
-      { day: 8, title: "Arcanjos", reading: "", content: "Saudação ao Coro dos Arcanjos: Conceda-nos o dom da perseverança na fé e nas boas obras." },
+      { day: 1, title: "Arcanjos", reading: "", content: "Saudação ao Coro dos Arcanjos: Conceda-nos o dom da perseverança na fé e nas boas obras." },
       { day: 9, title: "Anjos", reading: "", content: "Saudação ao Coro dos Anjos: Que sejamos conduzidos pelos anjos à glória eterna de Deus. Amém." }
     ]
   }
