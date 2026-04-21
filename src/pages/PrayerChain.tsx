@@ -332,11 +332,7 @@ const PrayerChain = () => {
                   <Sparkles className="text-white w-7 h-7" />
                 </div>
                 
-                <h2 className={cn(
-                  "font-serif italic font-bold text-[1.8rem] md:text-[3.2rem] text-center leading-[1.3] text-[#3d2800] max-w-3xl mx-auto drop-shadow-sm px-4 py-2 transition-all duration-700",
-                  author?.user_id === currentUser?.id && "disney-shimmer scale-105 text-[#a0720a]",
-                  author?.user_id && friendIds.has(author.user_id) && "halo-angelical"
-                )}>
+                <h2 className="font-serif italic font-bold text-[1.8rem] md:text-[3.2rem] text-center leading-[1.3] text-[#3d2800] max-w-3xl mx-auto drop-shadow-sm px-4 py-2 transition-all duration-700">
                   "{currentPrayer.phrases[currentPhraseIndex]}"
                 </h2>
                 
