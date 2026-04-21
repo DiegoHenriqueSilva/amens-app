@@ -26,7 +26,7 @@ export interface Novena {
 export const UNIVERSAL_PRAYERS = {
   opening: "Pelo sinal da Santa Cruz, livrai-nos, Deus, nosso Senhor, dos nossos inimigos. Em nome do Pai, do Filho e do Espírito Santo. Amém.",
   contrition: "Meu Deus, eu me arrependo de todo o coração de vos ter ofendido, porque sois infinitamente bom. Prometo, com o auxílio da vossa graça, esforçar-me para não mais pecar. Amém.",
-  common: `Pai Nosso: "Pai nosso que estais nos céus, santificado seja o vosso nome, venha a nós o vosso reino, seja feita a vossa vontade assim na terra como no céu. O pão nosso de cada dia nos dai hoje, perdoai-nos as nossas ofensas assim como nós perdoamos a quem nos tem ofendido, e não nos deixeis cair em tentação, mas livrai-nos do mal. Amém."\n\nAve Maria (Rezar 3 vezes): "Ave Maria, cheia de graça, o Senhor é convosco, bendita sois vós entre as mulheres e bendito é o fruto do vosso ventre, Jesus. Santa Maria, Mãe de Deus, rogai por nós pecadores, agora e na hora da nossa morte. Amém."\n\nGlória ao Pai: "Glória ao Pai, ao Filho e ao Espírito Santo. Como era no princípio, agora e sempre. Amém."`,
+  common: `Pai Nosso: "Pai nosso que estais nos céus, santificado seja o vosso nome, venha a nós o vosso reino, seja feita a vossa vontade assim na terra como no céu. O pão nosso de cada dia nos dai hoje, perdoai-nos as nossas ofensas assim como nós perdoamos a quem nos tem ofendido, e não nos deixeis cai em tentação, mas livrai-nos do mal. Amém."\n\nAve Maria: "Ave Maria, cheia de graça, o Senhor é convosco, bendita sois vós entre as mulheres e bendito é o fruto do vosso ventre, Jesus. Santa Maria, Mãe de Deus, rogai por nós pecadores, agora e na hora da nossa morte. Amém."\n\nGlória ao Pai: "Glória ao Pai, ao Filho e ao Espírito Santo. Como era no princípio, agora e sempre. Amém."`,
   blessing: "O Senhor nos abençoe, nos livre de todo o mal e nos conduza à vida eterna. Amém. Em nome do Pai, do Filho e do Espírito Santo. Amém."
 };
 
@@ -38,7 +38,7 @@ export const NOVENAS: Novena[] = [
     image: "https://upload.wikimedia.org/wikipedia/commons/1/15/Mary%2C_Untier_of_Knots_by_Schmidtner.png",
     colors: { from: "#2563eb", to: "#60a5fa" },
     prayers: {
-      initial: "Santa Maria, cheia da presença de Deus, durante os dias de tua vida aceitaste com toda a humildade a vontade do Pai, e o maligno nunca foi capaz de envolver-te com suas confusões. Junto a Teu Filho intercedeste por nossas dificuldades e, com toda a paciência, nos deste o exemplo de como desenrolar as linhas de nossa vida. E, ao se dar para sempre como nossa Mãe, pões em ordem e fazes mais claros os laços que nos unem ao Senhor. Santa Maria, Mãe de Deus e nossa Mãe, Tu que com o coração materno desatas os nós que atrapalham nossa vida, te pedimos que recebas em tuas mãos este nó [pedir a graça aqui] e que me livres das amarras e confusões com que me castiga aquele que é meu inimigo. Amém.",
+      initial: "Santa Maria, cheia da presença de Deus, durante os dias de tua vida aceitaste com toda a humildade a vontade do Pai, e o maligno nunca foi capaz de envolver-te com suas confusões. Junto a Teu Filho intercedeste por nossas dificuldades e, com toda a paciência, nos deste o exemplo de como desenrolar as lines de nossa vida. E, ao se dar para sempre como nossa Mãe, pões em ordem e fazes mais claros os laços que nos unem ao Senhor. Santa Maria, Mãe de Deus e nossa Mãe, Tu que com o coração materno desatas os nós que atrapalham nossa vida, te pedimos que recebas em tuas mãos este nó [pedir a graça aqui] e que me livres das amarras e confusões com que me castiga aquele que é meu inimigo. Amém.",
       final: "Virgem Maria, Mãe do belo amor, Mãe que jamais deixa de vir em socorro de um filho aflito. Lança teu olhar compassivo sobre mim, vê o emaranhado de nós que há em minha vida. Tu bem conheces o meu desespero, a minha dor e o quanto estou amarrado por causa destes nós. Maria, Mãe a quem Deus encarregou de desatar os nós da vida de seus filhos, confio hoje a fita da minha vida em tuas mãos. Ninguém, nem mesmo o maligno poderá tirá-la do teu precioso amparo materno. Em tuas mãos não há nó que não poderá ser desfeito. Maria, Desatadora dos Nós, rogai por nós! Amém."
     },
     days: [
@@ -105,20 +105,64 @@ export const NOVENAS: Novena[] = [
     image: "https://upload.wikimedia.org/wikipedia/commons/3/3d/Saint_Judas_Thaddeus.jpg",
     colors: { from: "#15803d", to: "#22c55e" },
     prayers: {
-      initial: "São Judas, glorioso Apóstolo, fiel servo e amigo de Jesus! A Igreja vos honra e invoca universalmente como o padroeiro dos casos desesperados, dos negócios sem remédio. Rogai por mim, que sou tão miserável. Imploro vosso auxílio imediato onde o socorro desapareceu quase por completo.",
-      petition: "São Judas Tadeu, intercedei por mim nesta necessidade urgente. (Faça o pedido).",
-      final: "Eu vos prometo, ó bendito São Judas, lembrar-me sempre deste grande favor, e nunca deixar de vos honrar como meu especial e poderoso patrono, e fazer tudo o que estiver ao meu alcance para incentivar a devoção para convosco. Amém."
+      initial: "São Judas, glorioso Apóstolo, fiel servo e amigo de Jesus! O nome do traidor foi causa de que fôsseis esquecido por muitos, mas a Igreja vos honra e invoca universalmente como o padroeiro dos casos desesperados, dos negócios sem remédio. Rogai por mim, que sou tão miserável. Fazei uso, eu vos imploro, desse privilégio particular que vos foi concedido, de trazer viável e imediato auxílio onde o socorro desapareceu quase por completo. Assisti-me nesta grande necessidade, para que eu possa receber as consolações e o auxílio do céu em todas as minhas precisões, tribulações e sofrimentos. [Fazer o pedido da graça aqui]. Amém.",
+      final: "Eu vos prometo, ó bendito São Judas, lembrar-me sempre deste grande favor, e nunca deixar de vos honrar como meu especial e poderoso patrono, e fazer tudo o que estiver ao meu alcance para incentivar a devoção para convosco. Que o Sagrado Coração de Jesus seja adorado, glorificado e amado em todo o mundo, agora e para sempre. São Judas Tadeu, rogai por nós e ouvi as nossas preces. Amém."
     },
     days: [
-      { day: 1, title: "Vocação", reading: "Mateus 4, 18-22", content: "Ajuda-me a ter coragem para responder à vontade de Deus em minha vida." },
-      { day: 2, title: "Força da fé", reading: "Marcos 11, 22-24", content: "Ensina-me a confiar no poder de Deus mesmo quando as circunstâncias parecem contrárias." },
-      { day: 3, title: "Amor ao próximo", reading: "João 15, 12-17", content: "Ajuda-me a ver o rosto do Cristo em meus irmãos, especialmente nos que sofrem." },
-      { day: 4, title: "Paciência", reading: "Romanos 5, 3-5", content: "Dá-me a paciência necessária para suportar as provas da vida com dignidade." },
-      { day: 5, title: "Esperança", reading: "Romanos 8, 24-25", content: "Que a esperança seja minha luz. Intercede para que eu nunca desista de lutar pelo bem." },
-      { day: 6, title: "Humildade", reading: "Filipenses 2, 3-8", content: "Livra-me do orgulho e da vaidade. Ensina-me que a verdadeira grandeza está em servir." },
-      { day: 7, title: "Misericórdia", reading: "Hebreus 4, 14-16", content: "Aproxima-me do trono da graça. Que eu nunca duvide do perdão de Deus." },
-      { day: 8, title: "Oração", reading: "Lucas 18, 1-8", content: "Ajuda-me a orar sem cessar e com confiança filial, sabendo que o Pai me escuta." },
-      { day: 9, title: "Glória celestial", reading: "Apocalipse 21, 1-4", content: "Que minha jornada terrena seja santa e que eu possa um dia cantar as maravilhas do Senhor." }
+      { 
+        day: 1, 
+        title: "Vocação e Resposta a Deus", 
+        reading: "Mateus 4, 18-22", 
+        content: '"Caminhando ao longo do mar da Galileia, Jesus viu dois irmãos... e disse-lhes: \'Vinde após mim, e eu farei de vós pescadores de homens\'. Eles, deixando imediatamente as redes, o seguiram."\n\nMeditação: "Glorioso São Judas Tadeu, tu ouviste o chamado de Jesus e deixaste tudo para segui-lo. Neste primeiro dia, peço-te a graça de ter um coração generoso e atento à voz de Deus. Nas minhas angústias e causas impossíveis, que eu não perca de vista que o meu principal chamado é pertencer a Cristo."' 
+      },
+      { 
+        day: 2, 
+        title: "A Força da Fé", 
+        reading: "Marcos 11, 22-24", 
+        content: '"Jesus respondeu-lhes: \'Tende fé em Deus. Em verdade vos digo: se alguém disser a esta montanha: Ergue-te e lança-te ao mar, e não duvidar em seu coração, mas crer que o que disser se realizará, assim lhe acontecerá\'."\n\nMeditação: "Amado São Judas, tu que viveste ao lado do Mestre e presenciaste Seus milagres, intercede pela minha fé vacilante. Ajuda-me a crer que, para Deus, nada é impossível. Apresento-te a montanha das minhas dificuldades, certo de que, pela tua intercessão, o Senhor a moverá."' 
+      },
+      { 
+        day: 3, 
+        title: "O Amor ao Próximo", 
+        reading: "João 15, 12-14", 
+        content: '"Este é o meu mandamento: amai-vos uns aos outros, como eu vos amei. Ninguém tem maior amor do que aquele que dá a vida por seus amigos. Vós sois meus amigos, se fizerdes o que eu vos mando."\n\nMeditação: "São Judas, apóstolo do amor, ensina-me a amar como Jesus amou. Que as minhas aflições pessoais não endureçam o meu coração para com as necessidades dos meus irmãos. Que ao buscar a tua ajuda nesta causa tão difícil, eu também seja instrumento de ajuda e compaixão para os outros."' 
+      },
+      { 
+        day: 4, 
+        title: "Paciência nas Tribulações", 
+        reading: "Romanos 5, 3-5", 
+        content: '"Gloriamo-nos até nas tribulações, sabendo que a tribulação produz a paciência, a paciência prova a fidelidade e a fidelidade comprovada produz a esperança. E a esperança não decepciona."\n\nMeditação: "Valente São Judas Tadeu, padroeiro dos desesperados, tu derramaste o teu sangue por amor a Cristo. Dá-me a paciência necessária para suportar esta pesada cruz. Quando o desespero bater à minha porta, lembra-me de que o sofrimento unido a Cristo produz frutos de salvação."' 
+      },
+      { 
+        day: 5, 
+        title: "A Esperança que não Falha", 
+        reading: "Romanos 8, 24-25", 
+        content: '"Pois fomos salvos em esperança. Ora, a esperança que se vê não é esperança; pois quem espera o que vê? Mas, se esperamos o que não vemos, nós o aguardamos com paciência."\n\nMeditação: "Ó poderoso intercessor, minha alma está cansada e o meu caso parece não ter remédio. Mas em ti, São Judas, renovo a minha esperança. Sustenta-me neste tempo de espera e não permitas que as trevas do desânimo apaguem a luz da confiança em Deus."' 
+      },
+      { 
+        day: 6, 
+        title: "Humildade e Serviço", 
+        reading: "Filipenses 2, 3-8", 
+        content: '"Não façais nada por espírito de rivalidade ou vanglória, mas, com humildade, considerai os outros superiores a vós mesmos... Tende em vós o mesmo sentimento que houve em Cristo Jesus."\n\nMeditação: "São Judas, tu foste humilde servidor do Reino de Deus. Livra-me do orgulho e da vaidade, que tantas vezes são a verdadeira raiz dos meus problemas. Concede-me um coração manso e humilde, pronto a aceitar a vontade do Pai, mesmo quando ela for contrária aos meus desejos."' 
+      },
+      { 
+        day: 7, 
+        title: "Confiança na Misericórdia", 
+        reading: "Hebreus 4, 14-16", 
+        content: '"Aproximemo-nos, portanto, com confiança do trono da graça, a fim de alcançarmos misericórdia e acharmos graça para sermos ajudados no momento oportuno."\n\nMeditação: "Apóstolo glorioso, reconheço que sou pecador e muitas vezes falhei. Mas confiando no trono da graça, recorro a ti. Alcança-me de Deus o perdão para as minhas faltas e a misericórdia para a minha situação que parece humanamente impossível de ser resolvida."' 
+      },
+      { 
+        day: 1, 
+        title: "Perseverança na Oração", 
+        reading: "Lucas 18, 1-8", 
+        content: '"Jesus contou-lhes uma parábola para mostrar a necessidade de orar sempre e nunca desfalecer... Acaso Deus não fará justiça aos seus escolhidos, que clamam por ele dia e noite?"\n\nMeditação: "São Judas Tadeu, padroeiro dos casos sem solução, não me deixes desistir de rezar. Mesmo que a resposta demore, que eu clame a Deus dia e noite com insistência. Sei que a tua poderosa intercessão diante do trono divino não me desamparará."' 
+      },
+      { 
+        day: 9, 
+        title: "A Glória Celestial e Ação de Graças", 
+        reading: "Apocalipse 21, 1-4", 
+        content: '"Ele enxugará toda lágrima dos seus olhos. Não haverá mais morte, nem luto, nem clamor, nem dor, porque as primeiras coisas passaram."\n\nMeditação: "Neste último dia da novena, glorioso São Judas Tadeu, venho te agradecer. Entrego em tuas mãos o meu futuro. Seja qual for o desfecho deste meu pedido, que ele me aproxime da glória do Céu, onde não haverá mais dor nem sofrimento, e onde poderei louvar a Deus junto contigo por toda a eternidade."' 
+      }
     ]
   },
   {
