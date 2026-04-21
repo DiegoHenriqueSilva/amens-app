@@ -11,6 +11,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { usePrayerQueue } from "@/hooks/use-prayer-queue";
 import { useFriends } from "@/hooks/use-friends";
 import { cn } from "@/lib/utils";
+import { useDailyTasks } from "@/hooks/use-daily-tasks";
 
 // Marco zero para a sincronização global (1º de Janeiro de 2024)
 const EPOCH = new Date("2024-01-01T00:00:00Z").getTime();
@@ -29,6 +30,7 @@ const PrayerChain = () => {
   const [timeOffset, setTimeOffset] = useState<number>(0);
   const [isSyncing, setIsSyncing] = useState(true);
   const [sparkles, setSparkles] = useState<{ id: number; x: number; y: number }[]>([]);
+  const { completeTask } = useDailyTasks();
   const { friends } = useFriends();
   const syncAttempted = useRef(false);
 
@@ -43,6 +45,7 @@ const PrayerChain = () => {
         // Fetch profile
         const { data: prof } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
         if (prof) setProfile(prof);
+        completeTask("live_prayer"); // User entered the live prayer chain
 
         // Check today's intention
         const today = new Date().toISOString().split('T')[0];

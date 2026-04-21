@@ -28,7 +28,7 @@ export const DAILY_TASKS: DailyTask[] = [
   { id: "send_invite", title: "Enviar um convite", xpReward: 30, route: "/profile" },
   { id: "pray_rosary", title: "Rezar um Terço", xpReward: 50, route: "/rosary-selection" },
   { id: "live_prayer", title: "Entrar na oração ao vivo", xpReward: 25, route: "/prayer-chain" },
-  { id: "share_cause", title: "Compartilhar uma causa", xpReward: 15, route: "/submit" },
+  { id: "share_cause", title: "Compartilhar uma causa", xpReward: 15, route: "/pray" },
 ];
 
 export function useDailyTasks() {

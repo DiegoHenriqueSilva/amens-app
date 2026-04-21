@@ -8,12 +8,14 @@ import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { divine_promises } from "@/data/divine_promises";
 import { cn } from "@/lib/utils";
+import { useDailyTasks } from "@/hooks/use-daily-tasks";
 
 const DivinePromise = () => {
   const navigate = useNavigate();
   const [promise, setPromise] = useState<any>(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [hasShined, setHasShined] = useState(false);
+  const { completeTask } = useDailyTasks();
 
   // Carregar do cache inicial com segurança
   useEffect(() => {
@@ -62,6 +64,7 @@ const DivinePromise = () => {
         setPromise(selectedPromise);
         localStorage.setItem("last_divine_promise", JSON.stringify(selectedPromise));
         toast.success("Uma promessa foi retirada para você! ✨");
+        completeTask("read_promise");
       } else {
         setPromise(divine_promises[0]);
       }

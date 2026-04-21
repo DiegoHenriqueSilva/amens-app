@@ -20,6 +20,7 @@ import { ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Camera, Users, Lock, Ticket } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useDailyTasks } from "@/hooks/use-daily-tasks";
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -27,6 +28,7 @@ const Profile = () => {
   const { totalXp, loading: xpLoading } = useXp();
   const [stats, setStats] = useState({ requests: 0, intercessions: 0 });
   const [savingCity, setSavingCity] = useState(false);
+  const { completeTask } = useDailyTasks();
   
   // Advanced Editing
   const [isEditing, setIsEditing] = useState(false);
@@ -607,6 +609,7 @@ const Profile = () => {
                                   const link = `${window.location.origin}/auth?ref=${user?.id}`;
                                   navigator.clipboard.writeText(link);
                                   toast.success("Convite copiado! Envie por WhatsApp. 🙏");
+                                  completeTask("send_invite");
                                }}
                              >
                                Copiar Link de Convite

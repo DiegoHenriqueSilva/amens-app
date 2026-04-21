@@ -12,6 +12,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { FriendSelector } from "@/components/FriendSelector";
 import { formatTimeAgo } from "@/lib/utils";
 import { usePushPrompt } from "@/contexts/PushPromptContext";
+import { useDailyTasks } from "@/hooks/use-daily-tasks";
 
 const FEEDBACK_OPTIONS: Record<string, { label: string; emoji: string }> = {
   success: { label: "Deu certo, obrigado pelas orações!", emoji: "🎉" },
@@ -43,6 +44,7 @@ const Pray = () => {
   const [hasRequestedCause, setHasRequestedCause] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const { triggerPushPrompt } = usePushPrompt();
+  const { completeTask } = useDailyTasks();
 
   const fetchIntercessions = async () => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -190,6 +192,7 @@ const Pray = () => {
         
         await addXp("pray");
         toast.success(`Ganhou +${XP_REWARDS.pray} pontos de fé por interceder!`);
+        completeTask("pray_cause");
         
         // Trigger push prompt
         setTimeout(() => {
@@ -239,9 +242,10 @@ const Pray = () => {
 
     const APP_URL = window.location.origin;
     const shareUrl = `${APP_URL}/auth?redirect=${encodeURIComponent(`/pray?id=${prayerRequest.id}`)}`;
-    const text = `✦ Preciso da sua intercessão ✦\n\n"${prayerRequest.content}"\n\n🙏 Una-se a mim em oração através do Améns:\n${shareUrl}`;
+    const text = `❆ Preciso da sua intercessão ❆\n\n"${prayerRequest.content}"\n\n🙏 Una-se a mim em oração através do Améns:\n${shareUrl}`;
     
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
+    completeTask("share_cause");
   };
 
   const generatePrayer = async () => {

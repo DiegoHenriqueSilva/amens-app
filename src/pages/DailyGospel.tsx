@@ -10,6 +10,7 @@ import { useXp } from "@/hooks/use-xp";
 import { getLevel, CELESTIAL_LEVELS } from "@/lib/xp";
 import { toast } from "sonner";
 import type { User as SupabaseUser } from "@supabase/supabase-js";
+import { useDailyTasks } from "@/hooks/use-daily-tasks";
 
 interface GospelData {
   verse: string; // O resumo poético principal
@@ -31,6 +32,7 @@ const DailyGospel = () => {
   const [videoId, setVideoId] = useState<string | null>(null);
   const [loadingVideo, setLoadingVideo] = useState(false);
   const [viewingYesterday, setViewingYesterday] = useState(false);
+  const { completeTask } = useDailyTasks();
 
   const now = new Date();
   const hour = now.getHours();
@@ -179,6 +181,7 @@ Responda APENAS com um objeto JSON válido no formato:
       setGospel(finalGospel);
       const cacheData = { data: finalGospel, date: todayString, liturgy: liturgiaData.liturgia };
       localStorage.setItem("daily_gospel_cache_v11", JSON.stringify(cacheData));
+      completeTask("read_gospel");
 
     } catch (err) {
       console.error("Failed to fetch daily gospel:", err);
@@ -229,10 +232,12 @@ Responda APENAS com um objeto JSON válido no formato:
               files: [file]
             });
             toast.success(mode === 'full' ? "Compartilhado completo! ✨" : "Resumo compartilhado! ✨");
+            completeTask("share_word");
             return;
           } else {
             await navigator.share(shareData);
             toast.success("Evangelho compartilhado!");
+            completeTask("share_word");
             return;
           }
         } catch (fileErr) {

@@ -8,6 +8,7 @@ import { PRAYERS, getMysteriesByDay, MISTERIOS, COROS_ANJOS, ROSARY_TYPES } from
 import { useRosaryVoice } from "@/hooks/use-rosary-voice";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { useDailyTasks } from "@/hooks/use-daily-tasks";
 
 interface Bead {
   id: number;
@@ -24,6 +25,7 @@ const RosaryPrayer = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isVoiceActive, setIsVoiceActive] = useState(false);
   const [isSwayEnabled, setIsSwayEnabled] = useState(true);
+  const { completeTask } = useDailyTasks();
 
   const mysteries = useMemo(() => {
     if (type === "misterios") return getMysteriesByDay();
@@ -101,6 +103,7 @@ const RosaryPrayer = () => {
       setCurrentIndex(prev => prev + 1);
     } else {
       toast.success("Terço finalizado. Que a paz esteja com você! 🙏");
+      completeTask("pray_rosary");
       navigate("/");
     }
   };
