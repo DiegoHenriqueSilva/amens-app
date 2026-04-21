@@ -92,63 +92,7 @@ const RosaryPrayer = () => {
     const stemCount = (type === 'misterios') ? 8 : (type === 'misericordia' ? 4 : (type === 'libertacao' ? 3 : (type === 'miguel' ? 4 : 4)));
     const loopCount = sequence.length - stemCount;
 
-    return sequence.map((b, i) => {
-      let x = 50, y = 50;
-      
-      const width = 84;  
-      const height = 54; 
-      const cornerRadius = 18;
-      const centerY = 36;
-      const bottomY = centerY + (height/2);
-      const topY = centerY - (height/2);
-      const leftX = 50 - (width/2);
-      const rightX = 50 + (width/2);
-
-      if (i < stemCount) {
-        const stemIdxFromMedal = (stemCount - 1) - i;
-        x = 50;
-        y = bottomY + (stemIdxFromMedal * 5);
-      } else {
-        const loopIdx = i - stemCount;
-        const straightW = width - 2 * cornerRadius;
-        const straightH = height - 2 * cornerRadius;
-        const arcLength = (Math.PI * 2 * cornerRadius) / 4;
-        const totalPerimeter = 2 * (straightW + straightH) + 4 * arcLength;
-        const step = totalPerimeter / (loopCount + 1);
-        let dist = (loopIdx + 1) * step;
-        
-        if (dist <= straightW / 2) {
-            x = 50 - dist; y = bottomY;
-        } else if (dist <= straightW / 2 + arcLength) {
-            const angle = (dist - straightW / 2) / arcLength * (Math.PI / 2);
-            x = leftX + cornerRadius - Math.sin(angle) * cornerRadius;
-            y = bottomY - cornerRadius + Math.cos(angle) * cornerRadius;
-        } else if (dist <= straightW / 2 + arcLength + straightH) {
-            x = leftX; y = bottomY - cornerRadius - (dist - (straightW / 2 + arcLength));
-        } else if (dist <= straightW / 2 + 2 * arcLength + straightH) {
-            const angle = (dist - (straightW / 2 + arcLength + straightH)) / arcLength * (Math.PI / 2);
-            x = leftX + cornerRadius - Math.cos(angle) * cornerRadius;
-            y = topY + cornerRadius - Math.sin(angle) * cornerRadius;
-        } else if (dist <= straightW / 2 + 2 * arcLength + straightH + straightW) {
-            x = leftX + cornerRadius + (dist - (straightW / 2 + 2 * arcLength + straightH));
-            y = topY;
-        } else if (dist <= straightW / 2 + 3 * arcLength + straightH + straightW) {
-            const angle = (dist - (straightW / 2 + 2 * arcLength + straightH + straightW)) / arcLength * (Math.PI / 2);
-            x = rightX - cornerRadius + Math.sin(angle) * cornerRadius;
-            y = topY + cornerRadius - Math.cos(angle) * cornerRadius;
-        } else if (dist <= straightW / 2 + 3 * arcLength + 2 * straightH + straightW) {
-            x = rightX; y = topY + cornerRadius + (dist - (straightW / 2 + 3 * arcLength + straightH + straightW));
-        } else if (dist <= straightW / 2 + 4 * arcLength + 2 * straightH + straightW) {
-            const angle = (dist - (straightW / 2 + 3 * arcLength + 2 * straightH + straightW)) / arcLength * (Math.PI / 2);
-            x = rightX - cornerRadius + Math.cos(angle) * cornerRadius;
-            y = bottomY - cornerRadius + Math.sin(angle) * cornerRadius;
-        } else {
-            x = rightX - cornerRadius - (dist - (straightW / 2 + 4 * arcLength + 2 * straightH + straightW));
-            y = bottomY;
-        }
-      }
-      return { ...b, id: i, x, y } as Bead;
-    });
+    return sequence.map((b, i) => ({ ...b, id: i, x: 0, y: 0 } as Bead));
   }, [type, mysteries]);
 
   const handleNext = () => {
@@ -170,46 +114,22 @@ const RosaryPrayer = () => {
 
   const { listening } = useRosaryVoice(handleNext, isVoiceActive, beads[currentIndex]?.prayer);
 
-  // --- Ornate Cross Component ---
-  const OrnateCross = ({ isActive }: { isActive: boolean }) => (
-    <div className={cn("relative w-14 h-20 flex items-center justify-center transition-all duration-700", isActive && "scale-110")}>
-        <svg viewBox="0 0 100 140" className="w-full h-full drop-shadow-2xl">
-            {/* Soft Glow */}
-            <path d="M50 10 C55 35 65 40 95 50 C65 60 55 65 50 130 C45 65 35 60 5 50 C35 40 45 35 50 10" 
-                  fill={isActive ? "rgba(251, 191, 36, 0.4)" : "transparent"} 
-                  className={cn(isActive && "gold-glow")} />
-            
-            <linearGradient id="cross-gold" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="#fff9e6" />
-                <stop offset="50%" stopColor="#fbbf24" />
-                <stop offset="100%" stopColor="#d97706" />
-            </linearGradient>
-
-            <g stroke="#8b7355" strokeWidth="1.2">
-                <rect x="42" y="10" width="16" height="120" rx="8" fill="url(#cross-gold)" />
-                <rect x="10" y="42" width="80" height="16" rx="8" fill="url(#cross-gold)" />
-                <circle cx="50" cy="50" r="10" fill="url(#cross-gold)" stroke="#8b7355" strokeWidth="1" />
-                <circle cx="50" cy="50" r="6" fill="#fff" opacity="0.4" />
-            </g>
-
-            {isActive && (
-                <g className="shimmer-effect" style={{mixBlendMode: 'overlay'}}>
-                    <rect x="42" y="10" width="16" height="120" rx="8" />
-                    <rect x="10" y="42" width="80" height="16" rx="8" />
-                </g>
-            )}
-        </svg>
-    </div>
-  );
+  // Legacy OrnateCross component removed
 
   return (
     <PageTransition>
-      <div className="h-screen w-full bg-white flex flex-col relative overflow-hidden pb-32">
-        {/* Divine Background */}
-        <div className="absolute inset-0 pointer-events-none opacity-15">
-           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[160%] h-[160%] sacred-ripple rounded-full border border-primary/5" />
-           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[100%] h-[100%] sacred-ripple rounded-full border border-primary/5 [animation-delay:-2s]" />
-        </div>
+      <div className="h-screen w-full bg-[#faf9f6] text-[#3d2800] flex flex-col relative overflow-hidden pb-32 paper-texture">
+        {/* Divine Glow Elements */}
+        <motion.div 
+          animate={{ opacity: [0.03, 0.08, 0.03], scale: [1, 1.2, 1] }}
+          transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute top-[-10rem] right-[-10rem] w-[40rem] h-[40rem] rounded-full bg-[#e8c547] blur-[120px] pointer-events-none" 
+        />
+        <motion.div 
+          animate={{ opacity: [0.02, 0.06, 0.02], scale: [1, 1.1, 1] }}
+          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut", delay: 2 }}
+          className="absolute bottom-[-10rem] left-[-10rem] w-[40rem] h-[40rem] rounded-full bg-[#b8860b] blur-[120px] pointer-events-none" 
+        />
         
         {/* Header */}
         <div className="pt-8 px-6 flex justify-between items-center z-50">
@@ -230,114 +150,64 @@ const RosaryPrayer = () => {
           </Button>
         </div>
 
+        {/* Horizontal Rosary Visualization Layer */}
+        <div className="flex flex-wrap items-center justify-center gap-1.5 px-6 z-20 mt-8 mb-2 w-full max-w-xl mx-auto">
+          {beads.map((bead, i) => {
+            const isActive = currentIndex === i;
+            const isPassed = currentIndex > i;
+            if (bead.type === "cross") {
+                return (
+                    <svg key={i} width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" 
+                         className={cn("w-5 h-5 shrink-0 transition-all mr-1", isActive ? "text-[#d4a017] scale-125" : isPassed ? "text-[#d4a017] opacity-80" : "text-[#d4a017]/40")}
+                    >
+                        <path d="M12 2v20M6 8h12"/>
+                    </svg>
+                );
+            }
+            return (
+                <div 
+                    key={i} 
+                    className={cn(
+                        "rounded-full transition-all duration-300",
+                        bead.type === "medal" ? "w-4 h-4 mx-1.5 flex items-center justify-center" : 
+                        bead.type === "large" ? "w-3 h-3 mx-1" : "w-1.5 h-1.5",
+                        isActive ? "bg-[#d4a017] scale-150 shadow-md border border-[#d4a017]" : 
+                        isPassed ? "bg-[#d4a017] opacity-80" : 
+                        (bead.type === "large" || bead.type === "medal") ? "border border-[#d4a017]/40 bg-[#d4a017]/10" : "bg-[#d4a017]/20"
+                    )}
+                >
+                    {bead.type === "medal" && <Heart className={cn("w-2.5 h-2.5", isActive || isPassed ? "text-white fill-current" : "text-[#d4a017]/40")} />}
+                </div>
+            );
+          })}
+        </div>
+
         {/* Central Space for Prayers */}
-        <div className="flex-1 relative flex items-center justify-center p-12 lg:p-32 z-10">
+        <div className="flex-1 relative flex flex-col items-center justify-center p-8 z-10 w-full min-h-[300px]">
            <AnimatePresence mode="wait">
                 <motion.div
                 key={currentIndex}
-                initial={{ opacity: 0, scale: 0.98, filter: "blur(8px)" }}
-                animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
-                exit={{ opacity: 0, scale: 1.02, filter: "blur(8px)" }}
+                initial={{ opacity: 0, y: 10, scale: 0.98, filter: "blur(4px)" }}
+                animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
+                exit={{ opacity: 0, y: -10, scale: 1.02, filter: "blur(4px)" }}
                 transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-                className="max-w-md w-full text-center space-y-6"
+                className="max-w-2xl w-full text-center space-y-6 flex flex-col justify-center min-h-[250px]"
                 >
                     {beads[currentIndex].mysteryTitle && (
-                        <div className="mb-4">
-                            <span className="text-[8px] font-black uppercase tracking-[0.5em] text-amber-500/60 block mb-1">Mistério</span>
-                            <h3 className="text-[11px] font-bold text-stone-700 uppercase tracking-[0.15em] leading-relaxed px-8">{beads[currentIndex].mysteryTitle}</h3>
-                            <div className="divider-gold w-10 mx-auto mt-3 opacity-30" />
+                        <div className="mb-6 flex flex-col justify-center items-center">
+                            <span className="text-[10px] font-black uppercase tracking-[0.3em] text-[#a0720a] bg-[#d4a017]/10 px-4 py-1.5 rounded-full shadow-sm border border-[#d4a017]/10 block mb-3">Mistério</span>
+                            <h3 className="text-xs md:text-sm font-bold text-[#3d2800] uppercase tracking-[0.15em] leading-relaxed px-8">{beads[currentIndex].mysteryTitle}</h3>
                         </div>
                     )}
                     
-                    <p className="font-serif italic text-2xl md:text-4xl text-stone-900 leading-tight px-4 font-medium drop-shadow-sm">
+                    <p className="font-serif italic text-[1.4rem] md:text-[2.2rem] text-[#3d2800] font-bold leading-[1.3] px-4 drop-shadow-sm max-w-3xl mx-auto">
                         "{beads[currentIndex].prayer}"
                     </p>
                 </motion.div>
             </AnimatePresence>
         </div>
 
-        {/* Rosary Visualization Layer */}
-        <div className="absolute inset-0 pointer-events-none z-20">
-            {/* Realistic Chain Layer */}
-            <svg className="w-full h-full absolute inset-0">
-                <defs>
-                    <linearGradient id="gold-line" x1="0%" y1="0%" x2="100%" y2="0%">
-                        <stop offset="0%" stopColor="#8b7355" />
-                        <stop offset="50%" stopColor="#d4af37" />
-                        <stop offset="100%" stopColor="#8b7355" />
-                    </linearGradient>
-                </defs>
-                {beads.map((bead, i) => {
-                    if (i === 0) return null;
-                    const prev = beads[i-1];
-                    const dx = (bead.x - prev.x);
-                    const dy = (bead.y - prev.y);
-                    const dist = Math.sqrt(dx*dx + dy*dy);
-                    const steps = Math.floor(dist * 1.4);
-                    
-                    const links = [];
-                    for(let s=1; s<steps; s++) {
-                        const px = prev.x + (dx * s/steps);
-                        const py = prev.y + (dy * s/steps);
-                        links.push(
-                            <ellipse 
-                                key={`link-${i}-${s}`}
-                                cx={`${px}%`} cy={`${py}%`}
-                                rx="1" ry="0.5"
-                                fill="none"
-                                stroke="#d4af37"
-                                strokeWidth="0.4"
-                                opacity="0.6"
-                                transform={`rotate(${Math.atan2(dy, dx) * 180 / Math.PI}, ${px}, ${py})`}
-                            />
-                        );
-                    }
-                    return <g key={`group-${i}`}>{links}</g>;
-                })}
-            </svg>
-
-            {/* Inactive & Active Beads */}
-            <div className={cn("w-full h-full relative", isSwayEnabled && "sway")}>
-                {beads.map((bead, i) => {
-                    const isActive = currentIndex === i;
-                    const isPassed = currentIndex > i;
-                    
-                    return (
-                        <motion.div
-                            key={`bead-${bead.id}`}
-                            className="absolute pointer-events-auto cursor-pointer"
-                            style={{ left: `${bead.x}%`, top: `${bead.y}%` }}
-                            onClick={() => setCurrentIndex(i)}
-                            initial={false}
-                            animate={{
-                                scale: isActive ? 1.3 : 1,
-                                opacity: 1,
-                                zIndex: isActive ? 40 : 20
-                            }}
-                        >
-                            <div className="relative -translate-x-1/2 -translate-y-1/2">
-                                {bead.type === "cross" ? (
-                                    <OrnateCross isActive={isActive} />
-                                ) : bead.type === "medal" ? (
-                                    <div className={cn("w-9 h-9 rounded-full flex items-center justify-center gold-border transition-all shadow-md", isActive ? "gold-gradient gold-glow scale-125" : "bg-white/80")}>
-                                        <Heart className={cn("w-4 h-4", isActive ? "text-white fill-current" : "text-amber-600/30")} />
-                                    </div>
-                                ) : (
-                                    <div className={cn(
-                                        "transition-all duration-500 rounded-full shadow-md",
-                                        bead.type === "large" ? "w-5 h-5" : "w-3 h-3",
-                                        isActive ? "gold-gradient gold-glow scale-125" : 
-                                        (isPassed ? "gold-gradient opacity-80" : "gold-border bg-white/90")
-                                    )}>
-                                        {isActive && <div className="absolute inset-0 rounded-full shimmer-effect" style={{mixBlendMode: 'overlay'}} />}
-                                    </div>
-                                )}
-                            </div>
-                        </motion.div>
-                    );
-                })}
-            </div>
-        </div>
+        {/* Legacy Visualization Layer Removed */}
 
         {/* Global Controls - Improved Ergonomics */}
         <div className="pb-32 px-8 flex flex-col items-center z-50">
