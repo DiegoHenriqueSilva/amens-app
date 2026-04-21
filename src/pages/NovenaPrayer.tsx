@@ -9,6 +9,7 @@ import { useNovenaState } from "@/hooks/use-novena-state";
 import { ReminderModal } from "@/components/novenas/ReminderModal";
 import PageTransition from "@/components/PageTransition";
 import { cn } from "@/lib/utils";
+import { MercyChaplet } from "@/components/novenas/MercyChaplet";
 
 const NovenaPrayer = () => {
   const { id } = useParams();
@@ -53,7 +54,7 @@ const NovenaPrayer = () => {
     { 
       title: novena.type === "mercy" ? "Terço da Misericórdia" : "Orações Comuns", 
       icon: HandHeart, 
-      content: novena.type === "mercy" ? novena.prayers.petition : UNIVERSAL_PRAYERS.common,
+      content: novena.type === "mercy" ? "" : UNIVERSAL_PRAYERS.common, // Interativo para mercy
       subtitle: "Passo 5"
     },
     { 
@@ -69,6 +70,9 @@ const NovenaPrayer = () => {
       subtitle: "Passo 7"
     },
   ];
+
+  // Identificar se é o passo do Terço Interativo
+  const isInteractiveStep = novena.type === "mercy" && step === 4;
 
   // Auto-scroll to top on step change
   useEffect(() => {
@@ -193,30 +197,36 @@ const NovenaPrayer = () => {
                 </div>
 
                 <div className="flex-1 flex flex-col justify-center">
-                   <p className={cn(
-                     "text-lg leading-relaxed text-foreground/90 whitespace-pre-wrap text-center py-4",
-                     step === 3 ? "italic border-l-4 border-primary/20 pl-6 text-left" : ""
-                   )}>
-                     {steps[step].content}
-                   </p>
+                   {isInteractiveStep ? (
+                     <MercyChaplet onComplete={handleNext} />
+                   ) : (
+                     <p className={cn(
+                       "text-lg leading-relaxed text-foreground/90 whitespace-pre-wrap text-center py-4",
+                       step === 3 ? "italic border-l-4 border-primary/20 pl-6 text-left" : ""
+                     )}>
+                       {steps[step].content}
+                     </p>
+                   )}
                 </div>
 
-                <div className="mt-12 pt-8 border-t border-primary/5 flex flex-col sm:flex-row items-center justify-between gap-4">
-                   <div className="flex flex-col">
-                      <p className="text-[10px] text-muted-foreground font-black uppercase tracking-[0.25em]">
-                        Passo {step + 1} de {steps.length}
-                      </p>
-                      <div className="flex gap-1 mt-1">
-                        {steps.map((_, i) => (
-                          <div key={i} className={cn("h-1 rounded-full transition-all duration-300", i === step ? "w-4 bg-primary" : "w-1.5 bg-primary/10")} />
-                        ))}
-                      </div>
-                   </div>
-                   <Button onClick={handleNext} className="w-full sm:w-auto rounded-2xl h-14 px-10 gradient-divine shadow-lg hover:shadow-xl flex items-center justify-center gap-3 group text-base font-bold">
-                     <span>{step < steps.length - 1 ? "Próxima Oração" : "Concluir Dia"}</span>
-                     <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                   </Button>
-                </div>
+                {!isInteractiveStep && (
+                  <div className="mt-12 pt-8 border-t border-primary/5 flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div className="flex flex-col">
+                        <p className="text-[10px] text-muted-foreground font-black uppercase tracking-[0.25em]">
+                          Passo {step + 1} de {steps.length}
+                        </p>
+                        <div className="flex gap-1 mt-1">
+                          {steps.map((_, i) => (
+                            <div key={i} className={cn("h-1 rounded-full transition-all duration-300", i === step ? "w-4 bg-primary" : "w-1.5 bg-primary/10")} />
+                          ))}
+                        </div>
+                    </div>
+                    <Button onClick={handleNext} className="w-full sm:w-auto rounded-2xl h-14 px-10 gradient-divine shadow-lg hover:shadow-xl flex items-center justify-center gap-3 group text-base font-bold transition-all active:scale-95">
+                      <span>{step < steps.length - 1 ? "Próxima Oração" : "Concluir Dia"}</span>
+                      <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                    </Button>
+                  </div>
+                )}
               </Card>
             </motion.div>
           </AnimatePresence>

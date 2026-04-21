@@ -26,7 +26,7 @@ export interface Novena {
 export const UNIVERSAL_PRAYERS = {
   opening: "Pelo sinal da Santa Cruz, livrai-nos, Deus, nosso Senhor, dos nossos inimigos. Em nome do Pai, do Filho e do Espírito Santo. Amém.",
   contrition: "Meu Deus, eu me arrependo de todo o coração de vos ter ofendido, porque sois infinitamente bom. Prometo, com o auxílio da vossa graça, esforçar-me para não mais pecar. Amém.",
-  common: `Pai Nosso: "Pai nosso que estais nos céus, santificado seja o vosso nome, venha a nós o vosso reino, seja feita a vossa vontade assim na terra como no céu. O pão nosso de cada dia nos dai hoje, perdoai-nos as nossas ofensas assim como nós perdoamos a quem nos tem ofendido, e não nos deixeis cai em tentação, mas livrai-nos do mal. Amém."\n\nAve Maria: "Ave Maria, cheia de graça, o Senhor é convosco, bendita sois vós entre as mulheres e bendito é o fruto do vosso ventre, Jesus. Santa Maria, Mãe de Deus, rogai por nós pecadores, agora e na hora da nossa morte. Amém."\n\nGlória ao Pai: "Glória ao Pai, ao Filho e ao Espírito Santo. Como era no princípio, agora e sempre. Amém."`,
+  common: `Pai Nosso: "Pai nosso que estais nos céus, santificado seja o vosso nome, venha a nós o vosso reino, seja feita a vossa vontade assim na terra como no céu. O pão nosso de cada dia nos dai hoje, perdoai-nos as nossas ofensas assim como nós perdoamos a quem nos tem ofendido, e não nos deixeis cair em tentação, mas livrai-nos do mal. Amém."\n\nAve Maria (Rezar 3 vezes): "Ave Maria, cheia de graça, o Senhor é convosco, bendita sois vós entre as mulheres e bendito é o fruto do vosso ventre, Jesus. Santa Maria, Mãe de Deus, rogai por nós pecadores, agora e na hora da nossa morte. Amém."\n\nGlória ao Pai: "Glória ao Pai, ao Filho e ao Espírito Santo. Como era no princípio, agora e sempre. Amém."`,
   blessing: "O Senhor nos abençoe, nos livre de todo o mal e nos conduza à vida eterna. Amém. Em nome do Pai, do Filho e do Espírito Santo. Amém."
 };
 
@@ -38,7 +38,7 @@ export const NOVENAS: Novena[] = [
     image: "https://upload.wikimedia.org/wikipedia/commons/1/15/Mary%2C_Untier_of_Knots_by_Schmidtner.png",
     colors: { from: "#2563eb", to: "#60a5fa" },
     prayers: {
-      initial: "Santa Maria, cheia da presença de Deus, durante os dias de tua vida aceitaste com toda a humildade a vontade do Pai, e o maligno nunca foi capaz de envolver-te com suas confusões. Junto a Teu Filho intercedeste por nossas dificuldades e, com toda a paciência, nos deste o exemplo de como desenrolar as lines de nossa vida. E, ao se dar para sempre como nossa Mãe, pões em ordem e fazes mais claros os laços que nos unem ao Senhor. Santa Maria, Mãe de Deus e nossa Mãe, Tu que com o coração materno desatas os nós que atrapalham nossa vida, te pedimos que recebas em tuas mãos este nó [pedir a graça aqui] e que me livres das amarras e confusões com que me castiga aquele que é meu inimigo. Amém.",
+      initial: "Santa Maria, cheia da presença de Deus, durante os dias de tua vida aceitaste com toda a humildade a vontade do Pai, e o maligno nunca foi capaz de envolver-te com suas confusões. Junto a Teu Filho intercedeste por nossas dificuldades e, com toda a paciência, nos deste o exemplo de como desenrolar as linhas de nossa vida. E, ao se dar para sempre como nossa Mãe, pões em ordem e fazes mais claros os laços que nos unem ao Senhor. Santa Maria, Mãe de Deus e nossa Mãe, Tu que com o coração materno desatas os nós que atrapalham nossa vida, te pedimos que recebas em tuas mãos este nó [pedir a graça aqui] e que me livres das amarras e confusões com que me castiga aquele que é meu inimigo. Amém.",
       final: "Virgem Maria, Mãe do belo amor, Mãe que jamais deixa de vir em socorro de um filho aflito. Lança teu olhar compassivo sobre mim, vê o emaranhado de nós que há em minha vida. Tu bem conheces o meu desespero, a minha dor e o quanto estou amarrado por causa destes nós. Maria, Mãe a quem Deus encarregou de desatar os nós da vida de seus filhos, confio hoje a fita da minha vida em tuas mãos. Ninguém, nem mesmo o maligno poderá tirá-la do teu precioso amparo materno. Em tuas mãos não há nó que não poderá ser desfeito. Maria, Desatadora dos Nós, rogai por nós! Amém."
     },
     days: [
@@ -173,20 +173,65 @@ export const NOVENAS: Novena[] = [
     colors: { from: "#dc2626", to: "#f87171" },
     type: "mercy",
     prayers: {
-      initial: "Deus, Pai Misericordioso, que revelaste o Teu amor no Teu Filho Jesus Cristo e o derramaste sobre nós no Espírito Santo Consolador, confiamos-Te hoje o destino do mundo e de cada homem.",
+      initial: "Expirastes, Jesus, mas a fonte da vida brotou para as almas e o oceano da misericórdia abriu-se para o mundo inteiro. Ó fonte de vida, insondável Misericórdia Divina, envolve o mundo inteiro e derrama-Te sobre nós. Ó Sangue e Água, que brotastes do Coração de Jesus como fonte de misericórdia para nós, eu confio em Vós!",
       petition: "Pai Eterno, eu Vos ofereço o Corpo e Sangue, Alma e Divindade de Vosso diletíssimo Filho, Nosso Senhor Jesus Cristo, em expiação dos nossos pecados e do mundo inteiro.\n\n(Repetir 10x): Pela Sua dolorosa Paixão, tende misericórdia de nós e do mundo inteiro.",
-      final: "Deus Santo, Deus Forte, Deus Imortal, tende piedade de nós e do mundo inteiro. (3 vezes). Jesus, eu confio em Vós!"
+      final: "Deus Eterno, em quem a misericórdia é insondável e o tesouro da compaixão inesgotável, olhai propício para nós e multiplicai em nós a Vossa misericórdia, para que, nos momentos difíceis, não desesperemos nem fiquemos abatidos, mas nos submetamos com grande confiança à Vossa santa vontade, que é Amor e a própria Misericórdia. Amém."
     },
     days: [
-      { day: 1, title: "Toda a humanidade", reading: "", content: "Hoje traze-me a humanidade inteira e mergulha-a no mar da Minha misericórdia." },
-      { day: 2, title: "Sacerdotes", reading: "", content: "Hoje traze-me as almas dos sacerdotes e religiosos e mergulha-as na Minha insondável misericórdia." },
-      { day: 3, title: "Almas fiéis", reading: "", content: "Hoje traze-me todas as almas piedosas e fiéis e mergulha-as no oceano da Minha misericórdia." },
-      { day: 4, title: "Pagãos", reading: "", content: "Hoje traze-me os pagãos e aqueles que ainda não Me conhecem." },
-      { day: 5, title: "Afastados", reading: "", content: "Hoje traze-me as almas dos que se afastaram da Minha Igreja." },
-      { day: 6, title: "Almas mansas", reading: "", content: "Hoje traze-me as almas mansas e humildes e as almas das criancinhas." },
-      { day: 7, title: "Veneradores", reading: "", content: "Hoje traze-me as almas que veneram e glorificam de maneira especial a Minha misericórdia." },
-      { day: 8, title: "Almas do purgatório", reading: "", content: "Hoje traze-me as almas que se encontram na prisão do purgatório." },
-      { day: 9, title: "Almas tíbias", reading: "", content: "Hoje traze-me as almas tíbias e mergulha-as no abismo da Minha misericórdia." }
+      { 
+        day: 1, 
+        title: "Por toda a humanidade, especialmente os pecadores", 
+        reading: "", 
+        content: 'Palavras de Jesus: "Hoje, traz-Me a humanidade inteira, especialmente todos os pecadores, e mergulha-os no oceano da Minha misericórdia. Com isso consolarás a Minha amarga tristeza em que Me afreia a perda das almas."\n\nOração: Misericordiosíssimo Jesus, cuja natureza é ter piedade de nós e perdoar-nos, não olheis para os nossos pecados, mas para a confiança que depositamos na Vossa infinita bondade.' 
+      },
+      { 
+        day: 2, 
+        title: "Pelas almas dos sacerdotes e religiosos", 
+        reading: "", 
+        content: 'Palavras de Jesus: "Hoje, traz-Me as almas dos sacerdotes e religiosos e mergulha-as na Minha insondável misericórdia. Foram elas que Me deram forças para suportar a amarga Paixão."\n\nOração: Misericordiosíssimo Jesus, de quem procede tudo o que é bom, multiplicai as Vossas graças nas almas dos sacerdotes e religiosos, para que realizem dignas obras de misericórdia.' 
+      },
+      { 
+        day: 3, 
+        title: "Pelas almas piedosas e fiéis", 
+        reading: "", 
+        content: 'Palavras de Jesus: "Hoje, traz-Me todas as almas piedosas e fiéis e mergulha-as no oceano da Minha misericórdia. Estas almas consolaram-Me no Caminho da Cruz."\n\nOração: Misericordiosíssimo Jesus, que do tesouro da Vossa misericórdia concedeis a todos em abundância as Vossas graças, recebei-nos na morada do Vosso Coração compassivo.' 
+      },
+      { 
+        day: 4, 
+        title: "Pelos pagãos e pelos que ainda não conhecem a Jesus", 
+        reading: "", 
+        content: 'Palavras de Jesus: "Hoje, traz-Me os pagãos e aqueles que ainda não Me conhecem. Pensei neles também na Minha amarga Paixão, e o seu futuro zelo consolou o Meu Coração."\n\nOração: Piadosíssimo Jesus, que sois a luz de todo o mundo, recebei na morada do Vosso Coração as almas dos pagãos e daqueles que ainda não Vos conhecem.' 
+      },
+      { 
+        day: 5, 
+        title: "Pelas almas dos que se separaram da Igreja", 
+        reading: "", 
+        content: 'Palavras de Jesus: "Hoje, traz-Me as almas dos que se separaram da Minha Igreja e mergulha-os no oceano da Minha misericórdia. Na Minha amarga Paixão, elas dilaceravam o Meu Corpo e o Meu Coração."\n\nOração: Misericordiosíssimo Jesus, que sois a própria Bondade, não negueis a luz àqueles que Vos pedem. Recebei na morada do Vosso Coração as almas dos que se separaram da Igreja.' 
+      },
+      { 
+        day: 6, 
+        title: "Pelas almas mansas, humildes e das criancinhas", 
+        reading: "", 
+        content: 'Palavras de Jesus: "Hoje, traz-Me as almas mansas e humildes, assim como as almas das criancinhas, e mergulha-as na Minha misericórdia. Elas são as mais semelhantes ao Meu Coração."\n\nOração: Misericordiosíssimo Jesus, que dissestes: \'Aprendei de Mim que sou manso e humilde de Coração\', recebei as almas mansas e humildes e as das criancinhas.' 
+      },
+      { 
+        day: 7, 
+        title: "Pelas almas que veneram e glorificam a Misericórdia de Deus", 
+        reading: "", 
+        content: 'Palavras de Jesus: "Hoje, traz-Me as almas que veneram e glorificam de maneira especial a Minha misericórdia e mergulha-as nela. Estas almas sofreram mais com a Minha Paixão e penetraram mais profundamente no Meu espírito."\n\nOração: Misericordiosíssimo Jesus, cujo Coração é o próprio Amor, recebei na morada do Vosso Coração as almas que veneram e exaltam a grandeza da Vossa misericórdia.' 
+      },
+      { 
+        day: 8, 
+        title: "Pelas almas do purgatório", 
+        reading: "", 
+        content: 'Palavras de Jesus: "Hoje, traz-Me as almas que se encontram na prisão do purgatório e mergulha-as no abismo da Minha misericórdia. Que as torrentes do Meu Sangue refresquem a sua ardor."\n\nOração: Misericordiosíssimo Jesus, que dissestes que quereis misericórdia, levo à morada do Vosso Coração compassivo as almas do purgatório, que Vos são muito queridas.' 
+      },
+      { 
+        day: 9, 
+        title: "Pelas almas tíbias (frias/indiferentes)", 
+        reading: "", 
+        content: 'Palavras de Jesus: "Hoje, traz-Me as almas tíbias e mergulha-as no abismo da Minha misericórdia. Estas almas ferem mais dolorosamente o Meu Coração."\n\nOração: Piadosíssimo Jesus, que sois a própria compaixão, trazei para a morada do Vosso Coração as almas tíbias. Que nestas almas se aqueça o Vosso puro amor.' 
+      }
     ]
   },
   {
