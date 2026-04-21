@@ -53,7 +53,7 @@ const BottomNav = () => {
   const navItems = [
     { path: "/", icon: Home, label: "Início" },
     { path: "/messages", icon: Mail, label: "Mensagens", badge: unreadCount },
-    { path: "/prayer-chain", icon: LinkIcon, label: "Corrente" },
+    { path: "/prayer-chain", icon: LinkIcon, label: "Oração ao vivo" },
     { path: "/friends", icon: Users, label: "Amigos", badge: requests?.length || 0 },
     { path: "/profile", icon: User, label: "Perfil" },
   ];

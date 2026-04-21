@@ -105,27 +105,24 @@ export const usePrayerQueue = (currentPrayerId: string | undefined, currentPhras
     return null;
   }, [currentPrayerId, currentPhraseIndex, globalTime]);
 
-  const author = useMemo(() => {
-    if (currentPhraseIndex === 0) return null; // Rule 1: First phrase has no author (The Liturgy)
-    if (!currentPhraseTimestamp) return null;
+  const recentContributors = useMemo(() => {
+    const all = Object.entries(contributions)
+      .map(([ts, c]) => ({ ...c, timestamp: parseInt(ts) }))
+      .sort((a, b) => b.timestamp - a.timestamp); // most recent updates first
 
-    const contrib = contributions[currentPhraseTimestamp];
-    
-    if (contrib) {
-      return contrib;
+    const unique: Contributor[] = [];
+    const seen = new Set();
+    for (const c of all) {
+      const key = c.user_id || c.name;
+      if (!seen.has(key)) {
+        seen.add(key);
+        unique.push(c);
+      }
+      if (unique.length >= 3) break; // Mostra até 3 pessoas recentes
     }
-
-    // Default to random fake name if no real contribution (Pilot Logic)
-    // Seed using the timestamp to ensure everyone sees the SAME random name
-    const seed = parseInt(currentPhraseTimestamp);
-    const nameIndex = Math.floor(seed / PHRASE_DURATION) % COMMON_NAMES.length;
-    const cityIndex = (Math.floor(seed / PHRASE_DURATION) + 5) % PR_CITIES_100K.length;
     
-    return { 
-      name: COMMON_NAMES[nameIndex], 
-      city: PR_CITIES_100K[cityIndex] 
-    };
-  }, [currentPhraseTimestamp, currentPhraseIndex, contributions]);
+    return unique;
+  }, [contributions]);
 
-  return { author, isLoading };
+  return { recentContributors, isLoading };
 };

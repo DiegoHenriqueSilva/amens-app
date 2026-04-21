@@ -256,7 +256,7 @@ const Index = () => {
                     <h2 className="text-lg font-bold mb-2">Novenas</h2>
                     <p className="text-xs text-muted-foreground leading-tight mb-4 font-medium">Escolha uma novena para seguir com fé</p>
                   </div>
-                  <Button size="sm" className="w-full rounded-full text-xs py-5 font-bold shadow-sm border-0" style={{background: 'linear-gradient(135deg, #8b4513, #a0522d)', color: '#fff8e1'}}>
+                  <Button size="sm" className="w-full rounded-full text-xs py-5 font-bold shadow-sm border-0" style={{background: 'linear-gradient(135deg, #9c6f1c, #b88a30)', color: '#fff8e1'}}>
                     <BookOpen className="w-3 h-3 mr-2" />
                     Iniciar
                   </Button>
@@ -268,7 +268,7 @@ const Index = () => {
               <Link to="/rosary-selection">
                 <Card className="p-6 h-full text-center flex flex-col items-center justify-between border-primary/5 soft-shadow hover:bg-white transition-colors rounded-[2rem] border-dashed border-primary/20">
                   <div className="w-14 h-14 bg-transparent rounded-full flex items-center justify-center mb-4 overflow-hidden">
-                    <img src="/backgrounds/bg-3.png" alt="Sagrado Terço" className="w-full h-full object-cover rounded-full drop-shadow-md" />
+                    <img src="https://a-static.mlcdn.com.br/800x600/terco-sagrado-coracao-de-jesus-pai-nosso-8mm-principe-da-paz/shoppingdafe/16008667435/13f74b6e0e27b035b50fca5800bedd04.jpeg" alt="Sagrado Terço" className="w-full h-full object-cover rounded-full drop-shadow-md" />
                   </div>
                   <div>
                     <h2 className="text-lg font-bold mb-2">Sagrado Terço</h2>

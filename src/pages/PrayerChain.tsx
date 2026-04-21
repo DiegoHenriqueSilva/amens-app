@@ -137,7 +137,8 @@ const PrayerChain = () => {
     return { currentPrayer: PRAYERS[0], currentPhraseIndex: 0, progress: 0 };
   }, [globalTime]);
 
-  const { author, isLoading: queueLoading } = usePrayerQueue(currentPrayer?.id, currentPhraseIndex, globalTime);
+  const { recentContributors, isLoading: queueLoading } = usePrayerQueue(currentPrayer?.id, currentPhraseIndex, globalTime);
+  const [hasClickedOrarJunto, setHasClickedOrarJunto] = useState(false);
 
   const handleOrarJunto = async () => {
     if (!currentUser) {
@@ -208,6 +209,7 @@ const PrayerChain = () => {
 
       if (foundSlot) {
         localStorage.setItem('last_pray_click', Date.now().toString());
+        setHasClickedOrarJunto(true);
       } else {
         toast({ title: "Fluxo Intenso", description: "Todos os próximos slots estão ocupados. Tente novamente!" });
       }
@@ -288,7 +290,7 @@ const PrayerChain = () => {
                 >
                   <form onSubmit={handleSubmitIntention} className="relative group mb-2">
                     <Input 
-                      placeholder={currentUser ? "Pelo que oramos hoje?" : "Entrar para enviar intenção"}
+                      placeholder={currentUser ? "Escreva uma intenção de oração" : "Entrar para enviar intenção"}
                       value={intention}
                       onChange={(e) => setIntention(e.target.value)}
                       className="bg-white/80 border-[#d4a017]/20 py-6 pl-6 pr-14 rounded-[2rem] text-[#3d2800] soft-shadow font-semibold text-sm focus-visible:ring-[#d4a017]/30"
@@ -338,19 +340,22 @@ const PrayerChain = () => {
                   "{currentPrayer.phrases[currentPhraseIndex]}"
                 </h2>
                 
-                {author && !queueLoading && (
+                {recentContributors.length > 0 && !queueLoading && (
                   <motion.div
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="mt-8 flex flex-col items-center"
+                    className="mt-8 flex flex-col items-center gap-1.5"
                   >
-                    <p className={cn(
-                      "text-[#a0720a] font-black text-[10px] md:text-[12px] text-center uppercase tracking-[0.4em] opacity-80 px-4 py-2 transition-all",
-                      author?.user_id === currentUser?.id && "text-primary opacity-100 scale-110 font-bold",
-                      author?.user_id && friendIds.has(author.user_id) && "text-friend-accent opacity-100 scale-110"
-                    )}>
-                      — {author.name}, {author.city} —
-                    </p>
+                    <p className="text-[#a0720a] text-[10px] uppercase tracking-[0.3em] font-bold mb-1 opacity-70">Unidos em oração agora:</p>
+                    {recentContributors.map((contrib, i) => (
+                      <p key={i} className={cn(
+                        "text-[#3d2800]/70 font-bold text-[12px] md:text-[14px] text-center tracking-wide px-4 transition-all",
+                        contrib?.user_id === currentUser?.id && "text-primary scale-105 drop-shadow-sm",
+                        contrib?.user_id && friendIds.has(contrib.user_id) && "text-friend-accent scale-105 drop-shadow-sm"
+                      )}>
+                        {contrib.name} — entrou na oração
+                      </p>
+                    ))}
                   </motion.div>
                 )}
               </motion.div>
@@ -398,24 +403,26 @@ const PrayerChain = () => {
             </AnimatePresence>
            </div>
 
-           <motion.div 
-             whileHover={{ scale: 1.05 }} 
-             whileTap={{ scale: 0.95 }}
-             className="relative z-30 mb-6"
-           >
-             <Button 
-               onClick={handleOrarJunto}
-               className="rounded-full shadow-2xl bg-white/95 backdrop-blur-md hover:bg-white text-[#d4a017] border-2 border-[#d4a017]/30 flex items-center gap-4 px-10 py-8 group transition-all"
+           {!hasClickedOrarJunto && (
+             <motion.div 
+               whileHover={{ scale: 1.05 }} 
+               whileTap={{ scale: 0.95 }}
+               className="relative z-30 mb-6"
              >
-               <div className="flex flex-col items-center">
-                 <span className="text-[16px] font-black uppercase tracking-[0.2em] text-[#3d2800] group-hover:text-primary">Orar junto</span>
-                 <span className="text-[10px] font-bold uppercase tracking-widest opacity-40">Unir sua voz</span>
-               </div>
-               <div className="w-11 h-11 bg-[#d4a017]/10 rounded-full flex items-center justify-center group-hover:bg-[#d4a017]/20 transition-colors">
-                 <Heart className="w-6 h-6 text-[#d4a017] fill-current" />
-               </div>
-             </Button>
-           </motion.div>
+               <Button 
+                 onClick={handleOrarJunto}
+                 className="rounded-full shadow-2xl bg-white/95 backdrop-blur-md hover:bg-white text-[#d4a017] border-2 border-[#d4a017]/30 flex items-center gap-4 px-10 py-8 group transition-all"
+               >
+                 <div className="flex flex-col items-center">
+                   <span className="text-[16px] font-black uppercase tracking-[0.2em] text-[#3d2800] group-hover:text-primary">Orar junto</span>
+                   <span className="text-[10px] font-bold uppercase tracking-widest opacity-40">Unir sua voz</span>
+                 </div>
+                 <div className="w-11 h-11 bg-[#d4a017]/10 rounded-full flex items-center justify-center group-hover:bg-[#d4a017]/20 transition-colors">
+                   <Heart className="w-6 h-6 text-[#d4a017] fill-current" />
+                 </div>
+               </Button>
+             </motion.div>
+           )}
 
            <div className="flex flex-col items-center gap-3">
               <div className="flex items-center gap-3 bg-white/40 backdrop-blur-sm px-4 py-1.5 rounded-full border border-black/5">
