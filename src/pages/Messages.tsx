@@ -8,11 +8,14 @@ import PageTransition from "@/components/PageTransition";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { formatTimeAgo } from "@/lib/utils";
+import { usePushPrompt } from "@/contexts/PushPromptContext";
 
 const Messages = () => {
   const navigate = useNavigate();
   const [notifications, setNotifications] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const { triggerPushPrompt } = usePushPrompt();
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -21,6 +24,11 @@ const Messages = () => {
         return;
       }
       fetchNotifications(session.user.id);
+      
+      // Delay push prompt slightly to not conflict with page animate-in
+      setTimeout(() => {
+         triggerPushPrompt("Fique sabendo quando te enviarem mensagens, autorize as notificações");
+      }, 1500);
     });
   }, [navigate]);
 

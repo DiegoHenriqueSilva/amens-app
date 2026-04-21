@@ -24,6 +24,7 @@ import NovenaPrayer from "./pages/NovenaPrayer";
 import RosarySelection from "./pages/RosarySelection";
 import RosaryPrayer from "./pages/RosaryPrayer";
 import BottomNav from "./components/BottomNav";
+import { PushPromptProvider } from "./contexts/PushPromptContext";
 
 const queryClient = new QueryClient();
 
@@ -46,11 +47,12 @@ const App = () => {
 
   return (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <div className="min-h-screen relative pb-28">
+    <PushPromptProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <div className="min-h-screen relative pb-28">
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/pray" element={<Pray />} />
@@ -74,6 +76,7 @@ const App = () => {
         </div>
       </BrowserRouter>
     </TooltipProvider>
+    </PushPromptProvider>
   </QueryClientProvider>
   );
 };

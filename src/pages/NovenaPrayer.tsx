@@ -10,6 +10,7 @@ import { ReminderModal } from "@/components/novenas/ReminderModal";
 import PageTransition from "@/components/PageTransition";
 import { cn } from "@/lib/utils";
 import { MercyChaplet } from "@/components/novenas/MercyChaplet";
+import { usePushPrompt } from "@/contexts/PushPromptContext";
 
 const NovenaPrayer = () => {
   const { id } = useParams();
@@ -21,6 +22,7 @@ const NovenaPrayer = () => {
   const [showReminder, setShowReminder] = useState(false);
   const [showConclusion, setShowConclusion] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const { triggerPushPrompt } = usePushPrompt();
 
   if (!novena) return null;
 
@@ -103,6 +105,10 @@ const NovenaPrayer = () => {
   const handleConfirmReminder = (time: string) => {
     setReminder(time);
     navigate("/novenas");
+    // Trigger push prompt right after navigating
+    setTimeout(() => {
+        triggerPushPrompt("Não perca sua prece amanhã, autorize as notificações");
+    }, 500);
   };
 
   if (showConclusion) {

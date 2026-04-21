@@ -11,6 +11,7 @@ import { useNavigate } from "react-router-dom";
 import { useXp } from "@/hooks/use-xp";
 import { XP_REWARDS } from "@/lib/xp";
 import PageTransition from "@/components/PageTransition";
+import { usePushPrompt } from "@/contexts/PushPromptContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { formatTimeAgo } from "@/lib/utils";
 
@@ -34,6 +35,7 @@ const Submit = () => {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { addXp } = useXp();
+  const { triggerPushPrompt } = usePushPrompt();
   
   // History states
   const [prayers, setPrayers] = useState<any[]>([]);
@@ -233,7 +235,13 @@ const Submit = () => {
       await addXp("submit");
       toast.success(`Pedido enviado! Ganhou +${XP_REWARDS.submit} pontos de fé`);
       setFormData({ title: "", content: "", location: "" });
-      setTimeout(() => navigate("/"), 2000);
+      
+      // Trigger push prompt
+      setTimeout(() => {
+         triggerPushPrompt("Saiba quando alguém orar por seu pedido, autorize as notificações");
+      }, 800);
+
+      setTimeout(() => navigate("/"), 3000); // give a bit more time before navigating
     } catch (error: any) {
       console.error('Error submitting prayer request:', error);
       toast.error(`Erro técnico: ${error.message || JSON.stringify(error)}`);

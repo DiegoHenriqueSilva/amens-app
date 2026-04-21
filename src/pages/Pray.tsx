@@ -11,6 +11,7 @@ import PageTransition from "@/components/PageTransition";
 import { motion, AnimatePresence } from "framer-motion";
 import { FriendSelector } from "@/components/FriendSelector";
 import { formatTimeAgo } from "@/lib/utils";
+import { usePushPrompt } from "@/contexts/PushPromptContext";
 
 const FEEDBACK_OPTIONS: Record<string, { label: string; emoji: string }> = {
   success: { label: "Deu certo, obrigado pelas orações!", emoji: "🎉" },
@@ -41,6 +42,7 @@ const Pray = () => {
   const { addXp } = useXp();
   const [hasRequestedCause, setHasRequestedCause] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
+  const { triggerPushPrompt } = usePushPrompt();
 
   const fetchIntercessions = async () => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -188,6 +190,11 @@ const Pray = () => {
         
         await addXp("pray");
         toast.success(`Ganhou +${XP_REWARDS.pray} pontos de fé por interceder!`);
+        
+        // Trigger push prompt
+        setTimeout(() => {
+          triggerPushPrompt("Deseja saber quando esta pessoa atualizar o status do pedido? Autorize as notificações e acompanhe.");
+        }, 1200);
       } else {
         toast.info("Não há causas disponíveis no momento");
       }
