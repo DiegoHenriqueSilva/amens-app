@@ -112,8 +112,15 @@ const Messages = () => {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.05 }}
-                    onClick={() => markAsRead(notif.id)}
-                    className="cursor-pointer"
+                    onClick={() => {
+                      markAsRead(notif.id);
+                      if (notif.prayer_request_id) {
+                        navigate(`/pray?id=${notif.prayer_request_id}`);
+                      } else if (notif.message.toLowerCase().includes('interceder')) {
+                        navigate('/pray');
+                      }
+                    }}
+                    className="cursor-pointer active:scale-95 transition-transform"
                   >
                     <Card className={`p-6 border-primary/5 soft-shadow transition-all rounded-[1.8rem] relative overflow-hidden ${notif.is_read ? 'bg-white/40' : 'bg-white/80 border-primary/15 shadow-md scale-[1.01]'}`}>
                        {!notif.is_read && (
