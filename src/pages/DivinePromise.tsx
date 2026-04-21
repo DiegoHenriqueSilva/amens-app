@@ -9,15 +9,27 @@ import { toast } from "sonner";
 import { divine_promises } from "@/data/divine_promises";
 import { cn } from "@/lib/utils";
 import { useDailyTasks } from "@/hooks/use-daily-tasks";
+import { InviteGatePopup } from "@/components/InviteGatePopup";
+import { supabase } from "@/integrations/supabase/client";
 
 const DivinePromise = () => {
   const navigate = useNavigate();
   const [promise, setPromise] = useState<any>(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [hasShined, setHasShined] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const { completeTask } = useDailyTasks();
 
-  // Carregar do cache inicial com segurança
+  // Mark read_promise task as done when user enters this page
+  useEffect(() => {
+    completeTask("read_promise");
+  }, []);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setIsAuthenticated(!!session?.user);
+    });
+  }, []);
   useEffect(() => {
     try {
       const cached = localStorage.getItem("last_divine_promise");
@@ -64,7 +76,7 @@ const DivinePromise = () => {
         setPromise(selectedPromise);
         localStorage.setItem("last_divine_promise", JSON.stringify(selectedPromise));
         toast.success("Uma promessa foi retirada para você! ✨");
-        completeTask("read_promise");
+        // (task already counted on mount)
       } else {
         setPromise(divine_promises[0]);
       }
@@ -231,6 +243,7 @@ const DivinePromise = () => {
             </AnimatePresence>
           </main>
         </div>
+        <InviteGatePopup isAuthenticated={isAuthenticated} />
       </div>
     </PageTransition>
   );

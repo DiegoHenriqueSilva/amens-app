@@ -11,6 +11,7 @@ import { getLevel, CELESTIAL_LEVELS } from "@/lib/xp";
 import { toast } from "sonner";
 import type { User as SupabaseUser } from "@supabase/supabase-js";
 import { useDailyTasks } from "@/hooks/use-daily-tasks";
+import { InviteGatePopup } from "@/components/InviteGatePopup";
 
 interface GospelData {
   verse: string; // O resumo poético principal
@@ -37,6 +38,11 @@ const DailyGospel = () => {
   const now = new Date();
   const hour = now.getHours();
   const isBeforeSix = hour < 6;
+
+  // Mark read_gospel task as done when user enters this page
+  useEffect(() => {
+    completeTask("read_gospel");
+  }, []);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -181,7 +187,7 @@ Responda APENAS com um objeto JSON válido no formato:
       setGospel(finalGospel);
       const cacheData = { data: finalGospel, date: todayString, liturgy: liturgiaData.liturgia };
       localStorage.setItem("daily_gospel_cache_v11", JSON.stringify(cacheData));
-      completeTask("read_gospel");
+      // (task is already counted on page mount)
 
     } catch (err) {
       console.error("Failed to fetch daily gospel:", err);
@@ -415,6 +421,7 @@ Responda APENAS com um objeto JSON válido no formato:
             </motion.div>
           ) : null}
         </div>
+        <InviteGatePopup isAuthenticated={!!user} />
       </div>
     </PageTransition>
   );

@@ -13,6 +13,7 @@ import { FriendSelector } from "@/components/FriendSelector";
 import { formatTimeAgo } from "@/lib/utils";
 import { usePushPrompt } from "@/contexts/PushPromptContext";
 import { useDailyTasks } from "@/hooks/use-daily-tasks";
+import { InviteGatePopup } from "@/components/InviteGatePopup";
 
 const FEEDBACK_OPTIONS: Record<string, { label: string; emoji: string }> = {
   success: { label: "Deu certo, obrigado pelas orações!", emoji: "🎉" },
@@ -45,6 +46,7 @@ const Pray = () => {
   const [showHistory, setShowHistory] = useState(false);
   const { triggerPushPrompt } = usePushPrompt();
   const { completeTask } = useDailyTasks();
+  const [currentUser, setCurrentUser] = useState<any>(null);
 
   const fetchIntercessions = async () => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -99,9 +101,8 @@ const Pray = () => {
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) {
-        navigate(`/auth?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`);
-      }
+      setCurrentUser(session?.user ?? null);
+      // Don't redirect — allow unauthenticated users to view shared prayer requests
     });
   }, [navigate]);
 
@@ -229,6 +230,7 @@ const Pray = () => {
       if (error) throw error;
 
       toast.success(`Convite enviado para ${selectedIds.length} ${selectedIds.length === 1 ? 'amigo' : 'amigos'}! 🙏`);
+      completeTask("share_cause");
       setFriendSelectorOpen(false);
     } catch (error) {
       console.error("Error sending invites:", error);
@@ -240,8 +242,10 @@ const Pray = () => {
     if (!prayerRequest) return;
 
     const APP_URL = window.location.origin;
-    const shareUrl = `${APP_URL}/auth?redirect=${encodeURIComponent(`/pray?id=${prayerRequest.id}`)}`;
-    const text = `❆ Preciso da sua intercessão ❆\n\n"${prayerRequest.content}"\n\n🙏 Una-se a mim em oração através do Améns:\n${shareUrl}`;
+    const shareUrl = `${APP_URL}/pray?id=${prayerRequest.id}`;
+    const authorName = prayerRequest.author_name ? prayerRequest.author_name : "Um fiel";
+    const location = prayerRequest.location ? ` (${prayerRequest.location})` : "";
+    const text = `❆ Pedido de Oração ❆\n\nDe: ${authorName}${location}\n\n"${prayerRequest.content}"\n\n🙏 Ore por esta causa no Améns:\n${shareUrl}`;
     
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
     completeTask("share_cause");
@@ -565,6 +569,7 @@ REGRAS ADICIONAIS:
              )}
           </div>
         </div>
+        <InviteGatePopup isAuthenticated={!!currentUser} />
       </div>
     </PageTransition>
   );
