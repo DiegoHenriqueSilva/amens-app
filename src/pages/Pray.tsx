@@ -1,8 +1,8 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Sparkles, Heart, ArrowLeft, Users, Share2, MessageCircle, Clock } from "lucide-react";
+import { Sparkles, Heart, ArrowLeft, Users, Share2, MessageCircle, Clock, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useXp } from "@/hooks/use-xp";
@@ -315,7 +315,7 @@ REGRAS ADICIONAIS:
                     </div>
                   </Card>
                 </motion.div>
-              ) : !prayerRequest ? (
+              ) : isLoading || !prayerRequest ? (
                 <motion.div key="empty" variants={fadeUp} initial="initial" animate="animate" exit="exit">
                   <Card className="p-12 text-center soft-shadow border-primary/10">
                     <Loader2 className="w-10 h-10 animate-spin text-primary mx-auto mb-4" />
@@ -550,6 +550,7 @@ REGRAS ADICIONAIS:
       </div>
     </PageTransition>
   );
+
 };
 
 export default Pray;
