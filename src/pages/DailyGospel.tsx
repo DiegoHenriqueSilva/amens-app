@@ -323,7 +323,7 @@ Responda APENAS com um objeto JSON válido no formato:
                     className="border-primary/20 text-primary hover:bg-primary/5 w-full rounded-full py-6 text-sm"
                   >
                     <Share2 className="w-4 h-4 mr-3" />
-                    Enviar Texto Completo
+                    Compartilhar
                   </Button>
                 </div>
                 
