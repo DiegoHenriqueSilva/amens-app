@@ -17,17 +17,18 @@ export interface DailyTask {
   id: DailyTaskType;
   title: string;
   xpReward: number;
+  route: string;
 }
 
 export const DAILY_TASKS: DailyTask[] = [
-  { id: "pray_cause", title: "Orar por uma causa", xpReward: 10 },
-  { id: "read_gospel", title: "Ler o Evangelho do dia", xpReward: 15 },
-  { id: "read_promise", title: "Ler uma Divina Promessa", xpReward: 10 },
-  { id: "share_word", title: "Compartilhar Palavra Divina", xpReward: 20 },
-  { id: "send_invite", title: "Enviar um convite", xpReward: 30 },
-  { id: "pray_rosary", title: "Rezar um Terço", xpReward: 50 },
-  { id: "live_prayer", title: "Entrar na oração ao vivo", xpReward: 25 },
-  { id: "share_cause", title: "Compartilhar uma causa", xpReward: 15 },
+  { id: "pray_cause", title: "Orar por uma causa", xpReward: 10, route: "/pray" },
+  { id: "read_gospel", title: "Ler o Evangelho do dia", xpReward: 15, route: "/daily-gospel" },
+  { id: "read_promise", title: "Ler uma Divina Promessa", xpReward: 10, route: "/divine-promise" },
+  { id: "share_word", title: "Compartilhar Palavra Divina", xpReward: 20, route: "/daily-gospel" },
+  { id: "send_invite", title: "Enviar um convite", xpReward: 30, route: "/profile" },
+  { id: "pray_rosary", title: "Rezar um Terço", xpReward: 50, route: "/rosary-selection" },
+  { id: "live_prayer", title: "Entrar na oração ao vivo", xpReward: 25, route: "/prayer-chain" },
+  { id: "share_cause", title: "Compartilhar uma causa", xpReward: 15, route: "/submit" },
 ];
 
 export function useDailyTasks() {

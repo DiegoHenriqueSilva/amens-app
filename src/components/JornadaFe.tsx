@@ -1,19 +1,35 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { Card } from "./ui/card";
-import { CheckCircle2, ChevronDown, ChevronUp, Sparkles, BookOpen, HeartHandshake, Share2, Crown } from "lucide-react";
-import { useState } from "react";
+import { CheckCircle2, ChevronDown, ChevronUp, Sparkles, Crown } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { useDailyTasks, DAILY_TASKS } from "@/hooks/use-daily-tasks";
-import { Progress } from "./ui/progress";
 import { cn } from "@/lib/utils";
 
 export const JornadaFe = () => {
   const [isExpanded, setIsExpanded] = useState(false);
   const { completedTasks, totalCompleted } = useDailyTasks();
+  const navigate = useNavigate();
+  const cardRef = useRef<HTMLDivElement>(null);
   
   const isCrowned = totalCompleted >= 5;
 
+  // Click outside to collapse
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (cardRef.current && !cardRef.current.contains(event.target as Node)) {
+        setIsExpanded(false);
+      }
+    };
+    if (isExpanded) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [isExpanded]);
+
   return (
-    <Card className="mx-6 mt-4 p-1 rounded-[2rem] bg-gradient-to-br from-white/90 to-white/60 border border-primary/20 soft-shadow backdrop-blur-md overflow-hidden relative">
+    <div ref={cardRef}>
+      <Card className="mx-6 mt-4 p-1 rounded-[2rem] bg-gradient-to-br from-white/90 to-white/60 border border-primary/20 soft-shadow backdrop-blur-md overflow-hidden relative">
       <div 
         className="px-5 py-4 cursor-pointer flex items-center justify-between"
         onClick={() => setIsExpanded(!isExpanded)}
@@ -51,28 +67,33 @@ export const JornadaFe = () => {
             exit={{ height: 0, opacity: 0 }}
             className="overflow-hidden border-t border-primary/5"
           >
-            <div className="p-5 space-y-3">
-                <p className="text-xs text-muted-foreground text-center mb-4 leading-relaxed px-2">
-                    Complete pelo menos 5 ações diárias para fortalecer sua coroa de fé e receber <strong>+100 Pontos extras!</strong>
+            <div className="px-4 py-3 space-y-1">
+                <p className="text-[11px] text-muted-foreground text-center mb-2 leading-relaxed px-1">
+                    Complete pelo menos 5 ações diárias para fortalecer sua coroa de fé e receber <strong className="text-[#8b6508]">+100 Pontos extras!</strong>
                 </p>
-                <div className="grid grid-cols-1 gap-2">
+                <div className="grid grid-cols-1 gap-1">
                     {DAILY_TASKS.map((task) => {
                         const isDone = completedTasks.includes(task.id);
                         return (
                             <div 
                                 key={task.id} 
+                                onClick={() => {
+                                  if (!isDone) {
+                                    navigate(task.route);
+                                  }
+                                }}
                                 className={cn(
-                                    "flex items-center justify-between p-3 rounded-2xl border transition-all", 
-                                    isDone ? "bg-primary/5 border-primary/20" : "bg-white border-transparent hover:border-primary/10"
+                                    "flex items-center justify-between px-3 py-2 rounded-xl transition-all cursor-pointer group", 
+                                    isDone ? "bg-primary/5 border border-primary/10" : "bg-transparent border border-transparent hover:bg-white/50"
                                 )}
                             >
-                                <span className={cn("text-xs font-semibold", isDone ? "text-primary/70 line-through decoration-primary/30" : "text-foreground")}>
-                                    {task.title} <span className="opacity-50 text-[10px]">+{task.xpReward} XP</span>
+                                <span className={cn("text-[11px] font-semibold transition-colors", isDone ? "text-primary/60 line-through decoration-primary/20" : "text-foreground group-hover:text-primary")}>
+                                    {task.title} <span className="opacity-40 text-[9px] font-bold ml-1">+{task.xpReward} XP</span>
                                 </span>
                                 {isDone ? (
-                                    <CheckCircle2 className="w-5 h-5 text-green-500" />
+                                    <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
                                 ) : (
-                                    <div className="w-5 h-5 rounded-full border-2 border-primary/10" />
+                                    <div className="w-4 h-4 rounded-full border-[1.5px] border-primary/20 shrink-0 group-hover:border-primary/40 transition-colors" />
                                 )}
                             </div>
                         );
@@ -82,6 +103,7 @@ export const JornadaFe = () => {
           </motion.div>
         )}
       </AnimatePresence>
-    </Card>
+      </Card>
+    </div>
   );
 };
