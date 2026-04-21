@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, ChevronRight, CheckCircle2, Sparkles, BookOpen, Quote, Heart, HandHeart, ShieldCheck } from "lucide-react";
+import { ArrowLeft, ChevronRight, ChevronLeft, CheckCircle2, Sparkles, BookOpen, Quote, Heart, HandHeart, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { NOVENAS, UNIVERSAL_PRAYERS } from "@/data/novenas";
@@ -221,10 +221,27 @@ const NovenaPrayer = () => {
                           ))}
                         </div>
                     </div>
-                    <Button onClick={handleNext} className="w-full sm:w-auto rounded-2xl h-14 px-10 gradient-divine shadow-lg hover:shadow-xl flex items-center justify-center gap-3 group text-base font-bold transition-all active:scale-95">
-                      <span>{step < steps.length - 1 ? "Próxima Oração" : "Concluir Dia"}</span>
-                      <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                    </Button>
+                    
+                    <div className="flex items-center gap-3 w-full sm:w-auto">
+                      {step > 0 && (
+                        <Button 
+                          variant="outline"
+                          onClick={() => setStep(step - 1)} 
+                          className="flex-1 sm:flex-none rounded-2xl h-14 px-6 border-primary/10 hover:bg-primary/5 text-primary flex items-center justify-center gap-2 group transition-all active:scale-95 font-bold"
+                        >
+                          <ChevronLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+                          <span className="sm:inline">Voltar</span>
+                        </Button>
+                      )}
+                      
+                      <Button 
+                        onClick={handleNext} 
+                        className="flex-[2] sm:flex-none rounded-2xl h-14 px-10 gradient-divine shadow-lg hover:shadow-xl flex items-center justify-center gap-3 group text-base font-bold transition-all active:scale-95"
+                      >
+                        <span>{step < steps.length - 1 ? "Próxima Oração" : "Concluir Dia"}</span>
+                        <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                      </Button>
+                    </div>
                   </div>
                 )}
               </Card>
