@@ -118,7 +118,7 @@ const RosaryPrayer = () => {
 
   return (
     <PageTransition>
-      <div className="h-screen w-full bg-[#faf9f6] text-[#3d2800] flex flex-col relative overflow-hidden pb-32 paper-texture">
+      <div className="h-[100dvh] w-full bg-[#faf9f6] text-[#3d2800] flex flex-col relative overflow-hidden paper-texture">
         {/* Divine Glow Elements */}
         <motion.div 
           animate={{ opacity: [0.03, 0.08, 0.03], scale: [1, 1.2, 1] }}
@@ -132,7 +132,7 @@ const RosaryPrayer = () => {
         />
         
         {/* Header */}
-        <div className="pt-8 px-6 flex justify-between items-center z-50">
+        <div className="pt-8 px-6 flex justify-between items-center z-50 shrink-0">
           <Button variant="ghost" size="icon" onClick={() => navigate("/rosary-selection")} className="rounded-full bg-white/40 hover:bg-white shadow-sm border border-primary/5">
             <ArrowLeft className="w-5 h-5 text-stone-500" />
           </Button>
@@ -151,7 +151,7 @@ const RosaryPrayer = () => {
         </div>
 
         {/* Horizontal Rosary Visualization Layer */}
-        <div className="flex flex-wrap items-center justify-center gap-1.5 px-6 z-20 mt-8 mb-2 w-full max-w-xl mx-auto">
+        <div className="flex flex-wrap items-center justify-center gap-1 px-4 z-20 mt-6 mb-2 w-full max-w-xl mx-auto shrink-0">
           {beads.map((bead, i) => {
             const isActive = currentIndex === i;
             const isPassed = currentIndex > i;
@@ -169,7 +169,7 @@ const RosaryPrayer = () => {
                     key={i} 
                     className={cn(
                         "rounded-full transition-all duration-300",
-                        bead.type === "medal" ? "w-4 h-4 mx-1.5 flex items-center justify-center" : 
+                        bead.type === "medal" ? "w-4 h-4 mx-1 flex items-center justify-center" : 
                         bead.type === "large" ? "w-3 h-3 mx-1" : "w-1.5 h-1.5",
                         isActive ? "bg-[#d4a017] scale-150 shadow-md border border-[#d4a017]" : 
                         isPassed ? "bg-[#d4a017] opacity-80" : 
@@ -183,7 +183,7 @@ const RosaryPrayer = () => {
         </div>
 
         {/* Central Space for Prayers */}
-        <div className="flex-1 relative flex flex-col items-center justify-center p-8 z-10 w-full min-h-[300px]">
+        <div className="flex-1 relative flex flex-col items-center justify-start py-8 px-4 z-10 w-full min-h-0 overflow-y-auto style-scrollbar">
            <AnimatePresence mode="wait">
                 <motion.div
                 key={currentIndex}
@@ -191,26 +191,24 @@ const RosaryPrayer = () => {
                 animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
                 exit={{ opacity: 0, y: -10, scale: 1.02, filter: "blur(4px)" }}
                 transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-                className="max-w-2xl w-full text-center space-y-6 flex flex-col justify-center min-h-[250px]"
+                className="max-w-2xl w-full text-center space-y-6 flex flex-col justify-start pb-8"
                 >
                     {beads[currentIndex].mysteryTitle && (
-                        <div className="mb-6 flex flex-col justify-center items-center">
+                        <div className="mb-4 flex flex-col justify-center items-center">
                             <span className="text-[10px] font-black uppercase tracking-[0.3em] text-[#a0720a] bg-[#d4a017]/10 px-4 py-1.5 rounded-full shadow-sm border border-[#d4a017]/10 block mb-3">Mistério</span>
                             <h3 className="text-xs md:text-sm font-bold text-[#3d2800] uppercase tracking-[0.15em] leading-relaxed px-8">{beads[currentIndex].mysteryTitle}</h3>
                         </div>
                     )}
                     
-                    <p className="font-serif italic text-[1.4rem] md:text-[2.2rem] text-[#3d2800] font-bold leading-[1.3] px-4 drop-shadow-sm max-w-3xl mx-auto">
+                    <p className="font-serif italic text-[1.2rem] sm:text-[1.4rem] md:text-[2rem] text-[#3d2800] font-bold leading-[1.3] px-2 drop-shadow-sm max-w-3xl mx-auto whitespace-pre-wrap">
                         "{beads[currentIndex].prayer}"
                     </p>
                 </motion.div>
             </AnimatePresence>
         </div>
 
-        {/* Legacy Visualization Layer Removed */}
-
         {/* Global Controls - Improved Ergonomics */}
-        <div className="pb-32 px-8 flex flex-col items-center z-50">
+        <div className="px-8 pb-10 pt-6 flex flex-col items-center z-50 shrink-0 bg-gradient-to-t from-[#faf9f6] via-[#faf9f6]/95 to-transparent">
             {/* Listening HUD */}
             {listening && isVoiceActive && (
                 <div className="mb-6 flex items-center gap-3 px-6 py-2 bg-white/90 backdrop-blur-md rounded-full border border-amber-200 shadow-lg">
