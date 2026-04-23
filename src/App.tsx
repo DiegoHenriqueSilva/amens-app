@@ -20,6 +20,7 @@ import Community from "./pages/Community";
 import Tree from "./pages/Tree";
 import Messages from "./pages/Messages";
 import Friends from "./pages/Friends";
+import Terco from "./pages/Terco";
 
 const queryClient = new QueryClient();
 
@@ -57,6 +58,7 @@ const App = () => {
           <Route path="/tree" element={<Tree />} />
           <Route path="/messages" element={<Messages />} />
           <Route path="/friends" element={<Friends />} />
+          <Route path="/terco" element={<Terco />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
