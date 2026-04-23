@@ -16,7 +16,7 @@ export function XpBadge({ totalXp, userName, avatarUrl }: XpBadgeProps) {
   const levelIndex = CELESTIAL_LEVELS.findIndex(l => l.name === level.name);
   
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-2 group cursor-pointer transition-colors hover:bg-black/5 p-2 rounded-2xl -m-2">
       <div className="flex items-center gap-4">
         <div className="w-12 h-12 bg-secondary/50 rounded-xl flex items-center justify-center text-2xl shadow-inner overflow-hidden border border-primary/10">
           {avatarUrl ? (
@@ -45,8 +45,8 @@ export function XpBadge({ totalXp, userName, avatarUrl }: XpBadgeProps) {
              )}
           </div>
         </div>
-        <div className="w-10 h-10 border border-primary/10 rounded-xl flex items-center justify-center text-primary/40">
-           <BookOpen className="w-5 h-5" />
+        <div className="w-14 h-14 flex items-center justify-center overflow-visible relative flex-shrink-0">
+           <img src="/livro_3d.png" alt="Sagração" className="w-full h-full object-contain transition-all duration-500 drop-shadow-sm group-active:drop-shadow-[0_0_20px_rgba(255,215,0,1)] group-active:brightness-125 group-active:scale-110" />
         </div>
       </div>
     </div>

@@ -281,8 +281,17 @@ const Submit = () => {
             <Card className="max-w-2xl mx-auto p-8 soft-shadow border-primary/10">
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div>
-                  <Label htmlFor="title" className="text-base">Título do Pedido *</Label>
-                  <Input id="title" placeholder="Ex: Cura para meu filho Miguel" value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })} className="mt-2" maxLength={100} required />
+                  <div className="flex items-center justify-between mb-2">
+                    <Label htmlFor="title" className="text-base">Título (Opcional)</Label>
+                    <div className="w-10 h-10 overflow-visible relative flex-shrink-0">
+                      <img 
+                        src="/enviar_pergaminho_3d.png" 
+                        alt="Pergaminho solitário" 
+                        className={`w-full h-full object-contain transition-all duration-500 ${isSubmitting ? 'drop-shadow-[0_0_25px_rgba(255,215,0,1)] brightness-125 scale-110' : 'drop-shadow-sm'}`} 
+                      />
+                    </div>
+                  </div>
+                  <Input id="title" placeholder="Ex: Cura para meu filho Miguel" value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })} maxLength={100} />
                 </div>
                 <div>
                   <Label htmlFor="content" className="text-base">Seu Pedido de Oração *</Label>

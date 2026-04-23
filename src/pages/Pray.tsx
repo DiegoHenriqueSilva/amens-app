@@ -331,9 +331,14 @@ REGRAS ADICIONAIS:
                 </motion.div>
               ) : isLoading || !prayerRequest ? (
                 <motion.div key="empty" variants={fadeUp} initial="initial" animate="animate" exit="exit">
-                  <Card className="p-12 text-center soft-shadow border-primary/10">
-                    <Loader2 className="w-10 h-10 animate-spin text-primary mx-auto mb-4" />
-                    <p className="text-muted-foreground">Buscando uma causa para você interceder...</p>
+                  <Card className="group p-12 text-center soft-shadow border-primary/10 transition-colors">
+                    <motion.div animate={{ scale: [1, 1.08, 1] }} transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }} className="w-20 h-20 mx-auto mb-5 bg-transparent flex items-center justify-center overflow-visible relative">
+                      <img src="/estrela_3d.png" alt="Estrela brilhante" className="w-full h-full object-contain drop-shadow-md transition-all duration-500 group-active:drop-shadow-[0_0_30px_rgba(255,215,0,1)] group-active:brightness-125 group-active:scale-110" />
+                    </motion.div>
+                    <h2 className="text-2xl font-semibold mb-4 text-foreground">Clique para receber uma causa</h2>
+                    <Button onClick={fetchRandomPrayerRequest} disabled={isLoading} size="lg" className="gradient-divine text-primary-foreground hover:opacity-90">
+                      {isLoading ? "Buscando..." : "Sortear Causa e Orar"}
+                    </Button>
                   </Card>
                 </motion.div>
               ) : (
