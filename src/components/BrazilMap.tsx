@@ -15,15 +15,15 @@ const BrazilMap: React.FC<BrazilMapProps> = ({ onStateClick, selectedState }) =>
   return (
     <Card className="p-2 sm:p-4 border-primary/10 bg-white/50 backdrop-blur-md rounded-[2.5rem] overflow-hidden relative soft-shadow border-2">
       <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent pointer-events-none" />
-      <div className="w-full relative z-10 flex justify-center min-h-[300px]">
+      <div className="w-full relative z-10 flex justify-center min-h-[450px]">
         <TooltipProvider delayDuration={50}>
           <ComposableMap
             projection="geoMercator"
             projectionConfig={{ 
-              scale: 550, 
+              scale: 850, 
               center: [-54, -15] 
             }}
-            className="w-full h-full max-w-[500px]"
+            className="w-full h-full"
           >
             <Geographies geography={geoUrl}>
               {({ geographies }) =>
