@@ -31,12 +31,6 @@ export const CELESTIAL_LEVELS: CelestialLevel[] = [
   { name: "Cedro", emoji: "🌲", minXp: 2760 },
   { name: "Estrela da Manhã", emoji: "✨", minXp: 3100 },
   { name: "Elo da Vida", emoji: "🔗", minXp: 3460 },
-  { name: "Intercessor", emoji: "🤝", minXp: 3840 },
-  { name: "Anjo", emoji: "👼", minXp: 4240 },
-  { name: "Arcanjo", emoji: "⚡", minXp: 4660 },
-  { name: "Serafim", emoji: "🔥", minXp: 5100 },
-  { name: "Querubim", emoji: "✨", minXp: 5560 },
-  { name: "Árvore da Vida", emoji: "🌳", minXp: 6040 },
 ];
 
 export function getLevel(totalXp: number): CelestialLevel {
