@@ -167,6 +167,7 @@ const Profile = () => {
       id: user.id,
       full_name: editData.fullName,
       state: editData.state,
+      city: editData.city,
       parish: editData.parish,
       show_real_name: editData.showRealName,
       display_name: editData.showRealName ? editData.displayName : null,
