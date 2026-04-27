@@ -182,7 +182,7 @@ const Community = () => {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.1 }}
-            className="mb-8 space-y-4"
+            className="mb-6 space-y-2"
           >
             <div className="flex items-center gap-2 px-2">
               <MapPin className="w-4 h-4 text-primary" />
