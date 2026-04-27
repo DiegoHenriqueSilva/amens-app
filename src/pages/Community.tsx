@@ -369,7 +369,7 @@ const Community = () => {
                                  className="w-28 h-28 mx-auto bg-white rounded-full flex items-center justify-center shadow-2xl border-4 border-primary/5 relative mb-4"
                                >
                                  <img 
-                                   src="/beautiful_catholic_church_illustration_1777251568032.png" 
+                                   src="/church.png" 
                                    alt="Igreja" 
                                    className="w-24 h-24 object-contain"
                                  />
