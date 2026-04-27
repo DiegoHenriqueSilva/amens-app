@@ -46,10 +46,6 @@ const Index = () => {
     }
   };
 
-  const fetchProfile = async (userId: string) => {
-    const { data } = await supabase.from('profiles').select('full_name, avatar_url').eq('id', userId).single();
-    if (data) setProfile(data);
-  };
 
   useEffect(() => {
     // Safety check for supabase connection
