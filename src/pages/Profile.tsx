@@ -564,23 +564,8 @@ const Profile = () => {
                   </div>
 
                   {(() => {
-                    const totalEarnedInvites = 2 + (levelIndex * 2);
-                    const usedInvites = invitedUsers.length;
-                    const availableInvites = Math.max(0, totalEarnedInvites - usedInvites);
-
                     return (
                       <>
-                        <div className="flex justify-between items-center bg-primary/5 p-4 rounded-2xl border border-primary/10 mb-6">
-                           <div>
-                              <p className="text-xs uppercase font-bold text-primary/70 tracking-widest">Disponíveis</p>
-                              <h3 className="text-3xl font-black text-foreground">{availableInvites}</h3>
-                           </div>
-                           <div className="text-right">
-                              <p className="text-[10px] text-muted-foreground uppercase tracking-widest">Usados: {usedInvites}</p>
-                              <p className="text-[10px] text-muted-foreground uppercase tracking-widest">Ganhos (Nível {levelIndex}): {totalEarnedInvites}</p>
-                           </div>
-                        </div>
-
                         {loadingInvited ? (
                           <div className="py-12 text-center space-y-4">
                             <div className="w-8 h-8 border-4 border-primary/30 border-t-primary rounded-full animate-spin mx-auto" />
