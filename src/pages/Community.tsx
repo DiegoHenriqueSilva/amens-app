@@ -45,26 +45,8 @@ const Community = () => {
 
   useEffect(() => {
     fetchGlobalStats();
-    fetchRecentActivities();
     fetchCurrentUser();
     fetchFriends();
-    
-    // Subscribe to new intercessions for real-time feel
-    const channel = supabase
-      .channel("public-activities")
-      .on(
-        "postgres_changes",
-        { event: "INSERT", schema: "public", table: "prayer_intercessions" },
-        () => {
-          fetchGlobalStats();
-          fetchRecentActivities();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
   }, []);
 
   const fetchGlobalStats = async () => {
@@ -74,47 +56,6 @@ const Community = () => {
     setTotalPrayers(count || 0);
   };
 
-  const fetchRecentActivities = async () => {
-    setLoading(true);
-    // Fetch intercessions first
-    const { data: intercessions } = await supabase
-      .from("prayer_intercessions")
-      .select("*")
-      .order("created_at", { ascending: false })
-      .limit(15);
-
-    if (intercessions && intercessions.length > 0) {
-      const userIds = intercessions.map(i => i.user_id).filter(Boolean);
-      const prayerRequestIds = intercessions.map(i => i.prayer_request_id).filter(Boolean);
-
-      // Fetch profiles
-      const { data: profiles } = await supabase
-        .from("profiles" as any)
-        .select("id, full_name, city, show_real_name, display_name, avatar_url")
-        .in("id", userIds);
-      
-      const profileMap = new Map(((profiles || []) as any[]).map(p => [p.id, p]));
-
-      // Fetch prayer requests
-      const { data: requests } = await supabase
-        .from("prayer_requests")
-        .select("id, location, author_name")
-        .in("id", prayerRequestIds);
-      
-      const requestsMap = new Map((requests || []).map(r => [r.id, r]));
-
-      const combined = intercessions.map(i => ({
-        ...i,
-        profiles: profileMap.get(i.user_id),
-        prayer_requests: requestsMap.get(i.prayer_request_id)
-      }));
-
-      setActivities(combined);
-    } else {
-      setActivities([]);
-    }
-    setLoading(false);
-  };
   
   const fetchCurrentUser = async () => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -481,67 +422,6 @@ const Community = () => {
             </Card>
           </motion.div>
 
-          {/* Faith Wall / Feed */}
-          <div className="space-y-6">
-            <div className="flex items-center justify-between px-2">
-               <div className="flex items-center gap-2">
-                 <TrendingUp className="w-4 h-4 text-primary" />
-                 <h2 className="text-xs uppercase font-bold tracking-widest text-foreground/70">Mural da Fé em Tempo Real</h2>
-               </div>
-               <span className="flex items-center gap-1.5">
-                 <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-                 <span className="text-[10px] font-bold text-green-600 uppercase">Ao Vivo</span>
-               </span>
-            </div>
-
-            <div className="space-y-4">
-              <AnimatePresence mode="popLayout">
-                {loading ? (
-                  [1, 2, 3].map(i => (
-                    <Card key={i} className="p-5 border-primary/5 bg-white/40 rounded-3xl animate-pulse h-20" />
-                  ))
-                ) : activities.length > 0 ? (
-                  activities.map((activity, index) => {
-                    const firstName = activity.profiles?.show_real_name 
-                      ? (activity.profiles?.display_name || activity.profiles?.full_name?.split(" ")[0] || "Um intercessor")
-                      : "Um intercessor";
-                    const city = activity.profiles?.city || activity.prayer_requests?.location || "Lugar Sagrado";
-                    
-                    return (
-                      <motion.div
-                        key={activity.id}
-                        initial={{ opacity: 0, x: -10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: index * 0.05 }}
-                      >
-                        <Card className="p-5 flex items-center gap-4 border-primary/5 soft-shadow bg-white/60 rounded-[1.8rem] hover:bg-white transition-all transform hover:-translate-y-0.5">
-                          <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-primary/70 border border-primary/10 overflow-hidden">
-                             <Avatar className="w-full h-full rounded-2xl">
-                                <AvatarImage src={activity.profiles?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${activity.user_id}`} className="object-cover" />
-                                <AvatarFallback className="bg-secondary text-primary">
-                                   <UserIcon className="w-6 h-6" />
-                                </AvatarFallback>
-                             </Avatar>
-                          </div>
-                          <div className="flex-1">
-                            <p className="text-[13px] font-medium leading-tight text-foreground/90">
-                              <span className="text-primary font-bold">{firstName}</span> de <span className="font-bold">{city}</span> acabou de interceder por uma causa.
-                            </p>
-                            <p className="text-[10px] text-muted-foreground mt-1 font-bold">{formatTimeAgo(activity.created_at)}</p>
-                          </div>
-                          <Heart className="w-4 h-4 text-primary/30 fill-primary/5" />
-                        </Card>
-                      </motion.div>
-                    );
-                  })
-                ) : (
-                  <div className="text-center py-10 opacity-40">
-                    <p className="text-sm italic">O silêncio é prece, mas a comunidade logo se moverá... 🙏</p>
-                  </div>
-                )}
-              </AnimatePresence>
-            </div>
-          </div>
 
           {/* Top Intercessors - Teaser */}
           <motion.div 
