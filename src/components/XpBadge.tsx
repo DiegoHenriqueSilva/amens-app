@@ -78,23 +78,22 @@ export function XpBadge({ totalXp, userName, avatarUrl }: XpBadgeProps) {
             {userName && <p className="text-sm font-black uppercase tracking-widest truncate max-w-[150px]" style={{color: '#5a3e0a'}}>{userName.split(' ')[0]}</p>}
             <span className="text-xs text-muted-foreground font-medium ml-auto">{totalXp} Pontos de Fé</span>
           </div>
-          <div className="flex flex-col gap-0.5 mb-2">
-            <span className="text-[10px] font-black text-[#5a3e0a]/60 uppercase tracking-[0.2em]">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-[10px] font-black text-[#5a3e0a]/60 uppercase tracking-[0.2em] whitespace-nowrap">
               Nível {displayLevel}
             </span>
-            <div className="flex items-center gap-2">
-              {displayLevel <= 20 ? (
-                <img 
-                  src={iconPath} 
-                  alt={level.name} 
-                  className="h-9 w-auto object-contain drop-shadow-sm -ml-0.5" 
-                />
-              ) : (
-                <h3 className="font-black text-[#5a3e0a] text-lg">
-                  "{level.name}"
-                </h3>
-              )}
-            </div>
+            {displayLevel <= 20 && (
+              <img 
+                src={iconPath} 
+                alt={level.name} 
+                className="h-6 w-auto object-contain drop-shadow-sm" 
+              />
+            )}
+            {displayLevel > 20 && (
+              <h3 className="font-black text-[#5a3e0a] text-xs">
+                "{level.name}"
+              </h3>
+            )}
           </div>
           <Progress value={progress} className="h-2 bg-secondary border border-primary/5" />
           <div className="flex justify-between items-center mt-1.5">

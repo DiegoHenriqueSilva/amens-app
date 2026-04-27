@@ -332,16 +332,14 @@ const Profile = () => {
                 Nível {levelIndex + 1}
               </span>
             </div>
-            <div className="flex flex-col items-center gap-1 mb-4">
+            <div className="flex items-center justify-center gap-2 mb-4">
               <p className="text-[10px] text-muted-foreground font-black uppercase tracking-[0.3em]">Nível {levelIndex + 1}</p>
-              {levelIndex + 1 <= 20 ? (
+              {levelIndex + 1 <= 20 && (
                 <img 
                   src={`/level-icons/${levelIndex + 1}.png`} 
                   alt={level.name} 
-                  className="h-12 w-auto object-contain drop-shadow-md" 
+                  className="h-7 w-auto object-contain drop-shadow-sm" 
                 />
-              ) : (
-                <span className="text-xl font-black text-primary uppercase tracking-widest">"{level.name}"</span>
               )}
             </div>
 
