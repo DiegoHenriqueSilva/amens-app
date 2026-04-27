@@ -322,17 +322,24 @@ const Profile = () => {
                 animate={{ scale: [1, 1.1, 1] }}
                 transition={{ duration: 2, repeat: Infinity }}
               >
-                Nível {levelIndex}
+                Nível {levelIndex + 1}
               </motion.div>
             </div>
             
             <div className="flex items-center justify-center gap-3 mb-1">
               <h1 className="text-3xl font-bold text-foreground text-soft-outline">{fullName}</h1>
               <span className="text-xs font-bold text-primary/70 bg-primary/10 border border-primary/20 px-2.5 py-1 rounded-full tracking-wide whitespace-nowrap">
-                Nível {levelIndex}
+                Nível {levelIndex + 1}
               </span>
             </div>
-            <p className="text-sm text-muted-foreground font-medium uppercase tracking-widest mb-3">Nível {levelIndex} "{level.name}"</p>
+            <div className="flex items-center justify-center gap-2 mb-3">
+              <p className="text-sm text-muted-foreground font-bold uppercase tracking-widest">Nível {levelIndex + 1}</p>
+              {levelIndex + 1 <= 20 ? (
+                <img src={`/level-icons/${levelIndex + 1}.png`} alt={level.name} className="h-6 object-contain" />
+              ) : (
+                <span className="text-sm text-muted-foreground font-medium uppercase tracking-widest">"{level.name}"</span>
+              )}
+            </div>
 
             <div className="flex items-center gap-2 text-sm text-muted-foreground opacity-80">
               <MapPin className="w-3.5 h-3.5" />
