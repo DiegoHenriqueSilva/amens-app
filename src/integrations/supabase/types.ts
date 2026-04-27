@@ -100,6 +100,8 @@ export type Database = {
           message: string
           prayer_request_id: string | null
           user_id: string
+          sender_id: string | null
+          type: string | null
         }
         Insert: {
           created_at?: string
@@ -108,6 +110,8 @@ export type Database = {
           message: string
           prayer_request_id?: string | null
           user_id: string
+          sender_id?: string | null
+          type?: string | null
         }
         Update: {
           created_at?: string
@@ -116,6 +120,8 @@ export type Database = {
           message?: string
           prayer_request_id?: string | null
           user_id?: string
+          sender_id?: string | null
+          type?: string | null
         }
         Relationships: [
           {

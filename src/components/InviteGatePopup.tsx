@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Lock, X, Mail } from "lucide-react";
+import { Sparkles, X, Mail, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -34,10 +34,8 @@ export const InviteGatePopup = ({ isAuthenticated }: Props) => {
     return () => observer.disconnect();
   }, [isAuthenticated, dismissed]);
 
-  const handleCodeInput = (val: string) => {
-    if (val.length > 5) {
-      window.location.href = `/auth?ref=${val.trim()}`;
-    }
+  const handleJoin = () => {
+    window.location.href = `/auth`;
   };
 
   return (
@@ -65,29 +63,24 @@ export const InviteGatePopup = ({ isAuthenticated }: Props) => {
 
               <div className="flex flex-col items-center text-center space-y-4">
                 <div className="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center">
-                  <Lock className="w-7 h-7 text-primary" />
+                  <Sparkles className="w-7 h-7 text-primary" />
                 </div>
 
                 <div>
-                  <h3 className="text-lg font-bold text-foreground mb-1">Acesso Exclusivo</h3>
+                  <h3 className="text-lg font-bold text-foreground mb-1">Una-se à Nossa Fé</h3>
                   <p className="text-sm text-muted-foreground leading-relaxed">
-                    O Améns está em fase de expansão divina. Solicite um convite a um amigo ou familiar, ou envie uma mensagem para{" "}
-                    <a href="mailto:dieguh@gmail.com" className="text-primary font-semibold hover:underline">
-                      dieguh@gmail.com
-                    </a>{" "}
-                    para solicitar um convite. Obrigado!
+                    Crie sua conta agora para registrar suas orações, ganhar pontos de fé e fazer parte da nossa comunidade global.
                   </p>
                 </div>
 
                 <div className="w-full space-y-2">
-                  <p className="text-[10px] uppercase font-bold tracking-widest text-muted-foreground">
-                    Já possui um convite?
-                  </p>
-                  <Input
-                    placeholder="Cole seu código de convite..."
-                    className="text-center rounded-2xl border-primary/20"
-                    onChange={(e) => handleCodeInput(e.target.value)}
-                  />
+                  <Button 
+                    className="w-full gradient-divine rounded-2xl h-12 font-bold text-primary-foreground shadow-lg"
+                    onClick={handleJoin}
+                  >
+                    <UserPlus className="w-4 h-4 mr-2" />
+                    Criar Conta Grátis
+                  </Button>
                 </div>
 
                 <Button

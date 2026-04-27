@@ -189,6 +189,20 @@ const Pray = () => {
           if (existingReaction) {
             setActiveReaction(existingReaction.reaction_type);
           }
+
+          // Notify the author that someone is praying for them
+          if (randomRequest.user_id && randomRequest.user_id !== session.user.id) {
+            const senderName = session.user.user_metadata?.display_name || session.user.user_metadata?.full_name?.split(" ")[0] || "Um intercessor";
+            const senderParish = session.user.user_metadata?.parish || "";
+            
+            await supabase.from("notifications").insert({
+              user_id: randomRequest.user_id,
+              prayer_request_id: randomRequest.id,
+              sender_id: session.user.id,
+              type: 'intercession',
+              message: `🙏 ${senderName}${senderParish ? ` de ${senderParish}` : ""} começou a orar pelo seu pedido!`,
+            });
+          }
         }
         
         // completeTask handles XP award + toast + daily limit (1x per day)
@@ -471,15 +485,8 @@ REGRAS ADICIONAIS:
 
                                   setActiveReaction(reaction.type);
 
-                                  // Notify the author only on first reaction or when changing
-                                  if (prayerRequest.user_id && !activeReaction) {
-                                    const emoji = reaction.emoji;
-                                    await supabase.from("notifications").insert({
-                                      user_id: prayerRequest.user_id,
-                                      prayer_request_id: prayerRequest.id,
-                                      message: `${emoji} ${senderFirstName}${senderCity ? ` (${senderCity})` : ""} reagiu com ${reaction.label} ao seu pedido!`,
-                                    });
-                                  }
+                                  // Reaction notification removed as per user request to avoid duplicate alerts
+                                  // Replaced by the intercession notification when the cause is first received
 
                                   if (!activeReaction) {
                                     // Daily gate - only award XP for reacting once per day total

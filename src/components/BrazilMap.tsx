@@ -42,14 +42,14 @@ const BrazilMap: React.FC<BrazilMapProps> = ({ onStateClick, selectedState }) =>
                           onClick={() => onStateClick(stateUf)}
                           style={{
                             default: {
-                              fill: isSelected ? "#D4AF37" : "#F5F5DC",
-                              stroke: "#D4AF37",
-                              strokeWidth: isSelected ? 2 : 0.5,
+                              fill: isSelected ? "#c9a227" : "#fbf7ef",
+                              stroke: "#c9a227",
+                              strokeWidth: isSelected ? 1.5 : 0.8,
                               outline: "none",
                               transition: "all 300ms ease"
                             },
                             hover: {
-                              fill: "#D4AF37",
+                              fill: "#c9a227",
                               stroke: "#FFFFFF",
                               strokeWidth: 1.5,
                               opacity: 0.9,
@@ -58,7 +58,7 @@ const BrazilMap: React.FC<BrazilMapProps> = ({ onStateClick, selectedState }) =>
                               transition: "all 300ms ease"
                             },
                             pressed: {
-                              fill: "#B8860B",
+                              fill: "#b8860b",
                               stroke: "#FFFFFF",
                               strokeWidth: 1,
                               outline: "none",

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Home, Users, Link as LinkIcon, User, Mail } from "lucide-react";
+import { Home, Users, Link as LinkIcon, User, Mail, Globe } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useFriends } from "@/hooks/use-friends";
 import { supabase } from "@/integrations/supabase/client";
@@ -55,6 +55,7 @@ const BottomNav = () => {
     { path: "/messages", icon: Mail, label: "Mensagens", badge: unreadCount },
     { path: "/prayer-chain", icon: LinkIcon, label: "Oração ao vivo" },
     { path: "/friends", icon: Users, label: "Amigos", badge: requests?.length || 0 },
+    { path: "/community", icon: Globe, label: "Comunidade" },
     { path: "/profile", icon: User, label: "Perfil" },
   ];
 

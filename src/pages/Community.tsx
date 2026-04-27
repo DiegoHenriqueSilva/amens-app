@@ -5,6 +5,13 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
 import { Users, Sparkles, ArrowLeft, Heart, Globe, Award, TrendingUp, MapPin, Church } from "lucide-react";
 import PageTransition from "@/components/PageTransition";
 import { motion, AnimatePresence } from "framer-motion";
@@ -12,7 +19,9 @@ import { formatTimeAgo } from "@/lib/utils";
 import BrazilMap from "@/components/BrazilMap";
 import { fetchCitiesByState, type IBGECity } from "@/lib/ibge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { User as UserIcon } from "lucide-react";
+import { User as UserIcon, LogOut, Mail, Home, Search } from "lucide-react";
+import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
 const Community = () => {
   const navigate = useNavigate();
@@ -27,10 +36,15 @@ const Community = () => {
   const [parishStats, setParishStats] = useState<any[]>([]);
   const [cityTotalUsers, setCityTotalUsers] = useState(0);
   const [mapLoading, setMapLoading] = useState(false);
+  const [selectedParishMembers, setSelectedParishMembers] = useState<any[]>([]);
+  const [loadingMembers, setLoadingMembers] = useState(false);
+  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [pendingRequests, setPendingRequests] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     fetchGlobalStats();
     fetchRecentActivities();
+    fetchCurrentUser();
     
     // Subscribe to new intercessions for real-time feel
     const channel = supabase
@@ -98,6 +112,26 @@ const Community = () => {
     }
     setLoading(false);
   };
+  
+  const fetchCurrentUser = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session) {
+      setCurrentUser(session.user);
+      fetchPendingRequests(session.user.id);
+    }
+  };
+
+  const fetchPendingRequests = async (userId: string) => {
+    const { data } = await supabase
+      .from('friend_requests')
+      .select('receiver_id')
+      .eq('sender_id', userId)
+      .eq('status', 'pending');
+    
+    if (data) {
+      setPendingRequests(new Set(data.map(r => r.receiver_id)));
+    }
+  };
 
   const handleStateClick = async (stateUf: string) => {
     setSelectedMapState(stateUf);
@@ -125,6 +159,42 @@ const Community = () => {
       setParishStats(data.sort((a: any, b: any) => b.total_users - a.total_users));
     }
     setMapLoading(false);
+  };
+
+  const handleParishClick = async (parishName: string) => {
+    setLoadingMembers(true);
+    const { data, error } = await supabase
+      .from('profiles' as any)
+      .select('id, full_name, display_name, show_real_name, avatar_url, city, total_xp:user_xp(total_xp)')
+      .eq('state', selectedMapState)
+      .eq('city', selectedMapCity)
+      .eq('parish', parishName)
+      .eq('is_public_in_parish', true);
+    
+    if (!error && data) {
+      setSelectedParishMembers(data);
+    }
+    setLoadingMembers(false);
+  };
+
+  const handleAddFriend = async (targetUserId: string) => {
+    if (!currentUser) {
+      toast.error("Entre para adicionar amigos.");
+      return;
+    }
+    
+    const { error } = await supabase.from('friend_requests').insert({
+      sender_id: currentUser.id,
+      receiver_id: targetUserId,
+      status: 'pending'
+    });
+
+    if (error) {
+      toast.error("Erro ao enviar pedido.");
+    } else {
+      toast.success("Pedido de amizade enviado! 🙏");
+      setPendingRequests(prev => new Set([...prev, targetUserId]));
+    }
   };
 
   return (
@@ -165,6 +235,52 @@ const Community = () => {
             
             <BrazilMap onStateClick={handleStateClick} selectedState={selectedMapState} />
             
+            <div className="px-1">
+              <Select 
+                value={selectedMapState || ""} 
+                onValueChange={(val) => handleStateClick(val)}
+              >
+                <SelectTrigger className="w-full h-14 rounded-2xl border-primary/20 bg-white/50 backdrop-blur-sm soft-shadow text-foreground/80 font-medium">
+                  <SelectValue placeholder="Selecione o estado por nome..." />
+                </SelectTrigger>
+                <SelectContent className="rounded-2xl border-primary/10 max-h-[300px]">
+                  {[
+                    { uf: "AC", name: "Acre" },
+                    { uf: "AL", name: "Alagoas" },
+                    { uf: "AP", name: "Amapá" },
+                    { uf: "AM", name: "Amazonas" },
+                    { uf: "BA", name: "Bahia" },
+                    { uf: "CE", name: "Ceará" },
+                    { uf: "DF", name: "Distrito Federal" },
+                    { uf: "ES", name: "Espírito Santo" },
+                    { uf: "GO", name: "Goiás" },
+                    { uf: "MA", name: "Maranhão" },
+                    { uf: "MT", name: "Mato Grosso" },
+                    { uf: "MS", name: "Mato Grosso do Sul" },
+                    { uf: "MG", name: "Minas Gerais" },
+                    { uf: "PA", name: "Pará" },
+                    { uf: "PB", name: "Paraíba" },
+                    { uf: "PR", name: "Paraná" },
+                    { uf: "PE", name: "Pernambuco" },
+                    { uf: "PI", name: "Piauí" },
+                    { uf: "RJ", name: "Rio de Janeiro" },
+                    { uf: "RN", name: "Rio Grande do Norte" },
+                    { uf: "RS", name: "Rio Grande do Sul" },
+                    { uf: "RO", name: "Rondônia" },
+                    { uf: "RR", name: "Roraima" },
+                    { uf: "SC", name: "Santa Catarina" },
+                    { uf: "SP", name: "São Paulo" },
+                    { uf: "SE", name: "Sergipe" },
+                    { uf: "TO", name: "Tocantins" }
+                  ].map((state) => (
+                    <SelectItem key={state.uf} value={state.uf} className="rounded-xl font-medium">
+                      {state.name} ({state.uf})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
             <AnimatePresence>
               {selectedMapState && (
                 <motion.div
@@ -203,7 +319,10 @@ const Community = () => {
                          const percentage = cityTotalUsers > 0 ? Math.round((Number(stat.total_users) / cityTotalUsers) * 100) : 0;
                          return (
                            <motion.div key={stat.parish} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.1 }}>
-                             <Card className="p-4 border-primary/10 bg-white/70 rounded-[1.5rem] soft-shadow">
+                             <Card 
+                               className="p-4 border-primary/10 bg-white/70 rounded-[1.5rem] soft-shadow cursor-pointer hover:border-primary/30 transition-all"
+                               onClick={() => handleParishClick(stat.parish)}
+                             >
                                <div className="flex justify-between items-start mb-2">
                                  <div className="flex items-center gap-2">
                                    <Church className="w-4 h-4 text-primary/60" />
@@ -221,6 +340,59 @@ const Community = () => {
                            </motion.div>
                          );
                        })}
+
+                       {/* Membros da Paróquia Selecionada */}
+                       <AnimatePresence>
+                        {selectedParishMembers.length > 0 && (
+                          <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: 10 }}
+                            className="space-y-3 pt-6 border-t border-primary/10"
+                          >
+                            <h4 className="text-xs font-bold uppercase tracking-widest px-2 text-primary">
+                              Comunidade de Orantes
+                            </h4>
+                            <div className="grid gap-3">
+                              {selectedParishMembers.map((member) => (
+                                <Card key={member.id} className="p-4 flex items-center justify-between border-primary/5 bg-white/80 rounded-2xl soft-shadow">
+                                  <div className="flex items-center gap-3">
+                                    <Avatar className="w-10 h-10 border border-primary/10">
+                                      <AvatarImage src={member.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${member.id}`} />
+                                      <AvatarFallback className="bg-secondary text-primary">
+                                        <UserIcon className="w-5 h-5" />
+                                      </AvatarFallback>
+                                    </Avatar>
+                                    <div>
+                                      <p className="text-sm font-bold leading-tight">
+                                        {member.show_real_name ? (member.display_name || member.full_name?.split(' ')[0]) : "Membro da Fé"}
+                                      </p>
+                                      <p className="text-[10px] uppercase font-black text-primary/60 tracking-wider">
+                                        Intercessor em {member.city}
+                                      </p>
+                                    </div>
+                                  </div>
+                                  
+                                  {currentUser?.id !== member.id && (
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className={cn(
+                                        "rounded-full h-8 px-4 text-[10px] font-bold uppercase tracking-widest",
+                                        pendingRequests.has(member.id) ? "text-muted-foreground bg-secondary/50" : "text-primary hover:bg-primary/10"
+                                      )}
+                                      disabled={pendingRequests.has(member.id)}
+                                      onClick={() => handleAddFriend(member.id)}
+                                    >
+                                      {pendingRequests.has(member.id) ? "Pendente" : "Adicionar"}
+                                    </Button>
+                                  )}
+                                </Card>
+                              ))}
+                            </div>
+                          </motion.div>
+                        )}
+                       </AnimatePresence>
                      </div>
                   )}
 

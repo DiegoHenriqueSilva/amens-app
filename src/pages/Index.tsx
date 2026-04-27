@@ -16,6 +16,8 @@ import { CompleteProfileDialog } from "@/components/CompleteProfileDialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Check, X } from "lucide-react";
 import { JornadaFe } from "@/components/JornadaFe";
+import { AngelicalNotificationOverlay } from "@/components/AngelicalNotificationOverlay";
+import { useLocation } from "react-router-dom";
 
 const stagger = {
   animate: { transition: { staggerChildren: 0.1 } },
@@ -32,9 +34,8 @@ const Index = () => {
   const navigate = useNavigate();
   const { totalXp, loading: xpLoading } = useXp();
   const [profile, setProfile] = useState<any>(null);
-  const [showFriendPrompt, setShowFriendPrompt] = useState(false);
-  const [referrerName, setReferrerName] = useState("");
-  const [referrerIdToFriend, setReferrerIdToFriend] = useState<string | null>(null);
+  const location = useLocation();
+  const [activeIntercessionNotifId, setActiveIntercessionNotifId] = useState<string | null>(null);
 
   const fetchProfile = async (userId: string) => {
     try {
@@ -107,12 +108,7 @@ const Index = () => {
             body: { referrer_user_id: storedRef, referred_user_id: session.user.id },
           }).then(async ({ error }) => {
             if (!error) {
-              const { data: refProfile } = await supabase.from('profiles').select('full_name').eq('id', storedRef).single();
-              if (refProfile) {
-                setReferrerName(refProfile.full_name || "Seu amigo");
-                setReferrerIdToFriend(storedRef);
-                setShowFriendPrompt(true);
-              }
+              // Referral processed, but we no longer show the friend prompt
             }
           }).catch(e => console.error("Referral process error:", e));
           localStorage.removeItem("fe_referrer");
@@ -125,6 +121,16 @@ const Index = () => {
       supabase.removeChannel(channel);
     };
   }, [user?.id]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const notifId = params.get("intercession_id");
+    if (notifId) {
+      setActiveIntercessionNotifId(notifId);
+      // Clean up URL without reload
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, [location]);
 
   const handleSignOut = async () => {
     try {
@@ -139,42 +145,10 @@ const Index = () => {
     <PageTransition>
       <div className="min-h-screen">
         <CompleteProfileDialog />
-        
-        {/* Friendship Prompt Dialog */}
-        <Dialog open={showFriendPrompt} onOpenChange={setShowFriendPrompt}>
-          <DialogContent className="max-w-md bg-card/95 backdrop-blur-md border-primary/20 soft-shadow rounded-[2rem]">
-            <DialogHeader className="text-center">
-              <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Users className="w-8 h-8 text-primary" />
-              </div>
-              <DialogTitle className="text-2xl font-bold">Convite Recebido ✨</DialogTitle>
-              <DialogDescription className="text-base pt-2 text-center">
-                <span className="font-bold text-primary">{referrerName}</span> te convidou para o Amens, quer incluir ele/ela na sua lista de amigos?
-              </DialogDescription>
-            </DialogHeader>
-            <DialogFooter className="flex gap-3 mt-4 sm:justify-center">
-              <Button variant="outline" className="flex-1 rounded-2xl h-12" onClick={() => setShowFriendPrompt(false)}>
-                Agora não
-              </Button>
-              <Button 
-                className="flex-1 gradient-divine rounded-2xl h-12 text-primary-foreground font-bold"
-                onClick={async () => {
-                  if (referrerIdToFriend && user) {
-                    await supabase.from('friend_requests').insert({
-                      sender_id: user.id,
-                      receiver_id: referrerIdToFriend,
-                      status: 'pending'
-                    });
-                    toast.success("Pedido enviado!");
-                  }
-                  setShowFriendPrompt(false);
-                }}
-              >
-                Sim, claro!
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+        <AngelicalNotificationOverlay 
+          notificationId={activeIntercessionNotifId} 
+          onClose={() => setActiveIntercessionNotifId(null)} 
+        />
         
         <div className="container mx-auto px-6 py-8 relative z-10 max-w-lg">
           
