@@ -4,7 +4,9 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
+import IndexOld from "./pages/IndexOld";
 import Pray from "./pages/Pray";
+import PrayOld from "./pages/PrayOld";
 import Submit from "./pages/Submit";
 import Auth from "./pages/Auth";
 import DailyGospel from "./pages/DailyGospel";
@@ -55,7 +57,9 @@ const App = () => {
           <div className="min-h-screen relative pb-28">
           <Routes>
             <Route path="/" element={<Index />} />
+            <Route path="/old" element={<IndexOld />} />
             <Route path="/pray" element={<Pray />} />
+            <Route path="/pray_old" element={<PrayOld />} />
             <Route path="/submit" element={<Submit />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/daily-gospel" element={<DailyGospel />} />

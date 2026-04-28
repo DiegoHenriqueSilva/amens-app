@@ -200,6 +200,8 @@ export type Database = {
           updated_at: string
           user_id: string | null
           author_name: string | null
+          status: string
+          is_anonymous: boolean
         }
         Insert: {
           content: string
@@ -212,6 +214,8 @@ export type Database = {
           updated_at?: string
           user_id?: string | null
           author_name?: string | null
+          status?: string
+          is_anonymous?: boolean
         }
         Update: {
           content?: string
@@ -224,6 +228,38 @@ export type Database = {
           updated_at?: string
           user_id?: string | null
           author_name?: string | null
+          status?: string
+          is_anonymous?: boolean
+        }
+        Relationships: []
+      }
+      prayer_reports: {
+        Row: {
+          id: string
+          prayer_request_id: string
+          reporter_user_id: string
+          category: string
+          description: string | null
+          status: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          prayer_request_id: string
+          reporter_user_id: string
+          category: string
+          description?: string | null
+          status?: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          prayer_request_id?: string
+          reporter_user_id?: string
+          category?: string
+          description?: string | null
+          status?: string
+          created_at?: string
         }
         Relationships: []
       }

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Sparkles, Heart, ArrowLeft, Users, Share2, MessageCircle, Clock, Loader2, Lock } from "lucide-react";
+import { Sparkles, Heart, ArrowLeft, Users, Share2, MessageCircle, Clock, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useXp } from "@/hooks/use-xp";
@@ -294,22 +294,18 @@ REGRAS ADICIONAIS:
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-background/70 backdrop-blur-sm relative overflow-hidden">
-
+      <div className="min-h-screen bg-background relative overflow-hidden">
+        <Button variant="ghost" size="icon" onClick={() => navigate("/")} className="absolute top-4 left-4 z-20">
+          <ArrowLeft className="w-5 h-5" />
+        </Button>
 
         <div className="absolute top-[-6rem] left-[-4rem] w-80 h-80 bg-primary/5 rounded-full blur-3xl" />
         <div className="absolute bottom-[-6rem] right-[-4rem] w-80 h-80 bg-accent/5 rounded-full blur-3xl" />
 
-        <div className="container mx-auto px-4 py-8 relative z-10">
-          <div className="max-w-2xl mx-auto mb-6 flex items-center">
-            <Button variant="ghost" size="icon" onClick={() => navigate("/")} className="shrink-0 hover:bg-primary/10 transition-colors">
-              <ArrowLeft className="w-5 h-5 text-foreground" />
-            </Button>
-          </div>
-          
+        <div className="container mx-auto px-4 py-12 relative z-10">
           <motion.div className="max-w-2xl mx-auto text-center mb-10" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
             <p className="text-sm uppercase tracking-[0.25em] text-primary mb-2">✦</p>
-            <h1 className="text-4xl md:text-5xl font-bold mb-3 text-foreground">Orar por uma Causa</h1>
+            <h1 className="text-5xl md:text-6xl font-bold mb-3 text-foreground">Orar por uma Causa</h1>
             <div className="divider-gold max-w-[10rem] mx-auto mb-3" />
             <p className="text-muted-foreground">Seja um instrumento da graça divina</p>
           </motion.div>
@@ -322,9 +318,13 @@ REGRAS ADICIONAIS:
                     <motion.div animate={{ scale: [1, 1.05, 1] }} transition={{ duration: 4, repeat: Infinity }}>
                        <Sparkles className="w-12 h-12 text-primary mx-auto mb-6 opacity-30" />
                     </motion.div>
-                    <div className="flex flex-col gap-4">
-                      <Button onClick={fetchRandomPrayerRequest} disabled={isLoading} size="lg" className={`w-full h-16 bg-gradient-to-br from-[#d4a017] to-[#e8c547] text-[#3d2800] hover:opacity-90 transition-opacity font-bold text-lg rounded-2xl shadow-lg border-0 ${!currentUser ? 'opacity-60 pointer-events-none' : ''}`}>
+                    <div className="flex flex-col sm:flex-row gap-4">
+                      <Button onClick={fetchRandomPrayerRequest} disabled={isLoading} size="lg" className="flex-1 h-16 gradient-divine text-black font-bold text-lg rounded-2xl shadow-lg">
                         {isLoading ? "Buscando..." : "Receber uma Causa"}
+                      </Button>
+                      <Button onClick={() => setShowHistory(true)} variant="outline" size="lg" className="flex-1 h-16 border-primary/20 rounded-2xl transition-all">
+                        <Clock className="w-5 h-5 mr-3" />
+                        Histórico
                       </Button>
                     </div>
                   </Card>
@@ -338,7 +338,7 @@ REGRAS ADICIONAIS:
                 </motion.div>
               ) : (
                 <motion.div key="prayer" variants={fadeUp} initial="initial" animate="animate" exit="exit" className="space-y-6">
-                  <Card className={`p-8 soft-shadow border-primary/10 ${!currentUser ? 'opacity-60 pointer-events-none' : ''}`}>
+                  <Card className="p-8 soft-shadow border-primary/10">
                     <div className="flex items-start gap-4 mb-6">
                       <Heart className="w-5 h-5 text-primary flex-shrink-0 mt-1" />
                       <div>
@@ -354,12 +354,12 @@ REGRAS ADICIONAIS:
                     </div>
                     <div className="divider-gold mb-5" />
                     <div className="flex gap-3 flex-wrap">
-                      <Button onClick={generatePrayer} disabled={isGenerating} className="bg-gradient-to-br from-[#d4a017] to-[#e8c547] text-[#3d2800] hover:opacity-90 font-semibold border-0">
+                      <Button onClick={generatePrayer} disabled={isGenerating} className="gradient-sacred text-foreground hover:opacity-90">
                         <Sparkles className="w-4 h-4 mr-2" />
                         {isGenerating ? "Gerando..." : "Sugestão de Oração"}
                       </Button>
                       
-                      <Button onClick={fetchRandomPrayerRequest} variant="outline" disabled={isLoading} className="border-[#1D4ED8]/20 text-[#1D4ED8] hover:bg-[#1D4ED8]/5 flex-1 shadow-sm">
+                      <Button onClick={fetchRandomPrayerRequest} variant="outline" disabled={isLoading} className="border-primary/20 flex-1">
                         Próxima Causa
                       </Button>
 
@@ -367,7 +367,7 @@ REGRAS ADICIONAIS:
                          <Button 
                            variant="outline" 
                            onClick={() => setFriendSelectorOpen(true)}
-                           className="flex-1 rounded-xl border-[#1D4ED8]/20 text-[#1D4ED8] hover:bg-[#1D4ED8]/10 shadow-sm transition-colors"
+                           className="flex-1 rounded-xl border-primary/20 text-primary hover:bg-primary/5"
                          >
                            <Users className="w-4 h-4 mr-2" />
                            Enviar a um amigo
@@ -376,7 +376,7 @@ REGRAS ADICIONAIS:
                          <Button 
                            variant="outline" 
                            onClick={handleShareCompartilhar}
-                           className="flex-1 rounded-xl border-green-600/20 text-green-700 hover:bg-green-50 shadow-sm transition-colors"
+                           className="flex-1 rounded-xl border-green-200 text-green-600 hover:bg-green-50"
                          >
                            <Share2 className="w-4 h-4 mr-2" />
                            Compartilhar
@@ -509,25 +509,8 @@ REGRAS ADICIONAIS:
           </div>
 
           {/* History Section Integrated above or hidden */}
-          <div className="max-w-2xl mx-auto mt-16 pb-20 px-2">
-             {!showHistory ? (
-                <div className="text-center">
-                   <Button 
-                     variant="ghost" 
-                     onClick={() => {
-                        if (!currentUser) {
-                           navigate("/auth");
-                           return;
-                        }
-                        setShowHistory(true);
-                     }}
-                     className="text-black hover:text-primary text-[11px] uppercase tracking-widest font-black py-8 bg-primary/5 rounded-[2rem] border border-dashed border-primary/20 w-full hover:bg-primary/10 transition-all font-serif italic"
-                   >
-                     <Clock className="w-4 h-4 mr-2" />
-                     Ver minhas intercessões anteriores
-                   </Button>
-                </div>
-             ) : (
+          <div className="max-w-2xl mx-auto mt-8 pb-20 px-2">
+             {showHistory && (
                 <motion.div 
                    initial={{ opacity: 0, scale: 0.95 }}
                    animate={{ opacity: 1, scale: 1 }}
