@@ -114,7 +114,7 @@ const DivinePromise = () => {
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-background relative overflow-hidden flex flex-col">
+      <div className="min-h-screen bg-background relative overflow-hidden flex flex-col pb-28">
         {/* Decorações de fundo */}
         <div className="absolute top-[-10rem] right-[-10rem] w-[30rem] h-[30rem] rounded-full bg-primary/5 blur-3xl pointer-events-none" />
         <div className="absolute bottom-[-10rem] left-[-10rem] w-[30rem] h-[30rem] rounded-full bg-accent/5 blur-3xl pointer-events-none" />

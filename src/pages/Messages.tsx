@@ -76,7 +76,7 @@ const Messages = () => {
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-background relative overflow-hidden pb-12">
+      <div className="min-h-screen bg-background relative overflow-hidden pb-28">
         <div className="absolute top-[-5rem] left-[-5rem] w-[20rem] h-[20rem] rounded-full bg-primary/5 blur-3xl opacity-50" />
         <div className="absolute bottom-[-5rem] right-[-5rem] w-[20rem] h-[20rem] rounded-full bg-accent/5 blur-3xl opacity-50" />
 

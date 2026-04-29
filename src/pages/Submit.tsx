@@ -261,7 +261,7 @@ const Submit = () => {
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-background relative overflow-hidden">
+      <div className="min-h-screen bg-background relative overflow-hidden pb-28">
         <Button variant="ghost" size="icon" onClick={() => navigate("/")} className="absolute top-4 left-4 z-20">
           <ArrowLeft className="w-5 h-5" />
         </Button>

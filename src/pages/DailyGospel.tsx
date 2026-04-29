@@ -265,7 +265,7 @@ Responda APENAS com um objeto JSON válido no formato:
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-background relative overflow-hidden">
+      <div className="min-h-screen bg-background relative overflow-hidden pb-28">
         <div className="absolute top-[-8rem] right-[-6rem] w-[28rem] h-[28rem] rounded-full bg-primary/5 blur-3xl" />
         <div className="absolute bottom-[-6rem] left-[-6rem] w-[24rem] h-[24rem] rounded-full bg-accent/5 blur-3xl" />
 
