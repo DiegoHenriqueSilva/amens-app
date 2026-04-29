@@ -53,7 +53,7 @@ export const InviteGatePopup = ({ isAuthenticated }: Props) => {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 80 }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="fixed bottom-0 left-0 right-0 z-50 p-4 pb-8"
+            className="fixed bottom-0 left-0 right-0 z-[100] p-4 pb-8"
           >
             <div className="max-w-md mx-auto bg-white/97 backdrop-blur-xl rounded-[2rem] shadow-2xl border border-primary/20 p-6 relative">
               <div className="flex flex-col items-center text-center space-y-4">
