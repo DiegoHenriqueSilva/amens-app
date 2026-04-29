@@ -210,7 +210,7 @@ const Terco = () => {
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-background relative overflow-hidden flex flex-col">
+      <div className="min-h-screen bg-background relative overflow-hidden flex flex-col pb-28">
         {/* Header */}
         <div className="flex items-center justify-between p-4 px-6 relative z-20">
           <Button variant="ghost" size="icon" onClick={() => navigate("/")} className="hover:bg-primary/10">

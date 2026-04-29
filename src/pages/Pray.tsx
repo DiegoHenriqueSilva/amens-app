@@ -568,7 +568,7 @@ REGRAS ADICIONAIS:
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-background/70 backdrop-blur-sm relative overflow-hidden">
+      <div className="min-h-screen bg-background/70 backdrop-blur-sm relative overflow-hidden pb-28">
 
         <div className="absolute top-[-6rem] left-[-4rem] w-80 h-80 bg-primary/5 rounded-full blur-3xl" />
         <div className="absolute bottom-[-6rem] right-[-4rem] w-80 h-80 bg-accent/5 rounded-full blur-3xl" />
@@ -873,6 +873,7 @@ REGRAS ADICIONAIS:
             </AnimatePresence>
           </div>
 
+          <InviteGatePopup isAuthenticated={!!currentUser} />
           {/* History Section */}
           <div className="max-w-2xl mx-auto mt-16 pb-20 px-2">
              {!showHistory ? (
@@ -1023,7 +1024,6 @@ REGRAS ADICIONAIS:
              )}
           </div>
         </div>
-        <InviteGatePopup isAuthenticated={!!currentUser} />
         
         <ReportPrayerDialog 
           open={reportDialogOpen} 

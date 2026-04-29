@@ -139,7 +139,7 @@ const Index = () => {
 
   return (
     <PageTransition>
-      <div className="min-h-screen">
+      <div className="min-h-screen pb-28">
         <CompleteProfileDialog />
         <AngelicalNotificationOverlay 
           notificationId={activeIntercessionNotifId} 
@@ -178,7 +178,7 @@ const Index = () => {
               <Link to="/pray">
                 <Card className="p-6 h-full text-center flex flex-col items-center justify-between border-primary/5 soft-shadow bg-[#FAFAFA] hover:-translate-y-1 hover:shadow-xl transition-all duration-300 rounded-[2rem]">
                   <div className="w-14 h-14 bg-transparent rounded-full flex items-center justify-center mb-4 overflow-hidden">
-                    <img src="/oracao.jpg" alt="Orar por uma causa" className="w-full h-full object-cover rounded-full drop-shadow-md" />
+                    <img src="/oracao_3d.png" alt="Orar por uma causa" className="w-full h-full object-cover rounded-full drop-shadow-md" />
                   </div>
                   <div>
                     <h2 className="text-lg font-bold mb-2">Orar por uma Causa</h2>
@@ -196,7 +196,7 @@ const Index = () => {
               <Link to="/submit">
                 <Card className="p-6 h-full text-center flex flex-col items-center justify-between border-primary/5 soft-shadow bg-[#FAFAFA] hover:-translate-y-1 hover:shadow-xl transition-all duration-300 rounded-[2rem]">
                   <div className="w-14 h-14 bg-transparent rounded-full flex items-center justify-center mb-4 overflow-hidden">
-                    <img src="/enviaroracao.jpg" alt="Enviar Pedido" className="w-full h-full object-cover rounded-full drop-shadow-md" />
+                    <img src="/enviaroracao_3d.png" alt="Enviar Pedido" className="w-full h-full object-cover rounded-full drop-shadow-md" />
                   </div>
                   <div>
                     <h2 className="text-lg font-bold mb-2">Enviar Pedido</h2>
@@ -214,7 +214,7 @@ const Index = () => {
               <Link to="/daily-gospel">
                 <Card className="p-6 h-full text-center flex flex-col items-center justify-between border-primary/5 soft-shadow bg-[#FAFAFA] hover:-translate-y-1 hover:shadow-xl transition-all duration-300 rounded-[2rem]">
                   <div className="w-14 h-14 bg-transparent rounded-full flex items-center justify-center mb-4 overflow-hidden">
-                    <img src="/evangelho.jpg" alt="Evangelho do Dia" className="w-full h-full object-cover rounded-full drop-shadow-md" />
+                    <img src="/evangelho_3d.png" alt="Evangelho do Dia" className="w-full h-full object-cover rounded-full drop-shadow-md" />
                   </div>
                   <div>
                     <h2 className="text-lg font-bold mb-2">Evangelho do Dia</h2>
@@ -232,7 +232,7 @@ const Index = () => {
               <Link to="/novenas">
                 <Card className="p-6 h-full text-center flex flex-col items-center justify-between border-primary/5 soft-shadow bg-[#FAFAFA] hover:-translate-y-1 hover:shadow-xl transition-all duration-300 rounded-[2rem]">
                   <div className="w-14 h-14 bg-transparent rounded-full flex items-center justify-center mb-4 overflow-hidden">
-                    <img src="/backgrounds/bg-2.png" alt="Novenas" className="w-full h-full object-cover rounded-full drop-shadow-md" />
+                    <img src="/novenas.png" alt="Novenas" className="w-full h-full object-cover rounded-full drop-shadow-md" />
                   </div>
                   <div>
                     <h2 className="text-lg font-bold mb-2">Novenas</h2>
@@ -250,7 +250,7 @@ const Index = () => {
               <Link to="/rosary-selection">
                 <Card className="p-6 h-full text-center flex flex-col items-center justify-between border-primary/5 soft-shadow bg-[#FAFAFA] hover:-translate-y-1 hover:shadow-xl transition-all duration-300 rounded-[2rem] border-dashed border-primary/20">
                   <div className="w-14 h-14 bg-transparent rounded-full flex items-center justify-center mb-4 overflow-hidden">
-                    <img src="https://a-static.mlcdn.com.br/800x600/terco-sagrado-coracao-de-jesus-pai-nosso-8mm-principe-da-paz/shoppingdafe/16008667435/13f74b6e0e27b035b50fca5800bedd04.jpeg" alt="Sagrado Terço" className="w-full h-full object-cover rounded-full drop-shadow-md" />
+                    <img src="/sagrado_terco.png" alt="Sagrado Terço" className="w-full h-full object-cover rounded-full drop-shadow-md" />
                   </div>
                   <div>
                     <h2 className="text-lg font-bold mb-2">Sagrado Terço</h2>
@@ -268,7 +268,7 @@ const Index = () => {
               <Link to="/divine-promise">
                 <Card className="p-6 h-full text-center flex flex-col items-center justify-between border-primary/5 soft-shadow bg-[#FAFAFA] hover:-translate-y-1 hover:shadow-xl transition-all duration-300 rounded-[2rem] border-dashed">
                   <div className="w-14 h-14 bg-transparent rounded-full flex items-center justify-center mb-4 overflow-hidden">
-                    <img src="/divinaspromessas.png" alt="Divina Promessa" className="w-full h-full object-cover rounded-full drop-shadow-md" />
+                    <img src="/divinaspromessas_3d.png" alt="Divina Promessa" className="w-full h-full object-cover rounded-full drop-shadow-md" />
                   </div>
                   <div>
                     <h2 className="text-lg font-bold mb-2">Divina Promessa</h2>
