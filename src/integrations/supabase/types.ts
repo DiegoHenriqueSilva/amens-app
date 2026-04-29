@@ -100,6 +100,8 @@ export type Database = {
           message: string
           prayer_request_id: string | null
           user_id: string
+          sender_id: string | null
+          type: string | null
         }
         Insert: {
           created_at?: string
@@ -108,6 +110,8 @@ export type Database = {
           message: string
           prayer_request_id?: string | null
           user_id: string
+          sender_id?: string | null
+          type?: string | null
         }
         Update: {
           created_at?: string
@@ -116,6 +120,8 @@ export type Database = {
           message?: string
           prayer_request_id?: string | null
           user_id?: string
+          sender_id?: string | null
+          type?: string | null
         }
         Relationships: [
           {
@@ -395,6 +401,7 @@ export type Database = {
           display_name: string | null
           friend_code: string | null
           avatar_url: string | null
+          is_public_in_parish: boolean
           created_at: string
           updated_at: string
         }
@@ -408,6 +415,7 @@ export type Database = {
           display_name?: string | null
           friend_code?: string | null
           avatar_url?: string | null
+          is_public_in_parish?: boolean
           created_at?: string
           updated_at?: string
         }
@@ -421,6 +429,7 @@ export type Database = {
           display_name?: string | null
           friend_code?: string | null
           avatar_url?: string | null
+          is_public_in_parish?: boolean
           created_at?: string
           updated_at?: string
         }

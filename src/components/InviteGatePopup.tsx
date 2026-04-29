@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Lock, LogIn } from "lucide-react";
+import { Sparkles, X, Mail, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -35,10 +36,8 @@ export const InviteGatePopup = ({ isAuthenticated }: Props) => {
     return () => observer.disconnect();
   }, [isAuthenticated]);
 
-  const handleCodeInput = (val: string) => {
-    if (val.length > 5) {
-      window.location.href = `/auth?ref=${val.trim()}`;
-    }
+  const handleJoin = () => {
+    window.location.href = `/auth`;
   };
 
   return (
@@ -60,7 +59,7 @@ export const InviteGatePopup = ({ isAuthenticated }: Props) => {
 
                 {/* Ícone */}
                 <div className="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center">
-                  <Lock className="w-7 h-7 text-primary" />
+                  <Sparkles className="w-7 h-7 text-primary" />
                 </div>
 
                 {/* Texto */}
@@ -101,14 +100,13 @@ export const InviteGatePopup = ({ isAuthenticated }: Props) => {
 
                 {/* Campo de convite */}
                 <div className="w-full space-y-2">
-                  <p className="text-[10px] uppercase font-bold tracking-widest text-muted-foreground">
-                    Já possui um convite?
-                  </p>
-                  <Input
-                    placeholder="Cole seu código de convite..."
-                    className="text-center rounded-2xl border-primary/20"
-                    onChange={(e) => handleCodeInput(e.target.value)}
-                  />
+                  <Button 
+                    className="w-full gradient-divine rounded-2xl h-12 font-bold text-primary-foreground shadow-lg"
+                    onClick={handleJoin}
+                  >
+                    <UserPlus className="w-4 h-4 mr-2" />
+                    Criar Conta Grátis
+                  </Button>
                 </div>
 
               </div>

@@ -15,15 +15,15 @@ const BrazilMap: React.FC<BrazilMapProps> = ({ onStateClick, selectedState }) =>
   return (
     <Card className="p-2 sm:p-4 border-primary/10 bg-white/50 backdrop-blur-md rounded-[2.5rem] overflow-hidden relative soft-shadow border-2">
       <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent pointer-events-none" />
-      <div className="w-full relative z-10 flex justify-center min-h-[300px]">
+      <div className="w-full relative z-10 flex justify-center min-h-[380px]">
         <TooltipProvider delayDuration={50}>
           <ComposableMap
             projection="geoMercator"
             projectionConfig={{ 
-              scale: 550, 
-              center: [-54, -15] 
+              scale: 900, 
+              center: [-54, -14] 
             }}
-            className="w-full h-full max-w-[500px]"
+            className="w-full h-full"
           >
             <Geographies geography={geoUrl}>
               {({ geographies }) =>
@@ -42,14 +42,14 @@ const BrazilMap: React.FC<BrazilMapProps> = ({ onStateClick, selectedState }) =>
                           onClick={() => onStateClick(stateUf)}
                           style={{
                             default: {
-                              fill: isSelected ? "#D4AF37" : "#F5F5DC",
-                              stroke: "#D4AF37",
-                              strokeWidth: isSelected ? 2 : 0.5,
+                              fill: isSelected ? "#c9a227" : "#fbf7ef",
+                              stroke: "#c9a227",
+                              strokeWidth: isSelected ? 1.5 : 0.8,
                               outline: "none",
                               transition: "all 300ms ease"
                             },
                             hover: {
-                              fill: "#D4AF37",
+                              fill: "#c9a227",
                               stroke: "#FFFFFF",
                               strokeWidth: 1.5,
                               opacity: 0.9,
@@ -58,7 +58,7 @@ const BrazilMap: React.FC<BrazilMapProps> = ({ onStateClick, selectedState }) =>
                               transition: "all 300ms ease"
                             },
                             pressed: {
-                              fill: "#B8860B",
+                              fill: "#b8860b",
                               stroke: "#FFFFFF",
                               strokeWidth: 1,
                               outline: "none",

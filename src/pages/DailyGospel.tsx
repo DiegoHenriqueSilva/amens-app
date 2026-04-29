@@ -353,7 +353,12 @@ Responda APENAS com um objeto JSON válido no formato:
                 {user && (
                   <motion.div className="pt-2" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }}>
                     <p className="text-xs text-muted-foreground">
-                      {level.emoji} Enviando como <span className="font-semibold text-primary">Nível {CELESTIAL_LEVELS.indexOf(level)} "{level.name}"</span>. Você pode ganhar +30 pontos de fé hoje!
+                      {CELESTIAL_LEVELS.indexOf(level) + 1 <= 20 ? (
+                        <img src={`/level-icons/${CELESTIAL_LEVELS.indexOf(level) + 1}.png`} alt={level.name} className="h-5 object-contain inline-block mr-1" />
+                      ) : (
+                        level.emoji
+                      )}
+                      Enviando como <span className="font-semibold text-primary">Nível {CELESTIAL_LEVELS.indexOf(level) + 1}</span>. Você pode ganhar +30 pontos de fé hoje!
                     </p>
                   </motion.div>
                 )}

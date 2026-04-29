@@ -45,7 +45,8 @@ const Profile = () => {
     parish: "",
     showRealName: false,
     displayName: "",
-    avatarUrl: ""
+    avatarUrl: "",
+    isPublicInParish: false
   });
   const [uploading, setUploading] = useState(false);
   const [invitedUsers, setInvitedUsers] = useState<any[]>([]);
@@ -108,7 +109,8 @@ const Profile = () => {
         parish: profile.parish || "",
         showRealName: profile.show_real_name || false,
         displayName: profile.display_name || "",
-        avatarUrl: profile.avatar_url || ""
+        avatarUrl: profile.avatar_url || "",
+        isPublicInParish: profile.is_public_in_parish || false
       });
     }
   };
@@ -168,7 +170,8 @@ const Profile = () => {
       city: editData.city,
       parish: editData.parish,
       show_real_name: editData.showRealName,
-      display_name: editData.showRealName ? editData.displayName : null
+      display_name: editData.showRealName ? editData.displayName : null,
+      is_public_in_parish: editData.isPublicInParish
     });
 
     // Update Auth User Metadata
@@ -179,7 +182,8 @@ const Profile = () => {
         city: editData.city, 
         parish: editData.parish,
         show_real_name: editData.showRealName,
-        display_name: editData.showRealName ? editData.displayName : null
+        display_name: editData.showRealName ? editData.displayName : null,
+        is_public_in_parish: editData.isPublicInParish
       },
     });
 
@@ -269,7 +273,7 @@ const Profile = () => {
           <Tabs defaultValue="profile" className="w-full mt-6">
             <TabsList className="grid w-full grid-cols-2 mb-8 bg-white/50 backdrop-blur-sm rounded-full p-1 border border-primary/10 h-14">
               <TabsTrigger value="profile" className="rounded-full data-[state=active]:bg-primary data-[state=active]:text-primary-foreground font-bold transition-all duration-300">Meu Perfil</TabsTrigger>
-              <TabsTrigger value="invited" className="rounded-full data-[state=active]:bg-primary data-[state=active]:text-primary-foreground font-bold transition-all duration-300">Cofre de Convites</TabsTrigger>
+              <TabsTrigger value="invited" className="rounded-full data-[state=active]:bg-primary data-[state=active]:text-primary-foreground font-bold transition-all duration-300">Minhas Indicações</TabsTrigger>
             </TabsList>
 
             <TabsContent value="profile" className="outline-none">
@@ -318,17 +322,26 @@ const Profile = () => {
                 animate={{ scale: [1, 1.1, 1] }}
                 transition={{ duration: 2, repeat: Infinity }}
               >
-                Nível {levelIndex}
+                Nível {levelIndex + 1}
               </motion.div>
             </div>
             
             <div className="flex items-center justify-center gap-3 mb-1">
               <h1 className="text-3xl font-bold text-foreground text-soft-outline">{fullName}</h1>
               <span className="text-xs font-bold text-primary/70 bg-primary/10 border border-primary/20 px-2.5 py-1 rounded-full tracking-wide whitespace-nowrap">
-                Nível {levelIndex}
+                Nível {levelIndex + 1}
               </span>
             </div>
-            <p className="text-sm text-muted-foreground font-medium uppercase tracking-widest mb-3">Nível {levelIndex} "{level.name}"</p>
+            <div className="flex items-center justify-center gap-2 mb-4">
+              <p className="text-[10px] text-muted-foreground font-black uppercase tracking-[0.3em]">Nível {levelIndex + 1}</p>
+              {levelIndex + 1 <= 20 && (
+                <img 
+                  src={`/level-icons/${levelIndex + 1}.png`} 
+                  alt={level.name} 
+                  className="h-7 w-auto object-contain drop-shadow-sm" 
+                />
+              )}
+            </div>
 
             <div className="flex items-center gap-2 text-sm text-muted-foreground opacity-80">
               <MapPin className="w-3.5 h-3.5" />
@@ -440,6 +453,19 @@ const Profile = () => {
                                 </Label>
                             </div>
 
+                            <div className="flex items-center space-x-2">
+                                <input 
+                                    type="checkbox" 
+                                    id="is-public-parish-profile" 
+                                    className="w-4 h-4 rounded border-primary/20 text-primary focus:ring-primary"
+                                    checked={editData.isPublicInParish}
+                                    onChange={(e) => setEditData({...editData, isPublicInParish: e.target.checked})}
+                                />
+                                <Label htmlFor="is-public-parish-profile" className="text-xs font-medium cursor-pointer">
+                                    Desejo que minha foto e nome de usuário fique disponível na lista da minha paróquia.
+                                </Label>
+                            </div>
+
                             <AnimatePresence>
                                 {editData.showRealName && (
                                     <motion.div 
@@ -530,29 +556,14 @@ const Profile = () => {
                       <Ticket className="w-5 h-5 text-primary" />
                     </div>
                     <div>
-                      <h2 className="text-xl font-bold">Cofre de Convites</h2>
-                      <p className="text-xs text-muted-foreground">O Améns é uma comunidade exclusiva.</p>
+                      <h2 className="text-xl font-bold">Minhas Indicações</h2>
+                      <p className="text-xs text-muted-foreground">Veja quem você trouxe para a nossa comunidade.</p>
                     </div>
                   </div>
 
                   {(() => {
-                    const totalEarnedInvites = 2 + (levelIndex * 2);
-                    const usedInvites = invitedUsers.length;
-                    const availableInvites = Math.max(0, totalEarnedInvites - usedInvites);
-
                     return (
                       <>
-                        <div className="flex justify-between items-center bg-primary/5 p-4 rounded-2xl border border-primary/10 mb-6">
-                           <div>
-                              <p className="text-xs uppercase font-bold text-primary/70 tracking-widest">Disponíveis</p>
-                              <h3 className="text-3xl font-black text-foreground">{availableInvites}</h3>
-                           </div>
-                           <div className="text-right">
-                              <p className="text-[10px] text-muted-foreground uppercase tracking-widest">Usados: {usedInvites}</p>
-                              <p className="text-[10px] text-muted-foreground uppercase tracking-widest">Ganhos (Nível {levelIndex}): {totalEarnedInvites}</p>
-                           </div>
-                        </div>
-
                         {loadingInvited ? (
                           <div className="py-12 text-center space-y-4">
                             <div className="w-8 h-8 border-4 border-primary/30 border-t-primary rounded-full animate-spin mx-auto" />
@@ -563,11 +574,11 @@ const Profile = () => {
                             <div className="w-16 h-16 bg-secondary/50 rounded-full flex items-center justify-center mx-auto mb-4 opacity-50">
                               <Users className="w-8 h-8 text-muted-foreground" />
                             </div>
-                            <p className="text-sm font-medium text-muted-foreground mb-4">Você ainda não enviou convites com sucesso.</p>
+                            <p className="text-sm font-medium text-muted-foreground mb-4">Você ainda não indicou novos membros.</p>
                           </div>
                         ) : (
                           <div className="space-y-3 mb-6 max-h-[300px] overflow-y-auto style-scrollbar px-1">
-                            <h3 className="text-xs uppercase font-bold text-primary/70 tracking-widest mb-1 ml-2">Histórico de Convites</h3>
+                            <h3 className="text-xs uppercase font-bold text-primary/70 tracking-widest mb-1 ml-2">Histórico de Indicações</h3>
                             {invitedUsers.map((item) => {
                               const invitedProfile = item.profiles;
                               const invitedXp = item.user_xp?.total_xp || 0;
@@ -601,20 +612,20 @@ const Profile = () => {
                         )}
 
                         {availableInvites > 0 ? (
-                           <Card className="p-6 border-dashed border-primary/20 bg-primary/5 rounded-[2rem] text-center">
-                             <p className="text-xs text-primary font-semibold mb-3">Envie um convite exclusivo e expanda a comunidade!</p>
-                             <Button 
-                               className="gradient-divine w-full rounded-2xl h-11 text-xs font-bold"
-                               onClick={() => {
-                                  const link = `${window.location.origin}/auth?ref=${user?.id}`;
-                                  navigator.clipboard.writeText(link);
-                                  toast.success("Convite copiado! Envie por WhatsApp. 🙏");
-                                  completeTask("send_invite");
-                               }}
-                             >
-                               Copiar Link de Convite
-                             </Button>
-                           </Card>
+                        <Card className="p-6 border-dashed border-primary/20 bg-primary/5 rounded-[2rem] text-center">
+                          <p className="text-xs text-primary font-semibold mb-3">Compartilhe o Améns e ajude nossa comunidade a crescer!</p>
+                          <Button 
+                            className="gradient-divine w-full rounded-2xl h-11 text-xs font-bold"
+                            onClick={() => {
+                               const link = `${window.location.origin}/auth?ref=${user?.id}`;
+                               navigator.clipboard.writeText(link);
+                               toast.success("Link de indicação copiado! 🙏");
+                               completeTask("send_invite");
+                            }}
+                          >
+                            Copiar Link de Indicação
+                          </Button>
+                        </Card>
                         ) : (
                            <Card className="p-6 border border-red-100 bg-red-50/50 rounded-[2rem] text-center opacity-80">
                              <Lock className="w-6 h-6 text-red-400 mx-auto mb-2" />

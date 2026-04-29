@@ -347,7 +347,6 @@ const Pray = () => {
         .limit(PRAY_SETTINGS.maxCausesToFetch);
 
       if (error) throw error;
-
       // Filter seen
       const eligible = (data || []).filter(p => !seenPrayerIds.includes(p.id));
 
@@ -616,9 +615,14 @@ REGRAS ADICIONAIS:
                 </motion.div>
               ) : isLoading || !prayerRequest ? (
                 <motion.div key="empty" variants={fadeUp} initial="initial" animate="animate" exit="exit">
-                  <Card className="p-12 text-center soft-shadow border-primary/10">
-                    <Loader2 className="w-10 h-10 animate-spin text-primary mx-auto mb-4" />
-                    <p className="text-muted-foreground">Buscando uma causa para você interceder...</p>
+                  <Card className="group p-12 text-center soft-shadow border-primary/10 transition-colors">
+                    <motion.div animate={{ scale: [1, 1.08, 1] }} transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }} className="w-20 h-20 mx-auto mb-5 bg-transparent flex items-center justify-center overflow-visible relative">
+                      <img src="/estrela_3d.png" alt="Estrela brilhante" className="w-full h-full object-contain drop-shadow-md transition-all duration-500 group-active:drop-shadow-[0_0_30px_rgba(255,215,0,1)] group-active:brightness-125 group-active:scale-110" />
+                    </motion.div>
+                    <h2 className="text-2xl font-semibold mb-4 text-foreground">Clique para receber uma causa</h2>
+                    <Button onClick={fetchRandomPrayerRequest} disabled={isLoading} size="lg" className="gradient-divine text-primary-foreground hover:opacity-90">
+                      {isLoading ? "Buscando..." : "Sortear Causa e Orar"}
+                    </Button>
                   </Card>
                 </motion.div>
               ) : (
@@ -770,7 +774,100 @@ REGRAS ADICIONAIS:
                       </motion.div>
                     )}
                   </AnimatePresence>
+                  <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45, delay: 0.1 }}>
+                    <Card className="p-8 soft-shadow border-primary/15">
+                      <h3 className="text-xl font-semibold mb-3 text-primary">Envie Energia e Solidariedade</h3>
+                      <p className="text-sm text-muted-foreground mb-5">
+                        {activeReaction
+                          ? "Você já enviou sua reação — clique em outro para trocar"
+                          : "Mostre seu apoio à causa"}
+                      </p>
+                      <div className="flex flex-wrap gap-3 justify-center">
+                        {[
+                          { type: "love", emoji: "❤️", label: "Compaixão" },
+                          { type: "pray", emoji: "🙏", label: "Graça" },
+                          { type: "patience", emoji: "⏳", label: "Paciência" },
+                          { type: "strength", emoji: "💪", label: "Força" },
+                          { type: "empathy", emoji: "🥺", label: "Empatia" },
+                        ].map((reaction, i) => {
+                          const isActive = activeReaction === reaction.type;
+                          const isOtherActive = activeReaction !== null && !isActive;
+                          return (
+                            <motion.button
+                              key={reaction.type}
+                              initial={{ opacity: 0, scale: 0.8 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              transition={{ delay: 0.1 + i * 0.05 }}
+                              whileHover={{ scale: 1.15 }}
+                              whileTap={{ scale: 0.9 }}
+                              className={`flex flex-col items-center gap-1.5 p-3 rounded-xl transition-all duration-200 ${
+                                isActive
+                                  ? "bg-primary/15 ring-2 ring-primary/40 shadow-sm"
+                                  : isOtherActive
+                                  ? "opacity-35 hover:opacity-60 hover:bg-primary/5"
+                                  : "hover:bg-primary/5"
+                              }`}
+                              onClick={async () => {
+                                try {
+                                  const { data: { session } } = await supabase.auth.getSession();
+                                  if (!session) return;
 
+                                  if (isActive) {
+                                    // Toggle off — remove reaction
+                                    await supabase
+                                      .from("prayer_reactions")
+                                      .delete()
+                                      .eq("prayer_request_id", prayerRequest.id)
+                                      .eq("reactor_user_id", session.user.id);
+                                    setActiveReaction(null);
+                                    toast.success("Reação removida.");
+                                    return;
+                                  }
+
+                                  // Resolve sender info for personalized notification
+                                  const senderFullName = session.user.user_metadata?.full_name || "";
+                                  const senderFirstName = senderFullName.split(" ")[0] || "Um irmão";
+                                  const senderCity = session.user.user_metadata?.city || "";
+
+                                  // Upsert — replace any previous reaction
+                                  await supabase.from("prayer_reactions").upsert({
+                                    prayer_request_id: prayerRequest.id,
+                                    reactor_user_id: session.user.id,
+                                    reaction_type: reaction.type,
+                                  }, { onConflict: "prayer_request_id,reactor_user_id" });
+
+                                  setActiveReaction(reaction.type);
+
+                                  // Reaction notification removed as per user request to avoid duplicate alerts
+                                  // Replaced by the intercession notification when the cause is first received
+
+                                  if (!activeReaction) {
+                                    // Daily gate - only award XP for reacting once per day total
+                                    const today = new Date().toISOString().split("T")[0];
+                                    const reactKey = `amens_react_xp_${session.user.id}_${today}`;
+                                    if (!localStorage.getItem(reactKey)) {
+                                      await addXp("react");
+                                      localStorage.setItem(reactKey, "1");
+                                    }
+                                  }
+                                  toast.success(`${reaction.emoji} Reação enviada!`);
+                                } catch {
+                                  toast.error("Erro ao enviar reação");
+                                }
+                              }}
+                            >
+                              <span className={`text-3xl transition-transform duration-150 ${isActive ? "scale-110" : ""}`}>
+                                {reaction.emoji}
+                              </span>
+                              <span className={`text-[11px] font-medium transition-colors duration-150 ${isActive ? "text-primary" : "text-muted-foreground"}`}>
+                                {reaction.label}
+                              </span>
+                            </motion.button>
+                          );
+                        })}
+                      </div>
+                    </Card>
+                  </motion.div>
                 </motion.div>
               )}
             </AnimatePresence>

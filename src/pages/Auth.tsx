@@ -35,6 +35,7 @@ const Auth = () => {
   const [existingParishes, setExistingParishes] = useState<string[]>([]);
   const [showRealName, setShowRealName] = useState(false);
   const [displayName, setDisplayName] = useState("");
+  const [isPublicInParish, setIsPublicInParish] = useState(false);
   
   // State handling
   const [loading, setLoading] = useState(false);
@@ -163,7 +164,8 @@ const Auth = () => {
           city: selectedCity,
           parish: parish,
           show_real_name: showRealName,
-          display_name: showRealName ? displayName : null
+          display_name: showRealName ? displayName : null,
+          is_public_in_parish: isPublicInParish
         }
       } 
     });
@@ -210,7 +212,8 @@ const Auth = () => {
       city: selectedCity,
       parish: parish,
       show_real_name: showRealName,
-      display_name: showRealName ? displayName : null
+      display_name: showRealName ? displayName : null,
+      is_public_in_parish: isPublicInParish
     });
 
     // Also update auth user metadata gracefully
@@ -221,7 +224,8 @@ const Auth = () => {
         city: selectedCity,
         parish: parish,
         show_real_name: showRealName,
-        display_name: showRealName ? displayName : null
+        display_name: showRealName ? displayName : null,
+        is_public_in_parish: isPublicInParish
       }
     });
 
@@ -352,6 +356,19 @@ const Auth = () => {
                   </Label>
                 </div>
 
+                <div className="flex items-center space-x-2">
+                  <input 
+                    type="checkbox" 
+                    id="is-public-parish-incomplete" 
+                    className="w-4 h-4 rounded border-primary/20 text-primary focus:ring-primary"
+                    checked={isPublicInParish}
+                    onChange={(e) => setIsPublicInParish(e.target.checked)}
+                  />
+                  <Label htmlFor="is-public-parish-incomplete" className="text-xs font-medium cursor-pointer">
+                    Desejo que minha foto e nome de usuário fique disponível na lista da minha paróquia.
+                  </Label>
+                </div>
+
                 <AnimatePresence>
                   {showRealName && (
                     <motion.div 
@@ -431,29 +448,6 @@ const Auth = () => {
                 </form>
               </TabsContent>
               <TabsContent value="signup">
-                {!referrerId ? (
-                   <div className="py-8 text-center px-4 space-y-4">
-                      <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-2 text-primary">
-                          <Lock className="w-8 h-8" />
-                      </div>
-                      <h3 className="text-lg font-bold text-foreground">Acesso Exclusivo</h3>
-                      <p className="text-sm text-muted-foreground leading-relaxed">
-                         O Améns está em fase de expansão divina, solicite um convite para algum amigo ou familiar ou envie uma mensagem para dieguh@gmail.com para solicitar um convite. Obrigado!
-                      </p>
-                      <div className="pt-4 space-y-2 text-left">
-                        <Label className="text-xs text-center block mb-2">Já possui um link ou código?</Label>
-                        <Input 
-                           placeholder="Cole seu código de convite..." 
-                           className="text-center"
-                           onChange={(e) => {
-                             if(e.target.value.length > 5) {
-                               window.location.href = `/auth?ref=${e.target.value}`;
-                             }
-                           }} 
-                        />
-                      </div>
-                   </div>
-                ) : (
                 <div className="max-h-[50vh] overflow-y-auto px-1 pb-2 pt-2 -mx-1 hide-scrollbar">
                   <form onSubmit={handleSignUp} className="space-y-4">
                     <div className="space-y-2">
@@ -554,6 +548,19 @@ const Auth = () => {
                         </Label>
                       </div>
 
+                      <div className="flex items-center space-x-2">
+                        <input 
+                          type="checkbox" 
+                          id="is-public-parish-signup" 
+                          className="w-4 h-4 rounded border-primary/20 text-primary focus:ring-primary"
+                          checked={isPublicInParish}
+                          onChange={(e) => setIsPublicInParish(e.target.checked)}
+                        />
+                        <Label htmlFor="is-public-parish-signup" className="text-xs font-medium cursor-pointer">
+                          Desejo que minha foto e nome de usuário fique disponível na lista da minha paróquia.
+                        </Label>
+                      </div>
+
                       <AnimatePresence>
                         {showRealName && (
                           <motion.div 
@@ -587,7 +594,6 @@ const Auth = () => {
                     </Button>
                   </form>
                 </div>
-                )}
               </TabsContent>
             </Tabs>
           </Card>

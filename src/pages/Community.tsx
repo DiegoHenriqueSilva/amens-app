@@ -5,6 +5,13 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
 import { Users, Sparkles, ArrowLeft, Heart, Globe, Award, TrendingUp, MapPin, Church } from "lucide-react";
 import PageTransition from "@/components/PageTransition";
 import { motion, AnimatePresence } from "framer-motion";
@@ -12,7 +19,9 @@ import { formatTimeAgo } from "@/lib/utils";
 import BrazilMap from "@/components/BrazilMap";
 import { fetchCitiesByState, type IBGECity } from "@/lib/ibge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { User as UserIcon } from "lucide-react";
+import { User as UserIcon, LogOut, Mail, Home, Search } from "lucide-react";
+import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
 const Community = () => {
   const navigate = useNavigate();
@@ -27,27 +36,17 @@ const Community = () => {
   const [parishStats, setParishStats] = useState<any[]>([]);
   const [cityTotalUsers, setCityTotalUsers] = useState(0);
   const [mapLoading, setMapLoading] = useState(false);
+  const [selectedParishMembers, setSelectedParishMembers] = useState<any[]>([]);
+  const [loadingMembers, setLoadingMembers] = useState(false);
+  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [pendingRequests, setPendingRequests] = useState<Set<string>>(new Set());
+  const [friendIds, setFriendIds] = useState<Set<string>>(new Set());
+  const [selectedParish, setSelectedParish] = useState<string | null>(null);
 
   useEffect(() => {
     fetchGlobalStats();
-    fetchRecentActivities();
-    
-    // Subscribe to new intercessions for real-time feel
-    const channel = supabase
-      .channel("public-activities")
-      .on(
-        "postgres_changes",
-        { event: "INSERT", schema: "public", table: "prayer_intercessions" },
-        () => {
-          fetchGlobalStats();
-          fetchRecentActivities();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    fetchCurrentUser();
+    fetchFriends();
   }, []);
 
   const fetchGlobalStats = async () => {
@@ -57,52 +56,40 @@ const Community = () => {
     setTotalPrayers(count || 0);
   };
 
-  const fetchRecentActivities = async () => {
-    setLoading(true);
-    // Fetch intercessions first
-    const { data: intercessions } = await supabase
-      .from("prayer_intercessions")
-      .select("*")
-      .order("created_at", { ascending: false })
-      .limit(15);
-
-    if (intercessions && intercessions.length > 0) {
-      const userIds = intercessions.map(i => i.user_id).filter(Boolean);
-      const prayerRequestIds = intercessions.map(i => i.prayer_request_id).filter(Boolean);
-
-      // Fetch profiles
-      const { data: profiles } = await supabase
-        .from("profiles" as any)
-        .select("id, full_name, city, show_real_name, display_name, avatar_url")
-        .in("id", userIds);
-      
-      const profileMap = new Map(((profiles || []) as any[]).map(p => [p.id, p]));
-
-      // Fetch prayer requests
-      const { data: requests } = await supabase
-        .from("prayer_requests")
-        .select("id, location, author_name")
-        .in("id", prayerRequestIds);
-      
-      const requestsMap = new Map((requests || []).map(r => [r.id, r]));
-
-      const combined = intercessions.map(i => ({
-        ...i,
-        profiles: profileMap.get(i.user_id),
-        prayer_requests: requestsMap.get(i.prayer_request_id)
-      }));
-
-      setActivities(combined);
-    } else {
-      setActivities([]);
+  
+  const fetchCurrentUser = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session) {
+      setCurrentUser(session.user);
+      fetchPendingRequests(session.user.id);
     }
-    setLoading(false);
+  };
+
+  const fetchFriends = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    const { data } = await supabase.from('friendships').select('friend_id').eq('user_id', user.id);
+    if (data) setFriendIds(new Set(data.map(f => f.friend_id)));
+  };
+
+  const fetchPendingRequests = async (userId: string) => {
+    const { data } = await supabase
+      .from('friend_requests')
+      .select('receiver_id')
+      .eq('sender_id', userId)
+      .eq('status', 'pending');
+    
+    if (data) {
+      setPendingRequests(new Set(data.map(r => r.receiver_id)));
+    }
   };
 
   const handleStateClick = async (stateUf: string) => {
     setSelectedMapState(stateUf);
     setSelectedMapCity("");
     setParishStats([]);
+    setSelectedParish(null);
+    setSelectedParishMembers([]);
     
     const citiesData = await fetchCitiesByState(stateUf);
     setMapCities(citiesData);
@@ -112,6 +99,8 @@ const Community = () => {
     e.preventDefault();
     if (!selectedMapState || !selectedMapCity) return;
     
+    setSelectedParish(null);
+    setSelectedParishMembers([]);
     setMapLoading(true);
     const { data } = await (supabase
       .from('parish_stats' as any)
@@ -127,13 +116,50 @@ const Community = () => {
     setMapLoading(false);
   };
 
+  const handleParishClick = async (parishName: string) => {
+    setSelectedParish(parishName);
+    setLoadingMembers(true);
+    const { data, error } = await supabase
+      .from('profiles' as any)
+      .select('id, full_name, display_name, show_real_name, avatar_url, city')
+      .eq('state', selectedMapState)
+      .eq('city', selectedMapCity)
+      .eq('parish', parishName)
+      .eq('is_public_in_parish', true);
+    
+    if (!error && data) {
+      setSelectedParishMembers(data);
+    }
+    setLoadingMembers(false);
+  };
+
+  const handleAddFriend = async (targetUserId: string) => {
+    if (!currentUser) {
+      toast.error("Entre para adicionar amigos.");
+      return;
+    }
+    
+    const { error } = await supabase.from('friend_requests').insert({
+      sender_id: currentUser.id,
+      receiver_id: targetUserId,
+      status: 'pending'
+    });
+
+    if (error) {
+      toast.error("Erro ao enviar pedido.");
+    } else {
+      toast.success("Pedido de amizade enviado! 🙏");
+      setPendingRequests(prev => new Set([...prev, targetUserId]));
+    }
+  };
+
   return (
     <PageTransition>
       <div className="min-h-screen bg-background relative overflow-hidden">
         <div className="absolute top-[-8rem] right-[-8rem] w-[25rem] h-[25rem] rounded-full bg-primary/10 blur-3xl opacity-50" />
         <div className="absolute bottom-[-8rem] left-[-8rem] w-[25rem] h-[25rem] rounded-full bg-accent/10 blur-3xl opacity-50" />
 
-        <div className="container mx-auto px-6 py-8 relative z-10 max-w-lg">
+        <div className="container mx-auto px-6 py-8 relative z-10 max-w-lg pb-32">
           <Button variant="ghost" size="icon" onClick={() => navigate("/")} className="mb-6">
             <ArrowLeft className="w-5 h-5" />
           </Button>
@@ -156,7 +182,7 @@ const Community = () => {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.1 }}
-            className="mb-8 space-y-4"
+            className="mb-6 space-y-2"
           >
             <div className="flex items-center gap-2 px-2">
               <MapPin className="w-4 h-4 text-primary" />
@@ -165,13 +191,41 @@ const Community = () => {
             
             <BrazilMap onStateClick={handleStateClick} selectedState={selectedMapState} />
             
+            <div className="px-1">
+              <Select 
+                value={selectedMapState || ""} 
+                onValueChange={(val) => handleStateClick(val)}
+              >
+                <SelectTrigger className="w-full h-14 rounded-2xl border-primary/20 bg-white/50 backdrop-blur-sm soft-shadow text-foreground/80 font-medium">
+                  <SelectValue placeholder="Selecione o estado por nome..." />
+                </SelectTrigger>
+                <SelectContent className="rounded-2xl border-primary/10 max-h-[300px]">
+                  {[
+                    { uf: "AC", name: "Acre" }, { uf: "AL", name: "Alagoas" }, { uf: "AP", name: "Amapá" },
+                    { uf: "AM", name: "Amazonas" }, { uf: "BA", name: "Bahia" }, { uf: "CE", name: "Ceará" },
+                    { uf: "DF", name: "Distrito Federal" }, { uf: "ES", name: "Espírito Santo" }, { uf: "GO", name: "Goiás" },
+                    { uf: "MA", name: "Maranhão" }, { uf: "MT", name: "Mato Grosso" }, { uf: "MS", name: "Mato Grosso do Sul" },
+                    { uf: "MG", name: "Minas Gerais" }, { uf: "PA", name: "Pará" }, { uf: "PB", name: "Paraíba" },
+                    { uf: "PR", name: "Paraná" }, { uf: "PE", name: "Pernambuco" }, { uf: "PI", name: "Piauí" },
+                    { uf: "RJ", name: "Rio de Janeiro" }, { uf: "RN", name: "Rio Grande do Norte" }, { uf: "RS", name: "Rio Grande do Sul" },
+                    { uf: "RO", name: "Rondônia" }, { uf: "RR", name: "Roraima" }, { uf: "SC", name: "Santa Catarina" },
+                    { uf: "SP", name: "São Paulo" }, { uf: "SE", name: "Sergipe" }, { uf: "TO", name: "Tocantins" }
+                  ].map((state) => (
+                    <SelectItem key={state.uf} value={state.uf} className="rounded-xl font-medium">
+                      {state.name} ({state.uf})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
             <AnimatePresence>
               {selectedMapState && (
                 <motion.div
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: 'auto' }}
                   exit={{ opacity: 0, height: 0 }}
-                  className="space-y-4"
+                  className="space-y-4 overflow-hidden"
                 >
                   <Card className="p-5 soft-shadow border-primary/15 bg-gradient-to-br from-white/80 to-primary/5 backdrop-blur-md rounded-[2rem]">
                     <h3 className="text-sm font-bold text-primary mb-3">Pesquisar em {selectedMapState}</h3>
@@ -196,31 +250,147 @@ const Community = () => {
                   {/* Resultados das Paróquias */}
                   {parishStats.length > 0 && (
                      <div className="space-y-3 pt-2">
-                       <h4 className="text-xs font-bold uppercase tracking-widest px-2 text-primary/80">
-                         Paróquias em {selectedMapCity}
-                       </h4>
-                       {parishStats.map((stat, idx) => {
-                         const percentage = cityTotalUsers > 0 ? Math.round((Number(stat.total_users) / cityTotalUsers) * 100) : 0;
-                         return (
-                           <motion.div key={stat.parish} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.1 }}>
-                             <Card className="p-4 border-primary/10 bg-white/70 rounded-[1.5rem] soft-shadow">
-                               <div className="flex justify-between items-start mb-2">
-                                 <div className="flex items-center gap-2">
-                                   <Church className="w-4 h-4 text-primary/60" />
-                                   <span className="font-semibold text-sm leading-tight text-foreground/90">{stat.parish}</span>
+                       <div className="flex items-center justify-between px-2">
+                         <h4 className="text-xs font-bold uppercase tracking-widest text-primary/80">
+                           Paróquias em {selectedMapCity}
+                         </h4>
+                         {selectedParish && (
+                           <Button 
+                             variant="ghost" 
+                             size="sm" 
+                             onClick={() => setSelectedParish(null)}
+                             className="h-6 text-[10px] uppercase font-bold text-muted-foreground"
+                           >
+                             Voltar à lista
+                           </Button>
+                         )}
+                       </div>
+
+                       {!selectedParish ? (
+                         parishStats.map((stat, idx) => {
+                           const percentage = cityTotalUsers > 0 ? Math.round((Number(stat.total_users) / cityTotalUsers) * 100) : 0;
+                           return (
+                             <motion.div key={stat.parish} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.1 }}>
+                               <Card 
+                                 className="p-4 border-primary/10 bg-white/70 rounded-[1.5rem] soft-shadow cursor-pointer hover:border-primary/30 transition-all group"
+                                 onClick={() => handleParishClick(stat.parish)}
+                               >
+                                 <div className="flex justify-between items-start mb-2">
+                                   <div className="flex items-center gap-2">
+                                     <Church className="w-4 h-4 text-primary/60 group-hover:text-primary transition-colors" />
+                                     <span className="font-semibold text-sm leading-tight text-foreground/90">{stat.parish}</span>
+                                   </div>
+                                   <span className="text-xs font-extrabold text-primary bg-primary/10 px-2 py-0.5 rounded-full whitespace-nowrap ml-2">
+                                     {stat.total_users} {stat.total_users === 1 ? 'membro' : 'membros'}
+                                   </span>
                                  </div>
-                                 <span className="text-xs font-extrabold text-primary bg-primary/10 px-2 py-0.5 rounded-full whitespace-nowrap ml-2">
-                                   {stat.total_users} {stat.total_users === 1 ? 'membro' : 'membros'}
-                                 </span>
-                               </div>
-                               <div className="flex items-center gap-3">
-                                 <Progress value={percentage} className="h-1.5 flex-1 bg-primary/10" />
-                                 <span className="text-[10px] font-bold text-muted-foreground w-8 text-right">{percentage}%</span>
-                               </div>
+                                 <div className="flex items-center gap-3">
+                                   <Progress value={percentage} className="h-1.5 flex-1 bg-primary/10" />
+                                   <span className="text-[10px] font-bold text-muted-foreground w-8 text-right">{percentage}%</span>
+                                 </div>
+                               </Card>
+                             </motion.div>
+                           );
+                         })
+                       ) : (
+                         <AnimatePresence mode="wait">
+                           <motion.div 
+                             key="parish-view"
+                             initial={{ opacity: 0, y: 20 }}
+                             animate={{ opacity: 1, y: 0 }}
+                             exit={{ opacity: 0, y: 10 }}
+                             className="space-y-6 pt-4"
+                           >
+                             <Card className="p-8 border-primary/10 bg-gradient-to-b from-white to-primary/5 rounded-[2.5rem] soft-shadow text-center relative overflow-hidden">
+                               <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
+                               
+                               <motion.div 
+                                 initial={{ scale: 0.8, opacity: 0 }}
+                                 animate={{ scale: 1, opacity: 1 }}
+                                 className="w-28 h-28 mx-auto bg-white rounded-full flex items-center justify-center shadow-2xl border-4 border-primary/5 relative mb-4"
+                               >
+                                 <img 
+                                   src="/church.png" 
+                                   alt="Igreja" 
+                                   className="w-24 h-24 object-contain"
+                                 />
+                                 <div className="absolute -bottom-1 -right-1 bg-primary text-white p-2 rounded-full shadow-lg">
+                                   <Church className="w-4 h-4" />
+                                 </div>
+                               </motion.div>
+                               
+                               <h3 className="text-2xl font-black text-foreground mb-1 leading-tight">{selectedParish}</h3>
+                               <p className="text-[10px] uppercase tracking-[0.3em] text-primary font-black opacity-70">Perfil da Paróquia</p>
                              </Card>
+
+                             <div className="space-y-3">
+                               <h4 className="text-xs font-bold uppercase tracking-widest px-2 text-primary/70">Irmãos de Fé Públicos</h4>
+                               <div className="grid gap-3">
+                                 {loadingMembers ? (
+                                   [1, 2].map(i => <Card key={i} className="h-20 animate-pulse bg-white/50 rounded-2xl" />)
+                                 ) : selectedParishMembers.length > 0 ? (
+                                   selectedParishMembers.map((member) => {
+                                     const isMe = currentUser?.id === member.id;
+                                     const isFriend = friendIds.has(member.id);
+                                     const isPending = pendingRequests.has(member.id);
+
+                                     return (
+                                       <motion.div key={member.id} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }}>
+                                         <Card className={cn(
+                                           "p-4 flex items-center justify-between border-primary/5 bg-white/80 rounded-2xl soft-shadow transition-all",
+                                           isMe && "ring-2 ring-primary/20 bg-primary/5 shadow-inner"
+                                         )}>
+                                           <div className="flex items-center gap-3">
+                                             <Avatar className="w-12 h-12 border-2 border-background shadow-sm">
+                                               <AvatarImage src={member.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${member.id}`} />
+                                               <AvatarFallback className="bg-secondary text-primary">
+                                                 <UserIcon className="w-6 h-6" />
+                                               </AvatarFallback>
+                                             </Avatar>
+                                             <div>
+                                               <p className="text-sm font-bold leading-tight flex items-center gap-2">
+                                                 {member.show_real_name ? (member.display_name || member.full_name?.split(' ')[0]) : "Membro da Fé"}
+                                                 {isMe && <span className="text-[9px] bg-primary text-white px-2 py-0.5 rounded-full font-black uppercase tracking-tighter">Você</span>}
+                                                 {isFriend && <span className="text-[9px] bg-green-500 text-white px-2 py-0.5 rounded-full font-black uppercase tracking-tighter">Seu Amigo</span>}
+                                               </p>
+                                               <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-widest">
+                                                 {selectedMapCity} • {selectedMapState}
+                                               </p>
+                                             </div>
+                                           </div>
+                                           
+                                           {!isMe && !isFriend && (
+                                             <Button
+                                               variant="ghost"
+                                               size="sm"
+                                               className={cn(
+                                                 "rounded-full h-9 px-5 text-[10px] font-black uppercase tracking-widest transition-all",
+                                                 isPending ? "text-muted-foreground bg-secondary/50" : "bg-primary/10 text-primary hover:bg-primary hover:text-white"
+                                               )}
+                                               disabled={isPending}
+                                               onClick={() => handleAddFriend(member.id)}
+                                             >
+                                               {isPending ? "Pendente" : "Seguir"}
+                                             </Button>
+                                           )}
+                                           
+                                           {isFriend && (
+                                             <div className="p-2.5 bg-green-50 text-green-600 rounded-full">
+                                               <Heart className="w-4 h-4 fill-current" />
+                                             </div>
+                                           )}
+                                         </Card>
+                                       </motion.div>
+                                     );
+                                   })
+                                 ) : (
+                                   <p className="text-center text-xs italic text-muted-foreground py-6">Ainda não há outros membros públicos nesta paróquia. 🙏</p>
+                                 )}
+                               </div>
+                             </div>
                            </motion.div>
-                         );
-                       })}
+                         </AnimatePresence>
+                       )}
                      </div>
                   )}
 
@@ -252,67 +422,6 @@ const Community = () => {
             </Card>
           </motion.div>
 
-          {/* Faith Wall / Feed */}
-          <div className="space-y-6">
-            <div className="flex items-center justify-between px-2">
-               <div className="flex items-center gap-2">
-                 <TrendingUp className="w-4 h-4 text-primary" />
-                 <h2 className="text-xs uppercase font-bold tracking-widest text-foreground/70">Mural da Fé em Tempo Real</h2>
-               </div>
-               <span className="flex items-center gap-1.5">
-                 <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-                 <span className="text-[10px] font-bold text-green-600 uppercase">Ao Vivo</span>
-               </span>
-            </div>
-
-            <div className="space-y-4">
-              <AnimatePresence mode="popLayout">
-                {loading ? (
-                  [1, 2, 3].map(i => (
-                    <Card key={i} className="p-5 border-primary/5 bg-white/40 rounded-3xl animate-pulse h-20" />
-                  ))
-                ) : activities.length > 0 ? (
-                  activities.map((activity, index) => {
-                    const firstName = activity.profiles?.show_real_name 
-                      ? (activity.profiles?.display_name || activity.profiles?.full_name?.split(" ")[0] || "Um intercessor")
-                      : "Um intercessor";
-                    const city = activity.profiles?.city || activity.prayer_requests?.location || "Lugar Sagrado";
-                    
-                    return (
-                      <motion.div
-                        key={activity.id}
-                        initial={{ opacity: 0, x: -10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: index * 0.05 }}
-                      >
-                        <Card className="p-5 flex items-center gap-4 border-primary/5 soft-shadow bg-white/60 rounded-[1.8rem] hover:bg-white transition-all transform hover:-translate-y-0.5">
-                          <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-primary/70 border border-primary/10 overflow-hidden">
-                             <Avatar className="w-full h-full rounded-2xl">
-                                <AvatarImage src={activity.profiles?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${activity.user_id}`} className="object-cover" />
-                                <AvatarFallback className="bg-secondary text-primary">
-                                   <UserIcon className="w-6 h-6" />
-                                </AvatarFallback>
-                             </Avatar>
-                          </div>
-                          <div className="flex-1">
-                            <p className="text-[13px] font-medium leading-tight text-foreground/90">
-                              <span className="text-primary font-bold">{firstName}</span> de <span className="font-bold">{city}</span> acabou de interceder por uma causa.
-                            </p>
-                            <p className="text-[10px] text-muted-foreground mt-1 font-bold">{formatTimeAgo(activity.created_at)}</p>
-                          </div>
-                          <Heart className="w-4 h-4 text-primary/30 fill-primary/5" />
-                        </Card>
-                      </motion.div>
-                    );
-                  })
-                ) : (
-                  <div className="text-center py-10 opacity-40">
-                    <p className="text-sm italic">O silêncio é prece, mas a comunidade logo se moverá... 🙏</p>
-                  </div>
-                )}
-              </AnimatePresence>
-            </div>
-          </div>
 
           {/* Top Intercessors - Teaser */}
           <motion.div 
