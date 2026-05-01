@@ -358,7 +358,7 @@ const Index = () => {
 
           {user && (
             <motion.div className="flex justify-center mt-12 opacity-80" initial={{ opacity: 0 }} animate={{ opacity: 0.8 }}>
-               <Button onClick={handleSignOut} variant="ghost" size="sm" className="text-xs text-glow font-bold">
+               <Button onClick={handleSignOut} variant="ghost" size="sm" className="text-xs font-bold">
                   Sair da Conta
                </Button>
             </motion.div>
