@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { getLevel, getNextLevel, getLevelProgress, CELESTIAL_LEVELS } from "@/lib/xp";
 import { Progress } from "@/components/ui/progress";
-import { BookOpen } from "lucide-react";
+import { BookOpen, User } from "lucide-react";
 
 interface XpBadgeProps {
   totalXp: number;
@@ -34,7 +34,7 @@ export function XpBadge({ totalXp, userName, avatarUrl }: XpBadgeProps) {
   }, [displayLevel]);
 
   return (
-    <motion.div 
+    <motion.div
       animate={showLevelUpAnim ? {
         boxShadow: [
           "0 0 0px rgba(212, 175, 55, 0)",
@@ -55,7 +55,7 @@ export function XpBadge({ totalXp, userName, avatarUrl }: XpBadgeProps) {
     >
       <AnimatePresence>
         {showLevelUpAnim && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0 }}
@@ -66,16 +66,16 @@ export function XpBadge({ totalXp, userName, avatarUrl }: XpBadgeProps) {
         )}
       </AnimatePresence>
       <div className="flex items-center gap-4">
-        <div className="w-12 h-12 bg-secondary/50 rounded-xl flex items-center justify-center text-2xl shadow-inner overflow-hidden border border-primary/10">
+        <div className="w-12 h-12 bg-secondary/50 rounded-full flex items-center justify-center text-2xl shadow-inner overflow-hidden border border-primary/10">
           {avatarUrl ? (
             <img src={avatarUrl} alt={userName} className="w-full h-full object-cover" />
           ) : (
-            <img src={iconPath} alt={level.name} className="w-full h-full object-contain p-1" />
+            <User className="w-6 h-6 text-primary/60" />
           )}
         </div>
         <div className="flex-1">
           <div className="flex items-baseline justify-between mb-0.5">
-            {userName && <p className="text-sm font-black uppercase tracking-widest truncate max-w-[150px]" style={{color: '#5a3e0a'}}>{userName.split(' ')[0]}</p>}
+            {userName && <p className="text-sm font-black uppercase tracking-widest truncate max-w-[150px]" style={{ color: '#5a3e0a' }}>{userName.split(' ')[0]}</p>}
             <span className="text-xs text-muted-foreground font-medium ml-auto">{totalXp} Pontos de Fé</span>
           </div>
           <div className="flex items-center gap-2 mb-2">
@@ -83,10 +83,10 @@ export function XpBadge({ totalXp, userName, avatarUrl }: XpBadgeProps) {
               Nível {displayLevel}
             </span>
             {displayLevel <= 20 && (
-              <img 
-                src={iconPath} 
-                alt={level.name} 
-                className="h-6 w-auto object-contain drop-shadow-sm" 
+              <img
+                src={iconPath}
+                alt={level.name}
+                className="h-6 w-auto object-contain drop-shadow-sm"
               />
             )}
             {displayLevel > 20 && (
@@ -97,16 +97,16 @@ export function XpBadge({ totalXp, userName, avatarUrl }: XpBadgeProps) {
           </div>
           <Progress value={progress} className="h-2 bg-secondary border border-primary/5" />
           <div className="flex justify-between items-center mt-1.5">
-             <div />
-             {next && (
-               <span className="text-[11px] text-muted-foreground font-bold tracking-tight">
-                 Proximo: <span className="text-primary/70 uppercase font-black">{next.name}</span>
-               </span>
-             )}
+            <div />
+            {next && (
+              <span className="text-[11px] text-muted-foreground font-bold tracking-tight">
+                Proximo: <span className="text-primary/70 uppercase font-black">{next.name}</span>
+              </span>
+            )}
           </div>
         </div>
         <div className="w-14 h-14 flex items-center justify-center overflow-visible relative flex-shrink-0">
-           <img src="/livro_3d.png" alt="Sagração" className="w-full h-full object-contain transition-all duration-500 drop-shadow-sm group-active:drop-shadow-[0_0_20px_rgba(255,215,0,1)] group-active:brightness-125 group-active:scale-110" />
+          <img src="/livro_3d.png" alt="Sagração" className="w-full h-full object-contain transition-all duration-500 drop-shadow-sm group-active:drop-shadow-[0_0_20px_rgba(255,215,0,1)] group-active:brightness-125 group-active:scale-110" />
         </div>
       </div>
     </motion.div>
