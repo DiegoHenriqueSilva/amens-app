@@ -96,7 +96,7 @@ const Index = () => {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user ?? null);
-      
+
       if ((event === "SIGNED_IN" || event === "INITIAL_SESSION") && session) {
         const storedRef = localStorage.getItem("fe_referrer");
         if (storedRef && storedRef !== session.user.id) {
@@ -141,20 +141,20 @@ const Index = () => {
     <PageTransition>
       <div className="min-h-screen pb-28">
         <CompleteProfileDialog />
-        <AngelicalNotificationOverlay 
-          notificationId={activeIntercessionNotifId} 
-          onClose={() => setActiveIntercessionNotifId(null)} 
+        <AngelicalNotificationOverlay
+          notificationId={activeIntercessionNotifId}
+          onClose={() => setActiveIntercessionNotifId(null)}
         />
-        
+
         <div className="container mx-auto px-6 py-8 relative z-10 max-w-lg">
-          
+
           <motion.div className="text-center mb-8 pt-4" initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
-             <h1 className="text-5xl font-bold text-foreground mb-1 tracking-tight text-glow text-soft-outline">Améns</h1>
-             <div className="flex items-center justify-center gap-2 text-[#8b6508] text-glow">
-                <Sparkles className="w-3 h-3" />
-                <span className="text-xs uppercase tracking-[0.2em] font-bold">Unidos pela Fé</span>
-                <Sparkles className="w-3 h-3" />
-             </div>
+            <h1 className="text-5xl font-bold text-foreground mb-1 tracking-tight text-glow text-soft-outline">Améns</h1>
+            <div className="flex items-center justify-center gap-2 text-[#8b6508] text-glow">
+              <Sparkles className="w-3 h-3" />
+              <span className="text-xs uppercase tracking-[0.2em] font-bold">Unidos pela Fé</span>
+              <Sparkles className="w-3 h-3" />
+            </div>
           </motion.div>
 
           {/* Jornada da Fé Diária */}
@@ -168,7 +168,7 @@ const Index = () => {
           {user && !xpLoading && (
             <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.1 }}>
               <Card className="p-5 mb-8 soft-shadow border-primary/5 bg-white/70 backdrop-blur-sm rounded-[2rem]">
-                 <XpBadge totalXp={totalXp} userName={profile?.full_name || user.user_metadata?.full_name || ""} avatarUrl={profile?.avatar_url} />
+                <XpBadge totalXp={totalXp} userName={profile?.full_name || user.user_metadata?.full_name || ""} avatarUrl={profile?.avatar_url} />
               </Card>
             </motion.div>
           )}
@@ -285,82 +285,82 @@ const Index = () => {
 
           {/* Secondary Actions List */}
           <motion.div className="space-y-4 mb-10" variants={stagger} initial="initial" animate="animate">
-              <motion.div variants={fadeUp}>
-                <Link to="/terco">
-                  <Card className="p-4 flex items-center gap-4 border-primary/5 soft-shadow bg-gradient-to-r from-primary/10 to-primary/5 rounded-3xl hover:bg-white transition-colors relative overflow-hidden">
-                     <div className="absolute right-0 top-0 w-32 h-32 bg-primary/10 rounded-full blur-2xl pointer-events-none" />
-                     <div className="w-10 h-10 bg-primary/20 rounded-2xl flex items-center justify-center text-primary">
-                        <Sparkles className="w-5 h-5" />
-                     </div>
-                     <div className="flex-1 relative z-10">
-                        <h3 className="text-sm font-bold text-foreground">Terço Guiado</h3>
-                        <p className="text-[11px] text-muted-foreground font-medium w-full truncate">Reze acompanhando visualmente por voz</p>
-                     </div>
-                     <Button variant="outline" size="sm" className="rounded-full text-[10px] h-8 px-4 border-primary/20 text-primary bg-background/50 hover:bg-primary hover:text-white">Iniciar</Button>
-                  </Card>
-                </Link>
-              </motion.div>
+            <motion.div variants={fadeUp}>
+              <Link to="/terco">
+                <Card className="p-4 flex items-center gap-4 border-primary/5 soft-shadow bg-gradient-to-r from-primary/10 to-primary/5 rounded-3xl hover:bg-white transition-colors relative overflow-hidden">
+                  <div className="absolute right-0 top-0 w-32 h-32 bg-primary/10 rounded-full blur-2xl pointer-events-none" />
+                  <div className="w-10 h-10 bg-primary/20 rounded-2xl flex items-center justify-center text-primary">
+                    <Sparkles className="w-5 h-5" />
+                  </div>
+                  <div className="flex-1 relative z-10">
+                    <h3 className="text-sm font-bold text-foreground">Terço Guiado</h3>
+                    <p className="text-[11px] text-muted-foreground font-medium w-full truncate">Reze acompanhando visualmente por voz</p>
+                  </div>
+                  <Button variant="outline" size="sm" className="rounded-full text-[10px] h-8 px-4 border-primary/20 text-primary bg-background/50 hover:bg-primary hover:text-white">Iniciar</Button>
+                </Card>
+              </Link>
+            </motion.div>
 
-             <motion.div variants={fadeUp}>
-               <Link to="/my-prayers">
-                 <Card className="p-4 flex items-center gap-4 border-primary/5 soft-shadow bg-white/60 rounded-3xl hover:bg-white transition-colors">
-                    <div className="w-10 h-10 bg-secondary/50 rounded-2xl flex items-center justify-center text-primary/60">
-                       <BookOpen className="w-5 h-5" />
-                    </div>
-                    <div className="flex-1">
-                       <h3 className="text-sm font-bold">Minhas Preces</h3>
-                       <p className="text-[11px] text-muted-foreground font-medium">Veja quem orou por você</p>
-                    </div>
-                    <Button variant="outline" size="sm" className="rounded-full text-[10px] h-8 px-4 border-primary/20 text-primary">Ver Histórico</Button>
-                 </Card>
-               </Link>
-             </motion.div>
+            <motion.div variants={fadeUp}>
+              <Link to="/my-prayers">
+                <Card className="p-4 flex items-center gap-4 border-primary/5 soft-shadow bg-white/60 rounded-3xl hover:bg-white transition-colors">
+                  <div className="w-10 h-10 bg-secondary/50 rounded-2xl flex items-center justify-center text-primary/60">
+                    <BookOpen className="w-5 h-5" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-sm font-bold">Minhas Preces</h3>
+                    <p className="text-[11px] text-muted-foreground font-medium">Veja quem orou por você</p>
+                  </div>
+                  <Button variant="outline" size="sm" className="rounded-full text-[10px] h-8 px-4 border-primary/20 text-primary">Ver Histórico</Button>
+                </Card>
+              </Link>
+            </motion.div>
 
-             <motion.div variants={fadeUp}>
-               <Link to="/my-intercessions">
-                 <Card className="p-4 flex items-center gap-4 border-primary/5 soft-shadow bg-white/60 rounded-3xl hover:bg-white transition-colors">
-                    <div className="w-10 h-10 bg-secondary/50 rounded-2xl flex items-center justify-center text-primary/60">
-                       <HandHeart className="w-5 h-5" />
-                    </div>
-                    <div className="flex-1">
-                       <h3 className="text-sm font-bold">Minhas Intercessões</h3>
-                       <p className="text-[11px] text-muted-foreground font-medium">Causas que você apoiou</p>
-                    </div>
-                    <Button variant="outline" size="sm" className="rounded-full text-[10px] h-8 px-4 border-primary/20 text-primary">Ver Lista</Button>
-                 </Card>
-               </Link>
-             </motion.div>
+            <motion.div variants={fadeUp}>
+              <Link to="/my-intercessions">
+                <Card className="p-4 flex items-center gap-4 border-primary/5 soft-shadow bg-white/60 rounded-3xl hover:bg-white transition-colors">
+                  <div className="w-10 h-10 bg-secondary/50 rounded-2xl flex items-center justify-center text-primary/60">
+                    <HandHeart className="w-5 h-5" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-sm font-bold">Minhas Intercessões</h3>
+                    <p className="text-[11px] text-muted-foreground font-medium">Causas que você apoiou</p>
+                  </div>
+                  <Button variant="outline" size="sm" className="rounded-full text-[10px] h-8 px-4 border-primary/20 text-primary">Ver Lista</Button>
+                </Card>
+              </Link>
+            </motion.div>
 
-              <motion.div variants={fadeUp}>
-                <Link to='/friends'>
-                  <Card className='p-4 flex items-center gap-4 border-primary/5 soft-shadow bg-white/60 rounded-3xl hover:bg-white transition-colors'>
-                     <div className='w-10 h-10 bg-secondary/50 rounded-2xl flex items-center justify-center text-primary/60'>
-                        <Users className='w-5 h-5' />
-                     </div>
-                     <div className='flex-1'>
-                        <h3 className='text-sm font-bold'>Amigos da Fé</h3>
-                        <p className='text-[11px] text-muted-foreground font-medium'>Conecte-se com outros intercessores</p>
-                     </div>
-                     <Button variant='outline' size='sm' className='rounded-full text-[10px] h-8 px-4 border-primary/20 text-primary'>Conectar</Button>
-                  </Card>
-                </Link>
-              </motion.div>
+            <motion.div variants={fadeUp}>
+              <Link to='/friends'>
+                <Card className='p-4 flex items-center gap-4 border-primary/5 soft-shadow bg-white/60 rounded-3xl hover:bg-white transition-colors'>
+                  <div className='w-10 h-10 bg-secondary/50 rounded-2xl flex items-center justify-center text-primary/60'>
+                    <Users className='w-5 h-5' />
+                  </div>
+                  <div className='flex-1'>
+                    <h3 className='text-sm font-bold'>Amigos da Fé</h3>
+                    <p className='text-[11px] text-muted-foreground font-medium'>Conecte-se com outros intercessores</p>
+                  </div>
+                  <Button variant='outline' size='sm' className='rounded-full text-[10px] h-8 px-4 border-primary/20 text-primary'>Conectar</Button>
+                </Card>
+              </Link>
+            </motion.div>
           </motion.div>
 
           {!user && (
             <motion.div className="text-center mt-10" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-               <Button onClick={() => navigate("/auth")} className="bg-gradient-to-br from-[#d4a017] to-[#e8c547] text-[#3d2800] border-0 shadow-md hover:opacity-90 transition-opacity font-bold rounded-full px-10 py-6 text-base">
-                 <User className="w-5 h-5 mr-2" />
-                 Entrar na Comunidade
-               </Button>
+              <Button onClick={() => navigate("/auth")} className="bg-gradient-to-br from-[#d4a017] to-[#e8c547] text-[#3d2800] border-0 shadow-md hover:opacity-90 transition-opacity font-bold rounded-full px-10 py-6 text-base">
+                <User className="w-5 h-5 mr-2" />
+                Entrar na Comunidade
+              </Button>
             </motion.div>
           )}
 
           {user && (
             <motion.div className="flex justify-center mt-12 opacity-80" initial={{ opacity: 0 }} animate={{ opacity: 0.8 }}>
-               <Button onClick={handleSignOut} variant="ghost" size="sm" className="text-xs text-glow font-bold">
-                  Sair da Conta
-               </Button>
+              <Button onClick={handleSignOut} variant="ghost" size="sm" className="text-xs font-bold">
+                Sair da Conta
+              </Button>
             </motion.div>
           )}
         </div>

@@ -614,16 +614,9 @@ REGRAS ADICIONAIS:
                   </Card>
                 </motion.div>
               ) : isLoading || !prayerRequest ? (
-                <motion.div key="empty" variants={fadeUp} initial="initial" animate="animate" exit="exit">
-                  <Card className="group p-12 text-center soft-shadow border-primary/10 transition-colors">
-                    <motion.div animate={{ scale: [1, 1.08, 1] }} transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }} className="w-20 h-20 mx-auto mb-5 bg-transparent flex items-center justify-center overflow-visible relative">
-                      <img src="/estrela_3d.png" alt="Estrela brilhante" className="w-full h-full object-contain drop-shadow-md transition-all duration-500 group-active:drop-shadow-[0_0_30px_rgba(255,215,0,1)] group-active:brightness-125 group-active:scale-110" />
-                    </motion.div>
-                    <h2 className="text-2xl font-semibold mb-4 text-foreground">Clique para receber uma causa</h2>
-                    <Button onClick={fetchRandomPrayerRequest} disabled={isLoading} size="lg" className="gradient-divine text-primary-foreground hover:opacity-90">
-                      {isLoading ? "Buscando..." : "Sortear Causa e Orar"}
-                    </Button>
-                  </Card>
+                <motion.div key="empty" variants={fadeUp} initial="initial" animate="animate" exit="exit" className="flex flex-col items-center justify-center py-20">
+                  <div className="animate-spin w-10 h-10 border-4 border-primary border-t-transparent rounded-full mb-4" />
+                  <p className="text-primary font-medium animate-pulse">Buscando causa...</p>
                 </motion.div>
               ) : (
                 <motion.div key="prayer" variants={fadeUp} initial="initial" animate="animate" exit="exit" className="space-y-6">
@@ -720,7 +713,7 @@ REGRAS ADICIONAIS:
                       </Button>
                       
                       {!prayerRequest.feedback && !isSharedCause && (
-                        <Button onClick={fetchRandomPrayerRequest} variant="outline" className="border-[#1D4ED8]/20 text-[#1D4ED8] hover:bg-[#1D4ED8]/5 shadow-sm">
+                        <Button onClick={fetchRandomPrayerRequest} variant="outline" className="border-[#1D4ED8]/20 text-[#1D4ED8] hover:text-[#1D4ED8] hover:bg-[#1D4ED8]/5 shadow-sm">
                           Próxima Causa
                         </Button>
                       )}
@@ -730,7 +723,7 @@ REGRAS ADICIONAIS:
                        <Button 
                          variant="outline" 
                          onClick={() => setFriendSelectorOpen(true)}
-                         className="flex-1 rounded-xl border-[#1D4ED8]/20 text-[#1D4ED8] hover:bg-[#1D4ED8]/10 shadow-sm transition-colors text-xs h-9"
+                         className="flex-1 rounded-xl border-[#1D4ED8]/20 text-[#1D4ED8] hover:text-[#1D4ED8] hover:bg-[#1D4ED8]/10 shadow-sm transition-colors text-xs h-9"
                        >
                          <Users className="w-3.5 h-3.5 mr-2" />
                          Enviar a um amigo do Améns
@@ -739,7 +732,7 @@ REGRAS ADICIONAIS:
                        <Button 
                          variant="outline" 
                          onClick={handleShareCompartilhar}
-                         className="flex-1 rounded-xl border-green-600/20 text-green-700 hover:bg-green-50 shadow-sm transition-colors text-xs h-9"
+                         className="flex-1 rounded-xl border-green-600/20 text-green-700 hover:text-green-700 hover:bg-green-50 shadow-sm transition-colors text-xs h-9"
                        >
                          <Share2 className="w-3.5 h-3.5 mr-2" />
                          Compartilhar fora do Améns
@@ -750,9 +743,6 @@ REGRAS ADICIONAIS:
                       <div className="mt-4 flex flex-col gap-3 items-center text-center">
                         <button onClick={() => setReportDialogOpen(true)} className="text-[10px] text-muted-foreground hover:text-red-500 transition-colors uppercase font-medium flex items-center justify-center gap-1 mx-auto">
                           <Flag className="w-3 h-3" /> Reportar essa causa a um administrador
-                        </button>
-                        <button onClick={fetchRandomPrayerRequest} className="text-[10px] text-primary hover:text-primary/80 transition-colors uppercase font-bold tracking-widest flex items-center justify-center gap-1 mx-auto bg-primary/5 px-3 py-1.5 rounded-full">
-                          Próxima Causa
                         </button>
                       </div>
                     )}
@@ -774,100 +764,6 @@ REGRAS ADICIONAIS:
                       </motion.div>
                     )}
                   </AnimatePresence>
-                  <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45, delay: 0.1 }}>
-                    <Card className="p-8 soft-shadow border-primary/15">
-                      <h3 className="text-xl font-semibold mb-3 text-primary">Envie Energia e Solidariedade</h3>
-                      <p className="text-sm text-muted-foreground mb-5">
-                        {activeReaction
-                          ? "Você já enviou sua reação — clique em outro para trocar"
-                          : "Mostre seu apoio à causa"}
-                      </p>
-                      <div className="flex flex-wrap gap-3 justify-center">
-                        {[
-                          { type: "love", emoji: "❤️", label: "Compaixão" },
-                          { type: "pray", emoji: "🙏", label: "Graça" },
-                          { type: "patience", emoji: "⏳", label: "Paciência" },
-                          { type: "strength", emoji: "💪", label: "Força" },
-                          { type: "empathy", emoji: "🥺", label: "Empatia" },
-                        ].map((reaction, i) => {
-                          const isActive = activeReaction === reaction.type;
-                          const isOtherActive = activeReaction !== null && !isActive;
-                          return (
-                            <motion.button
-                              key={reaction.type}
-                              initial={{ opacity: 0, scale: 0.8 }}
-                              animate={{ opacity: 1, scale: 1 }}
-                              transition={{ delay: 0.1 + i * 0.05 }}
-                              whileHover={{ scale: 1.15 }}
-                              whileTap={{ scale: 0.9 }}
-                              className={`flex flex-col items-center gap-1.5 p-3 rounded-xl transition-all duration-200 ${
-                                isActive
-                                  ? "bg-primary/15 ring-2 ring-primary/40 shadow-sm"
-                                  : isOtherActive
-                                  ? "opacity-35 hover:opacity-60 hover:bg-primary/5"
-                                  : "hover:bg-primary/5"
-                              }`}
-                              onClick={async () => {
-                                try {
-                                  const { data: { session } } = await supabase.auth.getSession();
-                                  if (!session) return;
-
-                                  if (isActive) {
-                                    // Toggle off — remove reaction
-                                    await supabase
-                                      .from("prayer_reactions")
-                                      .delete()
-                                      .eq("prayer_request_id", prayerRequest.id)
-                                      .eq("reactor_user_id", session.user.id);
-                                    setActiveReaction(null);
-                                    toast.success("Reação removida.");
-                                    return;
-                                  }
-
-                                  // Resolve sender info for personalized notification
-                                  const senderFullName = session.user.user_metadata?.full_name || "";
-                                  const senderFirstName = senderFullName.split(" ")[0] || "Um irmão";
-                                  const senderCity = session.user.user_metadata?.city || "";
-
-                                  // Upsert — replace any previous reaction
-                                  await supabase.from("prayer_reactions").upsert({
-                                    prayer_request_id: prayerRequest.id,
-                                    reactor_user_id: session.user.id,
-                                    reaction_type: reaction.type,
-                                  }, { onConflict: "prayer_request_id,reactor_user_id" });
-
-                                  setActiveReaction(reaction.type);
-
-                                  // Reaction notification removed as per user request to avoid duplicate alerts
-                                  // Replaced by the intercession notification when the cause is first received
-
-                                  if (!activeReaction) {
-                                    // Daily gate - only award XP for reacting once per day total
-                                    const today = new Date().toISOString().split("T")[0];
-                                    const reactKey = `amens_react_xp_${session.user.id}_${today}`;
-                                    if (!localStorage.getItem(reactKey)) {
-                                      await addXp("react");
-                                      localStorage.setItem(reactKey, "1");
-                                    }
-                                  }
-                                  toast.success(`${reaction.emoji} Reação enviada!`);
-                                } catch {
-                                  toast.error("Erro ao enviar reação");
-                                }
-                              }}
-                            >
-                              <span className={`text-3xl transition-transform duration-150 ${isActive ? "scale-110" : ""}`}>
-                                {reaction.emoji}
-                              </span>
-                              <span className={`text-[11px] font-medium transition-colors duration-150 ${isActive ? "text-primary" : "text-muted-foreground"}`}>
-                                {reaction.label}
-                              </span>
-                            </motion.button>
-                          );
-                        })}
-                      </div>
-                    </Card>
-                  </motion.div>
                 </motion.div>
               )}
             </AnimatePresence>
@@ -950,7 +846,7 @@ REGRAS ADICIONAIS:
                                   <div className="flex items-center flex-wrap gap-x-2 gap-y-1 text-[10px] text-muted-foreground mt-3">
                                     <div className="flex items-center gap-1" title={formatFullDatetime(item.created_at)}>
                                       <Clock className="w-3 h-3 text-primary/40" />
-                                      <span>Orou {formatTimeAgo(item.created_at)}</span>
+                                      <span>🙏 Causa Acolhida {formatTimeAgo(item.created_at)}</span>
                                     </div>
                                     {item.posted_at && (
                                       <>
