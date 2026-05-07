@@ -41,6 +41,17 @@ const fadeUp = {
   exit: { opacity: 0, y: -10, transition: { duration: 0.25 } },
 };
 
+const BuscandoText = () => {
+  const [dots, setDots] = useState("");
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setDots(prev => (prev.length >= 3 ? "" : prev + "."));
+    }, 400);
+    return () => clearInterval(interval);
+  }, []);
+  return <span>Buscando{dots}</span>;
+};
+
 const Pray = () => {
   const [prayerRequest, setPrayerRequest] = useState<any>(null);
   const [suggestedPrayer, setSuggestedPrayer] = useState<string>("");
@@ -616,12 +627,11 @@ REGRAS ADICIONAIS:
               ) : isLoading || !prayerRequest ? (
                 <motion.div key="empty" variants={fadeUp} initial="initial" animate="animate" exit="exit">
                   <Card className="group p-12 text-center soft-shadow border-primary/10 transition-colors">
-                    <motion.div animate={{ scale: [1, 1.08, 1] }} transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }} className="w-20 h-20 mx-auto mb-5 bg-transparent flex items-center justify-center overflow-visible relative">
+                    <motion.div animate={{ scale: [1, 1.08, 1] }} transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }} className="w-20 h-20 mx-auto mb-8 bg-transparent flex items-center justify-center overflow-visible relative">
                       <img src="/estrela_3d.png" alt="Estrela brilhante" className="w-full h-full object-contain drop-shadow-md transition-all duration-500 group-active:drop-shadow-[0_0_30px_rgba(255,215,0,1)] group-active:brightness-125 group-active:scale-110" />
                     </motion.div>
-                    <h2 className="text-2xl font-semibold mb-4 text-foreground">Clique para receber uma causa</h2>
-                    <Button onClick={fetchRandomPrayerRequest} disabled={isLoading} size="lg" className="gradient-divine text-primary-foreground hover:opacity-90">
-                      {isLoading ? "Buscando..." : "Sortear Causa e Orar"}
+                    <Button onClick={fetchRandomPrayerRequest} disabled={isLoading} size="lg" className="w-full max-w-[240px] h-16 gradient-divine text-white hover:opacity-90 font-black text-xl uppercase tracking-widest shadow-xl rounded-2xl">
+                      {isLoading ? <BuscandoText /> : "Receber Causa"}
                     </Button>
                   </Card>
                 </motion.div>
