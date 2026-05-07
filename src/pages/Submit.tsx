@@ -8,8 +8,8 @@ import { Send, ArrowLeft, Eye, Heart, Clock, MessageCircle, Check, Users, Chevro
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
-import { useXp } from "@/hooks/use-xp";
-import { XP_REWARDS } from "@/lib/xp";
+import { useFaithPoints } from "@/hooks/use-faith-points";
+import { FAITH_POINTS_REWARDS } from "@/lib/faith-points";
 import PageTransition from "@/components/PageTransition";
 import { usePushPrompt } from "@/contexts/PushPromptContext";
 import { motion, AnimatePresence } from "framer-motion";
@@ -34,7 +34,7 @@ const FEEDBACK_OPTIONS = [
 const Submit = () => {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { addXp } = useXp();
+  const { addFaithPoints } = useFaithPoints();
   const { triggerPushPrompt } = usePushPrompt();
   
   // History states
@@ -235,11 +235,11 @@ const Submit = () => {
       // Daily XP gate — award submit XP only once per day
       const userId = session?.user?.id;
       const today = new Date().toISOString().split("T")[0];
-      const submitXpKey = `amens_submit_xp_${userId}_${today}`;
-      if (userId && !localStorage.getItem(submitXpKey)) {
-        await addXp("submit");
-        localStorage.setItem(submitXpKey, "1");
-        toast.success(`Pedido enviado! Ganhou +${XP_REWARDS.submit} pontos de fé`);
+      const submitFaithPointsKey = `amens_submit_faith_points_${userId}_${today}`;
+      if (userId && !localStorage.getItem(submitFaithPointsKey)) {
+        await addFaithPoints("submit");
+        localStorage.setItem(submitFaithPointsKey, "1");
+        toast.success(`Pedido enviado! Ganhou +${FAITH_POINTS_REWARDS.submit} pontos de fé`);
       } else {
         toast.success("Pedido enviado com sucesso!");
       }

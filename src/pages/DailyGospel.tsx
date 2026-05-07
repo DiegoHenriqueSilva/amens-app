@@ -6,8 +6,8 @@ import { Card } from "@/components/ui/card";
 import { ArrowLeft, Share2, Loader2, BookOpen, Sparkles } from "lucide-react";
 import PageTransition from "@/components/PageTransition";
 import { motion } from "framer-motion";
-import { useXp } from "@/hooks/use-xp";
-import { getLevel, CELESTIAL_LEVELS } from "@/lib/xp";
+import { useFaithPoints } from "@/hooks/use-faith-points";
+import { getLevel, CELESTIAL_LEVELS } from "@/lib/faith-points";
 import { toast } from "sonner";
 import type { User as SupabaseUser } from "@supabase/supabase-js";
 import { useDailyTasks } from "@/hooks/use-daily-tasks";
@@ -26,7 +26,7 @@ interface GospelData {
 const DailyGospel = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState<SupabaseUser | null>(null);
-  const { totalXp } = useXp();
+  const { totalFaithPoints } = useFaithPoints();
   const [generating, setGenerating] = useState(false);
   const [loadingGospel, setLoadingGospel] = useState(true);
   const [gospel, setGospel] = useState<GospelData | null>(null);
@@ -206,7 +206,7 @@ Responda APENAS com um objeto JSON válido no formato:
     }
   };
 
-  const level = getLevel(totalXp);
+  const level = getLevel(totalFaithPoints);
   const APP_URL = "https://amens-app.vercel.app";
   const referralLink = user
     ? `${APP_URL}/auth?ref=${user.id}`

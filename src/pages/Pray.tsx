@@ -5,8 +5,8 @@ import { Card } from "@/components/ui/card";
 import { Sparkles, Heart, ArrowLeft, Users, Share2, Clock, Loader2, Flag, Eye, MessageCircle, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { useXp } from "@/hooks/use-xp";
-import { XP_REWARDS } from "@/lib/xp";
+import { useFaithPoints } from "@/hooks/use-faith-points";
+import { FAITH_POINTS_REWARDS } from "@/lib/faith-points";
 import PageTransition from "@/components/PageTransition";
 import { motion, AnimatePresence } from "framer-motion";
 import { FriendSelector } from "@/components/FriendSelector";
@@ -53,7 +53,7 @@ const Pray = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const prayerIdParam = searchParams.get("id");
-  const { addXp } = useXp();
+  const { addFaithPoints } = useFaithPoints();
   const [hasRequestedCause, setHasRequestedCause] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const { triggerPushPrompt } = usePushPrompt();
@@ -533,12 +533,12 @@ REGRAS ADICIONAIS:
           });
         }
         
-        // XP logic
-        if (!currentReaction) {
+        // Faith Points logic
+        if (currentUser) {
           const today = new Date().toISOString().split("T")[0];
-          const reactKey = `amens_react_xp_${currentUser.id}_${today}`;
+          const reactKey = `amens_react_faith_points_${currentUser.id}_${today}`;
           if (!localStorage.getItem(reactKey)) {
-            await addXp("react");
+            await addFaithPoints("react");
             localStorage.setItem(reactKey, "1");
           }
         }
@@ -824,11 +824,6 @@ REGRAS ADICIONAIS:
                                     return;
                                   }
 
-                                  // Resolve sender info for personalized notification
-                                  const senderFullName = session.user.user_metadata?.full_name || "";
-                                  const senderFirstName = senderFullName.split(" ")[0] || "Um irmão";
-                                  const senderCity = session.user.user_metadata?.city || "";
-
                                   // Upsert — replace any previous reaction
                                   await supabase.from("prayer_reactions").upsert({
                                     prayer_request_id: prayerRequest.id,
@@ -839,16 +834,12 @@ REGRAS ADICIONAIS:
                                   setActiveReaction(reaction.type);
 
                                   // Reaction notification removed as per user request to avoid duplicate alerts
-                                  // Replaced by the intercession notification when the cause is first received
-
-                                  if (!activeReaction) {
-                                    // Daily gate - only award XP for reacting once per day total
-                                    const today = new Date().toISOString().split("T")[0];
-                                    const reactKey = `amens_react_xp_${session.user.id}_${today}`;
-                                    if (!localStorage.getItem(reactKey)) {
-                                      await addXp("react");
-                                      localStorage.setItem(reactKey, "1");
-                                    }
+                                  // Daily gate - only award points for reacting once per day total
+                                  const today = new Date().toISOString().split("T")[0];
+                                  const reactKey = `amens_react_faith_points_${session.user.id}_${today}`;
+                                  if (!localStorage.getItem(reactKey)) {
+                                    await addFaithPoints("react");
+                                    localStorage.setItem(reactKey, "1");
                                   }
                                   toast.success(`${reaction.emoji} Reação enviada!`);
                                 } catch {

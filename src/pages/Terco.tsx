@@ -8,7 +8,7 @@ import { useSpeechRecognition } from "@/hooks/use-speech-recognition";
 import { PRAYERS, ROSARY_SEQUENCE, RosaryBead } from "@/data/rosary";
 import PageTransition from "@/components/PageTransition";
 import { motion, AnimatePresence } from "framer-motion";
-import { useXp } from "@/hooks/use-xp";
+import { useFaithPoints } from "@/hooks/use-faith-points";
 
 // Geometric Generation for the visual beads
 const generateBeadCoordinates = () => {
@@ -85,7 +85,7 @@ function zoomOutList<T>(list: T[]): T[] { return list;} // Utility to satisfy TS
 
 const Terco = () => {
   const navigate = useNavigate();
-  const { addXp } = useXp();
+  const { addFaithPoints } = useFaithPoints();
   
   const [currentBeadIndex, setCurrentBeadIndex] = useState(0);
   const [completedBeads, setCompletedBeads] = useState<Set<number>>(new Set());
@@ -187,7 +187,7 @@ const Terco = () => {
   const handleFinishRosary = async () => {
     toggleListening();
     setSessionActive(false);
-    await addXp("pray");
+    await addFaithPoints("pray");
     toast.success("O Terço foi concluído com sucesso. Uma chuva de bênçãos sobre você!");
     // Trigger some confetti or celebration effect here
   };

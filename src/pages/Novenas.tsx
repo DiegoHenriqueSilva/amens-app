@@ -23,10 +23,10 @@ const NovenaCard = ({ novena, onSelect }: { novena: typeof NOVENAS[0], onSelect:
     >
       <Card 
         onClick={() => onSelect(novena.id)}
-        className="p-6 h-full text-center flex flex-col items-center justify-between border-primary/5 soft-shadow hover:bg-white transition-colors rounded-[2.5rem] bg-white/70 backdrop-blur-sm group"
+        className="p-6 h-full text-center flex flex-col items-center justify-between border-primary/5 soft-shadow bg-white/80 backdrop-blur-sm hover:-translate-y-1 hover:shadow-xl transition-all duration-300 rounded-[2rem] group cursor-pointer"
       >
         <div className="relative">
-          <div className="w-20 h-20 bg-primary/5 rounded-full flex items-center justify-center mb-4 overflow-hidden border-2 border-primary/10 shadow-md">
+          <div className="w-20 h-20 bg-transparent rounded-full flex items-center justify-center mb-4 overflow-hidden border-2 border-primary/10 shadow-md">
             {!imgError ? (
               <img 
                 src={novena.image} 
@@ -51,8 +51,8 @@ const NovenaCard = ({ novena, onSelect }: { novena: typeof NOVENAS[0], onSelect:
         </div>
 
         <div className="mb-4">
-          <h2 className="text-base font-bold mb-1 leading-tight">{novena.name}</h2>
-          <p className="text-[10px] text-muted-foreground leading-tight font-medium line-clamp-2 px-2">
+          <h2 className="text-lg font-bold mb-2 leading-tight">{novena.name}</h2>
+          <p className="text-xs text-muted-foreground leading-tight font-medium line-clamp-2 px-2">
             {novena.focus}
           </p>
         </div>
@@ -60,7 +60,7 @@ const NovenaCard = ({ novena, onSelect }: { novena: typeof NOVENAS[0], onSelect:
         <Button 
           size="sm" 
           className={cn(
-            "w-full rounded-full text-[10px] py-4 h-auto font-bold shadow-sm border-0 uppercase tracking-widest transition-opacity active:opacity-90",
+            "w-full rounded-full text-xs py-5 font-bold shadow-md transition-opacity border-0",
           )}
           style={{ 
             background: `linear-gradient(135deg, ${novena.colors.from}, ${novena.colors.to})`,
@@ -105,26 +105,32 @@ const Novenas = () => {
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-background relative pb-32">
-        {/* Decorative Background Elements */}
-        <div className="absolute top-[-8rem] right-[-6rem] w-[28rem] h-[28rem] rounded-full bg-primary/5 blur-3xl pointer-events-none" />
+      <div className="min-h-screen bg-background/70 backdrop-blur-sm relative overflow-hidden pb-32">
+        {/* Ambient Blurs */}
+        <div className="absolute top-[-6rem] left-[-4rem] w-80 h-80 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-[-6rem] right-[-4rem] w-80 h-80 bg-accent/5 rounded-full blur-3xl pointer-events-none" />
         
-        <div className="container mx-auto px-6 py-12 relative z-10 max-w-lg">
-          <header className="flex items-center justify-between mb-10">
-            <Button variant="ghost" size="icon" onClick={() => navigate("/")} className="rounded-full hover:bg-primary/10">
-              <ArrowLeft className="w-5 h-5 text-primary" />
+        <div className="container mx-auto px-6 py-8 relative z-10 max-w-lg">
+          <div className="max-w-2xl mx-auto mb-6 flex items-center">
+            <Button variant="ghost" size="icon" onClick={() => navigate("/")} className="shrink-0 hover:bg-primary/10 transition-colors">
+              <ArrowLeft className="w-5 h-5 text-foreground" />
             </Button>
-            <div className="text-right">
-              <h1 className="text-3xl font-black text-foreground tracking-tight text-glow">Novenas</h1>
-              <div className="flex items-center justify-end gap-1 text-[#8b6508] text-[10px] font-bold uppercase tracking-widest mt-1">
-                <Sparkles className="w-2.5 h-2.5" />
-                <span>9 Dias de Devoção</span>
-              </div>
-            </div>
-          </header>
+          </div>
 
           <motion.div 
-            className="grid grid-cols-2 gap-4"
+            className="max-w-2xl mx-auto text-center mb-10"
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <p className="text-sm uppercase tracking-[0.25em] text-primary mb-2">✦</p>
+            <h1 className="text-4xl md:text-5xl font-bold mb-3 text-foreground">Novenas</h1>
+            <div className="divider-gold max-w-[10rem] mx-auto mb-3" />
+            <p className="text-muted-foreground">Escolha uma novena para seguir com fé</p>
+          </motion.div>
+
+          <motion.div 
+            className="grid grid-cols-2 gap-5"
             initial="initial"
             animate="animate"
             variants={{

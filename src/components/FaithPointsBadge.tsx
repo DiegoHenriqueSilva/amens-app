@@ -1,20 +1,20 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { getLevel, getNextLevel, getLevelProgress, CELESTIAL_LEVELS } from "@/lib/xp";
+import { getLevel, getNextLevel, getLevelProgress, CELESTIAL_LEVELS } from "@/lib/faith-points";
 import { Progress } from "@/components/ui/progress";
 import { BookOpen } from "lucide-react";
 
-interface XpBadgeProps {
-  totalXp: number;
+interface FaithPointsBadgeProps {
+  totalFaithPoints: number;
   userName?: string;
   avatarUrl?: string | null;
 }
 
-export function XpBadge({ totalXp, userName, avatarUrl }: XpBadgeProps) {
-  const level = getLevel(totalXp);
-  const next = getNextLevel(totalXp);
-  const progress = getLevelProgress(totalXp);
+export function FaithPointsBadge({ totalFaithPoints, userName, avatarUrl }: FaithPointsBadgeProps) {
+  const level = getLevel(totalFaithPoints);
+  const next = getNextLevel(totalFaithPoints);
+  const progress = getLevelProgress(totalFaithPoints);
 
   const levelIndex = CELESTIAL_LEVELS.findIndex(l => l.name === level.name);
   const displayLevel = levelIndex !== -1 ? levelIndex + 1 : 1;
@@ -76,7 +76,7 @@ export function XpBadge({ totalXp, userName, avatarUrl }: XpBadgeProps) {
         <div className="flex-1">
           <div className="flex items-baseline justify-between mb-0.5">
             {userName && <p className="text-sm font-black uppercase tracking-widest truncate max-w-[150px]" style={{color: '#5a3e0a'}}>{userName.split(' ')[0]}</p>}
-            <span className="text-xs text-muted-foreground font-medium ml-auto">{totalXp} Pontos de Fé</span>
+            <span className="text-xs text-muted-foreground font-medium ml-auto">{totalFaithPoints} Pontos de Fé</span>
           </div>
           <div className="flex items-center gap-2 mb-2">
             <span className="text-[10px] font-black text-[#5a3e0a]/60 uppercase tracking-[0.2em] whitespace-nowrap">
