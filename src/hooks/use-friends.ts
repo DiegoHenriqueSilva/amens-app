@@ -80,10 +80,35 @@ export const useFriends = () => {
         .from("profiles")
         .select("friend_code")
         .eq("id", user.id)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
-      setMyCode(data?.friend_code || null);
+      
+      if (data?.friend_code) {
+        setMyCode(data.friend_code);
+      } else {
+        // Generate a new code if missing
+        const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // Removed similar looking chars like I, O, 0, 1
+        const generate = () => {
+          let code = 'AMEN-';
+          for (let i = 0; i < 6; i++) {
+            code += chars.charAt(Math.floor(Math.random() * chars.length));
+          }
+          return code;
+        };
+        
+        const newCode = generate();
+        const { error: updateError } = await supabase
+          .from("profiles")
+          .update({ friend_code: newCode })
+          .eq("id", user.id);
+          
+        if (!updateError) {
+          setMyCode(newCode);
+        } else {
+          console.error("Failed to generate and save friend code:", updateError);
+        }
+      }
     } catch (e) {
       console.warn("useFriends: fetchMyCode failed:", e);
     }

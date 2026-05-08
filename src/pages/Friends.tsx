@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Users, UserPlus, Check, X, Copy, ArrowLeft,     Sparkles, Heart, User } from "lucide-react";
+import { Users, UserPlus, Check, X, Copy, ArrowLeft, Sparkles, Heart, User, ChevronLeft, ChevronRight } from "lucide-react";
 import PageTransition from "@/components/PageTransition";
 import { motion, AnimatePresence } from "framer-motion";
 import { useFriends } from "@/hooks/use-friends";
@@ -16,6 +16,12 @@ const Friends = () => {
   const { friends, requests, loading, myCode, sendRequestByCode, updateRequestStatus } = useFriends();
   const [friendCodeInput, setFriendCodeInput] = useState("");
   const [isSending, setIsSending] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+  
+  const totalPages = Math.ceil(friends.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedFriends = friends.slice(startIndex, startIndex + itemsPerPage);
 
   const handleCopyCode = () => {
     if (myCode) {
@@ -46,13 +52,13 @@ const Friends = () => {
         <div className="absolute top-[-8rem] right-[-8rem] w-[25rem] h-[25rem] rounded-full bg-primary/10 blur-3xl opacity-50" />
         <div className="absolute bottom-[-8rem] left-[-8rem] w-[25rem] h-[25rem] rounded-full bg-accent/10 blur-3xl opacity-50" />
 
-        <div className="container mx-auto px-6 py-8 relative z-10 max-w-lg">
+        <div className="container mx-auto px-6 py-4 relative z-10 max-w-lg">
           <Button variant="ghost" size="icon" onClick={() => navigate("/")} className="mb-6">
             <ArrowLeft className="w-5 h-5" />
           </Button>
 
           <motion.div 
-            className="text-center mb-8"
+            className="text-center mb-4"
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
           >
@@ -69,9 +75,9 @@ const Friends = () => {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.1 }}
-            className="mb-8"
+            className="mb-4"
           >
-            <Card className="p-6 bg-gradient-to-br from-white/80 to-primary/5 backdrop-blur-md border-primary/15 soft-shadow rounded-[2.5rem] border-2">
+            <Card className="p-4 bg-gradient-to-br from-white/80 to-primary/5 backdrop-blur-md border-primary/15 soft-shadow rounded-[2rem] border-2">
               <div className="flex flex-col items-center text-center">
                 <span className="text-[10px] font-bold text-primary uppercase tracking-widest mb-3 flex items-center gap-2">
                   <Sparkles className="w-3 h-3" /> Seu Código de Amigo <Sparkles className="w-3 h-3" />
@@ -94,7 +100,7 @@ const Friends = () => {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="mb-8"
+            className="mb-4"
           >
             <form onSubmit={handleSendRequest} className="flex gap-2">
               <Input 
@@ -126,21 +132,21 @@ const Friends = () => {
               </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="friends" className="space-y-4">
+            <TabsContent value="friends" className="space-y-2">
               <AnimatePresence mode="popLayout">
                 {loading ? (
                   [1, 2, 3].map(i => (
                     <Card key={i} className="p-4 rounded-3xl animate-pulse h-16 bg-white/40 border-none" />
                   ))
-                ) : friends.length > 0 ? (
-                  friends.map((friend, idx) => (
+                ) : paginatedFriends.length > 0 ? (
+                  paginatedFriends.map((friend, idx) => (
                     <motion.div
                       key={friend.id}
                       initial={{ opacity: 0, x: -10 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: idx * 0.05 }}
                     >
-                      <Card className="p-4 flex items-center gap-4 border-primary/5 bg-white/60 rounded-3xl hover:bg-white transition-all soft-shadow group">
+                      <Card className="p-2.5 flex items-center gap-4 border-primary/5 bg-white/60 rounded-2xl hover:bg-white transition-all soft-shadow group">
                         <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-primary/70 border border-primary/10 overflow-hidden">
                           <Avatar className="w-full h-full rounded-2xl">
                              <AvatarImage src={friend.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${friend.id}`} className="object-cover" />
@@ -171,6 +177,32 @@ const Friends = () => {
                   </div>
                 )}
               </AnimatePresence>
+
+              {totalPages > 1 && (
+                <div className="flex items-center justify-center gap-4 pt-4 pb-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                    disabled={currentPage === 1}
+                    className="rounded-xl border border-primary/10 bg-white/40 font-bold text-[10px] uppercase tracking-widest px-4 h-8"
+                  >
+                    <ChevronLeft className="w-3.5 h-3.5 mr-1" /> Anterior
+                  </Button>
+                  <span className="text-[10px] font-black text-primary/60 uppercase tracking-widest">
+                    Página {currentPage} / {totalPages}
+                  </span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                    disabled={currentPage === totalPages}
+                    className="rounded-xl border border-primary/10 bg-white/40 font-bold text-[10px] uppercase tracking-widest px-4 h-8"
+                  >
+                    Próxima <ChevronRight className="w-3.5 h-3.5 ml-1" />
+                  </Button>
+                </div>
+              )}
             </TabsContent>
 
             <TabsContent value="requests" className="space-y-4">
