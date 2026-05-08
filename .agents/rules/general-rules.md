@@ -23,7 +23,9 @@ Antes de iniciar qualquer nova funcionalidade, desenvolvedores e IA DEVEM seguir
 ### Branch Naming Convention
 - **Formato:** `<username>/<type>/<kebab-case-task-name>`
 - **Tipos Permitidos:** `feature`, `fix`, `chore`, `refactor`
-- **Diretriz para a IA:** Se o usuário solicitar uma alteração e você estiver criando um script de execução, pergunte ou sugira a criação de uma branch no padrão inglês antes de aplicar mudanças complexas.
+- **Diretriz para a IA:** Se o usuário solicitar uma alteração e você estiver criando um script de execução, pergunte ou sugira a criação de uma branch no padrão inglês antes de aplicar mudanças complexas. 
+- Pergunte ao usuário se ele confirma o nome da branch criada, descrição e mensagens de commit
+- Caso o usuário confirme faça o push para atualizar a branch e as alterações no github
 
 ---
 
