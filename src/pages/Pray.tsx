@@ -64,6 +64,38 @@ const Pray = () => {
   const [reportDialogOpen, setReportDialogOpen] = useState(false);
   const [isSharedCause, setIsSharedCause] = useState(false);
   const [editingReactionHistoryId, setEditingReactionHistoryId] = useState<string | null>(null);
+  const [expandedHistoryItems, setExpandedHistoryItems] = useState<Record<string, boolean>>({});
+
+  // Rastreia quais amigos já receberam convite para cada causa no dia de hoje.
+  // Persiste no sessionStorage para sobreviver a HMR e reloads da página na mesma aba.
+  const SHARED_FRIENDS_KEY = "amens_shared_friends_v1";
+
+  const readSharedFriendsMap = (): Record<string, string[]> => {
+    try {
+      const raw = sessionStorage.getItem(SHARED_FRIENDS_KEY);
+      if (!raw) return {};
+      const parsed = JSON.parse(raw);
+      // Descarta dados de dias anteriores
+      const today = new Date().toLocaleDateString("pt-BR");
+      if (parsed.date !== today) return {};
+      return parsed.map ?? {};
+    } catch {
+      return {};
+    }
+  };
+
+  const writeSharedFriendsMap = (map: Record<string, string[]>) => {
+    try {
+      const today = new Date().toLocaleDateString("pt-BR");
+      sessionStorage.setItem(SHARED_FRIENDS_KEY, JSON.stringify({ date: today, map }));
+    } catch { /* sessionStorage indisponível */ }
+  };
+
+  const [sharedFriendsMap, setSharedFriendsMap] = useState<Record<string, string[]>>(readSharedFriendsMap);
+
+  const toggleHistoryItemExpand = (id: string) => {
+    setExpandedHistoryItems(prev => ({ ...prev, [id]: !prev[id] }));
+  };
   
   const { drawsUsed, drawsLeft, isLimitReached, nextResetLabel, useOneDraw, returnOneDraw } = useDrawLimit(currentUser?.id || null);
 
@@ -83,13 +115,18 @@ const Pray = () => {
     });
   }, [navigate]);
 
+  const getLocalMidnightISO = () => {
+    const now = new Date();
+    const localMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
+    return localMidnight.toISOString();
+  };
+
   const loadDailyCurrentCause = async (userId: string) => {
-    const today = new Date().toISOString().split("T")[0];
     const { data } = await supabase
       .from("prayer_intercessions")
       .select("prayer_request_id")
       .eq("user_id", userId)
-      .gte("created_at", `${today}T00:00:00Z`)
+      .gte("created_at", getLocalMidnightISO())
       .order("created_at", { ascending: false })
       .limit(1);
 
@@ -124,18 +161,37 @@ const Pray = () => {
     
     setIsIntercessionsLoading(true);
     try {
-      const { data: intData, error } = await supabase
+      const { data: intDataRaw, error } = await supabase
         .from("prayer_intercessions")
         .select("id, prayer_request_id, created_at")
         .eq("user_id", currentUser.id)
         .order("created_at", { ascending: false })
-        .limit(20);
+        .limit(100);
       
       if (error) throw error;
-      if (!intData || intData.length === 0) {
+      if (!intDataRaw || intDataRaw.length === 0) {
         setIntercessions([]);
         return;
       }
+
+      const groupedIntData: Record<string, any[]> = {};
+      intDataRaw.forEach(i => {
+        if (!groupedIntData[i.prayer_request_id]) groupedIntData[i.prayer_request_id] = [];
+        groupedIntData[i.prayer_request_id].push(i);
+      });
+
+      const intData = Object.keys(groupedIntData).map(prayerId => {
+        const intercessionsList = groupedIntData[prayerId];
+        return {
+           id: intercessionsList[0].id,
+           prayer_request_id: prayerId,
+           created_at: intercessionsList[0].created_at,
+           intercessionsCount: intercessionsList.length,
+           allIntercessions: intercessionsList
+        };
+      });
+
+      intData.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
       const prayerIds = intData.map(i => i.prayer_request_id);
       const { data: prayerData } = await supabase
@@ -174,6 +230,11 @@ const Pray = () => {
       setIntercessions(intData.map(i => {
         const p = prayerMap[i.prayer_request_id] || {};
         const profile = p.user_id ? profilesMap[p.user_id] : {};
+        const authorNameFinal = getDisplayName(p.author_name, profile, p.is_anonymous);
+        const isActuallyAnonymous = p.is_anonymous || authorNameFinal === "Usuário Anônimo";
+        let finalAvatar = isActuallyAnonymous ? null : profile.avatar_url;
+        if (finalAvatar && finalAvatar.includes('dicebear.com')) finalAvatar = null;
+
         return {
           id: i.id,
           prayer_request_id: i.prayer_request_id,
@@ -183,12 +244,14 @@ const Pray = () => {
           prayer_content: p.status === 'banned' ? "[Causa removida por infringir as diretrizes do Améns]" : (p.content || "Pedido removido"),
           prayer_location: p.location || null,
           prayer_feedback: p.feedback || null,
-          author_name: getDisplayName(p.author_name, profile, p.is_anonymous),
-          avatar_url: p.is_anonymous ? null : profile.avatar_url,
+          author_name: authorNameFinal,
+          avatar_url: finalAvatar,
           is_friend: userFriends.includes(p.user_id),
           is_anonymous: p.is_anonymous,
           user_reaction: reactionsMap[i.prayer_request_id] || null,
-          status: p.status
+          status: p.status,
+          intercessionsCount: i.intercessionsCount,
+          allIntercessions: i.allIntercessions
         };
       }));
     } catch (e) {
@@ -204,19 +267,24 @@ const Pray = () => {
     }
   }, [showHistory]);
 
-  const recordIntercession = async (prayerId: string) => {
+  const recordIntercession = async (prayerId: string, isForceNew?: boolean) => {
     if (!currentUser) return;
-    const today = new Date().toISOString().split("T")[0];
-    
-    // Check if we already have an intercession today for this cause
-    const { data: existing } = await supabase
-      .from("prayer_intercessions")
-      .select("id")
-      .eq("prayer_request_id", prayerId)
-      .eq("user_id", currentUser.id)
-      .gte("created_at", `${today}T00:00:00Z`);
 
-    if (!existing || existing.length === 0) {
+    let shouldInsert = isForceNew;
+
+    if (!shouldInsert) {
+      // Check if we already have an intercession today for this cause (using local midnight)
+      const { data: existing } = await supabase
+        .from("prayer_intercessions")
+        .select("id")
+        .eq("prayer_request_id", prayerId)
+        .eq("user_id", currentUser.id)
+        .gte("created_at", getLocalMidnightISO());
+      
+      shouldInsert = !existing || existing.length === 0;
+    }
+
+    if (shouldInsert) {
       await supabase.from("prayer_intercessions").insert({
         prayer_request_id: prayerId,
         user_id: currentUser.id,
@@ -228,13 +296,12 @@ const Pray = () => {
 
   const removeCurrentIntercession = async (prayerId: string) => {
     if (!currentUser) return;
-    const today = new Date().toISOString().split("T")[0];
     await supabase
       .from("prayer_intercessions")
       .delete()
       .eq("prayer_request_id", prayerId)
       .eq("user_id", currentUser.id)
-      .gte("created_at", `${today}T00:00:00Z`);
+      .gte("created_at", getLocalMidnightISO());
   };
 
   const loadReaction = async (prayerId: string) => {
@@ -249,7 +316,7 @@ const Pray = () => {
     setActiveReaction(existingReaction?.reaction_type || null);
   };
 
-  const fetchPrayerById = async (id: string, isShared: boolean) => {
+  const fetchPrayerById = async (id: string, isShared: boolean, isForceNew?: boolean) => {
     setIsLoading(true);
     try {
       const { data, error } = await supabase
@@ -284,7 +351,7 @@ const Pray = () => {
         loadReaction(data.id);
         
         if (!isShared) {
-          recordIntercession(data.id);
+          recordIntercession(data.id, isForceNew);
         }
       } else {
         toast.error("Causa não encontrada.");
@@ -351,26 +418,33 @@ const Pray = () => {
       const eligible = (data || []).filter(p => !seenPrayerIds.includes(p.id));
 
       if (eligible.length > 0) {
-        // Calculate scores
-        const scored = eligible.map(p => {
-          let score = 0;
-          if (p.prayer_count === 0) score += PRAY_SETTINGS.drawWeights.zeroPrayers;
-          else if (p.prayer_count <= 3) score += PRAY_SETTINGS.drawWeights.fewPrayers;
-          else if (p.prayer_count <= 9) score += PRAY_SETTINGS.drawWeights.somePrayers;
+        const isFullyRandom = Math.random() < 0.20;
+        let selected;
 
-          if (userFriends.includes(p.user_id)) score += PRAY_SETTINGS.drawWeights.isFriend;
+        if (isFullyRandom) {
+          selected = eligible[Math.floor(Math.random() * eligible.length)];
+        } else {
+          // Calculate scores
+          const scored = eligible.map(p => {
+            let score = 0;
+            if (p.prayer_count === 0) score += PRAY_SETTINGS.drawWeights.zeroPrayers;
+            else if (p.prayer_count <= 3) score += PRAY_SETTINGS.drawWeights.fewPrayers;
+            else if (p.prayer_count <= 9) score += PRAY_SETTINGS.drawWeights.somePrayers;
 
-          const daysOld = Math.floor((Date.now() - new Date(p.created_at).getTime()) / (1000 * 60 * 60 * 24));
-          if (daysOld > PRAY_SETTINGS.oldCauseDaysThreshold) score += PRAY_SETTINGS.drawWeights.isOld;
-          if (daysOld < PRAY_SETTINGS.newCauseDaysThreshold) score += PRAY_SETTINGS.drawWeights.isNew;
+            if (userFriends.includes(p.user_id)) score += PRAY_SETTINGS.drawWeights.isFriend;
 
-          score += Math.random() * PRAY_SETTINGS.drawWeights.randomVariance * 2 - PRAY_SETTINGS.drawWeights.randomVariance;
-          return { ...p, score };
-        });
+            const daysOld = Math.floor((Date.now() - new Date(p.created_at).getTime()) / (1000 * 60 * 60 * 24));
+            if (daysOld > PRAY_SETTINGS.oldCauseDaysThreshold) score += PRAY_SETTINGS.drawWeights.isOld;
+            if (daysOld < PRAY_SETTINGS.newCauseDaysThreshold) score += PRAY_SETTINGS.drawWeights.isNew;
 
-        scored.sort((a, b) => b.score - a.score);
-        const topPool = scored.slice(0, PRAY_SETTINGS.topCausesPool);
-        const selected = topPool[Math.floor(Math.random() * topPool.length)];
+            score += Math.random() * PRAY_SETTINGS.drawWeights.randomVariance * 2 - PRAY_SETTINGS.drawWeights.randomVariance;
+            return { ...p, score };
+          });
+
+          scored.sort((a, b) => b.score - a.score);
+          const topPool = scored.slice(0, PRAY_SETTINGS.topCausesPool);
+          selected = topPool[Math.floor(Math.random() * topPool.length)];
+        }
 
         let profileData = null;
         if (selected.user_id) {
@@ -378,10 +452,15 @@ const Pray = () => {
           profileData = prof;
         }
 
+        const authorNameFinal = getDisplayName(selected.author_name, profileData, selected.is_anonymous);
+        const isActuallyAnonymous = selected.is_anonymous || authorNameFinal === "Usuário Anônimo";
+        let finalAvatar = isActuallyAnonymous ? null : profileData?.avatar_url;
+        if (finalAvatar && finalAvatar.includes('dicebear.com')) finalAvatar = null;
+
         const formattedData = {
            ...selected,
-           display_name: getDisplayName(selected.author_name, profileData, selected.is_anonymous),
-           avatar_url: selected.is_anonymous ? null : profileData?.avatar_url,
+           display_name: authorNameFinal,
+           avatar_url: finalAvatar,
            is_friend: userFriends.includes(selected.user_id)
         };
 
@@ -418,9 +497,28 @@ const Pray = () => {
       toast.error("Limite diário de sorteios atingido.");
       return;
     }
-    setShowHistory(false);
-    fetchPrayerById(prayerId, false);
+
+    setHasRequestedCause(true);
+    fetchPrayerById(prayerId, false, true);
     toast.success("Você escolheu orar por esta causa novamente!");
+
+    const now = new Date().toISOString();
+    setIntercessions(prev => {
+      const updated = prev.map(i =>
+        i.prayer_request_id === prayerId
+          ? {
+              ...i,
+              created_at: now,
+              intercessionsCount: i.intercessionsCount + 1,
+              allIntercessions: [
+                { id: `pending-${historyId}-${now}`, prayer_request_id: prayerId, created_at: now },
+                ...i.allIntercessions,
+              ],
+            }
+          : i
+      );
+      return updated.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    });
   };
 
   const handleInviteFriends = async (selectedIds: string[]) => {
@@ -438,6 +536,15 @@ const Pray = () => {
       }));
 
       await supabase.from("notifications").insert(notifications);
+
+      // Persiste o rastreamento no sessionStorage (sobrevive a HMR e reloads)
+      const updatedMap = {
+        ...sharedFriendsMap,
+        [prayerRequest.id]: [...(sharedFriendsMap[prayerRequest.id] || []), ...selectedIds],
+      };
+      setSharedFriendsMap(updatedMap);
+      writeSharedFriendsMap(updatedMap);
+
       toast.success(`Convite enviado para ${selectedIds.length} ${selectedIds.length === 1 ? 'amigo' : 'amigos'}! 🙏`);
       completeTask("share_cause");
       setFriendSelectorOpen(false);
@@ -447,16 +554,47 @@ const Pray = () => {
     }
   };
 
-  const handleShareCompartilhar = () => {
+  const handleShareCompartilhar = async () => {
     if (!prayerRequest) return;
 
-    const APP_URL = window.location.origin;
-    const shareUrl = `${APP_URL}/pray?id=${prayerRequest.id}`;
+    const shareUrl = `${window.location.origin}/pray?id=${prayerRequest.id}`;
     const authorName = prayerRequest.display_name || "Um fiel";
-    const location = prayerRequest.location ? ` (${prayerRequest.location})` : "";
-    const text = `❆ Pedido de Oração ❆\n\nDe: ${authorName}${location}\n\n"${prayerRequest.content}"\n\n🙏 Ore por esta causa no Améns:\n${shareUrl}`;
-    
-    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
+    const locationPart = prayerRequest.location ? ` (${prayerRequest.location})` : "";
+
+    // Emojis gerados em runtime via String.fromCodePoint — seguros com navigator.share
+    const pray = String.fromCodePoint(0x1F64F);     // 🙏
+    const sparkle = String.fromCodePoint(0x2728);    // ✨
+    const church = String.fromCodePoint(0x26EA);     // ⛪
+
+    const shareText = [
+      `${pray} *Pedido de Ora\u00e7\u00e3o* ${pray}`,
+      ``,
+      `${sparkle} De: *${authorName}*${locationPart}`,
+      ``,
+      `"${prayerRequest.content}"`,
+      ``,
+      `${church} Ore por esta causa no Am\u00e9ns:`,
+      shareUrl,
+    ].join("\n");
+
+    // Web Share API: passa o texto ao SO nativamente (sem encoding manual)
+    // Emoji e acentos chegam intactos pois nunca viram URL
+    if (typeof navigator.share === "function") {
+      try {
+        await navigator.share({
+          title: "Pedido de Ora\u00e7\u00e3o \u2014 Am\u00e9ns",
+          text: shareText,
+        });
+        completeTask("share_cause");
+        return;
+      } catch (e: any) {
+        if (e?.name === "AbortError") return; // usu\u00e1rio cancelou
+        // outro erro: cai no fallback abaixo
+      }
+    }
+
+    // Fallback: WhatsApp URL (desktop ou browsers sem navigator.share)
+    window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(shareText)}`, "_blank");
     completeTask("share_cause");
   };
 
@@ -638,7 +776,7 @@ REGRAS ADICIONAIS:
                           <img src={prayerRequest.avatar_url} alt="Avatar" className="w-12 h-12 rounded-full object-cover border-2 border-primary/20" />
                         ) : (
                           <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center border-2 border-primary/20">
-                            {prayerRequest.is_default ? <Sparkles className="w-5 h-5 text-primary" /> : <Heart className="w-5 h-5 text-primary" />}
+                            <Heart className="w-5 h-5 text-primary/50" />
                           </div>
                         )}
                       </div>
@@ -649,7 +787,7 @@ REGRAS ADICIONAIS:
                           <p className="text-xs text-primary font-bold uppercase tracking-widest opacity-80">
                             Enviado por {prayerRequest.display_name}
                           </p>
-                          {prayerRequest.is_friend && !prayerRequest.is_anonymous && (
+                          {prayerRequest.is_friend && !prayerRequest.is_anonymous && prayerRequest.display_name !== 'Usuário Anônimo' && (
                             <span className="text-[9px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-sm font-bold uppercase">Amigo 🤝</span>
                           )}
                         </div>
@@ -752,6 +890,8 @@ REGRAS ADICIONAIS:
                     open={friendSelectorOpen}
                     onOpenChange={setFriendSelectorOpen}
                     onSelect={handleInviteFriends}
+                    prayerRequestId={prayerRequest?.id}
+                    alreadySharedFriendIds={sharedFriendsMap[prayerRequest?.id] || []}
                   />
 
                   <AnimatePresence>
@@ -821,14 +961,14 @@ REGRAS ADICIONAIS:
                             animate={{ opacity: 1, x: 0 }} 
                             transition={{ delay: i * 0.1 }}
                           >
-                            <Card className="p-5 soft-shadow border-primary/5 rounded-3xl">
+                            <Card className={`p-5 soft-shadow rounded-3xl ${item.prayer_feedback ? 'bg-green-50/80 border-green-200' : 'border-primary/5'}`}>
                               <div className="flex gap-4">
                                 <div className="flex-shrink-0 mt-1">
                                   {item.avatar_url ? (
                                     <img src={item.avatar_url} alt="Avatar" className="w-10 h-10 rounded-full object-cover border border-primary/20" />
                                   ) : (
                                     <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center border border-primary/20">
-                                      <Heart className="w-4 h-4 text-primary" />
+                                      <Heart className="w-4 h-4 text-primary/50" />
                                     </div>
                                   )}
                                 </div>
@@ -836,25 +976,48 @@ REGRAS ADICIONAIS:
                                 <div className="flex-1">
                                   <div className="flex items-center gap-2 mb-1">
                                     <span className="text-xs font-bold text-primary uppercase tracking-wider">{item.author_name}</span>
-                                    {item.is_friend && !item.is_anonymous && <span className="text-[8px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-sm font-bold uppercase">Amigo 🤝</span>}
+                                    {item.is_friend && !item.is_anonymous && item.author_name !== 'Usuário Anônimo' && <span className="text-[8px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-sm font-bold uppercase">Amigo 🤝</span>}
                                     {item.is_anonymous && <span className="text-[8px] bg-stone-200 text-stone-600 px-1.5 py-0.5 rounded-sm font-bold uppercase">Anônimo</span>}
                                   </div>
                                   
                                   {item.prayer_title && <h4 className="text-sm font-bold mb-1 line-clamp-1">{item.prayer_title}</h4>}
                                   <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed mb-3">{item.prayer_content}</p>
                                   
-                                  <div className="flex items-center flex-wrap gap-x-2 gap-y-1 text-[10px] text-muted-foreground mt-3">
-                                    <div className="flex items-center gap-1" title={formatFullDatetime(item.created_at)}>
-                                      <Clock className="w-3 h-3 text-primary/40" />
-                                      <span>🙏 Causa Acolhida {formatTimeAgo(item.created_at)}</span>
+                                  <div className="flex flex-col w-full gap-2 mt-3 text-[10px] text-muted-foreground">
+                                    <div className="flex items-center flex-wrap gap-x-2 gap-y-1">
+                                      <div className="flex items-center gap-1" title={formatFullDatetime(item.created_at)}>
+                                        <Clock className="w-3 h-3 text-primary/40" />
+                                        <span>🙏 Rezei por essa causa {formatTimeAgo(item.created_at)}</span>
+                                      </div>
+                                      {item.posted_at && (
+                                        <>
+                                          <span className="text-primary/20">•</span>
+                                          <div className="flex items-center gap-1" title={formatFullDatetime(item.posted_at)}>
+                                            <span>Postado {formatTimeAgo(item.posted_at)}</span>
+                                          </div>
+                                        </>
+                                      )}
                                     </div>
-                                    {item.posted_at && (
-                                      <>
-                                        <span className="text-primary/20">•</span>
-                                        <div className="flex items-center gap-1" title={formatFullDatetime(item.posted_at)}>
-                                          <span>Postado {formatTimeAgo(item.posted_at)}</span>
-                                        </div>
-                                      </>
+                                    
+                                    {item.intercessionsCount > 1 && (
+                                      <div>
+                                        <button 
+                                          onClick={() => toggleHistoryItemExpand(item.id)}
+                                          className="text-primary hover:underline font-medium"
+                                        >
+                                          Ver todas as datas em que rezei por essa causa ({item.intercessionsCount})
+                                        </button>
+                                        {expandedHistoryItems[item.id] && (
+                                          <div className="mt-2 pl-4 border-l border-primary/20 space-y-1">
+                                            {item.allIntercessions.map((hist: any, idx: number) => (
+                                              <div key={idx} className="text-muted-foreground flex items-center gap-1.5 py-0.5">
+                                                <Clock className="w-2.5 h-2.5 opacity-40" />
+                                                <span className="text-[9px]">Intercedi em {formatFullDatetime(hist.created_at)} ({formatTimeAgo(hist.created_at)})</span>
+                                              </div>
+                                            ))}
+                                          </div>
+                                        )}
+                                      </div>
                                     )}
                                   </div>
 
