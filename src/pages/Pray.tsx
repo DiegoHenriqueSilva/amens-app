@@ -228,6 +228,25 @@ const Pray = () => {
       .gte("created_at", `${today}T00:00:00Z`);
 
     if (!existing || existing.length === 0) {
+      // If it's a default prayer, ensure it exists in the prayer_requests table first
+      if (prayerId.startsWith('default-')) {
+        const { data: dbPrayer } = await supabase.from('prayer_requests').select('id').eq('id', prayerId).maybeSingle();
+        if (!dbPrayer) {
+          const defaultPrayer = DEFAULT_PRAYERS.find(p => p.id === prayerId);
+          if (defaultPrayer) {
+            await supabase.from('prayer_requests').insert([{
+              id: defaultPrayer.id,
+              title: defaultPrayer.title,
+              content: defaultPrayer.content,
+              author_name: defaultPrayer.author_name,
+              status: 'active',
+              user_id: null,
+              prayer_count: 0
+            }]);
+          }
+        }
+      }
+
       await supabase.from("prayer_intercessions").insert({
         prayer_request_id: prayerId,
         user_id: currentUser.id,
@@ -352,7 +371,6 @@ const Pray = () => {
         .from('prayer_requests')
         .select('*')
         .eq('status', 'active')
-        .is('feedback', null)
         .neq('user_id', currentUser.id)
         .order('created_at', { ascending: false })
         .limit(PRAY_SETTINGS.maxCausesToFetch);
@@ -413,7 +431,11 @@ const Pray = () => {
         setPrayerRequest(randomDefault);
         setSuggestedPrayer("");
         setActiveReaction(null);
-        toast.info("Todas as causas foram atendidas. Interceda por esta intenção especial.");
+        
+        // Record intercession for default prayer to show in history
+        await recordIntercession(randomDefault.id);
+        
+        toast.info("Causas individuais atendidas. Una-se a nós nesta intenção comum.");
       }
     } catch (error) {
       console.error('Error fetching prayer request:', error);
@@ -648,6 +670,18 @@ REGRAS ADICIONAIS:
                     </div>
                   )}
 
+                  {prayerRequest.is_default && (
+                    <motion.div 
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="bg-primary/5 border border-primary/20 rounded-2xl p-6 mb-6 text-center shadow-sm"
+                    >
+                      <p className="text-primary font-medium leading-relaxed text-sm">
+                        Sua intenção de oração é o que move nossa corrente santa. No momento não há novas causas disponíveis. No entanto que tal se unir a outras <span className="font-black underline decoration-primary/30 decoration-2">{Math.floor(Math.random() * 450) + 120}</span> pessoas e orarmos por:
+                      </p>
+                    </motion.div>
+                  )}
+
                   <Card className={`p-8 soft-shadow border-primary/10 ${!currentUser ? 'opacity-60 pointer-events-none' : ''}`}>
                     <div className="flex items-start gap-4 mb-6">
                       <div className="flex-shrink-0 relative">
@@ -672,14 +706,24 @@ REGRAS ADICIONAIS:
                         </div>
                         <p className="text-foreground/80 leading-relaxed">{prayerRequest.content}</p>
                         
-                        <div className="flex items-center flex-wrap gap-x-3 gap-y-1 mt-3">
+                        <div className="flex flex-col gap-2 mt-4 pt-3 border-t border-primary/5">
+                          <div className="flex items-center flex-wrap gap-x-4 gap-y-1">
+                            {prayerRequest.created_at && (
+                              <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground" title={formatFullDatetime(prayerRequest.created_at)}>
+                                <Clock className="w-3 h-3 opacity-60" />
+                                <span className="font-medium uppercase tracking-tight">Solicitado em:</span>
+                                <span>{new Date(prayerRequest.created_at).toLocaleDateString()}</span>
+                              </div>
+                            )}
+                            {prayerRequest.feedback && prayerRequest.updated_at && (
+                              <div className="flex items-center gap-1.5 text-[10px] text-primary/70 font-bold" title={formatFullDatetime(prayerRequest.updated_at)}>
+                                <Check className="w-3 h-3" />
+                                <span className="uppercase tracking-tight">Retorno em:</span>
+                                <span>{new Date(prayerRequest.updated_at).toLocaleDateString()}</span>
+                              </div>
+                            )}
+                          </div>
                           {prayerRequest.location && <p className="text-[10px] text-muted-foreground flex items-center gap-1"><span>📍</span> {prayerRequest.location}</p>}
-                          {prayerRequest.created_at && (
-                            <p className="text-[10px] text-muted-foreground flex items-center gap-1" title={formatFullDatetime(prayerRequest.created_at)}>
-                              <Clock className="w-3 h-3 opacity-50" />
-                              Postado {formatTimeAgo(prayerRequest.created_at)}
-                            </p>
-                          )}
                         </div>
                       </div>
                     </div>
