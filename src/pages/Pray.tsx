@@ -296,14 +296,23 @@ const Pray = () => {
 
   const removeCurrentIntercession = async (prayerId: string) => {
     if (!currentUser) return;
-    await supabase
+    
+    const { data } = await supabase
       .from("prayer_intercessions")
-      .delete()
+      .select("id")
       .eq("prayer_request_id", prayerId)
       .eq("user_id", currentUser.id)
-      .gte("created_at", getLocalMidnightISO());
-  };
+      .gte("created_at", getLocalMidnightISO())
+      .order("created_at", { ascending: false })
+      .limit(1);
 
+    if (data && data.length > 0) {
+      await supabase
+        .from("prayer_intercessions")
+        .delete()
+        .eq("id", data[0].id);
+    }
+  };
   const loadReaction = async (prayerId: string) => {
     if (!currentUser) return;
     const { data: existingReaction } = await supabase
