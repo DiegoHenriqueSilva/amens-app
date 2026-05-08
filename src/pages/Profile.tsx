@@ -258,6 +258,7 @@ const Profile = () => {
     ? (editData.displayName || editData.fullName.split(' ')[0]) 
     : (editData.fullName || "Usuário Améns");
   const currentCity = user.user_metadata?.city || "";
+  const availableInvites = (levelIndex + 1) * 2 - invitedUsers.length;
 
   return (
     <PageTransition>
