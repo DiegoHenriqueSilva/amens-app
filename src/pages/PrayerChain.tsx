@@ -370,7 +370,7 @@ const PrayerChain = () => {
                           className={cn(
                             "text-[#3d2800]/70 font-semibold text-[11px] md:text-[13px] text-center tracking-wide px-2 py-1 rounded-full transition-all",
                             contrib?.user_id === currentUser?.id && "text-primary font-bold bg-[#d4a017]/10",
-                            contrib?.user_id && friendIds.has(contrib.user_id) && "text-friend-accent font-bold bg-friend-accent/10"
+                            contrib?.user_id && friendIds.has(contrib.user_id) && "text-marian font-bold bg-marian/10"
                           )}
                         >
                           {contrib.name} ({contrib.city}) — entrou na oração

@@ -61,7 +61,7 @@ const BottomNav = () => {
   return (
     <nav
       className={cn(
-        "md:hidden fixed bottom-4 left-4 right-4 z-50",
+        "md:hidden fixed bottom-safe-nav left-4 right-4 z-50",
         "rounded-2xl bg-vellum border border-hairline shadow-nav",
         "flex items-end justify-around px-2 py-2",
       )}
