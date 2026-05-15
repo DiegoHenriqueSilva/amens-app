@@ -1,10 +1,6 @@
 import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { Send, ArrowLeft, Eye, Heart, Clock, MessageCircle, Check, Users, ChevronDown, ChevronUp } from "lucide-react";
+import { ArrowLeft, Eye, Heart, Users, ChevronDown, ChevronUp, Check, MessageCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
@@ -12,23 +8,19 @@ import { useXp } from "@/hooks/use-xp";
 import { XP_REWARDS } from "@/lib/xp";
 import PageTransition from "@/components/PageTransition";
 import { usePushPrompt } from "@/contexts/PushPromptContext";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { formatTimeAgo } from "@/lib/utils";
+import { AnonymityToggle } from "@/components/ui/anonymity-toggle";
+import { cn } from "@/lib/utils";
 
-const REACTION_MAP: Record<string, { emoji: string; label: string }> = {
-  love: { emoji: "❤️", label: "Compaixão" },
-  pray: { emoji: "🙏", label: "Graça" },
-  patience: { emoji: "⏳", label: "Paciência" },
-  strength: { emoji: "💪", label: "Força" },
-  empathy: { emoji: "🥺", label: "Empatía" },
-};
+const THEMES = ["Família", "Saúde", "Trabalho", "Gratidão", "Luto", "Paz", "Cura", "Relacionamento"];
 
 const FEEDBACK_OPTIONS = [
-  { value: "success", label: "Deu certo, obrigado pelas orações!", emoji: "🎉" },
-  { value: "not_this_time", label: "Não foi desta vez, mas obrigado pelas preces!", emoji: "🙏" },
-  { value: "keep_trying", label: "Não deu certo mas vou continuar tentando", emoji: "💪" },
-  { value: "god_knows", label: "Não deu certo mas Deus sabe o que faz, obrigado pelas orações", emoji: "✝️" },
-  { value: "grace_received", label: "Consegui a graça solicitada, obrigado!", emoji: "⭐" },
+  { value: "success", label: "Deu certo, obrigado pelas orações!" },
+  { value: "not_this_time", label: "Não foi desta vez, mas obrigado pelas preces!" },
+  { value: "keep_trying", label: "Não deu certo mas vou continuar tentando" },
+  { value: "god_knows", label: "Não deu certo mas Deus sabe o que faz, obrigado pelas orações" },
+  { value: "grace_received", label: "Consegui a graça solicitada, obrigado!" },
 ];
 
 const Submit = () => {
@@ -36,8 +28,12 @@ const Submit = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { addXp } = useXp();
   const { triggerPushPrompt } = usePushPrompt();
-  
-  // History states
+
+  const [title, setTitle] = useState("");
+  const [content, setContent] = useState("");
+  const [isAnonymous, setIsAnonymous] = useState(false);
+  const [selectedTheme, setSelectedTheme] = useState<string | null>(null);
+
   const [prayers, setPrayers] = useState<any[]>([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState<string | null>(null);
@@ -45,10 +41,16 @@ const Submit = () => {
   const [intercessorsOpen, setIntercessorsOpen] = useState<string | null>(null);
   const [showHistory, setShowHistory] = useState(false);
 
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!session) navigate("/auth");
+    });
+    fetchHistory();
+  }, [navigate]);
+
   const fetchHistory = async () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return;
-    
     setIsLoadingHistory(true);
     try {
       const { data: prayerData, error } = await supabase
@@ -56,56 +58,35 @@ const Submit = () => {
         .select("*")
         .eq("user_id", session.user.id)
         .order("created_at", { ascending: false })
-        .limit(20); // Increased limit for integrated history
-        
+        .limit(20);
       if (error) throw error;
-      if (!prayerData || prayerData.length === 0) {
-        setPrayers([]);
-        return;
-      }
+      if (!prayerData || prayerData.length === 0) { setPrayers([]); return; }
 
       const prayerIds = prayerData.map((p) => p.id);
-
-      // Reactions
       const { data: reactionData } = await supabase
         .from("prayer_reactions").select("prayer_request_id, reaction_type").in("prayer_request_id", prayerIds);
-
       const reactionsByPrayer: Record<string, Record<string, number>> = {};
       reactionData?.forEach((r) => {
         if (!reactionsByPrayer[r.prayer_request_id]) reactionsByPrayer[r.prayer_request_id] = {};
         reactionsByPrayer[r.prayer_request_id][r.reaction_type] = (reactionsByPrayer[r.prayer_request_id][r.reaction_type] || 0) + 1;
       });
 
-      // Intercessors
       const { data: intercessionData } = await supabase
-        .from("prayer_intercessions")
-        .select("prayer_request_id, user_id")
-        .in("prayer_request_id", prayerIds);
-
+        .from("prayer_intercessions").select("prayer_request_id, user_id").in("prayer_request_id", prayerIds);
       const intercessorsByPrayer: Record<string, any[]> = {};
       if (intercessionData && intercessionData.length > 0) {
         const userIds = [...new Set(intercessionData.map((i) => i.user_id))];
         const { data: profileData } = await supabase
-          .from("profiles" as any)
-          .select("id, full_name, display_name, show_real_name, city, state")
-          .in("id", userIds);
-
+          .from("profiles" as any).select("id, full_name, display_name, show_real_name, city, state").in("id", userIds);
         const profileMap = new Map(((profileData || []) as any[]).map((p) => [p.id, p]));
-
         intercessionData.forEach((i) => {
           if (!intercessorsByPrayer[i.prayer_request_id]) intercessorsByPrayer[i.prayer_request_id] = [];
           const profile = profileMap.get(i.user_id);
           const name = profile?.show_real_name
-            ? (profile.display_name || profile.full_name?.split(" ")[0] || "Intercessor")
-            : "Um intercessor";
-          intercessorsByPrayer[i.prayer_request_id].push({
-            name,
-            city: profile?.city || "",
-            state: profile?.state || "",
-          });
+            ? (profile.display_name || profile.full_name?.split(" ")[0] || "Intercessor") : "Um intercessor";
+          intercessorsByPrayer[i.prayer_request_id].push({ name, city: profile?.city || "" });
         });
       }
-
       setPrayers(prayerData.map((p: any) => ({
         ...p,
         reactions: reactionsByPrayer[p.id] || {},
@@ -123,137 +104,88 @@ const Submit = () => {
     try {
       const { error } = await supabase.from("prayer_requests").update({ feedback: feedbackValue }).eq("id", prayerId);
       if (error) throw error;
-
       const { data: intercessions } = await supabase
         .from("prayer_intercessions").select("user_id").eq("prayer_request_id", prayerId);
-
-      const feedbackLabel = FEEDBACK_OPTIONS.find(f => f.value === feedbackValue)?.label || feedbackValue;
-
+      const feedbackLabel = FEEDBACK_OPTIONS.find((f) => f.value === feedbackValue)?.label || feedbackValue;
       if (intercessions && intercessions.length > 0) {
-        const prayer = prayers.find(p => p.id === prayerId);
-        const title = prayer?.title || "um pedido";
-        const notifications = intercessions.map(i => ({
+        const prayer = prayers.find((p) => p.id === prayerId);
+        const notifications = intercessions.map((i) => ({
           user_id: i.user_id,
           prayer_request_id: prayerId,
-          message: `Retorno sobre "${title}": ${feedbackLabel}`,
+          message: `Retorno sobre "${prayer?.title || "um pedido"}": ${feedbackLabel}`,
         }));
         await supabase.from("notifications").insert(notifications);
       }
-
-      setPrayers(prev => prev.map(p => p.id === prayerId ? { ...p, feedback: feedbackValue } : p));
+      setPrayers((prev) => prev.map((p) => (p.id === prayerId ? { ...p, feedback: feedbackValue } : p)));
       setFeedbackOpen(null);
       toast.success("Feedback enviado! Os intercessores serão notificados.");
-    } catch (e) {
+    } catch {
       toast.error("Erro ao enviar feedback");
     } finally {
       setSendingFeedback(false);
     }
   };
 
-  useEffect(() => {
-    fetchHistory();
-  }, []);
-
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) {
-        navigate("/auth");
-      } else {
-        const city = session.user.user_metadata?.city;
-        const state = session.user.user_metadata?.state;
-        if (city && state) {
-          setFormData(prev => ({ ...prev, location: `${city}, ${state}` }));
-        } else if (city) {
-          setFormData(prev => ({ ...prev, location: city }));
-        }
-      }
-    });
-  }, [navigate]);
-
-  const [formData, setFormData] = useState({ title: "", content: "", location: "" });
-
-  const notifyFriends = async (prayerId: string, title: string) => {
+  const notifyFriends = async (prayerId: string, prayerTitle: string) => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
-
-      const userName = session.user.user_metadata?.full_name || "Um amigo";
-      const userFirstName = userName.split(" ")[0];
-
-      // Fetch all friends
+      const firstName = (session.user.user_metadata?.full_name || "Um amigo").split(" ")[0];
       const { data: friendsData } = await supabase
-        .from("friendships")
-        .select("friend_id")
-        .eq("user_id", session.user.id);
-
+        .from("friendships").select("friend_id").eq("user_id", session.user.id);
       if (!friendsData || friendsData.length === 0) return;
-
-      const notifications = friendsData.map(f => ({
-        user_id: f.friend_id,
-        prayer_request_id: prayerId,
-        message: `🙏 ${userFirstName} acabou de enviar um novo pedido de oração: "${title}"`,
-        is_read: false
-      }));
-
-      await supabase.from("notifications").insert(notifications);
-    } catch (err) {
-      console.error("Error notifying friends:", err);
+      await supabase.from("notifications").insert(
+        friendsData.map((f) => ({
+          user_id: f.friend_id,
+          prayer_request_id: prayerId,
+          message: `🙏 ${firstName} acabou de enviar um novo pedido de oração: "${prayerTitle}"`,
+          is_read: false,
+        })),
+      );
+    } catch (e) {
+      console.error("Error notifying friends:", e);
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.content.trim()) {
-      toast.error("Por favor, descreva seu pedido de oração");
-      return;
-    }
-    if (formData.title.trim().length < 5) {
-      toast.error("O título do pedido deve ter pelo menos 5 letras");
-      return;
-    }
+    if (title.trim().length < 5) { toast.error("O título deve ter pelo menos 5 caracteres"); return; }
     setIsSubmitting(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
       const fullName = session?.user?.user_metadata?.full_name || "Anônimo";
-      const firstName = fullName.split(' ')[0];
-      
-      const { data, error } = await supabase.from('prayer_requests').insert([{
-        title: formData.title.trim(),
-        content: formData.content.trim(),
-        location: formData.location.trim() || null,
+      const firstName = isAnonymous ? null : fullName.split(" ")[0];
+
+      const { data, error } = await supabase.from("prayer_requests").insert([{
+        title: title.trim(),
+        content: content.trim() || null,
         prayer_count: 0,
         user_id: session?.user?.id,
         author_name: firstName,
       }]).select().single();
 
       if (error) throw error;
-      
-      if (data) {
-        await notifyFriends(data.id, data.title);
-      }
+      if (data) await notifyFriends(data.id, data.title);
 
-      // Daily XP gate — award submit XP only once per day
       const userId = session?.user?.id;
       const today = new Date().toISOString().split("T")[0];
       const submitXpKey = `amens_submit_xp_${userId}_${today}`;
       if (userId && !localStorage.getItem(submitXpKey)) {
         await addXp("submit");
         localStorage.setItem(submitXpKey, "1");
-        toast.success(`Pedido enviado! Ganhou +${XP_REWARDS.submit} pontos de fé`);
-      } else {
-        toast.success("Pedido enviado com sucesso!");
       }
-      setFormData({ title: "", content: "", location: "" });
-      
-      // Trigger push prompt
-      setTimeout(() => {
-         triggerPushPrompt("Saiba quando alguém orar por seu pedido, autorize as notificações");
-      }, 800);
 
+      toast.success("Seu pedido foi enviado. A comunidade poderá rezar por essa intenção.");
+      setTitle("");
+      setContent("");
+      setIsAnonymous(false);
+      setSelectedTheme(null);
+      fetchHistory();
+
+      setTimeout(() => triggerPushPrompt("Saiba quando alguém orar por seu pedido, autorize as notificações"), 800);
       setTimeout(() => navigate("/"), 3000);
     } catch (error: any) {
-      console.error('Error submitting prayer request:', error);
-      toast.error(`Erro técnico: ${error.message || JSON.stringify(error)}`);
+      toast.error(`Erro ao enviar: ${error.message || "tente novamente"}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -261,180 +193,218 @@ const Submit = () => {
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-background relative overflow-hidden pb-28">
-        <Button variant="ghost" size="icon" onClick={() => navigate("/")} className="absolute top-4 left-4 z-20">
-          <ArrowLeft className="w-5 h-5" />
-        </Button>
+      <div className="min-h-screen pb-28">
 
-        <div className="absolute top-[-6rem] right-[-4rem] w-80 h-80 bg-accent/5 rounded-full blur-3xl" />
-        <div className="absolute bottom-[-6rem] left-[-4rem] w-80 h-80 bg-primary/5 rounded-full blur-3xl" />
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 pt-safe pt-4 pb-2">
+          <button
+            onClick={() => navigate(-1)}
+            className="w-9 h-9 -ml-2 rounded-full flex items-center justify-center active:bg-black/5"
+          >
+            <ArrowLeft size={18} />
+          </button>
+          <div className="font-serif text-[17px] tracking-tight text-ink">Nova intenção</div>
+          <div className="w-9" />
+        </div>
 
-        <div className="container mx-auto px-4 py-12 relative z-10">
-          <motion.div className="max-w-2xl mx-auto text-center mb-10" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-            <p className="text-sm uppercase tracking-[0.25em] text-primary mb-2">✦</p>
-            <h1 className="text-5xl md:text-6xl font-bold mb-3 text-foreground">Enviar Pedido de Oração</h1>
-            <div className="divider-gold max-w-[10rem] mx-auto mb-3" />
-            <p className="text-muted-foreground">Compartilhe sua necessidade com a comunidade</p>
-          </motion.div>
+        <div className="px-5 max-w-xl mx-auto">
+          <p className="text-[13px] text-ink-soft mb-6 mt-1">
+            Sua intenção poderá ser orada pela comunidade.
+          </p>
 
-          <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.55, delay: 0.15 }}>
-            <Card className="max-w-2xl mx-auto p-8 soft-shadow border-primary/10">
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <Label htmlFor="title" className="text-base">Título (Opcional)</Label>
-                    <div className="w-10 h-10 overflow-visible relative flex-shrink-0">
-                      <img 
-                        src="/enviar_pergaminho_3d.png" 
-                        alt="Pergaminho solitário" 
-                        className={`w-full h-full object-contain transition-all duration-500 ${isSubmitting ? 'drop-shadow-[0_0_25px_rgba(255,215,0,1)] brightness-125 scale-110' : 'drop-shadow-sm'}`} 
-                      />
-                    </div>
-                  </div>
-                  <Input id="title" placeholder="Ex: Cura para meu filho Miguel" value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })} maxLength={100} />
-                </div>
-                <div>
-                  <Label htmlFor="content" className="text-base">Seu Pedido de Oração *</Label>
-                  <Textarea id="content" placeholder="Descreva seu pedido de oração com detalhes..." value={formData.content} onChange={(e) => setFormData({ ...formData, content: e.target.value })} className="mt-2 min-h-[180px]" required maxLength={1000} />
-                  <p className="text-sm text-muted-foreground mt-1">{formData.content.length}/1000 caracteres</p>
-                </div>
-                <Button type="submit" disabled={isSubmitting} size="lg" className="w-full gradient-divine text-black hover:opacity-90 font-bold">
-                  <Send className="w-4 h-4 mr-2" />
-                  {isSubmitting ? "Enviando..." : "Enviar Pedido"}
-                </Button>
-              </form>
-            </Card>
-          </motion.div>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Anonymity toggle — first element */}
+            <AnonymityToggle active={isAnonymous} onChange={setIsAnonymous} />
 
-          {/* History Section */}
-          <div className="max-w-2xl mx-auto mt-16 pb-20 px-2">
-             {!showHistory ? (
-                <div className="text-center">
-                   <Button 
-                     variant="ghost" 
-                     onClick={() => setShowHistory(true)}
-                     className="text-black hover:text-primary text-[11px] uppercase tracking-widest font-black py-8 bg-primary/5 rounded-[2rem] border border-dashed border-primary/20 w-full hover:bg-primary/10 transition-all font-serif italic"
-                   >
-                     <Clock className="w-4 h-4 mr-2" />
-                     Ver meus pedidos anteriores
-                   </Button>
-                </div>
-             ) : (
-                <motion.div 
-                   initial={{ opacity: 0, scale: 0.95 }}
-                   animate={{ opacity: 1, scale: 1 }}
-                   className="space-y-6"
+            {/* Title field — inline serif */}
+            <div>
+              <label className="text-[10px] uppercase tracking-[0.28em] text-ink-soft block mb-2">
+                Em uma frase
+              </label>
+              <input
+                className="w-full bg-transparent border-0 border-b border-hairline font-serif text-xl py-2 outline-none placeholder:text-ink-soft/50 focus:border-ink/40 transition-colors"
+                placeholder="Pela saúde da minha mãe…"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                maxLength={80}
+              />
+              <div className="flex justify-between mt-1">
+                <span className="text-[11px] text-ink-soft">mínimo 5 caracteres</span>
+                <span className="text-[11px] text-ink-soft font-mono">{title.length}/80</span>
+              </div>
+            </div>
+
+            {/* Description — optional */}
+            <div>
+              <label className="text-[10px] uppercase tracking-[0.28em] text-ink-soft block mb-2">
+                Conte mais <span className="normal-case tracking-normal">(opcional)</span>
+              </label>
+              <Textarea
+                placeholder="Descreva o que está em seu coração…"
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+                rows={5}
+                maxLength={1000}
+              />
+              <div className="flex justify-end mt-1">
+                <span className="text-[11px] text-ink-soft font-mono">{content.length}/1000</span>
+              </div>
+            </div>
+
+            {/* Theme chips — optional */}
+            <div>
+              <label className="text-[10px] uppercase tracking-[0.28em] text-ink-soft block mb-2">
+                Tema <span className="normal-case tracking-normal">(opcional)</span>
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {THEMES.map((theme) => (
+                  <button
+                    key={theme}
+                    type="button"
+                    onClick={() => setSelectedTheme(selectedTheme === theme ? null : theme)}
+                    className={cn(
+                      "px-3.5 py-2 rounded-full text-xs border transition-all",
+                      selectedTheme === theme
+                        ? "bg-ink text-paper border-ink"
+                        : "bg-transparent text-ink border-hairline hover:bg-vellum",
+                    )}
+                  >
+                    {theme}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Moderation note */}
+            <p className="text-[11px] text-ink-soft">
+              <span className="text-gold">✦</span> Pedidos passam por moderação antes de aparecer na comunidade.
+            </p>
+
+            {/* Submit */}
+            <button
+              type="submit"
+              disabled={isSubmitting || title.trim().length < 5}
+              className="w-full h-12 rounded-full bg-ink text-paper text-sm font-medium transition-opacity hover:opacity-90 active:opacity-80 disabled:opacity-35 disabled:cursor-not-allowed"
+            >
+              {isSubmitting ? "Enviando…" : "Compartilhar com a comunidade"}
+            </button>
+
+            <p className="text-center text-[11px] text-ink-soft">
+              Você ganha {XP_REWARDS.submit} pontos na sua caminhada ao enviar.
+            </p>
+          </form>
+
+          {/* History */}
+          <div className="mt-12 pb-4">
+            <button
+              onClick={() => { setShowHistory(!showHistory); if (!showHistory) fetchHistory(); }}
+              className="w-full flex items-center justify-between py-3 border-t border-hairline text-[11px] uppercase tracking-[0.24em] text-ink-soft"
+            >
+              Meus pedidos anteriores
+              {showHistory ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+            </button>
+
+            <AnimatePresence>
+              {showHistory && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="overflow-hidden"
                 >
-                   <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center gap-3">
-                         <Clock className="w-5 h-5 text-primary opacity-60" />
-                         <h2 className="text-xl font-bold text-foreground opacity-80 uppercase tracking-widest text-[14px]">Pedidos Recentes</h2>
-                      </div>
-                      <Button variant="ghost" size="sm" onClick={() => setShowHistory(false)} className="text-[10px] uppercase font-bold text-muted-foreground">Ocultar</Button>
-                   </div>
+                  {isLoadingHistory ? (
+                    <div className="py-8 text-center">
+                      <div className="animate-spin w-4 h-4 border-2 border-marian border-t-transparent rounded-full mx-auto" />
+                    </div>
+                  ) : prayers.length === 0 ? (
+                    <p className="py-6 text-sm text-ink-soft text-center">Você ainda não enviou nenhum pedido.</p>
+                  ) : (
+                    <div className="space-y-4 pt-2">
+                      {prayers.map((prayer) => (
+                        <div key={prayer.id} className="bg-vellum border border-hairline rounded-xl p-5">
+                          <div className="flex items-start justify-between gap-2 mb-2">
+                            <p className="font-serif text-[15px] leading-snug text-ink">{prayer.title}</p>
+                            <span className="text-[10px] text-ink-soft shrink-0">{formatTimeAgo(prayer.created_at)}</span>
+                          </div>
+                          {prayer.content && (
+                            <p className="text-[12px] text-ink-soft leading-relaxed line-clamp-2 mb-3">{prayer.content}</p>
+                          )}
 
-                   {isLoadingHistory ? (
-                     <div className="text-center py-6 opacity-40">
-                        <div className="animate-spin w-5 h-5 border-2 border-primary border-t-transparent rounded-full mx-auto mb-2" />
-                        <p className="text-xs">Carregando histórico...</p>
-                     </div>
-                   ) : prayers.length === 0 ? (
-                     <p className="text-center text-sm text-muted-foreground py-8 border border-dashed border-primary/10 rounded-3xl">
-                       Você ainda não enviou nenhum pedido.
-                     </p>
-                   ) : (
-                     <div className="space-y-6">
-                        {prayers.map((prayer, i) => (
-                          <motion.div 
-                            key={prayer.id} 
-                            initial={{ opacity: 0, scale: 0.98 }} 
-                            animate={{ opacity: 1, scale: 1 }} 
-                            transition={{ delay: i * 0.1 }}
-                          >
-                            <Card className="p-6 soft-shadow border-primary/5 bg-white/70 backdrop-blur-sm rounded-[2rem]">
-                              <div className="mb-4">
-                                <div className="flex justify-between items-start mb-2">
-                                  {prayer.title && <h3 className="text-base font-bold text-foreground">{prayer.title}</h3>}
-                                  <span className="text-[10px] bg-primary/5 px-2 py-1 rounded-full text-primary font-bold">{formatTimeAgo(prayer.created_at)}</span>
-                                </div>
-                                <p className="text-sm text-muted-foreground leading-relaxed line-clamp-2">{prayer.content}</p>
-                              </div>
-                              
-                              <div className="flex items-center gap-4 text-[11px] text-muted-foreground mb-4">
-                                 <div className="flex items-center gap-1"><Eye className="w-3.5 h-3.5" /> <span>{prayer.prayer_count}</span></div>
-                                 <div className="flex items-center gap-1"><Heart className="w-3.5 h-3.5" /> <span>{Object.values(prayer.reactions as object).reduce((a: any, b: any) => a + b, 0)}</span></div>
-                              </div>
+                          <div className="flex items-center gap-4 text-[11px] text-ink-soft mb-3">
+                            <span className="flex items-center gap-1"><Eye size={12} />{prayer.prayer_count}</span>
+                            <span className="flex items-center gap-1">
+                              <Heart size={12} />
+                              {Object.values(prayer.reactions as object).reduce((a: any, b: any) => a + b, 0)}
+                            </span>
+                          </div>
 
-                              {/* Intercessors List */}
-                              {prayer.intercessors.length > 0 && (
-                                <div className="mb-4 bg-primary/5 rounded-2xl p-3">
-                                  <button
-                                    onClick={() => setIntercessorsOpen(intercessorsOpen === prayer.id ? null : prayer.id)}
-                                    className="flex items-center gap-2 text-[10px] font-black text-primary/70 uppercase tracking-wider w-full text-left"
-                                  >
-                                    <Users className="w-3.5 h-3.5" />
-                                    {prayer.intercessors.length} {prayer.intercessors.length === 1 ? "pessoa orou" : "pessoas oraram"} por você
-                                    {intercessorsOpen === prayer.id ? <ChevronUp className="w-3 h-3 ml-auto" /> : <ChevronDown className="w-3 h-3 ml-auto" />}
-                                  </button>
-
-                                  <AnimatePresence>
-                                    {intercessorsOpen === prayer.id && (
-                                      <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
-                                        <div className="mt-2 flex flex-wrap gap-1.5">
-                                          {prayer.intercessors.map((int: any, idx: number) => (
-                                            <span key={idx} className="bg-white/50 px-2 py-1 rounded-full text-[9px] font-bold text-stone-600 border border-primary/5">
-                                              🙏 {int.name}
-                                            </span>
-                                          ))}
-                                        </div>
-                                      </motion.div>
-                                    )}
-                                  </AnimatePresence>
-                                </div>
-                              )}
-
-                              {/* Feedback Section */}
-                              <div className="pt-3 border-t border-primary/5">
-                                {prayer.feedback ? (
-                                  <div className="flex items-center gap-2 text-[11px] font-bold text-primary">
-                                    <Check className="w-3.5 h-3.5" />
-                                    <span>Seu retorno: {FEEDBACK_OPTIONS.find(f => f.value === prayer.feedback)?.emoji} {FEEDBACK_OPTIONS.find(f => f.value === prayer.feedback)?.label}</span>
-                                  </div>
-                                ) : (
-                                  <div>
-                                     {feedbackOpen === prayer.id ? (
-                                       <div className="space-y-2 py-2">
-                                          <p className="text-[10px] font-black text-muted-foreground uppercase mb-2 tracking-widest">Dê um retorno aos intercessores:</p>
-                                          <div className="grid grid-cols-1 gap-2">
-                                             {FEEDBACK_OPTIONS.map(option => (
-                                               <button 
-                                                 key={option.value} 
-                                                 disabled={sendingFeedback}
-                                                 onClick={() => handleFeedback(prayer.id, option.value)}
-                                                 className="text-left px-3 py-2 rounded-xl border border-primary/10 hover:bg-primary/5 text-xs flex items-center gap-2 transition-all"
-                                               >
-                                                 <span>{option.emoji}</span>
-                                                 <span className="text-stone-700">{option.label}</span>
-                                               </button>
-                                             ))}
-                                          </div>
-                                          <Button variant="ghost" size="sm" onClick={() => setFeedbackOpen(null)} className="h-7 text-[10px] mt-1">Cancelar</Button>
-                                       </div>
-                                     ) : (
-                                       <Button variant="outline" size="sm" onClick={() => setFeedbackOpen(prayer.id)} className="h-8 rounded-full text-[10px] font-bold border-primary/10 text-primary">
-                                          <MessageCircle className="w-3 h-3 mr-1.5" /> Dar Retorno
-                                       </Button>
-                                     )}
-                                  </div>
+                          {/* Intercessors */}
+                          {prayer.intercessors.length > 0 && (
+                            <div className="mb-3">
+                              <button
+                                onClick={() => setIntercessorsOpen(intercessorsOpen === prayer.id ? null : prayer.id)}
+                                className="flex items-center gap-1.5 text-[11px] text-marian"
+                              >
+                                <Users size={12} />
+                                {prayer.intercessors.length} {prayer.intercessors.length === 1 ? "pessoa orou" : "pessoas oraram"} por você
+                                {intercessorsOpen === prayer.id ? <ChevronUp size={11} /> : <ChevronDown size={11} />}
+                              </button>
+                              <AnimatePresence>
+                                {intercessorsOpen === prayer.id && (
+                                  <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden mt-2">
+                                    <div className="flex flex-wrap gap-1.5">
+                                      {prayer.intercessors.map((int: any, idx: number) => (
+                                        <span key={idx} className="bg-hairline px-2.5 py-1 rounded-full text-[10px] text-ink-soft">
+                                          {int.name}{int.city ? ` · ${int.city}` : ""}
+                                        </span>
+                                      ))}
+                                    </div>
+                                  </motion.div>
                                 )}
+                              </AnimatePresence>
+                            </div>
+                          )}
+
+                          {/* Feedback */}
+                          <div className="pt-3 border-t border-dashed border-hairline">
+                            {prayer.feedback ? (
+                              <div className="flex items-center gap-1.5 text-[11px] text-marian">
+                                <Check size={11} />
+                                {FEEDBACK_OPTIONS.find((f) => f.value === prayer.feedback)?.label}
                               </div>
-                            </Card>
-                          </motion.div>
-                        ))}
-                     </div>
-                   )}
+                            ) : feedbackOpen === prayer.id ? (
+                              <div className="space-y-2">
+                                <p className="text-[10px] uppercase tracking-[0.24em] text-ink-soft mb-2">Dê um retorno aos intercessores:</p>
+                                {FEEDBACK_OPTIONS.map((option) => (
+                                  <button
+                                    key={option.value}
+                                    disabled={sendingFeedback}
+                                    onClick={() => handleFeedback(prayer.id, option.value)}
+                                    className="w-full text-left px-3 py-2.5 rounded-lg border border-hairline hover:bg-hairline/50 text-[12px] text-ink transition-colors"
+                                  >
+                                    {option.label}
+                                  </button>
+                                ))}
+                                <button onClick={() => setFeedbackOpen(null)} className="text-[11px] text-ink-soft hover:text-ink mt-1">
+                                  Cancelar
+                                </button>
+                              </div>
+                            ) : (
+                              <button
+                                onClick={() => setFeedbackOpen(prayer.id)}
+                                className="flex items-center gap-1.5 text-[11px] text-marian hover:underline underline-offset-4"
+                              >
+                                <MessageCircle size={11} /> Dar retorno
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </motion.div>
-             )}
+              )}
+            </AnimatePresence>
           </div>
         </div>
       </div>
