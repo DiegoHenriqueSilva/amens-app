@@ -12,8 +12,6 @@ import DailyGospel from "./pages/DailyGospel";
 import DivinePromise from "./pages/DivinePromise";
 import NotFound from "./pages/NotFound";
 
-import { useEffect } from "react";
-
 import Profile from "./pages/Profile";
 import Community from "./pages/Community";
 import Tree from "./pages/Tree";
@@ -25,28 +23,13 @@ import NovenaPrayer from "./pages/NovenaPrayer";
 import RosarySelection from "./pages/RosarySelection";
 import RosaryPrayer from "./pages/RosaryPrayer";
 import BottomNav from "./components/BottomNav";
+import { TopBar } from "./components/TopBar";
 import { PushPromptProvider } from "./contexts/PushPromptContext";
 import Terco from "./pages/Terco";
 
 const queryClient = new QueryClient();
 
 const App = () => {
-  useEffect(() => {
-    const backgrounds = [
-      '/backgrounds/bg-1.png',
-      '/backgrounds/bg-2.png',
-      '/backgrounds/bg-3.png',
-      '/backgrounds/bg-4.png',
-      '/bg-divine-new.png',
-      '/bg-tree.png'
-    ];
-    const randomBg = backgrounds[Math.floor(Math.random() * backgrounds.length)];
-    // Safe property set
-    try {
-      document.body.style.setProperty('--bg-url', `url(${randomBg})`);
-    } catch(e) {}
-  }, []);
-
   return (
   <QueryClientProvider client={queryClient}>
     <PushPromptProvider>
@@ -55,6 +38,7 @@ const App = () => {
         <Sonner />
         <BrowserRouter>
           <div className="min-h-screen relative">
+          <TopBar />
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/old" element={<IndexOld />} />
