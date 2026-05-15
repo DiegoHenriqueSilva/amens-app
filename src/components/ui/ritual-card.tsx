@@ -1,3 +1,4 @@
+import { ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type RitualKind = "Evangelho" | "Terço" | "Novena" | "Promessa";
@@ -11,7 +12,7 @@ interface RitualCardProps {
   progress?: number; // 0–1
   onClick?: () => void;
   className?: string;
-  /** When true, renders as a full-width vertical list item instead of carousel card */
+  /** When true, renders as a full-width horizontal list item */
   listMode?: boolean;
 }
 
@@ -26,12 +27,46 @@ export function RitualCard({
   className,
   listMode = false,
 }: RitualCardProps) {
+  if (listMode) {
+    return (
+      <button
+        onClick={onClick}
+        className={cn(
+          "w-full py-4 border-b border-hairline text-left flex items-center justify-between gap-4 group",
+          className,
+        )}
+      >
+        <div className="min-w-0">
+          <span className="text-[9px] uppercase tracking-[0.24em] text-gold">{kind}</span>
+          <p className="font-serif text-[15px] leading-tight text-ink mt-0.5">{title}</p>
+          <p className="text-[11px] mt-0.5 text-ink-soft truncate">{sub}</p>
+          {typeof progress === "number" && (
+            <div className="mt-2 h-1 w-20 rounded-full bg-hairline">
+              <div
+                className="h-1 rounded-full bg-marian transition-all"
+                style={{ width: `${progress * 100}%` }}
+              />
+            </div>
+          )}
+        </div>
+        <div className="flex items-center gap-2 shrink-0">
+          {badge && (
+            <span className="text-[8px] uppercase tracking-[0.18em] px-1.5 py-0.5 rounded-sm bg-ink text-paper">
+              {badge}
+            </span>
+          )}
+          <span className="text-[11px] text-ink-soft whitespace-nowrap">{duration}</span>
+          <ChevronRight size={15} className="text-hairline group-hover:text-ink-soft transition-colors" />
+        </div>
+      </button>
+    );
+  }
+
   return (
     <button
       onClick={onClick}
       className={cn(
-        "bg-vellum border border-hairline rounded-lg p-4 text-left flex flex-col justify-between",
-        listMode ? "w-full min-h-[auto] border-t border-x-0 border-b-0 rounded-none px-0 py-4" : "min-h-[160px] w-[180px] shrink-0",
+        "bg-vellum border border-hairline rounded-lg p-4 text-left flex flex-col justify-between min-h-[160px] w-[180px] shrink-0",
         className,
       )}
     >

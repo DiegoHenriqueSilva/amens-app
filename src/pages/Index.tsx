@@ -53,6 +53,13 @@ const getGreeting = (): string => {
   return "Boa noite";
 };
 
+const getDateLabel = (): string => {
+  const d = new Date();
+  const days = ["Domingo", "Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira", "Sábado"];
+  const months = ["janeiro", "fevereiro", "março", "abril", "maio", "junho", "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"];
+  return `${days[d.getDay()]}, ${d.getDate()} de ${months[d.getMonth()]}`;
+};
+
 const Index = () => {
   const [firstName, setFirstName] = useState<string>("");
   const [onlineCount, setOnlineCount] = useState(0);
@@ -61,6 +68,7 @@ const Index = () => {
   const [cause, setCause] = useState<Cause | null>(null);
   const [causeAuthor, setCauseAuthor] = useState<CauseAuthor | null>(null);
   const [causeRemaining, setCauseRemaining] = useState<number | undefined>(undefined);
+  const [daysJoined, setDaysJoined] = useState(0);
   const [activeIntercessionNotifId, setActiveIntercessionNotifId] = useState<string | null>(null);
   const navigate = useNavigate();
   const location = useLocation();
@@ -80,11 +88,15 @@ const Index = () => {
 
         const { data: profile } = await supabase
           .from("profiles")
-          .select("first_name, avatar_url")
+          .select("first_name, avatar_url, created_at")
           .eq("id", session.user.id)
           .maybeSingle();
 
         if (profile?.first_name) setFirstName(profile.first_name);
+        if (profile?.created_at) {
+          const days = Math.max(1, Math.floor((Date.now() - new Date(profile.created_at).getTime()) / 86400000));
+          setDaysJoined(days);
+        }
 
         const { count } = await supabase
           .from("notifications")
@@ -217,9 +229,9 @@ const Index = () => {
             <div>
               {/* Greeting */}
               <div className="pt-5 pb-6 md:pt-0">
-                {firstName && (
-                  <p className="text-[13px] text-ink-soft mb-1">{getGreeting()}, {firstName}.</p>
-                )}
+                <p className="text-[12px] text-ink-soft mb-3">
+                  {getDateLabel()} · {getGreeting()}{firstName ? `, ${firstName}` : ""}.
+                </p>
                 <h1 className="font-serif text-[30px] leading-[1.1] text-ink">
                   Há uma intenção esperando<br />por você hoje.
                 </h1>
@@ -256,10 +268,15 @@ const Index = () => {
 
             {/* RIGHT column — Rituals */}
             <div>
-              {/* Section label */}
-              <div className="flex items-center gap-3 mb-4 md:pt-0 pt-2">
+              {/* Section header: Rituals label + Caminhada counter (desktop) */}
+              <div className="flex items-end justify-between md:pt-0 pt-2 pb-3 border-b border-hairline">
                 <span className="text-[10px] uppercase tracking-[0.28em] text-ink-soft">Rituais de hoje</span>
-                <div className="flex-1 h-px bg-hairline" />
+                {userId && daysJoined > 0 && (
+                  <div className="hidden md:block text-right">
+                    <p className="text-[9px] uppercase tracking-[0.22em] text-ink-soft">Sua caminhada</p>
+                    <p className="font-serif text-[22px] text-ink leading-none mt-0.5">{daysJoined} dias</p>
+                  </div>
+                )}
               </div>
 
               {/* Mobile: horizontal scroll carousel */}
