@@ -114,28 +114,28 @@ const NovenaPrayer = () => {
   if (showConclusion) {
     return (
       <PageTransition>
-        <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 text-center">
-            <motion.div 
-              initial={{ scale: 0.8, opacity: 0 }} 
+        <div className="min-h-screen flex flex-col items-center justify-center p-6 text-center">
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              className="w-20 h-20 bg-primary/20 rounded-full flex items-center justify-center mb-6"
+              className="w-16 h-16 rounded-full border border-hairline bg-vellum flex items-center justify-center mb-6"
             >
-               <CheckCircle2 className="w-10 h-10 text-primary" />
+               <CheckCircle2 size={28} strokeWidth={1.5} className="text-marian" />
             </motion.div>
-            <h2 className="text-3xl font-bold mb-4">
-              {state.currentDay === 9 ? "Novena Concluída!" : "Dia Concluído! 🙏"}
+            <h2 className="font-serif text-[28px] text-ink mb-4">
+              {state.currentDay === 9 ? "Novena concluída" : "Dia concluído"}
             </h2>
-            <Card className="p-8 soft-shadow border-primary/10 max-w-md bg-white/50 backdrop-blur-sm mb-8">
-               <p className="text-foreground/80 leading-relaxed italic text-sm">
-                 {state.currentDay === 9 
-                   ? "Parabéns por concluir sua jornada de 9 dias. Que as graças solicitadas sejam alcançadas segundo a vontade do Pai. Amém."
+            <div className="rounded-xl border border-hairline bg-vellum p-6 max-w-md mb-8">
+               <p className="font-serif italic text-[16px] text-ink leading-relaxed">
+                 {state.currentDay === 9
+                   ? "Que as graças solicitadas sejam alcançadas segundo a vontade do Pai. Amém."
                    : "Que a paz de Cristo esteja com você. Amanhã continuaremos nossa caminhada de fé."
                  }
                </p>
-            </Card>
-            <Button onClick={handleFinish} className="w-full max-w-xs h-16 rounded-2xl gradient-divine shadow-lg text-lg font-bold">
-              {state.currentDay < 9 ? "Definir Lembrete de Amanhã" : "Finalizar Novena"}
-            </Button>
+            </div>
+            <button onClick={handleFinish} className="h-12 px-8 rounded-full bg-ink text-paper text-sm font-medium hover:opacity-90 transition-opacity">
+              {state.currentDay < 9 ? "Definir lembrete para amanhã" : "Finalizar novena"}
+            </button>
 
             <ReminderModal 
               open={showReminder} 
@@ -152,110 +152,93 @@ const NovenaPrayer = () => {
 
   return (
     <PageTransition>
-      <div className="min-h-screen w-full bg-[#faf9f6] text-foreground flex flex-col relative overflow-hidden paper-texture pb-32">
-        {/* Divine Glow Elements */}
-        <motion.div 
-          animate={{ opacity: [0.03, 0.08, 0.03], scale: [1, 1.2, 1] }}
-          transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute top-[-10rem] right-[-10rem] w-[40rem] h-[40rem] rounded-full bg-[#e8c547] blur-[120px] pointer-events-none" 
-        />
-        <motion.div 
-          animate={{ opacity: [0.02, 0.06, 0.02], scale: [1, 1.1, 1] }}
-          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut", delay: 2 }}
-          className="absolute bottom-[-10rem] left-[-10rem] w-[40rem] h-[40rem] rounded-full bg-[#b8860b] blur-[120px] pointer-events-none" 
-        />
+      <div className="min-h-screen w-full pb-32">
 
         {/* Header */}
-        <div className="bg-[#faf9f6]/90 backdrop-blur-md sticky top-0 z-30 border-b border-[#a0720a]/10 pt-12 pb-4 px-6">
+        <div className="bg-paper/90 backdrop-blur-md sticky top-0 z-30 border-b border-hairline pt-safe pt-4 pb-4 px-5">
           <div className="flex items-center gap-4 max-w-2xl mx-auto">
-            <Button variant="ghost" size="icon" onClick={() => navigate("/novenas")} className="rounded-full hover:bg-primary/10">
-              <ArrowLeft className="w-5 h-5 text-primary" />
-            </Button>
+            <button onClick={() => navigate("/novenas")} className="p-1 -ml-1 text-ink-soft hover:text-ink transition-colors">
+              <ArrowLeft size={20} strokeWidth={1.5} />
+            </button>
             <div className="flex-1 min-w-0">
-              <h1 className="text-base font-black leading-none mb-1 truncate">{novena.name}</h1>
+              <h1 className="text-[14px] font-medium text-ink leading-none mb-1 truncate">{novena.name}</h1>
               <div className="flex items-center gap-2">
-                <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full font-bold uppercase tracking-tighter">Dia {state.currentDay}</span>
-                <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest truncate">{steps[step].title}</span>
+                <span className="text-[9px] uppercase tracking-[0.18em] text-marian">Dia {state.currentDay}</span>
+                <span className="text-ink-soft">·</span>
+                <span className="text-[9px] uppercase tracking-[0.18em] text-ink-soft truncate">{steps[step].title}</span>
               </div>
             </div>
           </div>
-          {/* Progress bar */}
-          <div className="max-w-2xl mx-auto mt-6 px-2">
-            <div className="h-1.5 w-full bg-secondary rounded-full overflow-hidden">
-               <motion.div 
-                 className="h-full bg-primary"
-                 initial={{ width: 0 }}
-                 animate={{ width: `${((step + 1) / steps.length) * 100}%` }}
-               />
+          <div className="max-w-2xl mx-auto mt-3 px-0">
+            <div className="h-1 w-full bg-hairline rounded-full overflow-hidden">
+              <motion.div
+                className="h-full bg-marian rounded-full"
+                initial={{ width: 0 }}
+                animate={{ width: `${((step + 1) / steps.length) * 100}%` }}
+              />
             </div>
           </div>
         </div>
 
-        <div className="container mx-auto px-6 py-8 max-w-2xl" ref={containerRef}>
+        <div className="px-5 py-6 max-w-2xl mx-auto" ref={containerRef}>
           <AnimatePresence mode="wait">
             <motion.div
               key={step}
-              initial={{ opacity: 0, x: 20 }}
+              initial={{ opacity: 0, x: 16 }}
               animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              transition={{ duration: 0.3 }}
+              exit={{ opacity: 0, x: -16 }}
+              transition={{ duration: 0.25 }}
             >
-              <div className="p-4 sm:p-8 min-h-[450px] flex flex-col relative overflow-hidden z-10">
-                <div className="flex items-center gap-4 mb-8 pb-6 border-b border-[#a0720a]/10">
-                   <div className="w-12 h-12 bg-[#d4a017]/10 rounded-2xl flex items-center justify-center shadow-inner">
-                      <CurrentIcon className="w-6 h-6 text-[#d4a017]" />
-                   </div>
-                   <div>
-                      <h2 className="text-xl font-black text-[#3d2800] tracking-tight">{steps[step].title}</h2>
-                      <p className="text-[10px] uppercase font-bold tracking-[0.2em] text-[#a0720a]/70">{steps[step].subtitle}</p>
-                   </div>
+              <div className="min-h-[450px] flex flex-col">
+                <div className="flex items-center gap-3 mb-6 pb-5 border-b border-hairline">
+                  <div className="w-10 h-10 border border-hairline rounded-full flex items-center justify-center bg-vellum">
+                    <CurrentIcon size={18} strokeWidth={1.5} className="text-gold" />
+                  </div>
+                  <div>
+                    <h2 className="font-serif text-[18px] text-ink">{steps[step].title}</h2>
+                    <p className="text-[10px] uppercase tracking-[0.2em] text-ink-soft">{steps[step].subtitle}</p>
+                  </div>
                 </div>
 
                 <div className="flex-1 flex flex-col justify-center">
-                   {isInteractiveStep ? (
-                     <MercyChaplet onComplete={handleNext} />
-                   ) : (
-                     <p className={cn(
-                       "text-lg leading-relaxed text-[#3d2800]/90 whitespace-pre-wrap text-center py-4",
-                       step === 3 ? "italic border-l-4 border-[#d4a017]/20 pl-6 text-left" : ""
-                     )}>
-                       {steps[step].content}
-                     </p>
-                   )}
+                  {isInteractiveStep ? (
+                    <MercyChaplet onComplete={handleNext} />
+                  ) : (
+                    <p className={cn(
+                      "font-serif text-[18px] leading-[1.6] text-ink whitespace-pre-wrap py-4",
+                      step === 3 ? "italic border-l-2 border-hairline pl-5 text-left" : "text-center"
+                    )}>
+                      {steps[step].content}
+                    </p>
+                  )}
                 </div>
 
                 {!isInteractiveStep && (
-                  <div className="mt-12 pt-8 border-t border-[#a0720a]/10 flex flex-col sm:flex-row items-center justify-between gap-4">
-                    <div className="flex flex-col">
-                        <p className="text-[10px] text-[#3d2800]/50 font-black uppercase tracking-[0.25em]">
-                          Passo {step + 1} de {steps.length}
-                        </p>
-                        <div className="flex gap-1 mt-1">
-                          {steps.map((_, i) => (
-                            <div key={i} className={cn("h-1 rounded-full transition-all duration-300", i === step ? "w-4 bg-[#d4a017]" : "w-1.5 bg-[#d4a017]/20")} />
-                          ))}
-                        </div>
+                  <div className="mt-10 pt-6 border-t border-hairline flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div className="flex gap-1">
+                      {steps.map((_, i) => (
+                        <div key={i} className={cn("h-1 rounded-full transition-all duration-300", i === step ? "w-4 bg-marian" : "w-1.5 bg-hairline")} />
+                      ))}
                     </div>
-                    
+
                     <div className="flex items-center gap-3 w-full sm:w-auto">
                       {step > 0 && (
-                        <Button 
-                          variant="outline"
-                          onClick={() => setStep(step - 1)} 
-                          className="flex-1 sm:flex-none rounded-2xl h-14 px-6 border-[#d4a017]/20 hover:bg-[#d4a017]/10 text-[#d4a017] flex items-center justify-center gap-2 group transition-all active:scale-95 font-bold"
+                        <button
+                          onClick={() => setStep(step - 1)}
+                          className="flex-1 sm:flex-none h-11 px-5 rounded-full border border-hairline text-ink-soft text-sm hover:text-ink hover:border-ink/30 transition-colors flex items-center justify-center gap-1.5"
                         >
-                          <ChevronLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
-                          <span className="sm:inline">Voltar</span>
-                        </Button>
+                          <ChevronLeft size={16} strokeWidth={1.5} />
+                          Voltar
+                        </button>
                       )}
-                      
-                      <Button 
-                        onClick={handleNext} 
-                        className="flex-[2] sm:flex-none rounded-2xl h-14 px-10 gradient-divine shadow-lg hover:shadow-xl flex items-center justify-center gap-3 group text-base font-bold transition-all active:scale-95"
+
+                      <button
+                        onClick={handleNext}
+                        className="flex-[2] sm:flex-none h-12 px-8 rounded-full bg-ink text-paper text-sm font-medium hover:opacity-90 active:scale-95 transition-all flex items-center justify-center gap-2"
                       >
-                        <span>{step < steps.length - 1 ? "Próxima Oração" : "Concluir Dia"}</span>
-                        <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                      </Button>
+                        {step < steps.length - 1 ? "Próxima oração" : "Concluir dia"}
+                        <ChevronRight size={16} strokeWidth={1.5} />
+                      </button>
                     </div>
                   </div>
                 )}

@@ -114,136 +114,114 @@ const DivinePromise = () => {
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-background relative overflow-hidden flex flex-col pb-28">
-        {/* Decorações de fundo */}
-        <div className="absolute top-[-10rem] right-[-10rem] w-[30rem] h-[30rem] rounded-full bg-primary/5 blur-3xl pointer-events-none" />
-        <div className="absolute bottom-[-10rem] left-[-10rem] w-[30rem] h-[30rem] rounded-full bg-accent/5 blur-3xl pointer-events-none" />
+      <div className="min-h-screen pb-28 flex flex-col">
 
-        <div className="container mx-auto px-6 py-12 relative z-10 max-w-lg flex-1 flex flex-col">
-          <header className="flex items-center mb-10">
-            <Button variant="ghost" size="icon" onClick={() => navigate("/")} className="rounded-full hover:bg-primary/10">
-              <ArrowLeft className="w-5 h-5 text-primary" />
-            </Button>
-            <div className="ml-4">
-              <h1 className="text-2xl font-black text-foreground tracking-tight">Divina Promessa</h1>
-              <p className="text-[10px] uppercase font-bold tracking-widest text-primary/60">Uma palavra de luz para você</p>
+        <div className="px-5 md:px-12 max-w-2xl mx-auto w-full flex-1 flex flex-col">
+          <header className="flex items-center gap-3 pt-safe pt-4 pb-8">
+            <button onClick={() => navigate("/")} className="p-1 -ml-1 text-ink-soft hover:text-ink transition-colors">
+              <ArrowLeft size={20} strokeWidth={1.5} />
+            </button>
+            <div>
+              <h1 className="font-serif text-[22px] text-ink">Divina Promessa</h1>
+              <p className="text-[10px] uppercase tracking-[0.2em] text-ink-soft">Uma palavra para hoje</p>
             </div>
           </header>
 
-          <main className="flex-1 flex flex-col justify-center">
+          <div className="flex-1 flex flex-col justify-center">
             <AnimatePresence mode="wait">
               {!promise ? (
-                <motion.div 
+                <motion.div
                   key="empty"
-                  initial={{ opacity: 0, scale: 0.9 }}
+                  initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 1.1 }}
+                  exit={{ opacity: 0, scale: 1.05 }}
                   className="flex flex-col items-center"
                 >
-                  <div 
+                  <div
                     className={cn(
-                      "w-48 h-48 bg-white/50 backdrop-blur-md rounded-[3rem] shadow-xl border border-primary/10 flex items-center justify-center cursor-pointer transition-all duration-500",
-                      isDrawing ? "animate-pulse scale-95" : "hover:scale-105 hover:bg-white"
+                      "w-44 h-44 bg-vellum border border-hairline rounded-2xl flex items-center justify-center cursor-pointer transition-all duration-300",
+                      isDrawing ? "opacity-60 scale-95" : "hover:scale-105 hover:border-marian/30"
                     )}
                     onClick={drawPromise}
                   >
                     {isDrawing ? (
-                      <Loader2 className="w-16 h-16 text-primary animate-spin" />
+                      <div className="w-8 h-8 rounded-full border-2 border-marian border-t-transparent animate-spin" />
                     ) : (
-                      <BookOpen className="w-20 h-20 text-primary/40" />
+                      <BookOpen size={48} strokeWidth={1} className="text-ink-soft/40" />
                     )}
                   </div>
-                  
-                  <div className="mt-12 w-full max-w-xs space-y-4">
-                    <p className="text-center text-sm text-muted-foreground mb-6">
-                      Abra o livro e receba a promessa que Deus tem reservada para o seu coração neste dia.
+
+                  <div className="mt-10 w-full max-w-xs space-y-4 text-center">
+                    <p className="text-[13px] text-ink-soft leading-relaxed">
+                      Abra o livro e receba a promessa que Deus reservou para o seu coração neste dia.
                     </p>
-                    <Button 
-                      onClick={drawPromise} 
-                      disabled={isDrawing} 
-                      size="lg" 
-                      className="w-full h-16 rounded-2xl shadow-lg gradient-divine text-lg font-bold"
+                    <button
+                      onClick={drawPromise}
+                      disabled={isDrawing}
+                      className="w-full h-12 rounded-full bg-ink text-paper text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50"
                     >
-                      {isDrawing ? "Buscando luz..." : "Retirar Promessa"}
-                    </Button>
+                      {isDrawing ? "Buscando…" : "Receber promessa"}
+                    </button>
                   </div>
                 </motion.div>
               ) : (
-                <motion.div 
+                <motion.div
                   key="content"
-                  initial={{ opacity: 0, y: 20 }}
+                  initial={{ opacity: 0, y: 16 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="space-y-8"
+                  className="space-y-5"
                 >
-                  <div className="relative">
-                    <AnimatePresence>
-                      {!hasShined && (
-                        <motion.div 
-                          initial={{ opacity: 0, scale: 0.5 }}
-                          animate={{ opacity: 1, scale: 1.5 }}
-                          exit={{ opacity: 0, scale: 2 }}
-                          onAnimationComplete={() => setHasShined(true)}
-                          className="absolute inset-0 bg-primary/20 rounded-full blur-3xl pointer-events-none mx-auto"
-                          style={{ width: '80%', height: '80%', top: '10%' }}
-                        />
-                      )}
-                    </AnimatePresence>
-                    
-                    <Card className="p-10 text-center min-h-[350px] flex flex-col justify-center border-primary/10 rounded-[3rem] bg-white/80 backdrop-blur-sm shadow-2xl relative z-10">
-                      <div className="mb-6 opacity-20">
-                         <Sparkles className="w-8 h-8 mx-auto text-primary" />
-                      </div>
-                      
-                      <motion.blockquote 
-                        className="text-xl md:text-2xl font-black text-foreground leading-tight italic mb-8"
+                  <div className="rounded-xl border border-hairline bg-vellum p-8 text-center">
+                    <p className="text-[9px] uppercase tracking-[0.28em] text-gold mb-6">✦ Palavra de hoje</p>
+
+                    <motion.blockquote
+                      className="font-serif text-[24px] md:text-[28px] leading-[1.35] text-ink italic mb-6"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: 0.2 }}
+                    >
+                      "{promise.verse}"
+                    </motion.blockquote>
+
+                    <motion.p
+                      className="text-[10px] uppercase tracking-[0.28em] text-ink-soft mb-5"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: 0.35 }}
+                    >
+                      {promise.ref}
+                    </motion.p>
+
+                    {promise.context && (
+                      <motion.p
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
-                        transition={{ delay: 0.2 }}
+                        transition={{ delay: 0.5 }}
+                        className="text-[12px] text-ink-soft leading-relaxed italic pt-4 border-t border-hairline"
                       >
-                        "{promise.verse}"
-                      </motion.blockquote>
-                      
-                      <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 0.4 }}
-                      >
-                        <p className="text-xs font-black text-primary uppercase tracking-[0.3em] mb-6">
-                          {promise.ref}
-                        </p>
-                      </motion.div>
-                      
-                      {promise.context && (
-                        <motion.div 
-                          initial={{ opacity: 0 }} 
-                          animate={{ opacity: 1 }} 
-                          transition={{ delay: 0.6 }} 
-                          className="text-xs text-muted-foreground leading-relaxed italic bg-primary/5 p-5 rounded-2xl border border-primary/5"
-                        >
-                          {promise.context}
-                        </motion.div>
-                      )}
-                    </Card>
+                        {promise.context}
+                      </motion.p>
+                    )}
                   </div>
 
-                  <div className="grid grid-cols-1 gap-3">
-                    <Button onClick={handleShare} className="h-16 rounded-2xl flex items-center justify-center gap-3 gradient-divine shadow-lg font-bold text-lg">
-                      <Share2 className="w-5 h-5" />
-                      Compartilhar Promessa
-                    </Button>
-                    
-                    <Button 
-                      onClick={() => { localStorage.removeItem("last_divine_promise"); setPromise(null); }} 
-                      variant="ghost" 
-                      className="w-full text-muted-foreground h-12 font-bold uppercase tracking-widest text-[10px] hover:bg-primary/5"
-                    >
-                      Retirar Outra Palavra
-                    </Button>
-                  </div>
+                  <button
+                    onClick={handleShare}
+                    className="w-full h-12 rounded-full bg-ink text-paper text-sm font-medium hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
+                  >
+                    <Share2 size={16} strokeWidth={1.5} />
+                    Compartilhar promessa
+                  </button>
+
+                  <button
+                    onClick={() => { localStorage.removeItem("last_divine_promise"); setPromise(null); }}
+                    className="w-full text-[11px] text-ink-soft hover:text-ink transition-colors py-2"
+                  >
+                    Receber outra palavra
+                  </button>
                 </motion.div>
               )}
             </AnimatePresence>
-          </main>
+          </div>
         </div>
         <InviteGatePopup isAuthenticated={isAuthenticated} />
       </div>
