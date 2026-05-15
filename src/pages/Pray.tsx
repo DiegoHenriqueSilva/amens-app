@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Sparkles, Heart, ArrowLeft, Users, Share2, Clock, Loader2, Flag, Eye, MessageCircle, Check } from "lucide-react";
+import { HairlineDivider } from "@/components/ui/hairline-divider";
+import { cn } from "@/lib/utils";
+import { ArrowLeft, Users, Share2, Flag, MoreVertical } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useXp } from "@/hooks/use-xp";
@@ -65,6 +65,8 @@ const Pray = () => {
   const [isSharedCause, setIsSharedCause] = useState(false);
   const [editingReactionHistoryId, setEditingReactionHistoryId] = useState<string | null>(null);
   const [expandedHistoryItems, setExpandedHistoryItems] = useState<Record<string, boolean>>({});
+  const [prayTime, setPrayTime] = useState(0);
+  const [showAiSuggestion, setShowAiSuggestion] = useState(false);
 
   // Rastreia quais amigos já receberam convite para cada causa no dia de hoje.
   // Persiste no sessionStorage para sobreviver a HMR e reloads da página na mesma aba.
@@ -709,400 +711,296 @@ REGRAS ADICIONAIS:
     setReportDialogOpen(false);
     returnOneDraw();
     setSeenPrayerIds(prev => [...prev, prayerRequest.id]);
-    setPrayerRequest(null); // Clear screen
+    setPrayerRequest(null);
     toast.info("Você pode sortear uma nova causa agora.");
   };
 
+  // Prayer timer
+  useEffect(() => {
+    if (!prayerRequest) { setPrayTime(0); return; }
+    setPrayTime(0);
+    const interval = setInterval(() => setPrayTime(s => s + 1), 1000);
+    return () => clearInterval(interval);
+  }, [prayerRequest?.id]);
+
+  const formatTime = (s: number) => `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
+
   return (
     <PageTransition>
-      <div className="min-h-screen bg-background/70 backdrop-blur-sm relative overflow-hidden pb-28">
+      <div className="min-h-screen pb-28">
 
-        <div className="absolute top-[-6rem] left-[-4rem] w-80 h-80 bg-primary/5 rounded-full blur-3xl" />
-        <div className="absolute bottom-[-6rem] right-[-4rem] w-80 h-80 bg-accent/5 rounded-full blur-3xl" />
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 pt-safe pt-4 pb-2">
+          <button onClick={() => navigate(-1)} className="w-9 h-9 -ml-2 rounded-full flex items-center justify-center active:bg-black/5">
+            <ArrowLeft size={18} />
+          </button>
+          <div className="font-serif text-[17px] tracking-tight text-ink">Orar por uma Causa</div>
+          {prayerRequest && !prayerRequest.is_default && !isSharedCause ? (
+            <button onClick={() => setReportDialogOpen(true)} className="w-9 h-9 rounded-full flex items-center justify-center active:bg-black/5">
+              <MoreVertical size={18} className="text-ink-soft" />
+            </button>
+          ) : <div className="w-9" />}
+        </div>
 
-        <div className="container mx-auto px-4 py-8 relative z-10">
-          <div className="max-w-2xl mx-auto mb-6 flex items-center">
-            <Button variant="ghost" size="icon" onClick={() => navigate("/")} className="shrink-0 hover:bg-primary/10 transition-colors">
-              <ArrowLeft className="w-5 h-5 text-foreground" />
-            </Button>
-          </div>
-          
-          <motion.div className="max-w-2xl mx-auto text-center mb-10" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-            <p className="text-sm uppercase tracking-[0.25em] text-primary mb-2">✦</p>
-            <h1 className="text-4xl md:text-5xl font-bold mb-3 text-foreground">Orar por uma Causa</h1>
-            <div className="divider-gold max-w-[10rem] mx-auto mb-3" />
-            <p className="text-muted-foreground">Seja um instrumento da graça divina</p>
-          </motion.div>
+        <div className="px-5 max-w-xl mx-auto">
+          <InviteGatePopup isAuthenticated={!!currentUser} />
 
-          <div className="max-w-2xl mx-auto space-y-6">
-            <AnimatePresence mode="wait">
-              {!hasRequestedCause ? (
-                <motion.div key="initial" variants={fadeUp} initial="initial" animate="animate" exit="exit" className="space-y-4">
-                  <Card className="p-10 text-center soft-shadow border-primary/10">
-                    <motion.div animate={{ scale: [1, 1.05, 1] }} transition={{ duration: 4, repeat: Infinity }}>
-                       <Sparkles className="w-12 h-12 text-primary mx-auto mb-6 opacity-30" />
-                    </motion.div>
-                    <div className="flex flex-col gap-4">
-                      <Button onClick={fetchRandomPrayerRequest} disabled={isLoading || isLimitReached} size="lg" className={`w-full h-16 bg-gradient-to-br from-[#d4a017] to-[#e8c547] text-[#3d2800] hover:opacity-90 transition-opacity font-bold text-lg rounded-2xl shadow-lg border-0 ${!currentUser || isLimitReached ? 'opacity-60 pointer-events-none' : ''}`}>
-                        {isLoading ? "Buscando..." : "Receber uma Causa"}
-                      </Button>
-                      
-                      {/* Limit Indicator */}
-                      {currentUser && (
-                        <div className="text-sm mt-2">
-                          {isLimitReached ? (
-                            <span className="text-red-500 font-medium">Limite atingido. Próximo sorteio {nextResetLabel}.</span>
-                          ) : (
-                            <span className="text-muted-foreground">Você tem <strong className="text-primary">{drawsLeft}</strong> de {PRAY_SETTINGS.dailyDrawLimit} sorteios disponíveis hoje.</span>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  </Card>
-                </motion.div>
-              ) : isLoading || !prayerRequest ? (
-                <motion.div key="empty" variants={fadeUp} initial="initial" animate="animate" exit="exit" className="flex flex-col items-center justify-center py-20">
-                  <div className="animate-spin w-10 h-10 border-4 border-primary border-t-transparent rounded-full mb-4" />
-                  <p className="text-primary font-medium animate-pulse">Buscando causa...</p>
-                </motion.div>
-              ) : (
-                <motion.div key="prayer" variants={fadeUp} initial="initial" animate="animate" exit="exit" className="space-y-6">
-                  
-                  {isSharedCause && (
-                    <div className="bg-blue-50 border border-blue-100 rounded-2xl p-4 text-center">
-                      <p className="text-blue-800 text-sm font-medium mb-3">Você acessou uma causa compartilhada.</p>
-                      <Button onClick={handleAcceptSharedCause} disabled={isLimitReached} className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm h-9">
-                        Aceitar interceder
-                      </Button>
-                      {isLimitReached && <p className="text-xs text-red-500 mt-2">Você não tem sorteios disponíveis hoje.</p>}
-                    </div>
+          <AnimatePresence mode="wait">
+            {/* Initial — no cause yet */}
+            {!hasRequestedCause && (
+              <motion.div key="initial" variants={fadeUp} initial="initial" animate="animate" exit="exit" className="pt-8 space-y-6">
+                <div className="bg-vellum border border-hairline rounded-xl p-8 text-center">
+                  <p className="font-serif text-[22px] leading-snug text-ink mb-6">
+                    "Interceder é levar o peso<br />do outro diante de Deus."
+                  </p>
+                  <button
+                    onClick={fetchRandomPrayerRequest}
+                    disabled={isLoading || isLimitReached || !currentUser}
+                    className="w-full h-12 rounded-full bg-ink text-paper text-sm font-medium transition-opacity hover:opacity-90 disabled:opacity-35 disabled:cursor-not-allowed"
+                  >
+                    {isLoading ? "Buscando…" : "Receber uma causa"}
+                  </button>
+                  {currentUser && (
+                    <p className="text-[11px] text-ink-soft mt-3">
+                      {isLimitReached
+                        ? `Limite atingido. Próximo sorteio ${nextResetLabel}.`
+                        : `${drawsLeft} de ${PRAY_SETTINGS.dailyDrawLimit} sorteios disponíveis hoje`}
+                    </p>
                   )}
+                </div>
+              </motion.div>
+            )}
 
-                  <Card className={`p-8 soft-shadow border-primary/10 ${!currentUser ? 'opacity-60 pointer-events-none' : ''}`}>
-                    <div className="flex items-start gap-4 mb-6">
-                      <div className="flex-shrink-0 relative">
-                        {prayerRequest.avatar_url ? (
-                          <img src={prayerRequest.avatar_url} alt="Avatar" className="w-12 h-12 rounded-full object-cover border-2 border-primary/20" />
-                        ) : (
-                          <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center border-2 border-primary/20">
-                            <Heart className="w-5 h-5 text-primary/50" />
-                          </div>
-                        )}
-                      </div>
-                      
-                      <div className="flex-1">
-                        {prayerRequest.title && <h3 className="text-xl font-semibold mb-1 text-foreground">{prayerRequest.title}</h3>}
-                        <div className="flex items-center gap-2 mb-3">
-                          <p className="text-xs text-primary font-bold uppercase tracking-widest opacity-80">
-                            Enviado por {prayerRequest.display_name}
-                          </p>
-                          {prayerRequest.is_friend && !prayerRequest.is_anonymous && prayerRequest.display_name !== 'Usuário Anônimo' && (
-                            <span className="text-[9px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-sm font-bold uppercase">Amigo 🤝</span>
-                          )}
-                        </div>
-                        <p className="text-foreground/80 leading-relaxed">{prayerRequest.content}</p>
-                        
-                        <div className="flex items-center flex-wrap gap-x-3 gap-y-1 mt-3">
-                          {prayerRequest.location && <p className="text-[10px] text-muted-foreground flex items-center gap-1"><span>📍</span> {prayerRequest.location}</p>}
-                          {prayerRequest.created_at && (
-                            <p className="text-[10px] text-muted-foreground flex items-center gap-1" title={formatFullDatetime(prayerRequest.created_at)}>
-                              <Clock className="w-3 h-3 opacity-50" />
-                              Postado {formatTimeAgo(prayerRequest.created_at)}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                    </div>
+            {/* Loading */}
+            {hasRequestedCause && (isLoading || !prayerRequest) && (
+              <motion.div key="loading" variants={fadeUp} initial="initial" animate="animate" exit="exit" className="flex justify-center py-20">
+                <div className="animate-spin w-6 h-6 border-2 border-marian border-t-transparent rounded-full" />
+              </motion.div>
+            )}
 
-                    {/* Integrated Reactions Section */}
-                    <div className="bg-primary/5 rounded-2xl p-5 mb-6 border border-primary/10">
-                      <h4 className="text-sm font-semibold text-center text-primary mb-3">Envie Energia e Solidariedade</h4>
-                      {prayerRequest.feedback ? (
-                         <div className="text-center p-3 bg-white/50 rounded-xl">
-                            <span className="text-2xl mb-1 block">{FEEDBACK_OPTIONS[prayerRequest.feedback]?.emoji}</span>
-                            <p className="text-xs font-medium text-green-700">Esta causa já recebeu um testemunho de graça!</p>
-                            <p className="text-[10px] text-muted-foreground mt-1">Interações desativadas</p>
-                         </div>
-                      ) : (
-                         <div className="flex flex-wrap gap-2 justify-center">
-                           {REACTIONS.map((reaction, i) => {
-                             const isActive = activeReaction === reaction.type;
-                             const isOtherActive = activeReaction !== null && !isActive;
-                             return (
-                               <motion.button
-                                 key={reaction.type}
-                                 whileHover={{ scale: 1.1 }}
-                                 whileTap={{ scale: 0.95 }}
-                                 className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-all duration-200 ${
-                                   isActive
-                                     ? "bg-white shadow-sm ring-1 ring-primary/30"
-                                     : isOtherActive
-                                     ? "opacity-50 hover:opacity-100 hover:bg-white/50"
-                                     : "hover:bg-white/50"
-                                 }`}
-                                 onClick={() => toggleReaction(reaction.type, prayerRequest.id, activeReaction, false)}
-                               >
-                                 <span className="text-2xl">{reaction.emoji}</span>
-                                 <span className={`text-[10px] font-medium ${isActive ? "text-primary" : "text-muted-foreground"}`}>{reaction.label}</span>
-                               </motion.button>
-                             );
-                           })}
-                         </div>
-                      )}
-                    </div>
+            {/* Cause */}
+            {hasRequestedCause && !isLoading && prayerRequest && (
+              <motion.div key="prayer" variants={fadeUp} initial="initial" animate="animate" exit="exit" className="pt-4 space-y-6">
 
-                    <div className="divider-gold mb-5" />
-                    
-                    <div className="flex gap-3 flex-wrap">
-                      <Button onClick={generatePrayer} disabled={isGenerating} className="bg-gradient-to-br from-[#d4a017] to-[#e8c547] text-[#3d2800] hover:opacity-90 font-semibold border-0 flex-1">
-                        <Sparkles className="w-4 h-4 mr-2" />
-                        {isGenerating ? "Gerando..." : "Sugestão de Oração"}
-                      </Button>
-                      
-                      {!prayerRequest.feedback && !isSharedCause && (
-                        <Button onClick={fetchRandomPrayerRequest} variant="outline" className="border-[#1D4ED8]/20 text-[#1D4ED8] hover:text-[#1D4ED8] hover:bg-[#1D4ED8]/5 shadow-sm">
-                          Próxima Causa
-                        </Button>
-                      )}
-                    </div>
+                {isSharedCause && (
+                  <div className="bg-marian/8 border border-marian/20 rounded-xl p-4 text-center">
+                    <p className="text-sm text-ink mb-3">Você acessou uma causa compartilhada.</p>
+                    <button
+                      onClick={handleAcceptSharedCause}
+                      disabled={isLimitReached}
+                      className="h-9 px-5 rounded-full bg-ink text-paper text-xs font-medium disabled:opacity-35"
+                    >
+                      Aceitar interceder
+                    </button>
+                    {isLimitReached && <p className="text-[11px] text-red-500 mt-2">Sorteios esgotados hoje.</p>}
+                  </div>
+                )}
 
-                    <div className="flex gap-2 w-full mt-3">
-                       <Button 
-                         variant="outline" 
-                         onClick={() => setFriendSelectorOpen(true)}
-                         className="flex-1 rounded-xl border-[#1D4ED8]/20 text-[#1D4ED8] hover:text-[#1D4ED8] hover:bg-[#1D4ED8]/10 shadow-sm transition-colors text-xs h-9"
-                       >
-                         <Users className="w-3.5 h-3.5 mr-2" />
-                         Enviar a um amigo do Améns
-                       </Button>
-                       
-                       <Button 
-                         variant="outline" 
-                         onClick={handleShareCompartilhar}
-                         className="flex-1 rounded-xl border-green-600/20 text-green-700 hover:text-green-700 hover:bg-green-50 shadow-sm transition-colors text-xs h-9"
-                       >
-                         <Share2 className="w-3.5 h-3.5 mr-2" />
-                         Compartilhar fora do Améns
-                       </Button>
-                    </div>
-
-                    {!prayerRequest.feedback && !prayerRequest.is_default && !isSharedCause && (
-                      <div className="mt-4 flex flex-col gap-3 items-center text-center">
-                        <button onClick={() => setReportDialogOpen(true)} className="text-[10px] text-muted-foreground hover:text-red-500 transition-colors uppercase font-medium flex items-center justify-center gap-1 mx-auto">
-                          <Flag className="w-3 h-3" /> Reportar essa causa a um administrador
-                        </button>
-                      </div>
+                {/* Cause card */}
+                <div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="text-gold text-[10px]">✦</span>
+                    <span className="text-[10px] uppercase tracking-[0.28em] text-ink-soft">
+                      Causa de {prayerRequest.display_name}
+                    </span>
+                    {prayerRequest.is_friend && !prayerRequest.is_anonymous && (
+                      <span className="text-[9px] bg-marian/10 text-marian px-1.5 py-0.5 rounded-sm">amigo</span>
                     )}
-                  </Card>
+                  </div>
+                  {prayerRequest.created_at && (
+                    <p className="text-[11px] text-ink-soft mb-4">{formatTimeAgo(prayerRequest.created_at)}{prayerRequest.location ? ` · ${prayerRequest.location}` : ""}</p>
+                  )}
+                  <p className="font-serif text-[26px] leading-[1.25] text-ink">
+                    "{prayerRequest.content || prayerRequest.title}"
+                  </p>
+                </div>
 
-                  <FriendSelector 
-                    open={friendSelectorOpen}
-                    onOpenChange={setFriendSelectorOpen}
-                    onSelect={handleInviteFriends}
-                    prayerRequestId={prayerRequest?.id}
-                    alreadySharedFriendIds={sharedFriendsMap[prayerRequest?.id] || []}
-                  />
+                <HairlineDivider />
 
+                {/* Stats */}
+                <div className="flex items-center gap-8">
+                  <div>
+                    <p className="text-[10px] uppercase tracking-[0.24em] text-ink-soft mb-0.5">Em oração</p>
+                    <p className="font-serif text-[22px] font-mono text-ink leading-none">{formatTime(prayTime)}</p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] uppercase tracking-[0.24em] text-ink-soft mb-0.5">Acompanhando</p>
+                    <p className="font-serif text-[22px] text-ink leading-none">{prayerRequest.prayer_count ?? 0} <span className="text-[14px] text-ink-soft">irmãos</span></p>
+                  </div>
+                </div>
+
+                {/* Reactions — chips */}
+                {!prayerRequest.feedback && (
+                  <div>
+                    <p className="text-[10px] uppercase tracking-[0.24em] text-ink-soft mb-2">Envie um sinal</p>
+                    <div className="flex flex-wrap gap-2">
+                      {REACTIONS.map((reaction) => {
+                        const isActive = activeReaction === reaction.type;
+                        return (
+                          <button
+                            key={reaction.type}
+                            onClick={() => toggleReaction(reaction.type, prayerRequest.id, activeReaction, false)}
+                            className={cn(
+                              "px-3.5 py-2 rounded-full text-xs border transition-all",
+                              isActive ? "bg-ink text-paper border-ink" : "bg-transparent text-ink border-hairline hover:bg-vellum",
+                            )}
+                          >
+                            {reaction.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {prayerRequest.feedback && (
+                  <p className="text-[12px] text-marian italic">Esta causa já recebeu um testemunho de graça.</p>
+                )}
+
+                {/* AI suggestion — collapsible */}
+                <div>
+                  <button
+                    onClick={() => {
+                      if (!showAiSuggestion && !suggestedPrayer) generatePrayer();
+                      setShowAiSuggestion(v => !v);
+                    }}
+                    className="flex items-center gap-2 text-[12px] text-ink-soft hover:text-ink transition-colors"
+                  >
+                    Sugestão de oração {showAiSuggestion ? "▴" : "▾"}
+                  </button>
                   <AnimatePresence>
-                    {suggestedPrayer && (
-                      <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45, delay: 0.1 }}>
-                        <Card className="p-8 soft-shadow border-primary/15">
-                          <h3 className="text-xl font-semibold mb-4 text-primary">Sugestão de Oração</h3>
-                          <p className="text-foreground/85 leading-relaxed italic whitespace-pre-wrap">{suggestedPrayer}</p>
-                        </Card>
+                    {showAiSuggestion && (
+                      <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
+                        <div className="mt-3 bg-vellum border border-hairline rounded-xl p-4">
+                          {isGenerating ? (
+                            <div className="flex justify-center py-4">
+                              <div className="animate-spin w-4 h-4 border-2 border-marian border-t-transparent rounded-full" />
+                            </div>
+                          ) : (
+                            <p className="font-serif text-[15px] leading-relaxed text-ink italic">{suggestedPrayer}</p>
+                          )}
+                        </div>
                       </motion.div>
                     )}
                   </AnimatePresence>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-
-          <InviteGatePopup isAuthenticated={!!currentUser} />
-          {/* History Section */}
-          <div className="max-w-2xl mx-auto mt-16 pb-20 px-2">
-             {!showHistory ? (
-                <div className="text-center">
-                   <Button 
-                     variant="ghost" 
-                     onClick={() => {
-                        if (!currentUser) {
-                           navigate("/auth");
-                           return;
-                        }
-                        setShowHistory(true);
-                     }}
-                     className="text-black hover:text-primary text-[11px] uppercase tracking-widest font-black py-8 bg-primary/5 rounded-[2rem] border border-dashed border-primary/20 w-full hover:bg-primary/10 transition-all font-serif italic"
-                   >
-                     <Clock className="w-4 h-4 mr-2" />
-                     Ver minhas intercessões anteriores
-                   </Button>
                 </div>
-             ) : (
-                <motion.div 
-                   initial={{ opacity: 0, scale: 0.95 }}
-                   animate={{ opacity: 1, scale: 1 }}
-                   className="space-y-6"
-                >
-                   <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center gap-3">
-                         <Clock className="w-5 h-5 text-primary opacity-60" />
-                         <h2 className="text-xl font-bold text-foreground opacity-80 uppercase tracking-widest text-[14px]">Causas que você intercedeu</h2>
-                      </div>
-                      <Button variant="ghost" size="sm" onClick={() => setShowHistory(false)} className="text-[10px] uppercase font-bold text-muted-foreground">Fechar</Button>
-                   </div>
 
-                   {isIntercessionsLoading ? (
-                     <div className="text-center py-6 opacity-40">
-                        <div className="animate-spin w-5 h-5 border-2 border-primary border-t-transparent rounded-full mx-auto mb-2" />
-                        <p className="text-xs">Carregando histórico...</p>
-                     </div>
-                   ) : intercessions.length === 0 ? (
-                     <p className="text-center text-sm text-muted-foreground py-8 border border-dashed border-primary/10 rounded-3xl">
-                       Você ainda não orou por nenhuma causa.
-                     </p>
-                   ) : (
-                     <div className="space-y-4">
-                        {intercessions.map((item, i) => (
-                          <motion.div 
-                            key={item.id} 
-                            initial={{ opacity: 0, x: -10 }} 
-                            animate={{ opacity: 1, x: 0 }} 
-                            transition={{ delay: i * 0.1 }}
-                          >
-                            <Card className={`p-5 soft-shadow rounded-3xl ${item.prayer_feedback ? 'bg-green-50/80 border-green-200' : 'border-primary/5'}`}>
-                              <div className="flex gap-4">
-                                <div className="flex-shrink-0 mt-1">
-                                  {item.avatar_url ? (
-                                    <img src={item.avatar_url} alt="Avatar" className="w-10 h-10 rounded-full object-cover border border-primary/20" />
-                                  ) : (
-                                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center border border-primary/20">
-                                      <Heart className="w-4 h-4 text-primary/50" />
-                                    </div>
-                                  )}
-                                </div>
+                {/* Primary actions */}
+                <div className="space-y-3">
+                  <button
+                    onClick={() => {
+                      toast.success("Sua oração foi registrada.");
+                      navigate("/");
+                    }}
+                    className="w-full h-12 rounded-full bg-ink text-paper text-sm font-medium hover:opacity-90 active:opacity-80 transition-opacity"
+                  >
+                    Concluí esta oração
+                  </button>
 
-                                <div className="flex-1">
-                                  <div className="flex items-center gap-2 mb-1">
-                                    <span className="text-xs font-bold text-primary uppercase tracking-wider">{item.author_name}</span>
-                                    {item.is_friend && !item.is_anonymous && item.author_name !== 'Usuário Anônimo' && <span className="text-[8px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-sm font-bold uppercase">Amigo 🤝</span>}
-                                    {item.is_anonymous && <span className="text-[8px] bg-stone-200 text-stone-600 px-1.5 py-0.5 rounded-sm font-bold uppercase">Anônimo</span>}
+                  {!prayerRequest.feedback && !isSharedCause && (
+                    <button
+                      onClick={fetchRandomPrayerRequest}
+                      disabled={isLoading || isLimitReached}
+                      className="w-full h-11 rounded-full bg-transparent text-ink border border-hairline text-[12.5px] hover:bg-vellum transition-colors disabled:opacity-35"
+                    >
+                      Receber outra
+                    </button>
+                  )}
+                </div>
+
+                {/* Share + history */}
+                <div className="flex items-center gap-4 justify-center">
+                  <button onClick={() => setFriendSelectorOpen(true)} className="flex items-center gap-1.5 text-[12px] text-marian hover:underline underline-offset-4">
+                    <Users size={13} /> Enviar a um amigo
+                  </button>
+                  <span className="text-hairline">|</span>
+                  <button onClick={handleShareCompartilhar} className="flex items-center gap-1.5 text-[12px] text-marian hover:underline underline-offset-4">
+                    <Share2 size={13} /> Compartilhar
+                  </button>
+                </div>
+
+                {/* Report */}
+                {!prayerRequest.feedback && !prayerRequest.is_default && !isSharedCause && (
+                  <div className="text-center pb-2">
+                    <button onClick={() => setReportDialogOpen(true)} className="flex items-center gap-1 text-[11px] text-ink-soft hover:text-ink-soft/60 mx-auto">
+                      <Flag size={10} /> Reportar conteúdo
+                    </button>
+                  </div>
+                )}
+
+                <FriendSelector
+                  open={friendSelectorOpen}
+                  onOpenChange={setFriendSelectorOpen}
+                  onSelect={handleInviteFriends}
+                  prayerRequestId={prayerRequest?.id}
+                  alreadySharedFriendIds={sharedFriendsMap[prayerRequest?.id] || []}
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* History */}
+          {currentUser && (
+            <div className="mt-10">
+              <button
+                onClick={() => { if (!showHistory) fetchIntercessions(); setShowHistory(v => !v); }}
+                className="w-full flex items-center justify-between py-3 border-t border-hairline text-[11px] uppercase tracking-[0.24em] text-ink-soft"
+              >
+                Minhas intercessões anteriores
+                <span>{showHistory ? "▴" : "▾"}</span>
+              </button>
+              <AnimatePresence>
+                {showHistory && (
+                  <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
+                    {isIntercessionsLoading ? (
+                      <div className="py-6 text-center"><div className="animate-spin w-4 h-4 border-2 border-marian border-t-transparent rounded-full mx-auto" /></div>
+                    ) : intercessions.length === 0 ? (
+                      <p className="py-4 text-[12px] text-ink-soft text-center">Você ainda não orou por nenhuma causa.</p>
+                    ) : (
+                      <div className="space-y-3 pt-2 pb-4">
+                        {intercessions.map((item) => (
+                          <div key={item.id} className="bg-vellum border border-hairline rounded-xl p-4">
+                            <p className="font-serif text-[14px] text-ink leading-snug mb-1 line-clamp-2">{item.prayer_title || item.prayer_content}</p>
+                            <p className="text-[11px] text-ink-soft mb-3">{item.author_name} · {formatTimeAgo(item.created_at)}</p>
+                            <div className="flex items-center gap-3 pt-2 border-t border-dashed border-hairline">
+                              {item.prayer_feedback ? (
+                                <span className="text-[11px] text-marian">Graça alcançada</span>
+                              ) : (
+                                <>
+                                  <div className="flex gap-1.5">
+                                    {REACTIONS.map(r => (
+                                      <button key={r.type} onClick={() => toggleReaction(r.type, item.prayer_request_id, item.user_reaction, true)}
+                                        className={cn("px-2.5 py-1 rounded-full text-[10px] border transition-all", item.user_reaction === r.type ? "bg-ink text-paper border-ink" : "border-hairline text-ink-soft hover:bg-hairline/50")}>
+                                        {r.label}
+                                      </button>
+                                    ))}
                                   </div>
-                                  
-                                  {item.prayer_title && <h4 className="text-sm font-bold mb-1 line-clamp-1">{item.prayer_title}</h4>}
-                                  <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed mb-3">{item.prayer_content}</p>
-                                  
-                                  <div className="flex flex-col w-full gap-2 mt-3 text-[10px] text-muted-foreground">
-                                    <div className="flex items-center flex-wrap gap-x-2 gap-y-1">
-                                      <div className="flex items-center gap-1" title={formatFullDatetime(item.created_at)}>
-                                        <Clock className="w-3 h-3 text-primary/40" />
-                                        <span>🙏 Rezei por essa causa {formatTimeAgo(item.created_at)}</span>
-                                      </div>
-                                      {item.posted_at && (
-                                        <>
-                                          <span className="text-primary/20">•</span>
-                                          <div className="flex items-center gap-1" title={formatFullDatetime(item.posted_at)}>
-                                            <span>Postado {formatTimeAgo(item.posted_at)}</span>
-                                          </div>
-                                        </>
-                                      )}
-                                    </div>
-                                    
-                                    {item.intercessionsCount > 1 && (
-                                      <div>
-                                        <button 
-                                          onClick={() => toggleHistoryItemExpand(item.id)}
-                                          className="text-primary hover:underline font-medium"
-                                        >
-                                          Ver todas as datas em que rezei por essa causa ({item.intercessionsCount})
-                                        </button>
-                                        {expandedHistoryItems[item.id] && (
-                                          <div className="mt-2 pl-4 border-l border-primary/20 space-y-1">
-                                            {item.allIntercessions.map((hist: any, idx: number) => (
-                                              <div key={idx} className="text-muted-foreground flex items-center gap-1.5 py-0.5">
-                                                <Clock className="w-2.5 h-2.5 opacity-40" />
-                                                <span className="text-[9px]">Intercedi em {formatFullDatetime(hist.created_at)} ({formatTimeAgo(hist.created_at)})</span>
-                                              </div>
-                                            ))}
-                                          </div>
-                                        )}
-                                      </div>
-                                    )}
-                                  </div>
-
-                                  {/* History Reactions */}
-                                  <div className="mt-4 pt-3 border-t border-primary/5 flex items-center justify-between">
-                                    {item.prayer_feedback ? (
-                                      <div className="flex items-center gap-2 bg-green-50 text-green-700 px-3 py-1.5 rounded-xl border border-green-100">
-                                        <span className="text-lg">{FEEDBACK_OPTIONS[item.prayer_feedback]?.emoji}</span>
-                                        <span className="text-[10px] font-bold uppercase">Graça alcançada!</span>
-                                      </div>
-                                    ) : (
-                                      <div className="flex-1">
-                                        {editingReactionHistoryId === item.id ? (
-                                          <div className="flex gap-2">
-                                            {REACTIONS.map(reaction => (
-                                              <button
-                                                key={reaction.type}
-                                                onClick={() => toggleReaction(reaction.type, item.prayer_request_id, item.user_reaction, true)}
-                                                className={`p-1.5 rounded-lg text-lg transition-colors ${item.user_reaction === reaction.type ? 'bg-primary/20' : 'hover:bg-primary/5'}`}
-                                              >
-                                                {reaction.emoji}
-                                              </button>
-                                            ))}
-                                            <button onClick={() => setEditingReactionHistoryId(null)} className="ml-auto text-[10px] text-muted-foreground px-2">Fechar</button>
-                                          </div>
-                                        ) : (
-                                          <div className="flex items-center gap-3">
-                                            {item.user_reaction ? (
-                                              <div className="flex items-center gap-1.5 bg-primary/10 px-2 py-1 rounded-lg">
-                                                <span className="text-sm">{REACTIONS.find(r => r.type === item.user_reaction)?.emoji}</span>
-                                                <span className="text-[9px] text-primary font-medium">{REACTIONS.find(r => r.type === item.user_reaction)?.label}</span>
-                                              </div>
-                                            ) : (
-                                              <span className="text-[10px] text-muted-foreground/50 italic">Sem reação enviada</span>
-                                            )}
-                                            <button onClick={() => setEditingReactionHistoryId(item.id)} className="text-[10px] text-primary hover:underline">Alterar reação</button>
-                                          </div>
-                                        )}
-                                      </div>
-                                    )}
-
-                                    {!item.prayer_feedback && (
-                                      <Button 
-                                        variant="outline" 
-                                        size="sm" 
-                                        onClick={() => forceDrawFromHistory(item.id, item.prayer_request_id)}
-                                        className="h-7 text-[10px] border-primary/20 text-primary hover:bg-primary/10 ml-2 font-bold uppercase tracking-wider"
-                                      >
-                                        <Heart className="w-3 h-3 mr-1" />
-                                        Orar novamente
-                                      </Button>
-                                    )}
-                                  </div>
-
-                                </div>
-                              </div>
-                            </Card>
-                          </motion.div>
+                                  <button onClick={() => forceDrawFromHistory(item.id, item.prayer_request_id)} className="ml-auto text-[11px] text-marian hover:underline underline-offset-4">
+                                    Orar novamente
+                                  </button>
+                                </>
+                              )}
+                            </div>
+                          </div>
                         ))}
-                     </div>
-                   )}
-                </motion.div>
-             )}
-          </div>
+                      </div>
+                    )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          )}
         </div>
-        
-        <ReportPrayerDialog 
-          open={reportDialogOpen} 
-          prayerRequestId={prayerRequest?.id || null} 
+
+        <ReportPrayerDialog
+          open={reportDialogOpen}
+          prayerRequestId={prayerRequest?.id || null}
           onClose={() => setReportDialogOpen(false)}
           onConfirmed={handleReportConfirmed}
         />
       </div>
     </PageTransition>
   );
-
 };
 
 export default Pray;
