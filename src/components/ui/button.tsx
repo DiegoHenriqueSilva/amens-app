@@ -15,6 +15,9 @@ const buttonVariants = cva(
         secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
         ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
+        // Améns 2.0
+        ink: "h-12 px-6 rounded-full bg-ink text-paper hover:opacity-90 active:opacity-80 disabled:opacity-35",
+        "ghost-bordered": "h-11 px-5 rounded-full bg-transparent text-ink border border-hairline hover:bg-vellum",
       },
       size: {
         default: "h-10 px-4 py-2",
