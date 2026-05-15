@@ -139,7 +139,7 @@ export function CompleteProfileDialog() {
       if (!val && isOpen) return;
       setIsOpen(val);
     }}>
-      <DialogContent className="max-w-md bg-card/95 backdrop-blur-md border-primary/20 soft-shadow rounded-[2rem]">
+      <DialogContent className="max-w-md border border-hairline rounded-xl">
         <DialogHeader>
           <DialogTitle className="text-2xl text-center font-bold flex items-center justify-center gap-2">
             Complete seu Perfil <Sparkles className="w-5 h-5 text-primary" />
@@ -295,12 +295,12 @@ export function CompleteProfileDialog() {
             </AnimatePresence>
           </div>
 
-          <Button 
-            type="submit" 
-            className="w-full h-12 rounded-2xl gradient-divine font-bold shadow-lg mt-2" 
+          <Button
+            type="submit"
+            className="w-full h-12 rounded-full bg-ink text-paper hover:opacity-90 mt-2"
             disabled={loading}
           >
-            {loading ? "Salvando informações..." : "Entrar na Comunidade 🙏"}
+            {loading ? "Salvando..." : "Entrar na comunidade"}
           </Button>
         </form>
       </DialogContent>

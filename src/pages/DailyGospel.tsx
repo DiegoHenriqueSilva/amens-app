@@ -265,163 +265,113 @@ Responda APENAS com um objeto JSON válido no formato:
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-background relative overflow-hidden pb-28">
-        <div className="absolute top-[-8rem] right-[-6rem] w-[28rem] h-[28rem] rounded-full bg-primary/5 blur-3xl" />
-        <div className="absolute bottom-[-6rem] left-[-6rem] w-[24rem] h-[24rem] rounded-full bg-accent/5 blur-3xl" />
+      <div className="min-h-screen pb-28">
 
-        <div className="container mx-auto px-4 py-6 relative z-10 max-w-lg">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/")} className="mb-4">
-            <ArrowLeft className="w-5 h-5" />
-          </Button>
-
-          <motion.div className="text-center mb-8" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-            <p className="text-xs uppercase tracking-[0.25em] text-primary mb-2 text-glow font-bold">✦</p>
-            <h1 className="text-4xl font-bold text-foreground mb-2 text-glow text-soft-outline">Evangelho do Dia</h1>
-            <div className="divider-gold max-w-[6rem] mx-auto my-3" />
-            <p className="text-sm text-muted-foreground text-glow font-medium">Catálogo e Liturgia Católica Diária</p>
-          </motion.div>
+        <div className="px-5 md:px-12 max-w-2xl mx-auto">
+          <header className="flex items-center gap-3 pt-safe pt-4 pb-6">
+            <button onClick={() => navigate("/")} className="p-1 -ml-1 text-ink-soft hover:text-ink transition-colors">
+              <ArrowLeft size={20} strokeWidth={1.5} />
+            </button>
+            <div>
+              <h1 className="font-serif text-[22px] text-ink">Evangelho do Dia</h1>
+              {gospel?.liturgicalDay && (
+                <p className="text-[10px] uppercase tracking-[0.2em] text-ink-soft">{gospel.liturgicalDay}</p>
+              )}
+            </div>
+          </header>
 
           {loadingGospel ? (
-            <Card className="p-8 soft-shadow border-primary/15 text-center">
-              <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto mb-4" />
-              <p className="text-sm text-muted-foreground">Buscando as leituras de hoje e preparando seu pão diário...</p>
-            </Card>
+            <div className="rounded-xl border border-hairline bg-vellum p-8 text-center">
+              <div className="w-5 h-5 rounded-full border-2 border-marian border-t-transparent animate-spin mx-auto mb-4" />
+              <p className="text-[13px] text-ink-soft">Buscando as leituras de hoje…</p>
+            </div>
           ) : gospel ? (
-            <motion.div initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.5, delay: 0.2 }}>
-              <Card className="p-8 soft-shadow border-primary/15 text-center space-y-6 bg-card/80 backdrop-blur-md">
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
 
+              {gospel.imageUrl && (
+                <div className="w-full rounded-xl overflow-hidden aspect-square">
+                  <img
+                    src={gospel.imageUrl}
+                    alt="Ilustração do Evangelho"
+                    className="object-cover w-full h-full"
+                  />
+                </div>
+              )}
 
-                {gospel.liturgicalDay && (
-                  <p className="text-xs uppercase tracking-[0.2em] text-primary font-medium">
-                    {gospel.liturgicalDay}
+              <div className="rounded-xl border border-hairline bg-vellum p-6 space-y-5">
+                <div className="text-left space-y-3">
+                  <p className="text-[9px] uppercase tracking-[0.28em] text-ink-soft flex items-center gap-2">
+                    <BookOpen size={12} strokeWidth={1.5} />
+                    Leitura completa · {gospel.reference}
                   </p>
-                )}
-
-
-
-                {gospel.imageUrl && (
-                  <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.3 }} className="w-full relative rounded-2xl overflow-hidden aspect-square border-2 border-primary/20 shadow-lg my-6">
-                    <img 
-                      src={gospel.imageUrl} 
-                      alt="Ilustração do Evangelho" 
-                      className="object-cover w-full h-full hover:scale-105 transition-transform duration-700"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
-                  </motion.div>
-                )}
-
-
-                <div className="text-left space-y-3 pt-4">
-                  <h3 className="text-xs uppercase tracking-widest text-muted-foreground font-bold flex items-center">
-                    <BookOpen className="w-3.5 h-3.5 mr-2" /> 
-                    Leitura Completa ({gospel.reference})
-                  </h3>
-                  <p className="text-sm text-foreground/70 leading-relaxed font-serif bg-white/30 p-4 rounded-xl">
+                  <p className="font-serif text-[20px] leading-[1.55] text-ink">
                     {gospel.fullText}
                   </p>
                 </div>
-                
+
                 {gospel.curiosity && (
-                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.7 }} className="mt-8 p-5 rounded-xl bg-accent/10 border border-accent/20 text-left relative overflow-hidden">
-                    <div className="absolute -right-4 -top-4 opacity-10">
-                      <Sparkles className="w-24 h-24 text-primary" />
-                    </div>
-                    <p className="text-xs uppercase tracking-widest text-primary font-bold mb-3 flex items-center relative z-10">
-                      <Sparkles className="w-3.5 h-3.5 mr-2" /> 
-                      Curiosidade da Época
-                    </p>
-                    <p className="text-sm text-foreground/80 leading-relaxed relative z-10">
+                  <div className="pt-4 border-t border-hairline text-left">
+                    <p className="text-[9px] uppercase tracking-[0.28em] text-gold mb-2">✦ Contexto histórico</p>
+                    <p className="text-[13px] text-ink-soft leading-relaxed italic">
                       {gospel.curiosity}
                     </p>
-                  </motion.div>
-                )}
-
-                <div className="divider-gold mx-auto my-6" />
-
-                <div className="grid grid-cols-1 gap-3">
-                  
-                  <Button
-                    onClick={() => handleShare('full')}
-                    disabled={generating}
-                    className="gradient-divine w-full rounded-full py-6 text-sm font-bold shadow-lg shadow-primary/20 hover:opacity-90"
-                  >
-                    <Share2 className="w-5 h-5 mr-3" />
-                    Compartilhar Evangelho do Dia
-                  </Button>
-                </div>
-                
-                {user && (
-                  <motion.div className="pt-2" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }}>
-                    <p className="text-xs text-muted-foreground">
-                      {CELESTIAL_LEVELS.indexOf(level) + 1 <= 20 ? (
-                        <img src={`/level-icons/${CELESTIAL_LEVELS.indexOf(level) + 1}.png`} alt={level.name} className="h-5 object-contain inline-block mr-1" />
-                      ) : (
-                        level.emoji
-                      )}
-                      Enviando como <span className="font-semibold text-primary">Nível {CELESTIAL_LEVELS.indexOf(level) + 1}</span>. Você pode ganhar +30 pontos de fé hoje!
-                    </p>
-                  </motion.div>
-                )}
-              </Card>
-
-              {/* Bloco Separado para Vídeo de Reflexão */}
-              <motion.div 
-                initial={{ opacity: 0, y: 20 }} 
-                animate={{ opacity: 1, y: 0 }} 
-                transition={{ duration: 0.5, delay: 0.4 }}
-                className="mt-6"
-              >
-                <Card className="p-6 soft-shadow border-primary/10 bg-card/80 backdrop-blur-md overflow-hidden">
-                  <div className="flex items-center gap-3 mb-4">
-                     <div className="w-8 h-8 bg-red-500/10 rounded-full flex items-center justify-center">
-                        <Sparkles className="w-4 h-4 text-red-600" />
-                     </div>
-                     <h3 className="text-sm font-bold uppercase tracking-widest text-foreground">
-                        Reflexão em Vídeo
-                     </h3>
                   </div>
+                )}
 
-                  {loadingVideo ? (
-                    <div className="aspect-video bg-muted/50 rounded-2xl flex flex-col items-center justify-center animate-pulse">
-                       <Loader2 className="w-6 h-6 animate-spin text-primary mb-2" />
-                       <p className="text-[10px] text-muted-foreground uppercase font-bold">Buscando vídeo...</p>
-                    </div>
-                  ) : videoId ? (
-                    <div className="relative aspect-video rounded-2xl overflow-hidden shadow-inner bg-black">
-                      <iframe
-                        className="absolute inset-0 w-full h-full"
-                        src={`https://www.youtube.com/embed/${videoId}`}
-                        title="Padre Reginaldo Manzotti - Evangelho do Dia"
-                        frameBorder="0"
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                        allowFullScreen
-                      />
-                    </div>
-                  ) : isBeforeSix && !viewingYesterday ? (
-                    <div className="p-8 text-center border-2 border-dashed border-primary/20 rounded-3xl bg-primary/5">
-                       <p className="text-sm text-foreground font-medium mb-4">
-                         O evangelho do dia estará disponível após as 6h da manhã.
-                       </p>
-                       <Button 
-                         variant="outline" 
-                         onClick={() => fetchLatestReflectionVideo(-1)}
-                         className="rounded-full border-primary/20 text-primary hover:bg-primary/10 font-bold"
-                       >
-                         Assista ao vídeo do evangelho de ontem
-                       </Button>
-                    </div>
-                  ) : (
-                    <div className="p-6 text-center border-2 border-dashed border-primary/10 rounded-2xl">
-                       <p className="text-sm text-muted-foreground">Vídeo indisponível no momento.</p>
-                       <p className="text-[10px] uppercase font-bold text-primary/40 mt-1">Tente novamente mais tarde</p>
-                    </div>
-                  )}
+                <button
+                  onClick={() => handleShare('full')}
+                  disabled={generating}
+                  className="w-full h-12 rounded-full bg-ink text-paper text-sm font-medium hover:opacity-90 transition-opacity flex items-center justify-center gap-2 disabled:opacity-50"
+                >
+                  <Share2 size={16} strokeWidth={1.5} />
+                  Compartilhar Evangelho
+                </button>
 
-                  <p className="text-[10px] text-center mt-4 text-muted-foreground uppercase tracking-widest font-medium">
-                    Pe. Reginaldo Manzotti • Oficial
+                {user && (
+                  <p className="text-[11px] text-ink-soft text-center">
+                    Compartilhar rende pontos de fé.
                   </p>
-                </Card>
-              </motion.div>
+                )}
+              </div>
+
+              {/* Video section */}
+              <div className="rounded-xl border border-hairline bg-vellum p-5">
+                <p className="text-[9px] uppercase tracking-[0.28em] text-ink-soft mb-4">Reflexão em vídeo</p>
+
+                {loadingVideo ? (
+                  <div className="aspect-video bg-hairline rounded-lg flex items-center justify-center animate-pulse">
+                    <div className="w-4 h-4 rounded-full border-2 border-marian border-t-transparent animate-spin" />
+                  </div>
+                ) : videoId ? (
+                  <div className="relative aspect-video rounded-lg overflow-hidden bg-ink">
+                    <iframe
+                      className="absolute inset-0 w-full h-full"
+                      src={`https://www.youtube.com/embed/${videoId}`}
+                      title="Padre Reginaldo Manzotti - Evangelho do Dia"
+                      frameBorder="0"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                    />
+                  </div>
+                ) : isBeforeSix && !viewingYesterday ? (
+                  <div className="p-6 text-center border border-dashed border-hairline rounded-lg">
+                    <p className="text-[13px] text-ink-soft mb-4">Disponível após as 6h da manhã.</p>
+                    <button
+                      onClick={() => fetchLatestReflectionVideo(-1)}
+                      className="text-sm text-marian hover:underline underline-offset-4"
+                    >
+                      Ver vídeo de ontem
+                    </button>
+                  </div>
+                ) : (
+                  <div className="p-5 text-center border border-dashed border-hairline rounded-lg">
+                    <p className="text-[12px] text-ink-soft italic">Vídeo indisponível no momento.</p>
+                  </div>
+                )}
+
+                <p className="text-[10px] text-ink-soft text-center mt-3">Pe. Reginaldo Manzotti · Oficial</p>
+              </div>
+
             </motion.div>
           ) : null}
         </div>

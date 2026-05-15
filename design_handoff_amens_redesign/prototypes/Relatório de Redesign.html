@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Améns — Relatório de Redesign</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500;1,600&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --paper:#F5EFE3; --vellum:#FBF8F1; --ink:#1B1B2F; --ink-soft:#6B6679;
+    --marian:#2E4F8B; --gold:#A37A2C; --hairline:#E6DDC8;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:'Inter',-apple-system,system-ui,sans-serif;
+    color:var(--ink);
+    background:
+      radial-gradient(1200px 800px at 20% 0%, #EDE5D2 0%, transparent 60%),
+      radial-gradient(1000px 700px at 80% 100%, #E8E0CB 0%, transparent 55%),
+      #E9E1CD;
+    min-height:100vh;
+    line-height:1.6;
+  }
+  .wrap{max-width:760px;margin:0 auto;padding:80px 28px 120px}
+  .eyebrow{font-size:11px;letter-spacing:0.32em;text-transform:uppercase;color:var(--gold);font-weight:500}
+  h1{font-family:'Cormorant Garamond',serif;font-weight:500;font-size:54px;line-height:1.05;margin:14px 0 6px;letter-spacing:-0.01em}
+  h1 em{font-style:italic;color:var(--marian)}
+  h2{font-family:'Cormorant Garamond',serif;font-weight:500;font-size:30px;line-height:1.15;margin:64px 0 14px;letter-spacing:-0.005em}
+  h3{font-family:'Inter',sans-serif;font-weight:600;font-size:15px;text-transform:uppercase;letter-spacing:0.12em;margin:34px 0 10px;color:var(--ink-soft)}
+  p{font-size:15.5px;color:var(--ink);margin:0 0 14px;max-width:64ch}
+  p.lede{font-size:18px;color:var(--ink-soft);max-width:54ch}
+  .ornament{display:inline-block;color:var(--gold);font-size:10px;margin:0 8px;vertical-align:middle}
+  .divider{display:flex;align-items:center;gap:12px;margin:48px 0}
+  .divider .line{flex:1;height:1px;background:var(--hairline)}
+  .meta{font-size:12px;color:var(--ink-soft);font-family:'JetBrains Mono',monospace;letter-spacing:0.04em}
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:18px 0 8px}
+  .card{background:var(--vellum);border:1px solid var(--hairline);border-radius:18px;padding:22px}
+  .card h4{margin:0 0 8px;font-family:'Cormorant Garamond',serif;font-weight:500;font-size:20px}
+  .card p{font-size:13.5px;color:var(--ink-soft);margin:0}
+  .badge-old{display:inline-block;font-size:10px;letter-spacing:0.18em;text-transform:uppercase;padding:3px 8px;border-radius:3px;background:rgba(184,92,58,0.1);color:#8B4528;font-weight:600}
+  .badge-new{display:inline-block;font-size:10px;letter-spacing:0.18em;text-transform:uppercase;padding:3px 8px;border-radius:3px;background:rgba(46,79,139,0.1);color:var(--marian);font-weight:600}
+  table.changes{width:100%;border-collapse:collapse;margin:14px 0 8px;font-size:14px}
+  table.changes th{text-align:left;padding:12px 14px;font-weight:500;font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:var(--ink-soft);border-bottom:1px solid var(--hairline);background:transparent}
+  table.changes td{padding:14px;vertical-align:top;border-bottom:1px solid var(--hairline)}
+  table.changes td:first-child{font-family:'Cormorant Garamond',serif;font-size:17px;color:var(--ink);width:30%}
+  table.changes td.old{color:var(--ink-soft);font-size:13.5px}
+  table.changes td.new{color:var(--ink);font-size:13.5px}
+  ul{padding-left:0;list-style:none;margin:8px 0 8px}
+  ul li{padding:8px 0 8px 22px;position:relative;font-size:14.5px;color:var(--ink);max-width:64ch}
+  ul li::before{content:"✦";position:absolute;left:0;top:9px;color:var(--gold);font-size:9px}
+  .swatch-row{display:flex;gap:10px;flex-wrap:wrap;margin:10px 0 6px}
+  .swatch{flex:1;min-width:120px;border:1px solid var(--hairline);border-radius:14px;overflow:hidden;background:var(--vellum)}
+  .swatch .chip{height:74px}
+  .swatch .meta-r{padding:10px 12px}
+  .swatch .name{font-size:12px;font-weight:600;color:var(--ink)}
+  .swatch .hex{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--ink-soft);margin-top:2px}
+  .quote{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:22px;line-height:1.4;border-left:2px solid var(--gold);padding:6px 0 6px 18px;color:var(--ink);margin:24px 0}
+  a.cta{display:inline-flex;align-items:center;gap:10px;background:var(--ink);color:var(--paper);text-decoration:none;padding:13px 22px;border-radius:999px;font-size:13.5px;font-weight:500;margin-top:8px}
+  a.cta:hover{opacity:0.92}
+  .footer{margin-top:80px;padding-top:30px;border-top:1px solid var(--hairline);font-size:12px;color:var(--ink-soft)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <p class="eyebrow">Améns · proposta de redesign</p>
+  <h1>Do mural <em>dourado</em><br/>à <em>página de oração.</em></h1>
+  <p class="lede">Uma direção mais editorial, mais católica, e menos parecida com um aplicativo de fidelidade. O que segue é o porquê de cada mudança, ancorado nos arquivos da pasta <span class="meta">.agents/</span>.</p>
+
+  <a class="cta" href="Améns Redesign.html">Abrir o protótipo →</a>
+
+  <!-- =========================================================== -->
+  <h2>O diagnóstico</h2>
+  <p>Antes de propor algo novo, alinhei o que está em produção com as próprias regras escritas pela equipe nos arquivos <span class="meta">.agents/</span>. Três tensões apareceram:</p>
+
+  <ul>
+    <li><strong>Hick &amp; Miller na Home.</strong> A regra <span class="meta">uiux-rules.md</span> pede "respiro" e alerta contra <em>cognitive overload</em>, mas a Home entrega <strong>seis tiles idênticos com botão dourado</strong> + Jornada da Fé + cartão de XP + contador <em>online</em>. Nenhum nível de hierarquia diz "comece por aqui".</li>
+    <li><strong>Bottom nav com 6 itens.</strong> Início, Mensagens, Oração ao vivo, Amigos, Comunidade, Perfil — três deles competem pelo mesmo espaço mental ("comunidade"). Lei de Hick é literal aqui.</li>
+    <li><strong>Copy transacional.</strong> "Sortear" (Divina Promessa) e "Garantir/Começar" violam <span class="meta">context-content-guidelines.md</span>, que proíbe gamificação predatória e promessas espirituais. O guia é claro, o app ainda não o segue.</li>
+    <li><strong>Wordmark com <code>text-stroke + glow</code>.</strong> Exatamente o "AI default" que <span class="meta">agent-frontend-design/SKILL.md</span> pede para evitar (seção "Anti-Patterns" → AI Tendency Patterns).</li>
+    <li><strong>Identidade vs. mecânica.</strong> A paleta atual usa o gradiente <code>#d4a017 → #e8c547</code> como <em>fill</em> em quase todo CTA. O dourado deixa de ser sagrado e vira ruído — perde a função simbólica que o próprio Design System descreve ("a glória de Deus").</li>
+  </ul>
+
+  <!-- =========================================================== -->
+  <h2>Princípio norteador</h2>
+  <div class="quote">
+    Améns não é um app de produtividade espiritual. É uma página de oração. Tudo o que não for página, deve sair do caminho.
+  </div>
+  <p>A direção se chama <strong>Papel &amp; Tinta</strong>. O fundo passa a ser um creme de papel litúrgico; a tinta principal é um índigo escuro (sóbrio, masculino e feminino ao mesmo tempo). O dourado deixa de ser tinta de botão e volta a ser <em>ornamento</em> — pequeno ✦ em divisores e <em>eyebrows</em>. O azul mariano permanece, mas mais profundo, usado como sinalizador comunitário (cadeia de oração, links ativos).</p>
+
+  <h3>Paleta nova</h3>
+  <div class="swatch-row">
+    <div class="swatch"><div class="chip" style="background:#F5EFE3"></div><div class="meta-r"><div class="name">Papel</div><div class="hex">#F5EFE3 · fundo</div></div></div>
+    <div class="swatch"><div class="chip" style="background:#FBF8F1"></div><div class="meta-r"><div class="name">Velino</div><div class="hex">#FBF8F1 · cartão</div></div></div>
+    <div class="swatch"><div class="chip" style="background:#1B1B2F"></div><div class="meta-r"><div class="name">Tinta</div><div class="hex">#1B1B2F · texto/CTA</div></div></div>
+    <div class="swatch"><div class="chip" style="background:#2E4F8B"></div><div class="meta-r"><div class="name">Mariano</div><div class="hex">#2E4F8B · comunidade</div></div></div>
+    <div class="swatch"><div class="chip" style="background:#A37A2C"></div><div class="meta-r"><div class="name">Ouro</div><div class="hex">#A37A2C · ornamento</div></div></div>
+  </div>
+  <p style="font-size:13px;color:var(--ink-soft);margin-top:4px">O Design System antigo permanece disponível como <em>tweak</em> ("Original — Divine Gold") para comparar no mesmo layout.</p>
+
+  <h3>Tipografia</h3>
+  <p><strong>Cormorant Garamond</strong> (já presente no projeto) volta a ser <em>display</em> séria — itálico no <em>wordmark</em>, regular para títulos editoriais e citações de pedidos. <strong>Inter</strong> faz o trabalho de UI. Não mexo no que já existe — só uso melhor. <em>O <code>text-stroke + glow</code> no wordmark foi removido.</em></p>
+
+  <!-- =========================================================== -->
+  <h2>Mudanças, tela a tela</h2>
+
+  <table class="changes">
+    <thead><tr><th>Tela</th><th>Antes</th><th>Depois</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>Hoje<br/><span class="meta">/</span></td>
+        <td class="old"><span class="badge-old">antes</span><br/>Saudação seguida de cartão de XP, módulo "Jornada da Fé" e <strong>grid 2×3 de tiles idênticos</strong>, todos com botão dourado e mesma altura.</td>
+        <td class="new"><span class="badge-new">depois</span><br/>Hero único: a causa em destaque do dia, em serifa grande, com um único CTA escuro ("Rezar com Joana"). Rituais (Evangelho, Terço, Novena em curso, Promessa) caem para um <strong>carrossel horizontal</strong> abaixo. Pulso da comunidade ao vivo em faixa enxuta. Jornada da Fé recolhida para <strong>14 traços horizontais</strong> — um por dia.</td>
+      </tr>
+      <tr>
+        <td>Orar por uma Causa<br/><span class="meta">/pray</span></td>
+        <td class="old"><span class="badge-old">antes</span><br/>Botões coloridos competem com o texto da causa. Reações em ícones grandes. Múltiplas ações no mesmo plano visual.</td>
+        <td class="new"><span class="badge-new">depois</span><br/>Modo foco: texto da causa em <strong>26 px serifa</strong> ocupa o quadro. Timer discreto ("em oração") + <em>"acompanhando agora: 14 irmãos"</em>. Reações viram <strong>chips de texto</strong> (não emojis). Sugestão de oração da IA fica recolhida atrás de um link.</td>
+      </tr>
+      <tr>
+        <td>Enviar Pedido<br/><span class="meta">/submit</span></td>
+        <td class="old"><span class="badge-old">antes</span><br/>Formulário direto, "Enviar" como CTA. Anonimato é <em>feature planejada</em> mas invisível.</td>
+        <td class="new"><span class="badge-new">depois</span><br/>Toggle de anonimato em <strong>destaque no topo</strong> — vira preto sólido quando ativo, deixando claro o estado. Título em serifa <em>inline-input</em> (sem caixa). Temas opcionais (Família, Saúde, Gratidão, Paz…) viram chips. CTA muda para <em>"Compartilhar com a comunidade"</em> — coerente com o guia de conteúdo.</td>
+      </tr>
+      <tr>
+        <td>Comunidade<br/><span class="meta">/community</span></td>
+        <td class="old"><span class="badge-old">antes</span><br/>Disperso entre Mensagens, Amigos, Comunidade, Oração ao vivo — quatro endpoints semelhantes.</td>
+        <td class="new"><span class="badge-new">depois</span><br/>Banner ao vivo ocupa o topo (corrente de oração das 19h). Feed de intenções recentes com cartões editoriais de velino. Pedidos de <em>gratidão</em> ganham etiqueta dourada — distinção visual sutil dos pedidos abertos.</td>
+      </tr>
+      <tr>
+        <td>Perfil<br/><span class="meta">/profile</span></td>
+        <td class="old"><span class="badge-old">antes</span><br/>XP em destaque, foto e cartões cheios de gamificação.</td>
+        <td class="new"><span class="badge-new">depois</span><br/>"Caminhando há 14 dias" como subtítulo. Pontos de fé em serifa grande mas <strong>com nome de nível humano</strong> ("Aprendiz da escuta · nível 3") em vez de "level up". Estatísticas como <em>texto</em>, não <em>data slop</em>. Intercessões recentes como lista sóbria.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- =========================================================== -->
+  <h2>UX — quatro decisões estruturais</h2>
+
+  <div class="grid-2">
+    <div class="card">
+      <h4>1. Bottom nav: 6 → 4 + FAB</h4>
+      <p>Hoje · Comunidade · <strong>+</strong> · Corrente · Perfil. "Mensagens", "Amigos" e "Oração ao vivo" foram absorvidos. O botão central <strong>+</strong> abre <em>Enviar Pedido</em> — o único ato de criação no app, ele merece o lugar de honra.</p>
+    </div>
+    <div class="card">
+      <h4>2. Uma causa por vez na Home</h4>
+      <p>Em vez de "receba até 3 causas hoje" como um <em>opener</em> abstrato, o app mostra <strong>a primeira causa</strong> direto na Home. O contador "2 restantes" vem em <em>fine print</em>, não como gatilho de gamificação.</p>
+    </div>
+    <div class="card">
+      <h4>3. Anonimato visível, não escondido</h4>
+      <p>O guia diz que anonimato é "sagrado". Então virou o primeiro controle do formulário de pedido — com mudança de cor do cartão inteiro quando ativo. Não é um <em>checkbox</em> no rodapé.</p>
+    </div>
+    <div class="card">
+      <h4>4. Reduzir gamificação a um traço</h4>
+      <p>Os 14 dias da caminhada viram 14 barrinhas finas no rodapé da Home. Nenhum "streak warning", nenhum confeti. A regra do <span class="meta">context-content-guidelines.md</span> é explícita: a fé não é competição.</p>
+    </div>
+  </div>
+
+  <!-- =========================================================== -->
+  <h2>UI — princípios sistêmicos</h2>
+  <ul>
+    <li><strong>Cartões em velino</strong> (#FBF8F1) sobre papel (#F5EFE3) — diferença sutil, sem sombra pesada. Apenas <em>hairline</em> de 1 px em creme escuro.</li>
+    <li><strong>Raio de 18–22 px</strong>, não 32. Os 32 px atuais (<code>rounded-[2rem]</code>) deixam tudo com cara de <em>kids app</em>; menor raio devolve dignidade.</li>
+    <li><strong>Botão primário em tinta sólida</strong> (#1B1B2F), não em gradiente dourado. Há <strong>um por tela</strong>, sempre. Quando há ação secundária, é texto puro em mariano ou contorno em creme.</li>
+    <li><strong>Ouro só em três lugares</strong>: ✦ ornamental, etiqueta de "categoria" no carrossel, e tag de "Gratidão" no feed. Resgata a função simbólica.</li>
+    <li><strong>Tipografia editorial</strong>: títulos em serifa grande respiram. O peso visual vem do texto, não de cores ou cartões empilhados.</li>
+  </ul>
+
+  <!-- =========================================================== -->
+  <h2>O que não mudei (deliberadamente)</h2>
+  <ul>
+    <li><strong>Família tipográfica</strong>: Cormorant Garamond + Inter já estavam no <span class="meta">index.css</span>. Mantive — só usei diferente.</li>
+    <li><strong>Linguagem de oração</strong>: Pai Nosso, Mistérios, Mariano, Intercessão — termos católicos seguem 1:1. Nenhuma "modernização".</li>
+    <li><strong>Mobile-first</strong>: <span class="meta">context-app-technical.md</span> pede e o protótipo respeita — todo o layout é 402 px na largura iOS.</li>
+    <li><strong>Mecânica de sorteio diário</strong>: lógica em <span class="meta">useDrawLimit</span> continua válida — só a apresentação muda.</li>
+  </ul>
+
+  <!-- =========================================================== -->
+  <h2>O que ainda vale brainstormar</h2>
+  <p>Como pede o <span class="meta">agent-brainstorming-uiux/SKILL.md</span>, esta proposta é um <em>divergence pass</em>. Antes de virar código no repo:</p>
+  <ul>
+    <li><strong>Banco de imagens</strong>: o app hoje usa PNGs 3D (oração, evangelho…). Eu deixaria placeholders no protótipo e proporia uma sessão sobre <em>iconografia 2D em traço</em> versus manter os 3D.</li>
+    <li><strong>Corrente de oração ao vivo</strong>: como ela aparece visualmente quando o usuário entra? Animação de respiração coletiva? Texto sincronizado?</li>
+    <li><strong>Modo noturno ("Vigília")</strong>: incluí um <em>tweak</em> de paleta noturna. Vale validar se faz sentido para uso de cabeceira.</li>
+    <li><strong>Nomes dos níveis</strong>: usei "Aprendiz da escuta · nível 3" como exemplo — o time pastoral deve aprovar a nomenclatura.</li>
+  </ul>
+
+  <div class="divider"><span class="line"></span><span style="color:var(--gold)">✦</span><span class="line"></span></div>
+
+  <p>O protótipo está navegável: as 5 telas são acessíveis via barra inferior + <em>tweak</em> de tela. A paleta original do app está disponível no <em>tweak</em> "Original (Divine Gold)" para comparação lado a lado dentro do mesmo layout — o exercício deixa claro <em>quanto</em> do problema era hierarquia, não cor.</p>
+
+  <a class="cta" href="Améns Redesign.html">Abrir o protótipo →</a>
+
+  <div class="footer">
+    <p style="margin:0">Relatório técnico — Améns redesign · maio 2026</p>
+  </div>
+</div>
+</body>
+</html>

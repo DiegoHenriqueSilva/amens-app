@@ -32,7 +32,7 @@ export const ReminderModal = ({ open, onOpenChange, currentDay, onConfirm }: Rem
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md bg-card/95 backdrop-blur-md border-primary/20 soft-shadow rounded-[2rem]">
+      <DialogContent className="sm:max-w-md border border-hairline rounded-xl">
         <DialogHeader>
           <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-4 mx-auto">
             <Bell className="w-6 h-6 text-primary animate-bounce-soft" />
@@ -70,7 +70,7 @@ export const ReminderModal = ({ open, onOpenChange, currentDay, onConfirm }: Rem
           <Button variant="ghost" onClick={() => onOpenChange(false)} className="rounded-xl flex-1">
             Agora não
           </Button>
-          <Button onClick={handleConfirm} className="rounded-xl flex-1 gradient-divine shadow-lg">
+          <Button onClick={handleConfirm} className="rounded-full flex-1 bg-ink text-paper hover:opacity-90">
             Confirmar Lembrete
           </Button>
         </DialogFooter>

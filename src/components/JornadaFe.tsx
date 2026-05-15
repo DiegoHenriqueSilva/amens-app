@@ -29,7 +29,7 @@ export const JornadaFe = () => {
 
   return (
     <div ref={cardRef}>
-      <Card className="mx-6 mt-4 p-1 rounded-[2rem] bg-gradient-to-br from-white/90 to-white/60 border border-primary/20 soft-shadow backdrop-blur-md overflow-hidden relative">
+      <Card className="mx-6 mt-4 p-1 rounded-xl border border-hairline bg-vellum overflow-hidden relative">
       <div 
         className="px-5 py-4 cursor-pointer flex items-center justify-between"
         onClick={() => setIsExpanded(!isExpanded)}

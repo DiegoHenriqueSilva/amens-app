@@ -76,9 +76,7 @@ const Messages = () => {
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-background relative overflow-hidden pb-28">
-        <div className="absolute top-[-5rem] left-[-5rem] w-[20rem] h-[20rem] rounded-full bg-primary/5 blur-3xl opacity-50" />
-        <div className="absolute bottom-[-5rem] right-[-5rem] w-[20rem] h-[20rem] rounded-full bg-accent/5 blur-3xl opacity-50" />
+      <div className="min-h-screen bg-paper relative overflow-hidden pb-28">
 
         <div className="container mx-auto px-6 py-8 relative z-10 max-w-lg">
           <div className="flex items-center justify-between mb-8">
@@ -103,7 +101,7 @@ const Messages = () => {
             <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-primary/20">
               <Mail className="w-8 h-8 text-primary" />
             </div>
-            <h1 className="text-4xl font-bold text-foreground mb-1 text-glow">Mensagens</h1>
+            <h1 className="font-serif text-[28px] text-ink mb-1">Mensagens</h1>
             <p className="text-[11px] uppercase tracking-[0.25em] font-bold text-muted-foreground opacity-60">Sua Caixa de Graças</p>
           </motion.div>
 
@@ -111,7 +109,7 @@ const Messages = () => {
             <AnimatePresence mode="popLayout">
               {loading ? (
                 [1, 2, 3].map(i => (
-                  <Card key={i} className="p-5 border-primary/5 rounded-3xl animate-pulse h-24" />
+                  <Card key={i} className="p-5 border border-hairline rounded-xl animate-pulse h-24" />
                 ))
               ) : notifications.length > 0 ? (
                 notifications.map((notif, index) => (
@@ -130,7 +128,7 @@ const Messages = () => {
                     }}
                     className="cursor-pointer active:scale-95 transition-transform"
                   >
-                    <Card className={`p-6 border-primary/5 soft-shadow transition-all rounded-[1.8rem] relative overflow-hidden ${notif.is_read ? 'bg-white/40' : 'bg-white/80 border-primary/15 shadow-md scale-[1.01]'}`}>
+                    <Card className={`p-6 transition-all rounded-xl relative overflow-hidden border ${notif.is_read ? 'bg-vellum border-hairline' : 'bg-white border-hairline shadow-sm scale-[1.01]'}`}>
                        {!notif.is_read && (
                          <div className="absolute top-0 right-0 w-8 h-8 bg-primary/10 rounded-bl-3xl flex items-center justify-center">
                             <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />

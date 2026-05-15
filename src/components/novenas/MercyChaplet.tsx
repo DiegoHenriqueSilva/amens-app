@@ -124,7 +124,7 @@ export const MercyChaplet = ({ onComplete }: MercyChapletProps) => {
         
         <Button 
           onClick={handleNext} 
-          className="flex-1 h-16 rounded-[2rem] gradient-divine shadow-lg hover:shadow-xl group font-black text-lg transition-all active:scale-[0.98]"
+          className="flex-1 h-12 rounded-full bg-ink text-paper text-sm font-medium hover:opacity-90 transition-opacity active:scale-95 flex items-center justify-center gap-1"
         >
           <span>{bead < 55 ? "Próxima Conta" : "Finalizar Terço"}</span>
           <ChevronRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />

@@ -1,13 +1,15 @@
+import { Capacitor } from '@capacitor/core';
 import { LocalNotifications } from '@capacitor/local-notifications';
 
 export const scheduleDailyPromiseNotification = async () => {
+  if (!Capacitor.isNativePlatform()) return;
+
   try {
     const perm = await LocalNotifications.checkPermissions();
     if (perm.display !== 'granted') {
       await LocalNotifications.requestPermissions();
     }
 
-    // Limpa anteriores para evitar duplicidade
     await LocalNotifications.cancel({ notifications: [{ id: 1 }] });
 
     await LocalNotifications.schedule({
@@ -16,8 +18,8 @@ export const scheduleDailyPromiseNotification = async () => {
           title: "Sua Divina Promessa de Hoje ✦",
           body: "Deus tem uma palavra especial para o seu coração. Clique para abrir seu Amém.",
           id: 1,
-          schedule: { 
-            at: new Date(new Date().setHours(8, 0, 0, 0) + 24 * 60 * 60 * 1000), // Próximas 8h da manhã
+          schedule: {
+            at: new Date(new Date().setHours(8, 0, 0, 0) + 24 * 60 * 60 * 1000),
             allowWhileIdle: true,
             every: 'day'
           },
@@ -28,7 +30,6 @@ export const scheduleDailyPromiseNotification = async () => {
         }
       ]
     });
-    console.log("Notificação diária agendada.");
   } catch (err) {
     console.warn("Local notifications not available or denied", err);
   }

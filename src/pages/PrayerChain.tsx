@@ -272,11 +272,11 @@ const PrayerChain = () => {
                
                <div className="pt-3 flex justify-center">
                  <motion.div 
-                   className="flex items-center gap-3 bg-white/90 backdrop-blur-xl px-6 py-2 rounded-full border border-[#d4a017]/30 soft-shadow ring-4 ring-[#d4a017]/5"
+                   className="flex items-center gap-3 bg-white/90 backdrop-blur-xl px-6 py-2 rounded-full border border-[#d4a017]/30 ring-4 ring-[#d4a017]/5"
                    whileHover={{ scale: 1.05 }}
                  >
                    <div className="w-2.5 h-2.5 bg-green-500 rounded-full animate-pulse shadow-[0_0_15px_rgba(34,197,94,0.6)]" />
-                   <span className="text-[12px] font-black tracking-[0.25em] uppercase text-[#3d2800] text-glow-gold">
+                   <span className="text-[12px] font-black tracking-[0.25em] uppercase text-[#3d2800]">
                      {currentPrayer ? currentPrayer.name : "Momento de Silêncio"}
                    </span>
                  </motion.div>
@@ -296,7 +296,7 @@ const PrayerChain = () => {
                       placeholder={currentUser ? "Escreva uma intenção de oração" : "Entrar para enviar intenção"}
                       value={intention}
                       onChange={(e) => setIntention(e.target.value)}
-                      className="bg-white/80 border-[#d4a017]/20 py-6 pl-6 pr-14 rounded-[2rem] text-[#3d2800] soft-shadow font-semibold text-sm focus-visible:ring-[#d4a017]/30"
+                      className="bg-white/80 border-[#d4a017]/20 py-6 pl-6 pr-14 rounded-xl text-[#3d2800] font-semibold text-sm focus-visible:ring-[#d4a017]/30"
                       disabled={!currentUser || isSubmitting}
                     />
                     <Button 
@@ -369,8 +369,8 @@ const PrayerChain = () => {
                           animate={{ opacity: 1, scale: 1, y: 0 }}
                           className={cn(
                             "text-[#3d2800]/70 font-semibold text-[11px] md:text-[13px] text-center tracking-wide px-2 py-1 rounded-full transition-all",
-                            contrib?.user_id === currentUser?.id && "text-primary font-bold bg-[#d4a017]/10 soft-shadow",
-                            contrib?.user_id && friendIds.has(contrib.user_id) && "text-friend-accent font-bold bg-friend-accent/10 soft-shadow"
+                            contrib?.user_id === currentUser?.id && "text-primary font-bold bg-[#d4a017]/10",
+                            contrib?.user_id && friendIds.has(contrib.user_id) && "text-marian font-bold bg-marian/10"
                           )}
                         >
                           {contrib.name} ({contrib.city}) — entrou na oração

@@ -1,135 +1,90 @@
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700&family=Inter:wght@300;400;500;600&family=Lora:ital,wght@0,400..700;1,400..700&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-.text-glow {
-  text-shadow: 
-    -2px -2px 0 #fff,  
-     2px -2px 0 #fff,
-    -2px  2px 0 #fff,
-     2px  2px 0 #fff,
-     0 0 12px rgba(255, 255, 255, 1);
-}
-
-.text-soft-outline {
-  -webkit-text-stroke: 1.2px white;
-  paint-order: stroke fill;
-}
-
 @layer base {
   :root {
-    /* Watercolor & Aged Gold palette */
-    --background: 45 40% 98%;
-    --foreground: 30 15% 15%;
+    /* Améns 2.0 — Papel & Tinta */
+    --paper:    45 50% 93%;     /* #F5EFE3 */
+    --vellum:   40 50% 97%;     /* #FBF8F1 */
+    --ink:      240 26% 14%;    /* #1B1B2F */
+    --ink-soft: 252 8% 44%;     /* #6B6679 */
+    --marian:   217 49% 36%;    /* #2E4F8B */
+    --gold:     38 58% 40%;     /* #A37A2C */
+    --hairline: 41 41% 85%;     /* #E6DDC8 */
 
-    --card: 0 0% 100%;
-    --card-foreground: 30 15% 15%;
+    /* shadcn aliases */
+    --background: var(--paper);
+    --foreground: var(--ink);
+    --card: var(--vellum);
+    --card-foreground: var(--ink);
+    --popover: var(--vellum);
+    --popover-foreground: var(--ink);
+    --primary: var(--ink);
+    --primary-foreground: var(--paper);
+    --secondary: var(--marian);
+    --secondary-foreground: var(--paper);
+    --muted: var(--vellum);
+    --muted-foreground: var(--ink-soft);
+    --accent: var(--gold);
+    --accent-foreground: var(--paper);
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: var(--hairline);
+    --input: var(--hairline);
+    --ring: var(--marian);
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 30 15% 15%;
+    --radius: 1.125rem; /* 18px base */
 
-    /* Soft Gold Tan */
-    --primary: 38 45% 55%;
-    --primary-foreground: 0 0% 100%;
+    --sidebar-background: var(--vellum);
+    --sidebar-foreground: var(--ink);
+    --sidebar-primary: var(--ink);
+    --sidebar-primary-foreground: var(--paper);
+    --sidebar-accent: var(--marian);
+    --sidebar-accent-foreground: var(--paper);
+    --sidebar-border: var(--hairline);
+    --sidebar-ring: var(--marian);
+  }
 
-    /* Paper Ivory */
-    --secondary: 40 40% 92%;
-    --secondary-foreground: 30 15% 15%;
-
-    --muted: 40 30% 94%;
-    --muted-foreground: 30 10% 40%;
-
-    --accent: 38 40% 65%;
-    --accent-foreground: 0 0% 100%;
-
-    --border: 38 30% 85%;
-    --input: 38 30% 90%;
-    --ring: 38 45% 55%;
-
-    --radius: 2rem;
-
-    --gradient-divine: linear-gradient(135deg, #c5a059, #b8860b);
-    --gradient-sacred: linear-gradient(135deg, #e5d3b3, #d4af37);
-    
-    --shadow-soft: 0 10px 40px -10px rgba(0,0,0,0.06);
+  .dark {
+    --paper:    254 16% 9%;     /* #15131C */
+    --vellum:   254 16% 14%;    /* #1F1C28 */
+    --ink:      45 50% 93%;     /* #F5EFE3 */
+    --ink-soft: 252 11% 60%;    /* #9089A0 */
+    --marian:   221 65% 76%;    /* #9BB4EC */
+    --gold:     39 56% 63%;     /* #D8B36A */
+    --hairline: 254 11% 18%;    /* #2C2836 */
   }
 
   body {
-    background-color: #fdfcf7;
-    min-height: 100vh;
     @apply text-foreground;
-    font-family: 'Inter', sans-serif;
-    position: relative;
+    background-color: hsl(var(--paper));
+    background-image:
+      radial-gradient(1200px 800px at 20% 0%, hsl(45 40% 88%) 0%, transparent 60%),
+      radial-gradient(1000px 700px at 80% 100%, hsl(45 35% 86%) 0%, transparent 55%);
+    font-family: 'Inter', -apple-system, system-ui, sans-serif;
+    min-height: 100vh;
   }
 
-  body::before {
-    content: "";
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-image: var(--bg-url, url('/backgrounds/bg-1.png'));
-    background-size: cover;
-    background-repeat: no-repeat;
-    background-position: center;
-    opacity: 0.33;
-    z-index: -1;
-    pointer-events: none;
+  h1, h2, h3, .font-serif {
+    font-family: 'Cormorant Garamond', 'Lora', serif;
+    font-weight: 500;
+    letter-spacing: -0.005em;
   }
 
-  h1, .font-serif {
-    font-family: 'Lora', serif;
-    font-weight: 600;
+  .font-mono {
+    font-family: 'JetBrains Mono', monospace;
   }
 }
 
 @layer components {
-  .soft-shadow {
-    box-shadow: var(--shadow-soft);
-  }
-
-  .divider-gold {
-    height: 1.5px;
-    background: linear-gradient(90deg, transparent, #c5a059, transparent);
-    opacity: 0.3;
-  }
-
   .nav-blur {
     @apply fixed bottom-0 left-0 right-0 z-50;
-    background: rgba(253, 252, 247, 0.9);
+    background: rgba(251, 248, 241, 0.92);
     backdrop-filter: blur(12px);
-    border-top: 1px solid rgba(200, 180, 150, 0.2);
+    border-top: 1px solid hsl(var(--hairline));
   }
 
-  .gradient-divine {
-    @apply bg-gradient-to-r from-primary via-[#F9E27A] to-primary text-white font-bold shadow-[0_0_20px_rgba(212,175,55,0.3)];
-  }
-
-  .gradient-sacred {
-    @apply bg-gradient-to-br from-[#FFF9E6] via-[#FDF3D0] to-[#FFF9E6] text-[#8B7355] border-[#D4AF37]/30 hover:shadow-[0_0_20px_rgba(212,175,55,0.2)];
-  }
-
-  .text-glow-gold {
-    text-shadow: 0 0 10px rgba(212, 175, 55, 0.3), 0 0 20px rgba(212, 175, 55, 0.1);
-  }
-
-  .paper-texture {
-    background-color: #f8f5f0;
-    background-image: url("https://www.transparenttextures.com/patterns/felt.png");
-    position: relative;
-  }
-  
-  .paper-texture::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background: radial-gradient(circle at center, transparent, rgba(0,0,0,0.02));
-    pointer-events: none;
-  }
-  
   .hide-scrollbar::-webkit-scrollbar {
     display: none;
   }
@@ -139,97 +94,22 @@
   }
 }
 
-@keyframes shimmer-sweep {
-  0% { transform: translateX(-100%) skewX(-20deg); opacity: 0; }
-  50% { opacity: 0.8; }
-  100% { transform: translateX(200%) skewX(-20deg); opacity: 0; }
+@layer utilities {
+  /* iOS / Android safe area insets */
+  .pt-safe {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  .pl-safe {
+    padding-left: env(safe-area-inset-left, 0px);
+  }
+  .pr-safe {
+    padding-right: env(safe-area-inset-right, 0px);
+  }
+  /* BottomNav floating pill: sits above the Home Indicator on notched devices */
+  .bottom-safe-nav {
+    bottom: max(1rem, env(safe-area-inset-bottom, 1rem));
+  }
 }
-
-.disney-shimmer {
-  position: relative;
-  overflow: hidden;
-}
-
-.disney-shimmer::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 50%;
-  height: 100%;
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    rgba(212, 175, 55, 0.1) 20%,
-    rgba(255, 255, 255, 0.7) 50%,
-    rgba(212, 175, 55, 0.1) 80%,
-    transparent 100%
-  );
-  animation: shimmer-sweep 2.5s ease-in-out infinite;
-  pointer-events: none;
-  z-index: 10;
-}
-
-@keyframes halo-glow {
-  0%, 100% { box-shadow: 0 0 10px rgba(212, 175, 55, 0), 0 0 20px rgba(212, 175, 55, 0); }
-  50% { box-shadow: 0 0 20px rgba(212, 175, 55, 0.3), 0 0 35px rgba(212, 175, 55, 0.1); }
-}
-
-.halo-angelical {
-  border-radius: 1rem;
-  padding: 1rem;
-  background: radial-gradient(circle at center, rgba(212, 175, 55, 0.05), transparent 70%);
-  animation: halo-glow 3s infinite ease-in-out;
-}
-
-.text-friend-accent {
-  color: #b8860b;
-  font-weight: 800;
-  text-shadow: 0 0 8px rgba(212, 175, 55, 0.2);
-  letter-spacing: 0.25em !important;
-}
-
-/* Luxury Gold Design System */
-.gold-gradient {
-  background: radial-gradient(circle at 35% 35%, #fff9e6 0%, #f9e27a 30%, #d4af37 60%, #8b7355 100%);
-}
-
-.gold-border {
-  border: 1.5px solid #d4af37;
-  box-shadow: inset 0 0 4px rgba(139, 115, 85, 0.3), 0 0 8px rgba(212, 175, 55, 0.2);
-}
-
-.gold-glow {
-  box-shadow: 0 0 20px 2px rgba(249, 226, 122, 0.6), 0 0 40px 5px rgba(212, 175, 55, 0.3);
-}
-
-@keyframes shimmer-gold {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
-}
-
-.shimmer-effect {
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
-  background-size: 200% 100%;
-  animation: shimmer-gold 3s infinite linear;
-}
-
-@keyframes sway {
-  0%, 100% { transform: translateY(0) rotate(0); }
-  50% { transform: translateY(-3px) rotate(0.5deg); }
-}
-
-.sway {
-  animation: sway 6s ease-in-out infinite;
-}
-
-.sacred-ripple {
-  background: radial-gradient(circle at center, transparent 0%, rgba(212, 175, 55, 0.03) 100%);
-  animation: pulse-ripple 8s ease-in-out infinite;
-}
-
-@keyframes pulse-ripple {
-  0%, 100% { transform: scale(1); opacity: 0.5; }
-  50% { transform: scale(1.1); opacity: 0.8; }
-}
-

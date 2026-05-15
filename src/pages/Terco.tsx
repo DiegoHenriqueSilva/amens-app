@@ -210,7 +210,7 @@ const Terco = () => {
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-background relative overflow-hidden flex flex-col pb-28">
+      <div className="min-h-screen bg-paper relative overflow-hidden flex flex-col pb-28">
         {/* Header */}
         <div className="flex items-center justify-between p-4 px-6 relative z-20">
           <Button variant="ghost" size="icon" onClick={() => navigate("/")} className="hover:bg-primary/10">
@@ -229,7 +229,7 @@ const Terco = () => {
           
           {/* Visual SVG Rosary */}
           <div className="w-full lg:w-1/2 flex items-center justify-center p-4">
-            <div className="relative w-full max-w-[350px] aspect-[1/1.4] bg-background/50 rounded-3xl soft-shadow border border-primary/20 backdrop-blur-md overflow-hidden flex items-center justify-center">
+            <div className="relative w-full max-w-[350px] aspect-[1/1.4] bg-vellum rounded-xl border border-hairline overflow-hidden flex items-center justify-center">
               <svg viewBox="0 0 100 130" className="w-full h-full drop-shadow-lg">
                 <defs>
                   <filter id="glow">
@@ -325,7 +325,7 @@ const Terco = () => {
 
               {!sessionActive && currentBeadIndex === 0 && (
                 <div className="absolute inset-0 bg-background/40 flex items-center justify-center backdrop-blur-[2px]">
-                   <Button onClick={startSession} size="lg" className="gradient-divine uppercase tracking-widest px-8 rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-105">
+                   <Button onClick={startSession} size="lg" className="bg-ink text-paper uppercase tracking-widest px-8 rounded-full h-12 transition-all hover:scale-105">
                      <Play className="w-5 h-5 mr-3 fill-current" />
                      Iniciar Prece
                    </Button>
@@ -345,8 +345,8 @@ const Terco = () => {
                        {currentBead.type === "space" && <span className="opacity-70 text-[10px]">(Reflexão)</span>}
                     </div>
                     
-                    <Card className="p-6 md:p-8 bg-background/80 backdrop-blur-md border-primary/20 soft-shadow rounded-3xl relative overflow-hidden">
-                       <div className="absolute top-0 left-0 w-full h-1 gradient-divine opacity-50" />
+                    <Card className="p-6 md:p-8 bg-vellum border border-hairline rounded-xl relative overflow-hidden">
+                       <div className="absolute top-0 left-0 w-full h-px bg-gold" />
                        <h2 className="text-3xl font-serif text-foreground mb-4 decoration-primary/30 underline-offset-4 decoration-wavy underline">{currentPrayer.title}</h2>
                        <p className="text-lg md:text-xl leading-relaxed text-muted-foreground whitespace-pre-wrap font-medium">
                           {currentPrayer.text}
@@ -402,7 +402,7 @@ const Terco = () => {
                     </div>
                     <h2 className="text-4xl font-serif text-foreground">Amém!</h2>
                     <p className="text-muted-foreground text-lg max-w-md">Você concluiu o seu terço. Que as graças alcancem o seu coração.</p>
-                    <Button onClick={() => navigate("/")} size="lg" className="gradient-divine mt-4">
+                    <Button onClick={() => navigate("/")} size="lg" className="bg-ink text-paper rounded-full h-12 mt-4">
                         Voltar ao Início
                     </Button>
                 </motion.div>

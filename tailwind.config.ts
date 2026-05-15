@@ -57,28 +57,42 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        // Améns 2.0 — Papel & Tinta
+        paper: "hsl(var(--paper))",
+        vellum: "hsl(var(--vellum))",
+        ink: {
+          DEFAULT: "hsl(var(--ink))",
+          soft: "hsl(var(--ink-soft))",
+        },
+        marian: "hsl(var(--marian))",
+        gold: "hsl(var(--gold))",
+        hairline: "hsl(var(--hairline))",
       },
       borderRadius: {
         lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
+        md: "calc(var(--radius) - 4px)",
+        sm: "4px",
+        xl: "22px",
+        "2xl": "28px",
+      },
+      fontFamily: {
+        serif: ['"Cormorant Garamond"', "Lora", "serif"],
+        sans: ["Inter", "system-ui", "sans-serif"],
+        mono: ['"JetBrains Mono"', "monospace"],
+      },
+      boxShadow: {
+        card: "0 1px 0 rgba(0,0,0,0.02), 0 12px 28px -18px rgba(28,22,40,0.18)",
+        nav: "0 18px 36px -22px rgba(28,22,40,0.25)",
+        fab: "0 14px 28px -10px rgba(28,22,40,0.5)",
       },
       keyframes: {
         "accordion-down": {
-          from: {
-            height: "0",
-          },
-          to: {
-            height: "var(--radix-accordion-content-height)",
-          },
+          from: { height: "0" },
+          to: { height: "var(--radix-accordion-content-height)" },
         },
         "accordion-up": {
-          from: {
-            height: "var(--radix-accordion-content-height)",
-          },
-          to: {
-            height: "0",
-          },
+          from: { height: "var(--radix-accordion-content-height)" },
+          to: { height: "0" },
         },
       },
       animation: {

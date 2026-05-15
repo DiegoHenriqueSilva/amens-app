@@ -1,95 +1,73 @@
 import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { ArrowLeft, Sparkles, BookOpen, Heart, Shield, Sword } from "lucide-react";
+import { ArrowLeft, BookOpen, Heart, Shield, Sword } from "lucide-react";
 import PageTransition from "@/components/PageTransition";
 import { motion } from "framer-motion";
-import { ROSARY_TYPES, getMysteriesByDay } from "@/data/rosary-data";
+import { ROSARY_TYPES } from "@/data/rosary-data";
 import { cn } from "@/lib/utils";
 
 const RosarySelection = () => {
   const navigate = useNavigate();
-  const todayMysteries = getMysteriesByDay();
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-background relative overflow-hidden pb-28">
-        <div className="absolute top-[-10rem] right-[-10rem] w-[30rem] h-[30rem] rounded-full bg-primary/5 blur-3xl opacity-50" />
-        <div className="absolute bottom-[-10rem] left-[-10rem] w-[30rem] h-[30rem] rounded-full bg-accent/5 blur-3xl opacity-50" />
+      <div className="min-h-screen pb-28">
 
-        <div className="container mx-auto px-6 py-8 relative z-10 max-w-lg">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/")} className="mb-6">
-            <ArrowLeft className="w-5 h-5" />
-          </Button>
-
-          <motion.div 
-            className="text-center mb-10"
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-          >
-            <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-primary/20">
-              <Sparkles className="w-8 h-8 text-primary" />
+        <div className="px-5 md:px-12 max-w-2xl mx-auto">
+          <header className="flex items-center gap-3 pt-safe pt-4 pb-6">
+            <button onClick={() => navigate("/")} className="p-1 -ml-1 text-ink-soft hover:text-ink transition-colors">
+              <ArrowLeft size={20} strokeWidth={1.5} />
+            </button>
+            <div>
+              <h1 className="font-serif text-[22px] text-ink">Sagrado Terço</h1>
+              <p className="text-[10px] uppercase tracking-[0.2em] text-ink-soft">Escolha sua devoção</p>
             </div>
-            <h1 className="text-4xl font-bold text-foreground mb-1 text-glow">Sagrado Terço</h1>
-            <p className="text-[11px] uppercase tracking-[0.25em] font-bold text-muted-foreground opacity-60">Escolha sua devoção</p>
-          </motion.div>
+          </header>
 
-          <div className="space-y-4">
+          <div className="space-y-3">
             {ROSARY_TYPES.map((type, idx) => {
-              const Icon = {
-                'misterios': BookOpen,
-                'misericordia': Heart,
-                'libertacao': Sparkles,
-                'miguel': ArrowLeft // Placeholders, will update icons in imports
-              }[type.id] || Sparkles;
-
-              // Correcting icons based on devotion
               let DisplayIcon = BookOpen;
-              let iconColor = "text-primary";
-              let bgColor = "bg-primary/10";
-              
+              let iconClass = "text-marian";
+
               if (type.id === 'misericordia') {
-                  DisplayIcon = Heart;
-                  iconColor = "text-red-500";
-                  bgColor = "bg-red-50";
+                DisplayIcon = Heart;
+                iconClass = "text-red-500";
               } else if (type.id === 'libertacao') {
-                  DisplayIcon = Shield;
-                  iconColor = "text-blue-500";
-                  bgColor = "bg-blue-50";
+                DisplayIcon = Shield;
+                iconClass = "text-blue-500";
               } else if (type.id === 'miguel') {
-                  DisplayIcon = Sword;
-                  iconColor = "text-amber-600";
-                  bgColor = "bg-amber-50";
+                DisplayIcon = Sword;
+                iconClass = "text-amber-600";
               }
 
               return (
                 <motion.div
                   key={type.id}
-                  initial={{ opacity: 0, y: 20 }}
+                  initial={{ opacity: 0, y: 12 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: idx * 0.1 }}
+                  transition={{ delay: idx * 0.08 }}
                 >
-                  <Card 
+                  <button
                     onClick={() => navigate(`/rosary/${type.id}`)}
-                    className="p-5 border-primary/5 bg-white/60 hover:bg-white/90 backdrop-blur-sm transition-all rounded-[1.8rem] cursor-pointer flex items-center gap-5 group hover:scale-[1.02] soft-shadow"
+                    className="w-full rounded-xl border border-hairline bg-vellum hover:border-marian/30 transition-colors p-4 flex items-center gap-4 text-left"
                   >
-                    <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110", bgColor, iconColor)}>
-                       <DisplayIcon className={cn("w-6 h-6", type.id === 'misericordia' && "fill-current")} />
+                    <div className={cn("w-10 h-10 rounded-full border border-hairline flex items-center justify-center shrink-0", iconClass)}>
+                      <DisplayIcon size={18} strokeWidth={1.5} className={cn(type.id === 'misericordia' && "fill-current")} />
                     </div>
-                    <div className="flex-1">
-                      <h3 className="text-base font-bold text-stone-800">{type.name}</h3>
-                      <p className="text-[11px] text-muted-foreground leading-tight">{type.description}</p>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[14px] font-medium text-ink leading-tight">{type.name}</p>
+                      <p className="text-[11px] text-ink-soft mt-0.5 leading-snug">{type.description}</p>
                     </div>
-                  </Card>
+                  </button>
                 </motion.div>
               );
             })}
           </div>
 
-          <div className="text-center mt-12 opacity-30">
-            <p className="text-[10px] uppercase tracking-[0.3em] font-bold italic">"Onde dois ou três estiverem unidos..."</p>
-          </div>
+          <p className="text-center text-[11px] text-ink-soft italic mt-10 opacity-50">
+            "Onde dois ou três estiverem unidos…"
+          </p>
         </div>
+
       </div>
     </PageTransition>
   );

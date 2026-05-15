@@ -121,36 +121,22 @@ const RosaryPrayer = () => {
 
   return (
     <PageTransition>
-      <div className="h-[100dvh] w-full bg-[#faf9f6] text-[#3d2800] flex flex-col relative overflow-hidden paper-texture">
-        {/* Divine Glow Elements */}
-        <motion.div 
-          animate={{ opacity: [0.03, 0.08, 0.03], scale: [1, 1.2, 1] }}
-          transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute top-[-10rem] right-[-10rem] w-[40rem] h-[40rem] rounded-full bg-[#e8c547] blur-[120px] pointer-events-none" 
-        />
-        <motion.div 
-          animate={{ opacity: [0.02, 0.06, 0.02], scale: [1, 1.1, 1] }}
-          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut", delay: 2 }}
-          className="absolute bottom-[-10rem] left-[-10rem] w-[40rem] h-[40rem] rounded-full bg-[#b8860b] blur-[120px] pointer-events-none" 
-        />
-        
+      <div className="h-[100dvh] w-full bg-paper text-ink flex flex-col relative overflow-hidden">
         {/* Header */}
-        <div className="pt-8 px-6 flex justify-between items-center z-50 shrink-0">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/rosary-selection")} className="rounded-full bg-white/40 hover:bg-white shadow-sm border border-primary/5">
-            <ArrowLeft className="w-5 h-5 text-stone-500" />
-          </Button>
+        <div className="pt-safe pt-4 px-5 flex justify-between items-center z-50 shrink-0">
+          <button onClick={() => navigate("/rosary-selection")} className="p-1 text-ink-soft hover:text-ink transition-colors">
+            <ArrowLeft size={20} strokeWidth={1.5} />
+          </button>
           <div className="text-center">
-             <h2 className="text-[10px] font-bold uppercase tracking-[0.4em] text-primary/60">Sagrado Terço</h2>
-             <p className="font-serif italic text-stone-400 text-[9px] truncate max-w-[150px]">{ROSARY_TYPES.find(t => t.id === type)?.name}</p>
+            <p className="text-[9px] uppercase tracking-[0.28em] text-ink-soft">Sagrado Terço</p>
+            <p className="font-serif italic text-[12px] text-ink-soft truncate max-w-[150px]">{ROSARY_TYPES.find(t => t.id === type)?.name}</p>
           </div>
-          <Button 
-            variant="ghost" 
-            size="icon" 
+          <button
             onClick={() => setIsVoiceActive(!isVoiceActive)}
-            className={cn("rounded-full border transition-all shadow-sm", isVoiceActive ? "bg-amber-100 border-amber-300 text-amber-600" : "bg-white/40 border-primary/5 text-stone-300")}
+            className={cn("w-9 h-9 rounded-full border transition-all flex items-center justify-center", isVoiceActive ? "bg-gold/10 border-gold text-gold" : "border-hairline text-ink-soft")}
           >
-            {isVoiceActive ? <Mic className="w-4 h-4" /> : <MicOff className="w-4 h-4" />}
-          </Button>
+            {isVoiceActive ? <Mic size={16} strokeWidth={1.5} /> : <MicOff size={16} strokeWidth={1.5} />}
+          </button>
         </div>
 
         {/* Horizontal Rosary Visualization Layer */}
@@ -201,13 +187,13 @@ const RosaryPrayer = () => {
                 className="max-w-2xl w-full text-center space-y-6 flex flex-col justify-start pb-8"
                 >
                     {beads[currentIndex].mysteryTitle && (
-                        <div className="mb-4 flex flex-col justify-center items-center">
-                            <span className="text-[10px] font-black uppercase tracking-[0.3em] text-[#a0720a] bg-[#d4a017]/10 px-4 py-1.5 rounded-full shadow-sm border border-[#d4a017]/10 block mb-3">Mistério</span>
-                            <h3 className="text-xs md:text-sm font-bold text-[#3d2800] uppercase tracking-[0.15em] leading-relaxed px-8">{beads[currentIndex].mysteryTitle}</h3>
+                        <div className="mb-5 flex flex-col items-center">
+                            <span className="text-[9px] uppercase tracking-[0.28em] text-gold mb-2">✦ Mistério</span>
+                            <h3 className="text-[12px] text-ink-soft uppercase tracking-[0.15em] leading-relaxed px-8">{beads[currentIndex].mysteryTitle}</h3>
                         </div>
                     )}
-                    
-                    <p className="font-serif italic text-[1.2rem] sm:text-[1.4rem] md:text-[2rem] text-[#3d2800] font-bold leading-[1.3] px-2 drop-shadow-sm max-w-3xl mx-auto whitespace-pre-wrap">
+
+                    <p className="font-serif italic text-[1.3rem] sm:text-[1.5rem] md:text-[1.9rem] text-ink leading-[1.4] px-4 max-w-3xl mx-auto whitespace-pre-wrap">
                         "{beads[currentIndex].prayer}"
                     </p>
                 </motion.div>
@@ -215,42 +201,38 @@ const RosaryPrayer = () => {
         </div>
 
         {/* Global Controls - Improved Ergonomics */}
-        <div className="px-8 pb-10 pt-6 flex flex-col items-center z-50 shrink-0 bg-gradient-to-t from-[#faf9f6] via-[#faf9f6]/95 to-transparent">
-            {/* Listening HUD */}
+        <div className="px-6 pb-10 pt-4 flex flex-col items-center z-50 shrink-0 bg-gradient-to-t from-paper via-paper/95 to-transparent">
             {listening && isVoiceActive && (
-                <div className="mb-6 flex items-center gap-3 px-6 py-2 bg-white/90 backdrop-blur-md rounded-full border border-amber-200 shadow-lg">
-                    <div className="w-2 h-2 bg-amber-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(245,158,11,0.5)]" />
-                    <span className="text-[10px] font-black text-amber-800 uppercase tracking-[0.2em]">Ouvindo...</span>
+                <div className="mb-4 flex items-center gap-2 px-4 py-1.5 bg-vellum rounded-full border border-gold/30">
+                    <div className="w-1.5 h-1.5 bg-gold rounded-full animate-pulse" />
+                    <span className="text-[10px] text-gold uppercase tracking-[0.2em]">Ouvindo…</span>
                 </div>
             )}
 
             <div className="w-full flex items-center justify-between">
-                {/* Secondary Controls (Left/Center-ish) */}
-                <div className="flex items-center gap-4">
-                    <Button variant="ghost" size="icon" onClick={handlePrevious} disabled={currentIndex === 0} className="w-12 h-12 rounded-full bg-white/40 shadow-sm border border-stone-100 disabled:opacity-20 transition-all">
-                        <ChevronLeft className="w-6 h-6 text-stone-500" />
-                    </Button>
-                    
-                    <div className="group relative" onClick={() => setIsSwayEnabled(!isSwayEnabled)}>
-                        <div className="w-12 h-12 bg-white rounded-full shadow-lg border border-primary/10 flex items-center justify-center transition-transform group-active:scale-95 cursor-pointer">
-                            <span className="text-xs font-black text-amber-700">{currentIndex + 1}</span>
-                            <svg className="absolute inset-0 w-full h-full -rotate-90">
-                                <circle cx="24" cy="24" r="20" stroke="#f8f8f8" strokeWidth="2" fill="transparent" />
-                                <circle cx="24" cy="24" r="20" stroke="#d4af37" strokeWidth="3" fill="transparent"
-                                    strokeDasharray={125} strokeDashoffset={125 - (currentIndex / (beads.length - 1)) * 125} strokeLinecap="round" />
-                            </svg>
+                <div className="flex items-center gap-3">
+                    <button onClick={handlePrevious} disabled={currentIndex === 0} className="w-11 h-11 rounded-full border border-hairline flex items-center justify-center text-ink-soft disabled:opacity-20 hover:border-ink/30 transition-colors">
+                        <ChevronLeft size={20} strokeWidth={1.5} />
+                    </button>
+
+                    <div className="relative w-11 h-11 cursor-pointer" onClick={() => setIsSwayEnabled(!isSwayEnabled)}>
+                        <div className="w-11 h-11 rounded-full border border-hairline bg-vellum flex items-center justify-center">
+                            <span className="text-[11px] font-mono text-ink">{currentIndex + 1}</span>
                         </div>
+                        <svg className="absolute inset-0 w-full h-full -rotate-90">
+                            <circle cx="22" cy="22" r="19" stroke="transparent" strokeWidth="2" fill="transparent" />
+                            <circle cx="22" cy="22" r="19" stroke="#c9a227" strokeWidth="2" fill="transparent"
+                                strokeDasharray={119} strokeDashoffset={119 - (currentIndex / (beads.length - 1)) * 119} strokeLinecap="round" />
+                        </svg>
                     </div>
                 </div>
 
-                {/* Primary Action Button (Bottom Right for Thumb) */}
-                <Button 
-                    variant="default"
-                    onClick={handleNext} 
-                    className="w-20 h-20 rounded-full bg-amber-500 hover:bg-amber-600 shadow-xl shadow-amber-500/30 flex items-center justify-center group active:scale-95 transition-all text-white border-4 border-white/20"
+                <button
+                    onClick={handleNext}
+                    className="w-20 h-20 rounded-full bg-ink text-paper flex items-center justify-center hover:opacity-90 active:scale-95 transition-all shadow-fab"
                 >
-                    <ChevronRight className="w-10 h-10 transition-transform group-hover:translate-x-1" />
-                </Button>
+                    <ChevronRight size={32} strokeWidth={1.5} />
+                </button>
             </div>
         </div>
       </div>
