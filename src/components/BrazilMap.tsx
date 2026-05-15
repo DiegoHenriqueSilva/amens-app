@@ -13,8 +13,7 @@ interface BrazilMapProps {
 
 const BrazilMap: React.FC<BrazilMapProps> = ({ onStateClick, selectedState }) => {
   return (
-    <Card className="p-2 sm:p-4 border-primary/10 bg-white/50 backdrop-blur-md rounded-[2.5rem] overflow-hidden relative soft-shadow border-2">
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent pointer-events-none" />
+    <Card className="p-2 sm:p-4 border border-hairline bg-vellum rounded-xl overflow-hidden relative">
       <div className="w-full relative z-10 flex justify-center min-h-[380px]">
         <TooltipProvider delayDuration={50}>
           <ComposableMap

@@ -67,7 +67,7 @@ export const FriendSelector = ({ open, onOpenChange, onSelect, title = "Convidar
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md bg-card/95 backdrop-blur-md border-primary/20 soft-shadow rounded-[2rem]">
+      <DialogContent className="sm:max-w-md border border-hairline rounded-xl">
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold flex items-center gap-2">
             <Users className="w-6 h-6 text-primary" />
@@ -143,7 +143,7 @@ export const FriendSelector = ({ open, onOpenChange, onSelect, title = "Convidar
           <Button 
             onClick={handleConfirm} 
             disabled={selectedIds.length === 0}
-            className="rounded-xl gradient-divine flex-1"
+            className="rounded-full bg-ink text-paper hover:opacity-90 flex-1"
           >
             Convidar {selectedIds.length > 0 && `(${selectedIds.length})`}
           </Button>

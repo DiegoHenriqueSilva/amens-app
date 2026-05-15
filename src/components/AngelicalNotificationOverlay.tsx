@@ -138,7 +138,7 @@ export const AngelicalNotificationOverlay = ({ notificationId, onClose }: Angeli
           animate={{ scale: 1, y: 0, opacity: 1 }}
           exit={{ scale: 0.8, y: 40, opacity: 0 }}
           transition={{ type: "spring", damping: 20, stiffness: 100 }}
-          className="relative w-full max-w-sm bg-gradient-to-b from-white to-primary/5 rounded-[3rem] shadow-2xl border border-primary/20 p-8 text-center overflow-hidden"
+          className="relative w-full max-w-sm bg-paper rounded-xl border border-hairline shadow-nav p-8 text-center overflow-hidden"
         >
           {/* Angelical Halo Effect */}
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-48 bg-primary/10 rounded-full blur-3xl -z-10" />
@@ -199,7 +199,7 @@ export const AngelicalNotificationOverlay = ({ notificationId, onClose }: Angeli
               </p>
               <Button 
                 onClick={handleThank}
-                className="w-full h-16 gradient-divine rounded-2xl text-lg font-bold shadow-lg hover:scale-[1.02] transition-transform active:scale-[0.98]"
+                className="w-full h-12 rounded-full bg-ink text-paper text-sm font-medium hover:opacity-90 transition-opacity active:scale-95"
               >
                 Agradecer e Abençoar
               </Button>

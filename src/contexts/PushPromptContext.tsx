@@ -85,7 +85,7 @@ export const PushPromptProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     <PushPromptContext.Provider value={{ triggerPushPrompt }}>
       {children}
       <Dialog open={isOpen} onOpenChange={(val) => { if (!val) handleDecline(); }}>
-        <DialogContent className="max-w-xs md:max-w-sm bg-card/95 backdrop-blur-md border border-primary/20 soft-shadow rounded-[2rem]">
+        <DialogContent className="max-w-xs md:max-w-sm border border-hairline rounded-xl">
           <DialogHeader className="text-center pt-2">
              <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4 relative">
                 <div className="absolute inset-0 bg-primary/20 rounded-full animate-ping opacity-30" />
@@ -98,7 +98,7 @@ export const PushPromptProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           </DialogHeader>
           <DialogFooter className="flex flex-col gap-3 mt-4 sm:justify-center">
             <Button 
-              className="w-full gradient-divine rounded-2xl h-12 text-primary-foreground font-bold shadow-md hover:scale-105 transition-transform"
+              className="w-full h-11 rounded-full bg-ink text-paper text-sm font-medium hover:opacity-90 transition-opacity"
               onClick={handleAccept}
             >
               Sim, Autorizar

@@ -41,10 +41,7 @@ const Friends = () => {
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-background relative overflow-hidden pb-28">
-        {/* Ambient background glows */}
-        <div className="absolute top-[-8rem] right-[-8rem] w-[25rem] h-[25rem] rounded-full bg-primary/10 blur-3xl opacity-50" />
-        <div className="absolute bottom-[-8rem] left-[-8rem] w-[25rem] h-[25rem] rounded-full bg-accent/10 blur-3xl opacity-50" />
+      <div className="min-h-screen bg-paper relative overflow-hidden pb-28">
 
         <div className="container mx-auto px-6 py-8 relative z-10 max-w-lg">
           <Button variant="ghost" size="icon" onClick={() => navigate("/")} className="mb-6">
@@ -59,8 +56,8 @@ const Friends = () => {
             <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-primary/20">
               <Users className="w-8 h-8 text-primary" />
             </div>
-            <h1 className="text-4xl font-bold text-foreground mb-2 text-glow">Amigos da Fé</h1>
-            <div className="divider-gold max-w-[8rem] mx-auto mb-4" />
+            <h1 className="font-serif text-[28px] text-ink mb-2">Amigos da Fé</h1>
+            <div className="w-8 h-px bg-hairline mx-auto my-3" />
             <p className="text-sm text-muted-foreground font-medium uppercase tracking-[0.2em]">Conectados em Intercessão</p>
           </motion.div>
 
@@ -71,7 +68,7 @@ const Friends = () => {
             transition={{ delay: 0.1 }}
             className="mb-8"
           >
-            <Card className="p-6 bg-gradient-to-br from-white/80 to-primary/5 backdrop-blur-md border-primary/15 soft-shadow rounded-[2.5rem] border-2">
+            <Card className="p-6 border border-hairline bg-vellum rounded-xl">
               <div className="flex flex-col items-center text-center">
                 <span className="text-[10px] font-bold text-primary uppercase tracking-widest mb-3 flex items-center gap-2">
                   <Sparkles className="w-3 h-3" /> Seu Código de Amigo <Sparkles className="w-3 h-3" />
@@ -103,7 +100,7 @@ const Friends = () => {
                 onChange={(e) => setFriendCodeInput(e.target.value)}
                 className="rounded-2xl border-primary/20 bg-white/70 h-12 text-sm font-bold uppercase tracking-widest placeholder:tracking-normal placeholder:font-medium placeholder:uppercase-0"
               />
-              <Button type="submit" disabled={!friendCodeInput || isSending} className="rounded-2xl gradient-divine h-12 px-6 flex items-center gap-2">
+              <Button type="submit" disabled={!friendCodeInput || isSending} className="rounded-full bg-ink text-paper h-12 px-6 flex items-center gap-2">
                 <UserPlus className="w-4 h-4" />
                 <span className="hidden sm:inline">Adicionar</span>
               </Button>
@@ -130,7 +127,7 @@ const Friends = () => {
               <AnimatePresence mode="popLayout">
                 {loading ? (
                   [1, 2, 3].map(i => (
-                    <Card key={i} className="p-4 rounded-3xl animate-pulse h-16 bg-white/40 border-none" />
+                    <Card key={i} className="p-4 rounded-xl animate-pulse h-16 bg-vellum border border-hairline" />
                   ))
                 ) : friends.length > 0 ? (
                   friends.map((friend, idx) => (
@@ -140,7 +137,7 @@ const Friends = () => {
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: idx * 0.05 }}
                     >
-                      <Card className="p-4 flex items-center gap-4 border-primary/5 bg-white/60 rounded-3xl hover:bg-white transition-all soft-shadow group">
+                      <Card className="p-4 flex items-center gap-4 border border-hairline bg-vellum rounded-xl hover:bg-white/50 transition-all group">
                         <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-primary/70 border border-primary/10 overflow-hidden">
                           <Avatar className="w-full h-full rounded-2xl">
                              <AvatarImage src={friend.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${friend.id}`} className="object-cover" />
@@ -183,7 +180,7 @@ const Friends = () => {
                       animate={{ opacity: 1, scale: 1 }}
                       transition={{ delay: idx * 0.05 }}
                     >
-                      <Card className="p-4 flex items-center gap-4 border-primary/10 bg-white/80 rounded-3xl soft-shadow border-l-4 border-l-primary">
+                      <Card className="p-4 flex items-center gap-4 border border-hairline bg-vellum rounded-xl border-l-4 border-l-primary">
                         <div className="w-10 h-10 rounded-xl flex items-center justify-center text-primary/60 border border-primary/5 overflow-hidden">
                            <Avatar className="w-full h-full rounded-xl">
                               <AvatarImage src={request.profiles?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${request.sender_id}`} className="object-cover" />

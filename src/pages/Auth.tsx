@@ -243,7 +243,7 @@ const Auth = () => {
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+      <div className="min-h-screen flex items-center justify-center p-4">
         
         {/* MODAL PARA GOOGLE LOGIN SEM PERFIL */}
         <Dialog open={showIncompleteProfile} onOpenChange={(val) => {

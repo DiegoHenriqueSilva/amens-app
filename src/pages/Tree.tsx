@@ -82,7 +82,7 @@ const Tree = () => {
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-background relative overflow-hidden flex flex-col items-center pb-28">
+      <div className="min-h-screen bg-paper relative overflow-hidden flex flex-col items-center pb-28">
         {/* Sky / Nature Background */}
         <div className="absolute top-0 left-0 w-full h-[60%] bg-gradient-to-b from-primary/5 to-background pointer-events-none" />
         <div className="absolute top-[10%] left-[10%] opacity-20"><Sun className="w-12 h-12 text-yellow-500 animate-pulse" /></div>
@@ -98,7 +98,7 @@ const Tree = () => {
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
           >
-            <h1 className="text-4xl font-extrabold text-foreground mb-1 tracking-tight text-glow">Fluxo de Orações</h1>
+            <h1 className="font-serif text-[28px] text-ink mb-1 tracking-tight">Fluxo de Orações</h1>
             <div className="w-16 h-1 bg-gradient-to-r from-transparent via-primary/40 to-transparent mx-auto rounded-full" />
             <p className="text-[10px] mt-2 uppercase tracking-[0.3em] font-bold text-primary/60">Intercessão e Comunhão Eterna</p>
           </motion.div>
@@ -176,7 +176,7 @@ const Tree = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
           >
-             <Card className="p-8 soft-shadow border-primary/10 bg-white/40 backdrop-blur-md rounded-[2.5rem] text-center">
+             <Card className="p-8 border border-hairline bg-vellum rounded-xl text-center">
                 <div className="inline-block px-4 py-1 bg-primary/10 rounded-full text-primary text-[10px] uppercase font-black tracking-widest mb-4">
                    Nível {growthLevel}
                 </div>
@@ -200,7 +200,7 @@ const Tree = () => {
                 
                 <Button 
                    onClick={() => navigate("/pray")}
-                   className="mt-8 gradient-divine w-full rounded-2xl py-6 text-sm font-bold shadow-xl active:scale-95 transition-transform"
+                   className="mt-8 bg-ink text-paper w-full rounded-full h-12 text-sm font-medium active:scale-95 transition-transform"
                 >
                    <Sparkles className="w-4 h-4 mr-2" />
                    Alimentar o Fluxo

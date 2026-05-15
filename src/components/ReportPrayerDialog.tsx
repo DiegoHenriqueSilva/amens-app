@@ -93,7 +93,7 @@ export const ReportPrayerDialog = ({
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
             className="fixed inset-x-4 top-1/2 -translate-y-1/2 z-[100] max-w-md mx-auto"
           >
-            <div className="bg-white rounded-[2rem] shadow-2xl border border-red-100 p-6">
+            <div className="bg-paper rounded-xl border border-hairline shadow-nav p-6">
               {/* Header */}
               <div className="flex items-center justify-between mb-5">
                 <div className="flex items-center gap-2">
