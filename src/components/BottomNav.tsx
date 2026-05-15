@@ -1,17 +1,35 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Home, Users, Link as LinkIcon, User, Mail, Globe } from "lucide-react";
+import { Home, Globe, Plus, Link as ChainIcon, User } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useFriends } from "@/hooks/use-friends";
 import { supabase } from "@/integrations/supabase/client";
+
+type NavItem = {
+  path: string;
+  icon: React.ElementType;
+  label: string;
+};
+
+const NAV_ITEMS: NavItem[] = [
+  { path: "/", icon: Home, label: "Hoje" },
+  { path: "/community", icon: Globe, label: "Comunidade" },
+];
+
+const NAV_ITEMS_RIGHT: NavItem[] = [
+  { path: "/prayer-chain", icon: ChainIcon, label: "Corrente" },
+  { path: "/profile", icon: User, label: "Perfil" },
+];
+
+const HIDDEN_PATHS = ["/auth"];
 
 const BottomNav = () => {
   const location = useLocation();
-  const { requests, friends, loading } = useFriends();
   const [unreadCount, setUnreadCount] = useState(0);
-  
+
   const fetchUnreadCount = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
     if (!session) return;
 
     const { count, error } = await supabase
@@ -27,19 +45,10 @@ const BottomNav = () => {
 
   useEffect(() => {
     fetchUnreadCount();
-    
-    // Subscribe to real-time notifications
+
     const channel = supabase
-      .channel('schema-db-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'notifications'
-        },
-        () => fetchUnreadCount()
-      )
+      .channel("bottomnav-notifications")
+      .on("postgres_changes", { event: "*", schema: "public", table: "notifications" }, fetchUnreadCount)
       .subscribe();
 
     return () => {
@@ -47,57 +56,85 @@ const BottomNav = () => {
     };
   }, []);
 
-  // Don't show bottom nav on auth page
-  if (location.pathname === "/auth") return null;
-  
-  const navItems = [
-    { path: "/", icon: Home, label: "Início" },
-    { path: "/messages", icon: Mail, label: "Mensagens", badge: unreadCount },
-    { path: "/prayer-chain", icon: LinkIcon, label: "Oração ao vivo" },
-    { path: "/friends", icon: Users, label: "Amigos", badge: requests?.length || 0 },
-    { path: "/community", icon: Globe, label: "Comunidade" },
-    { path: "/profile", icon: User, label: "Perfil" },
-  ];
+  if (HIDDEN_PATHS.includes(location.pathname)) return null;
 
   return (
-    <nav className="nav-blur fixed bottom-0 left-0 right-0 h-20 flex items-center justify-around px-2 pb-2 z-50">
-      {navItems.map((item) => {
-        const isActive = location.pathname === item.path;
-        const Icon = item.icon;
-        
+    <nav
+      className={cn(
+        "md:hidden fixed bottom-4 left-4 right-4 z-50",
+        "rounded-2xl bg-vellum border border-hairline shadow-nav",
+        "flex items-end justify-around px-2 py-2",
+      )}
+    >
+      {NAV_ITEMS.map((item) => (
+        <NavTab key={item.path} item={item} active={location.pathname === item.path} />
+      ))}
+
+      {/* FAB — always points to /submit */}
+      <Link
+        to="/submit"
+        className={cn(
+          "-mt-7 w-14 h-14 rounded-full bg-ink text-paper shadow-fab",
+          "flex items-center justify-center",
+          "transition-transform active:scale-95",
+        )}
+        aria-label="Enviar intenção"
+      >
+        <Plus size={22} strokeWidth={2} />
+      </Link>
+
+      {NAV_ITEMS_RIGHT.map((item) => {
+        const showBadge = item.path === "/profile" && unreadCount > 0;
         return (
-          <Link 
-            key={item.path} 
-            to={item.path} 
-            className="flex flex-col items-center gap-1 group relative"
-          >
-            <div className={cn(
-              "w-12 h-1 bg-primary rounded-full mb-1 transition-opacity",
-              isActive ? "opacity-100" : "opacity-0 group-hover:opacity-50"
-            )} />
-            <div className="relative">
-              <Icon className={cn(
-                "w-6 h-6 transition-colors",
-                isActive ? "text-primary" : "text-muted-foreground group-hover:text-primary"
-              )} />
-              {/* Badge (Notifications or Requests) */}
-              {item.badge > 0 && (
-                <span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-red-500 text-white text-[9px] rounded-full flex items-center justify-center border border-background font-bold animate-pulse">
-                  {item.badge}
-                </span>
-              )}
-            </div>
-            <span className={cn(
-              "text-[9px] font-bold transition-all truncate max-w-[60px]",
-              isActive ? "text-primary" : "text-muted-foreground group-hover:text-primary font-medium"
-            )}>
-              {item.label}
-            </span>
-          </Link>
+          <NavTab key={item.path} item={item} active={location.pathname === item.path} badge={showBadge ? unreadCount : undefined} />
         );
       })}
     </nav>
   );
 };
+
+interface NavTabProps {
+  item: NavItem;
+  active: boolean;
+  badge?: number;
+}
+
+function NavTab({ item, active, badge }: NavTabProps) {
+  const Icon = item.icon;
+  return (
+    <Link
+      to={item.path}
+      className="flex flex-col items-center gap-0.5 px-2 py-1 min-w-[44px]"
+    >
+      <div className="relative">
+        <Icon
+          size={22}
+          strokeWidth={active ? 1.9 : 1.5}
+          className={cn("transition-colors", active ? "text-ink" : "text-ink-soft")}
+        />
+        {badge !== undefined && badge > 0 && (
+          <span className="absolute -top-1 -right-1.5 w-3.5 h-3.5 bg-marian text-paper text-[8px] rounded-full flex items-center justify-center font-medium">
+            {badge > 9 ? "9+" : badge}
+          </span>
+        )}
+      </div>
+      <span
+        className={cn(
+          "text-[9.5px] transition-colors",
+          active ? "text-ink font-medium" : "text-ink-soft",
+        )}
+      >
+        {item.label}
+      </span>
+      {/* Active dot */}
+      <div
+        className={cn(
+          "w-1 h-1 rounded-full bg-gold transition-opacity",
+          active ? "opacity-100" : "opacity-0",
+        )}
+      />
+    </Link>
+  );
+}
 
 export default BottomNav;
