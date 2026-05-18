@@ -12,6 +12,9 @@ ALTER TABLE public.prayer_requests
   ADD CONSTRAINT prayer_requests_status_check
   CHECK (status IN ('active', 'completed', 'pending_review', 'policy_violation', 'banned'));
 
+ALTER TABLE public.notifications
+  ADD COLUMN IF NOT EXISTS type text;
+
 CREATE TABLE IF NOT EXISTS public.prayer_moderation_reviews (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   prayer_request_id uuid REFERENCES public.prayer_requests(id) ON DELETE CASCADE,
