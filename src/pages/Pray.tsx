@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Sparkles, Heart, ArrowLeft, Users, Share2, Clock, Loader2, Flag, Eye, MessageCircle, Check } from "lucide-react";
+import { Sparkles, Heart, ArrowLeft, Users, Share2, Clock, Loader2, Flag, Eye, MessageCircle, Check, ShieldAlert } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useFaithPoints } from "@/hooks/use-faith-points";
@@ -34,6 +34,17 @@ const REACTIONS = [
   { type: "strength", emoji: "💪", label: "Força" },
   { type: "empathy", emoji: "🥺", label: "Empatia" },
 ];
+
+const isRestrictedPrayer = (status?: string | null) =>
+  status === "pending_review" || status === "policy_violation" || status === "banned";
+
+const getRestrictedPrayerMessage = (status?: string | null) => {
+  if (status === "pending_review") {
+    return "Este pedido está em revisão e ainda não está disponível para a comunidade.";
+  }
+
+  return "Este pedido não pode continuar público porque não está de acordo com as políticas do Améns.";
+};
 
 const fadeUp = {
   initial: { opacity: 0, y: 20 },
@@ -75,6 +86,38 @@ const Pray = () => {
   const [reportDialogOpen, setReportDialogOpen] = useState(false);
   const [isSharedCause, setIsSharedCause] = useState(false);
   const [editingReactionHistoryId, setEditingReactionHistoryId] = useState<string | null>(null);
+  const [expandedHistoryItems, setExpandedHistoryItems] = useState<Record<string, boolean>>({});
+
+  // Rastreia quais amigos já receberam convite para cada causa no dia de hoje.
+  // Persiste no sessionStorage para sobreviver a HMR e reloads da página na mesma aba.
+  const SHARED_FRIENDS_KEY = "amens_shared_friends_v1";
+
+  const readSharedFriendsMap = (): Record<string, string[]> => {
+    try {
+      const raw = sessionStorage.getItem(SHARED_FRIENDS_KEY);
+      if (!raw) return {};
+      const parsed = JSON.parse(raw);
+      // Descarta dados de dias anteriores
+      const today = new Date().toLocaleDateString("pt-BR");
+      if (parsed.date !== today) return {};
+      return parsed.map ?? {};
+    } catch {
+      return {};
+    }
+  };
+
+  const writeSharedFriendsMap = (map: Record<string, string[]>) => {
+    try {
+      const today = new Date().toLocaleDateString("pt-BR");
+      sessionStorage.setItem(SHARED_FRIENDS_KEY, JSON.stringify({ date: today, map }));
+    } catch { /* sessionStorage indisponível */ }
+  };
+
+  const [sharedFriendsMap, setSharedFriendsMap] = useState<Record<string, string[]>>(readSharedFriendsMap);
+
+  const toggleHistoryItemExpand = (id: string) => {
+    setExpandedHistoryItems(prev => ({ ...prev, [id]: !prev[id] }));
+  };
   
   const { drawsUsed, drawsLeft, isLimitReached, nextResetLabel, useOneDraw, returnOneDraw } = useDrawLimit(currentUser?.id || null);
 
@@ -94,13 +137,18 @@ const Pray = () => {
     });
   }, [navigate]);
 
+  const getLocalMidnightISO = () => {
+    const now = new Date();
+    const localMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
+    return localMidnight.toISOString();
+  };
+
   const loadDailyCurrentCause = async (userId: string) => {
-    const today = new Date().toISOString().split("T")[0];
     const { data } = await supabase
       .from("prayer_intercessions")
       .select("prayer_request_id")
       .eq("user_id", userId)
-      .gte("created_at", `${today}T00:00:00Z`)
+      .gte("created_at", getLocalMidnightISO())
       .order("created_at", { ascending: false })
       .limit(1);
 
@@ -135,18 +183,37 @@ const Pray = () => {
     
     setIsIntercessionsLoading(true);
     try {
-      const { data: intData, error } = await supabase
+      const { data: intDataRaw, error } = await supabase
         .from("prayer_intercessions")
         .select("id, prayer_request_id, created_at")
         .eq("user_id", currentUser.id)
         .order("created_at", { ascending: false })
-        .limit(20);
+        .limit(100);
       
       if (error) throw error;
-      if (!intData || intData.length === 0) {
+      if (!intDataRaw || intDataRaw.length === 0) {
         setIntercessions([]);
         return;
       }
+
+      const groupedIntData: Record<string, any[]> = {};
+      intDataRaw.forEach(i => {
+        if (!groupedIntData[i.prayer_request_id]) groupedIntData[i.prayer_request_id] = [];
+        groupedIntData[i.prayer_request_id].push(i);
+      });
+
+      const intData = Object.keys(groupedIntData).map(prayerId => {
+        const intercessionsList = groupedIntData[prayerId];
+        return {
+           id: intercessionsList[0].id,
+           prayer_request_id: prayerId,
+           created_at: intercessionsList[0].created_at,
+           intercessionsCount: intercessionsList.length,
+           allIntercessions: intercessionsList
+        };
+      });
+
+      intData.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
       const prayerIds = intData.map(i => i.prayer_request_id);
       const { data: prayerData } = await supabase
@@ -185,21 +252,29 @@ const Pray = () => {
       setIntercessions(intData.map(i => {
         const p = prayerMap[i.prayer_request_id] || {};
         const profile = p.user_id ? profilesMap[p.user_id] : {};
+        const authorNameFinal = getDisplayName(p.author_name, profile, p.is_anonymous);
+        const isActuallyAnonymous = p.is_anonymous || authorNameFinal === "Usuário Anônimo";
+        let finalAvatar = isActuallyAnonymous ? null : profile.avatar_url;
+        if (finalAvatar && finalAvatar.includes('dicebear.com')) finalAvatar = null;
+
         return {
           id: i.id,
           prayer_request_id: i.prayer_request_id,
           created_at: i.created_at, // when user interceded
           posted_at: p.created_at, // when cause was created
           prayer_title: p.title || null,
-          prayer_content: p.status === 'banned' ? "[Causa removida por infringir as diretrizes do Améns]" : (p.content || "Pedido removido"),
+          prayer_content: isRestrictedPrayer(p.status) ? getRestrictedPrayerMessage(p.status) : (p.content || "Pedido removido"),
           prayer_location: p.location || null,
           prayer_feedback: p.feedback || null,
-          author_name: getDisplayName(p.author_name, profile, p.is_anonymous),
-          avatar_url: p.is_anonymous ? null : profile.avatar_url,
+          author_name: authorNameFinal,
+          avatar_url: finalAvatar,
           is_friend: userFriends.includes(p.user_id),
           is_anonymous: p.is_anonymous,
           user_reaction: reactionsMap[i.prayer_request_id] || null,
-          status: p.status
+          status: p.status,
+          is_restricted: isRestrictedPrayer(p.status),
+          intercessionsCount: i.intercessionsCount,
+          allIntercessions: i.allIntercessions
         };
       }));
     } catch (e) {
@@ -215,19 +290,24 @@ const Pray = () => {
     }
   }, [showHistory]);
 
-  const recordIntercession = async (prayerId: string) => {
+  const recordIntercession = async (prayerId: string, isForceNew?: boolean) => {
     if (!currentUser) return;
-    const today = new Date().toISOString().split("T")[0];
-    
-    // Check if we already have an intercession today for this cause
-    const { data: existing } = await supabase
-      .from("prayer_intercessions")
-      .select("id")
-      .eq("prayer_request_id", prayerId)
-      .eq("user_id", currentUser.id)
-      .gte("created_at", `${today}T00:00:00Z`);
 
-    if (!existing || existing.length === 0) {
+    let shouldInsert = isForceNew;
+
+    if (!shouldInsert) {
+      // Check if we already have an intercession today for this cause (using local midnight)
+      const { data: existing } = await supabase
+        .from("prayer_intercessions")
+        .select("id")
+        .eq("prayer_request_id", prayerId)
+        .eq("user_id", currentUser.id)
+        .gte("created_at", getLocalMidnightISO());
+      
+      shouldInsert = !existing || existing.length === 0;
+    }
+
+    if (shouldInsert) {
       // If it's a default prayer, ensure it exists in the prayer_requests table first
       if (prayerId.startsWith('default-')) {
         const { data: dbPrayer } = await supabase.from('prayer_requests').select('id').eq('id', prayerId).maybeSingle();
@@ -258,15 +338,23 @@ const Pray = () => {
 
   const removeCurrentIntercession = async (prayerId: string) => {
     if (!currentUser) return;
-    const today = new Date().toISOString().split("T")[0];
-    await supabase
+    
+    const { data } = await supabase
       .from("prayer_intercessions")
-      .delete()
+      .select("id")
       .eq("prayer_request_id", prayerId)
       .eq("user_id", currentUser.id)
-      .gte("created_at", `${today}T00:00:00Z`);
-  };
+      .gte("created_at", getLocalMidnightISO())
+      .order("created_at", { ascending: false })
+      .limit(1);
 
+    if (data && data.length > 0) {
+      await supabase
+        .from("prayer_intercessions")
+        .delete()
+        .eq("id", data[0].id);
+    }
+  };
   const loadReaction = async (prayerId: string) => {
     if (!currentUser) return;
     const { data: existingReaction } = await supabase
@@ -279,7 +367,7 @@ const Pray = () => {
     setActiveReaction(existingReaction?.reaction_type || null);
   };
 
-  const fetchPrayerById = async (id: string, isShared: boolean) => {
+  const fetchPrayerById = async (id: string, isShared: boolean, isForceNew?: boolean) => {
     setIsLoading(true);
     try {
       const { data, error } = await supabase
@@ -290,7 +378,7 @@ const Pray = () => {
 
       if (error) throw error;
       if (data) {
-        if (data.status === 'banned') {
+        if (isRestrictedPrayer(data.status)) {
           toast.error("Esta causa não está mais disponível.");
           fetchRandomPrayerRequest();
           return;
@@ -314,7 +402,7 @@ const Pray = () => {
         loadReaction(data.id);
         
         if (!isShared) {
-          recordIntercession(data.id);
+          recordIntercession(data.id, isForceNew);
         }
       } else {
         toast.error("Causa não encontrada.");
@@ -330,6 +418,11 @@ const Pray = () => {
 
   const handleAcceptSharedCause = async () => {
     if (!prayerRequest) return;
+    if (isRestrictedPrayer(prayerRequest.status)) {
+      toast.error("Esta causa não está disponível para novas interações.");
+      return;
+    }
+
     if (useOneDraw()) {
       setIsSharedCause(false);
       await recordIntercession(prayerRequest.id);
@@ -380,26 +473,33 @@ const Pray = () => {
       const eligible = (data || []).filter(p => !seenPrayerIds.includes(p.id));
 
       if (eligible.length > 0) {
-        // Calculate scores
-        const scored = eligible.map(p => {
-          let score = 0;
-          if (p.prayer_count === 0) score += PRAY_SETTINGS.drawWeights.zeroPrayers;
-          else if (p.prayer_count <= 3) score += PRAY_SETTINGS.drawWeights.fewPrayers;
-          else if (p.prayer_count <= 9) score += PRAY_SETTINGS.drawWeights.somePrayers;
+        const isFullyRandom = Math.random() < 0.20;
+        let selected;
 
-          if (userFriends.includes(p.user_id)) score += PRAY_SETTINGS.drawWeights.isFriend;
+        if (isFullyRandom) {
+          selected = eligible[Math.floor(Math.random() * eligible.length)];
+        } else {
+          // Calculate scores
+          const scored = eligible.map(p => {
+            let score = 0;
+            if (p.prayer_count === 0) score += PRAY_SETTINGS.drawWeights.zeroPrayers;
+            else if (p.prayer_count <= 3) score += PRAY_SETTINGS.drawWeights.fewPrayers;
+            else if (p.prayer_count <= 9) score += PRAY_SETTINGS.drawWeights.somePrayers;
 
-          const daysOld = Math.floor((Date.now() - new Date(p.created_at).getTime()) / (1000 * 60 * 60 * 24));
-          if (daysOld > PRAY_SETTINGS.oldCauseDaysThreshold) score += PRAY_SETTINGS.drawWeights.isOld;
-          if (daysOld < PRAY_SETTINGS.newCauseDaysThreshold) score += PRAY_SETTINGS.drawWeights.isNew;
+            if (userFriends.includes(p.user_id)) score += PRAY_SETTINGS.drawWeights.isFriend;
 
-          score += Math.random() * PRAY_SETTINGS.drawWeights.randomVariance * 2 - PRAY_SETTINGS.drawWeights.randomVariance;
-          return { ...p, score };
-        });
+            const daysOld = Math.floor((Date.now() - new Date(p.created_at).getTime()) / (1000 * 60 * 60 * 24));
+            if (daysOld > PRAY_SETTINGS.oldCauseDaysThreshold) score += PRAY_SETTINGS.drawWeights.isOld;
+            if (daysOld < PRAY_SETTINGS.newCauseDaysThreshold) score += PRAY_SETTINGS.drawWeights.isNew;
 
-        scored.sort((a, b) => b.score - a.score);
-        const topPool = scored.slice(0, PRAY_SETTINGS.topCausesPool);
-        const selected = topPool[Math.floor(Math.random() * topPool.length)];
+            score += Math.random() * PRAY_SETTINGS.drawWeights.randomVariance * 2 - PRAY_SETTINGS.drawWeights.randomVariance;
+            return { ...p, score };
+          });
+
+          scored.sort((a, b) => b.score - a.score);
+          const topPool = scored.slice(0, PRAY_SETTINGS.topCausesPool);
+          selected = topPool[Math.floor(Math.random() * topPool.length)];
+        }
 
         let profileData = null;
         if (selected.user_id) {
@@ -407,10 +507,15 @@ const Pray = () => {
           profileData = prof;
         }
 
+        const authorNameFinal = getDisplayName(selected.author_name, profileData, selected.is_anonymous);
+        const isActuallyAnonymous = selected.is_anonymous || authorNameFinal === "Usuário Anônimo";
+        let finalAvatar = isActuallyAnonymous ? null : profileData?.avatar_url;
+        if (finalAvatar && finalAvatar.includes('dicebear.com')) finalAvatar = null;
+
         const formattedData = {
            ...selected,
-           display_name: getDisplayName(selected.author_name, profileData, selected.is_anonymous),
-           avatar_url: selected.is_anonymous ? null : profileData?.avatar_url,
+           display_name: authorNameFinal,
+           avatar_url: finalAvatar,
            is_friend: userFriends.includes(selected.user_id)
         };
 
@@ -447,13 +552,38 @@ const Pray = () => {
   };
 
   const forceDrawFromHistory = async (historyId: string, prayerId: string) => {
+    const historyItem = intercessions.find(item => item.id === historyId);
+    if (isRestrictedPrayer(historyItem?.status)) {
+      toast.error("Esta causa não está disponível para novas interações.");
+      return;
+    }
+
     if (!useOneDraw()) {
       toast.error("Limite diário de sorteios atingido.");
       return;
     }
-    setShowHistory(false);
-    fetchPrayerById(prayerId, false);
+
+    setHasRequestedCause(true);
+    fetchPrayerById(prayerId, false, true);
     toast.success("Você escolheu orar por esta causa novamente!");
+
+    const now = new Date().toISOString();
+    setIntercessions(prev => {
+      const updated = prev.map(i =>
+        i.prayer_request_id === prayerId
+          ? {
+              ...i,
+              created_at: now,
+              intercessionsCount: i.intercessionsCount + 1,
+              allIntercessions: [
+                { id: `pending-${historyId}-${now}`, prayer_request_id: prayerId, created_at: now },
+                ...i.allIntercessions,
+              ],
+            }
+          : i
+      );
+      return updated.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    });
   };
 
   const handleInviteFriends = async (selectedIds: string[]) => {
@@ -471,6 +601,15 @@ const Pray = () => {
       }));
 
       await supabase.from("notifications").insert(notifications);
+
+      // Persiste o rastreamento no sessionStorage (sobrevive a HMR e reloads)
+      const updatedMap = {
+        ...sharedFriendsMap,
+        [prayerRequest.id]: [...(sharedFriendsMap[prayerRequest.id] || []), ...selectedIds],
+      };
+      setSharedFriendsMap(updatedMap);
+      writeSharedFriendsMap(updatedMap);
+
       toast.success(`Convite enviado para ${selectedIds.length} ${selectedIds.length === 1 ? 'amigo' : 'amigos'}! 🙏`);
       completeTask("share_cause");
       setFriendSelectorOpen(false);
@@ -480,16 +619,47 @@ const Pray = () => {
     }
   };
 
-  const handleShareCompartilhar = () => {
+  const handleShareCompartilhar = async () => {
     if (!prayerRequest) return;
 
-    const APP_URL = window.location.origin;
-    const shareUrl = `${APP_URL}/pray?id=${prayerRequest.id}`;
+    const shareUrl = `${window.location.origin}/pray?id=${prayerRequest.id}`;
     const authorName = prayerRequest.display_name || "Um fiel";
-    const location = prayerRequest.location ? ` (${prayerRequest.location})` : "";
-    const text = `❆ Pedido de Oração ❆\n\nDe: ${authorName}${location}\n\n"${prayerRequest.content}"\n\n🙏 Ore por esta causa no Améns:\n${shareUrl}`;
-    
-    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
+    const locationPart = prayerRequest.location ? ` (${prayerRequest.location})` : "";
+
+    // Emojis gerados em runtime via String.fromCodePoint — seguros com navigator.share
+    const pray = String.fromCodePoint(0x1F64F);     // 🙏
+    const sparkle = String.fromCodePoint(0x2728);    // ✨
+    const church = String.fromCodePoint(0x26EA);     // ⛪
+
+    const shareText = [
+      `${pray} *Pedido de Ora\u00e7\u00e3o* ${pray}`,
+      ``,
+      `${sparkle} De: *${authorName}*${locationPart}`,
+      ``,
+      `"${prayerRequest.content}"`,
+      ``,
+      `${church} Ore por esta causa no Am\u00e9ns:`,
+      shareUrl,
+    ].join("\n");
+
+    // Web Share API: passa o texto ao SO nativamente (sem encoding manual)
+    // Emoji e acentos chegam intactos pois nunca viram URL
+    if (typeof navigator.share === "function") {
+      try {
+        await navigator.share({
+          title: "Pedido de Ora\u00e7\u00e3o \u2014 Am\u00e9ns",
+          text: shareText,
+        });
+        completeTask("share_cause");
+        return;
+      } catch (e: any) {
+        if (e?.name === "AbortError") return; // usu\u00e1rio cancelou
+        // outro erro: cai no fallback abaixo
+      }
+    }
+
+    // Fallback: WhatsApp URL (desktop ou browsers sem navigator.share)
+    window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(shareText)}`, "_blank");
     completeTask("share_cause");
   };
 
@@ -536,6 +706,14 @@ REGRAS ADICIONAIS:
 
   const toggleReaction = async (reactionType: string, targetPrayerId: string, currentReaction: string | null, onHistoryItem?: boolean) => {
     if (!currentUser) return;
+
+    const targetStatus = onHistoryItem
+      ? intercessions.find(item => item.prayer_request_id === targetPrayerId)?.status
+      : prayerRequest?.status;
+    if (isRestrictedPrayer(targetStatus)) {
+      toast.error("Esta causa está com interações bloqueadas.");
+      return;
+    }
     
     const isRemoving = currentReaction === reactionType;
     const newReaction = isRemoving ? null : reactionType;
@@ -646,7 +824,12 @@ REGRAS ADICIONAIS:
                     </div>
                   </Card>
                 </motion.div>
-              ) : isLoading || !prayerRequest ? (
+              ) : isLoading ? (
+                <motion.div key="loading" variants={fadeUp} initial="initial" animate="animate" exit="exit" className="flex flex-col items-center justify-center py-20">
+                  <div className="animate-spin w-10 h-10 border-4 border-primary border-t-transparent rounded-full mb-4" />
+                  <p className="text-primary font-medium animate-pulse">Buscando causa...</p>
+                </motion.div>
+              ) : !prayerRequest ? (
                 <motion.div key="empty" variants={fadeUp} initial="initial" animate="animate" exit="exit">
                   <Card className="group p-12 text-center soft-shadow border-primary/10 transition-colors">
                     <motion.div animate={{ scale: [1, 1.08, 1] }} transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }} className="w-20 h-20 mx-auto mb-8 bg-transparent flex items-center justify-center overflow-visible relative">
@@ -689,7 +872,7 @@ REGRAS ADICIONAIS:
                           <img src={prayerRequest.avatar_url} alt="Avatar" className="w-12 h-12 rounded-full object-cover border-2 border-primary/20" />
                         ) : (
                           <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center border-2 border-primary/20">
-                            {prayerRequest.is_default ? <Sparkles className="w-5 h-5 text-primary" /> : <Heart className="w-5 h-5 text-primary" />}
+                            <Heart className="w-5 h-5 text-primary/50" />
                           </div>
                         )}
                       </div>
@@ -700,7 +883,7 @@ REGRAS ADICIONAIS:
                           <p className="text-xs text-primary font-bold uppercase tracking-widest opacity-80">
                             Enviado por {prayerRequest.display_name}
                           </p>
-                          {prayerRequest.is_friend && !prayerRequest.is_anonymous && (
+                          {prayerRequest.is_friend && !prayerRequest.is_anonymous && prayerRequest.display_name !== 'Usuário Anônimo' && (
                             <span className="text-[9px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-sm font-bold uppercase">Amigo 🤝</span>
                           )}
                         </div>
@@ -731,7 +914,13 @@ REGRAS ADICIONAIS:
                     {/* Integrated Reactions Section */}
                     <div className="bg-primary/5 rounded-2xl p-5 mb-6 border border-primary/10">
                       <h4 className="text-sm font-semibold text-center text-primary mb-3">Envie Energia e Solidariedade</h4>
-                      {prayerRequest.feedback ? (
+                      {isRestrictedPrayer(prayerRequest.status) ? (
+                         <div className="text-center p-3 bg-amber-50 rounded-xl border border-amber-200">
+                            <ShieldAlert className="w-5 h-5 mx-auto mb-2 text-amber-700" />
+                            <p className="text-xs font-medium text-amber-800">{getRestrictedPrayerMessage(prayerRequest.status)}</p>
+                            <p className="text-[10px] text-muted-foreground mt-1">Interações desativadas</p>
+                         </div>
+                      ) : prayerRequest.feedback ? (
                          <div className="text-center p-3 bg-white/50 rounded-xl">
                             <span className="text-2xl mb-1 block">{FEEDBACK_OPTIONS[prayerRequest.feedback]?.emoji}</span>
                             <p className="text-xs font-medium text-green-700">Esta causa já recebeu um testemunho de graça!</p>
@@ -773,8 +962,8 @@ REGRAS ADICIONAIS:
                         {isGenerating ? "Gerando..." : "Sugestão de Oração"}
                       </Button>
                       
-                      {!prayerRequest.feedback && !isSharedCause && (
-                        <Button onClick={fetchRandomPrayerRequest} variant="outline" className="border-[#1D4ED8]/20 text-[#1D4ED8] hover:bg-[#1D4ED8]/5 shadow-sm">
+                      {!isRestrictedPrayer(prayerRequest.status) && !prayerRequest.feedback && !isSharedCause && (
+                        <Button onClick={fetchRandomPrayerRequest} variant="outline" className="border-[#1D4ED8]/20 text-[#1D4ED8] hover:text-[#1D4ED8] hover:bg-[#1D4ED8]/5 shadow-sm">
                           Próxima Causa
                         </Button>
                       )}
@@ -784,7 +973,7 @@ REGRAS ADICIONAIS:
                        <Button 
                          variant="outline" 
                          onClick={() => setFriendSelectorOpen(true)}
-                         className="flex-1 rounded-xl border-[#1D4ED8]/20 text-[#1D4ED8] hover:bg-[#1D4ED8]/10 shadow-sm transition-colors text-xs h-9"
+                         className="flex-1 rounded-xl border-[#1D4ED8]/20 text-[#1D4ED8] hover:text-[#1D4ED8] hover:bg-[#1D4ED8]/10 shadow-sm transition-colors text-xs h-9"
                        >
                          <Users className="w-3.5 h-3.5 mr-2" />
                          Enviar a um amigo do Améns
@@ -793,20 +982,17 @@ REGRAS ADICIONAIS:
                        <Button 
                          variant="outline" 
                          onClick={handleShareCompartilhar}
-                         className="flex-1 rounded-xl border-green-600/20 text-green-700 hover:bg-green-50 shadow-sm transition-colors text-xs h-9"
+                         className="flex-1 rounded-xl border-green-600/20 text-green-700 hover:text-green-700 hover:bg-green-50 shadow-sm transition-colors text-xs h-9"
                        >
                          <Share2 className="w-3.5 h-3.5 mr-2" />
                          Compartilhar fora do Améns
                        </Button>
                     </div>
 
-                    {!prayerRequest.feedback && !prayerRequest.is_default && !isSharedCause && (
+                    {!isRestrictedPrayer(prayerRequest.status) && !prayerRequest.feedback && !prayerRequest.is_default && !isSharedCause && (
                       <div className="mt-4 flex flex-col gap-3 items-center text-center">
                         <button onClick={() => setReportDialogOpen(true)} className="text-[10px] text-muted-foreground hover:text-red-500 transition-colors uppercase font-medium flex items-center justify-center gap-1 mx-auto">
                           <Flag className="w-3 h-3" /> Reportar essa causa a um administrador
-                        </button>
-                        <button onClick={fetchRandomPrayerRequest} className="text-[10px] text-primary hover:text-primary/80 transition-colors uppercase font-bold tracking-widest flex items-center justify-center gap-1 mx-auto bg-primary/5 px-3 py-1.5 rounded-full">
-                          Próxima Causa
                         </button>
                       </div>
                     )}
@@ -816,6 +1002,8 @@ REGRAS ADICIONAIS:
                     open={friendSelectorOpen}
                     onOpenChange={setFriendSelectorOpen}
                     onSelect={handleInviteFriends}
+                    prayerRequestId={prayerRequest?.id}
+                    alreadySharedFriendIds={sharedFriendsMap[prayerRequest?.id] || []}
                   />
 
                   <AnimatePresence>
@@ -828,91 +1016,6 @@ REGRAS ADICIONAIS:
                       </motion.div>
                     )}
                   </AnimatePresence>
-                  <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45, delay: 0.1 }}>
-                    <Card className="p-8 soft-shadow border-primary/15">
-                      <h3 className="text-xl font-semibold mb-3 text-primary">Envie Energia e Solidariedade</h3>
-                      <p className="text-sm text-muted-foreground mb-5">
-                        {activeReaction
-                          ? "Você já enviou sua reação — clique em outro para trocar"
-                          : "Mostre seu apoio à causa"}
-                      </p>
-                      <div className="flex flex-wrap gap-3 justify-center">
-                        {[
-                          { type: "love", emoji: "❤️", label: "Compaixão" },
-                          { type: "pray", emoji: "🙏", label: "Graça" },
-                          { type: "patience", emoji: "⏳", label: "Paciência" },
-                          { type: "strength", emoji: "💪", label: "Força" },
-                          { type: "empathy", emoji: "🥺", label: "Empatia" },
-                        ].map((reaction, i) => {
-                          const isActive = activeReaction === reaction.type;
-                          const isOtherActive = activeReaction !== null && !isActive;
-                          return (
-                            <motion.button
-                              key={reaction.type}
-                              initial={{ opacity: 0, scale: 0.8 }}
-                              animate={{ opacity: 1, scale: 1 }}
-                              transition={{ delay: 0.1 + i * 0.05 }}
-                              whileHover={{ scale: 1.15 }}
-                              whileTap={{ scale: 0.9 }}
-                              className={`flex flex-col items-center gap-1.5 p-3 rounded-xl transition-all duration-200 ${
-                                isActive
-                                  ? "bg-primary/15 ring-2 ring-primary/40 shadow-sm"
-                                  : isOtherActive
-                                  ? "opacity-35 hover:opacity-60 hover:bg-primary/5"
-                                  : "hover:bg-primary/5"
-                              }`}
-                              onClick={async () => {
-                                try {
-                                  const { data: { session } } = await supabase.auth.getSession();
-                                  if (!session) return;
-
-                                  if (isActive) {
-                                    // Toggle off — remove reaction
-                                    await supabase
-                                      .from("prayer_reactions")
-                                      .delete()
-                                      .eq("prayer_request_id", prayerRequest.id)
-                                      .eq("reactor_user_id", session.user.id);
-                                    setActiveReaction(null);
-                                    toast.success("Reação removida.");
-                                    return;
-                                  }
-
-                                  // Upsert — replace any previous reaction
-                                  await supabase.from("prayer_reactions").upsert({
-                                    prayer_request_id: prayerRequest.id,
-                                    reactor_user_id: session.user.id,
-                                    reaction_type: reaction.type,
-                                  }, { onConflict: "prayer_request_id,reactor_user_id" });
-
-                                  setActiveReaction(reaction.type);
-
-                                  // Reaction notification removed as per user request to avoid duplicate alerts
-                                  // Daily gate - only award points for reacting once per day total
-                                  const today = new Date().toISOString().split("T")[0];
-                                  const reactKey = `amens_react_faith_points_${session.user.id}_${today}`;
-                                  if (!localStorage.getItem(reactKey)) {
-                                    await addFaithPoints("react");
-                                    localStorage.setItem(reactKey, "1");
-                                  }
-                                  toast.success(`${reaction.emoji} Reação enviada!`);
-                                } catch {
-                                  toast.error("Erro ao enviar reação");
-                                }
-                              }}
-                            >
-                              <span className={`text-3xl transition-transform duration-150 ${isActive ? "scale-110" : ""}`}>
-                                {reaction.emoji}
-                              </span>
-                              <span className={`text-[11px] font-medium transition-colors duration-150 ${isActive ? "text-primary" : "text-muted-foreground"}`}>
-                                {reaction.label}
-                              </span>
-                            </motion.button>
-                          );
-                        })}
-                      </div>
-                    </Card>
-                  </motion.div>
                 </motion.div>
               )}
             </AnimatePresence>
@@ -970,14 +1073,14 @@ REGRAS ADICIONAIS:
                             animate={{ opacity: 1, x: 0 }} 
                             transition={{ delay: i * 0.1 }}
                           >
-                            <Card className="p-5 soft-shadow border-primary/5 rounded-3xl">
+                            <Card className={`p-5 soft-shadow rounded-3xl ${item.is_restricted ? 'bg-amber-50/80 border-amber-200' : item.prayer_feedback ? 'bg-green-50/80 border-green-200' : 'border-primary/5'}`}>
                               <div className="flex gap-4">
                                 <div className="flex-shrink-0 mt-1">
                                   {item.avatar_url ? (
                                     <img src={item.avatar_url} alt="Avatar" className="w-10 h-10 rounded-full object-cover border border-primary/20" />
                                   ) : (
                                     <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center border border-primary/20">
-                                      <Heart className="w-4 h-4 text-primary" />
+                                      <Heart className="w-4 h-4 text-primary/50" />
                                     </div>
                                   )}
                                 </div>
@@ -985,31 +1088,66 @@ REGRAS ADICIONAIS:
                                 <div className="flex-1">
                                   <div className="flex items-center gap-2 mb-1">
                                     <span className="text-xs font-bold text-primary uppercase tracking-wider">{item.author_name}</span>
-                                    {item.is_friend && !item.is_anonymous && <span className="text-[8px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-sm font-bold uppercase">Amigo 🤝</span>}
+                                    {item.is_friend && !item.is_anonymous && item.author_name !== 'Usuário Anônimo' && <span className="text-[8px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-sm font-bold uppercase">Amigo 🤝</span>}
                                     {item.is_anonymous && <span className="text-[8px] bg-stone-200 text-stone-600 px-1.5 py-0.5 rounded-sm font-bold uppercase">Anônimo</span>}
                                   </div>
                                   
                                   {item.prayer_title && <h4 className="text-sm font-bold mb-1 line-clamp-1">{item.prayer_title}</h4>}
-                                  <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed mb-3">{item.prayer_content}</p>
-                                  
-                                  <div className="flex items-center flex-wrap gap-x-2 gap-y-1 text-[10px] text-muted-foreground mt-3">
-                                    <div className="flex items-center gap-1" title={formatFullDatetime(item.created_at)}>
-                                      <Clock className="w-3 h-3 text-primary/40" />
-                                      <span>Orou {formatTimeAgo(item.created_at)}</span>
+                                  {item.is_restricted ? (
+                                    <div className="text-xs text-amber-800 bg-white/70 border border-amber-200 rounded-xl p-3 mb-3">
+                                      <p className="font-bold mb-1">Conteúdo indisponível</p>
+                                      <p>{item.prayer_content}</p>
                                     </div>
-                                    {item.posted_at && (
-                                      <>
-                                        <span className="text-primary/20">•</span>
-                                        <div className="flex items-center gap-1" title={formatFullDatetime(item.posted_at)}>
-                                          <span>Postado {formatTimeAgo(item.posted_at)}</span>
-                                        </div>
-                                      </>
+                                  ) : (
+                                    <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed mb-3">{item.prayer_content}</p>
+                                  )}
+                                  
+                                  <div className="flex flex-col w-full gap-2 mt-3 text-[10px] text-muted-foreground">
+                                    <div className="flex items-center flex-wrap gap-x-2 gap-y-1">
+                                      <div className="flex items-center gap-1" title={formatFullDatetime(item.created_at)}>
+                                        <Clock className="w-3 h-3 text-primary/40" />
+                                        <span>🙏 Rezei por essa causa {formatTimeAgo(item.created_at)}</span>
+                                      </div>
+                                      {item.posted_at && (
+                                        <>
+                                          <span className="text-primary/20">•</span>
+                                          <div className="flex items-center gap-1" title={formatFullDatetime(item.posted_at)}>
+                                            <span>Postado {formatTimeAgo(item.posted_at)}</span>
+                                          </div>
+                                        </>
+                                      )}
+                                    </div>
+                                    
+                                    {item.intercessionsCount > 1 && (
+                                      <div>
+                                        <button 
+                                          onClick={() => toggleHistoryItemExpand(item.id)}
+                                          className="text-primary hover:underline font-medium"
+                                        >
+                                          Ver todas as datas em que rezei por essa causa ({item.intercessionsCount})
+                                        </button>
+                                        {expandedHistoryItems[item.id] && (
+                                          <div className="mt-2 pl-4 border-l border-primary/20 space-y-1">
+                                            {item.allIntercessions.map((hist: any, idx: number) => (
+                                              <div key={idx} className="text-muted-foreground flex items-center gap-1.5 py-0.5">
+                                                <Clock className="w-2.5 h-2.5 opacity-40" />
+                                                <span className="text-[9px]">Intercedi em {formatFullDatetime(hist.created_at)} ({formatTimeAgo(hist.created_at)})</span>
+                                              </div>
+                                            ))}
+                                          </div>
+                                        )}
+                                      </div>
                                     )}
                                   </div>
 
                                   {/* History Reactions */}
                                   <div className="mt-4 pt-3 border-t border-primary/5 flex items-center justify-between">
-                                    {item.prayer_feedback ? (
+                                    {item.is_restricted ? (
+                                      <div className="flex items-center gap-2 bg-amber-50 text-amber-700 px-3 py-1.5 rounded-xl border border-amber-200">
+                                        <ShieldAlert className="w-3.5 h-3.5" />
+                                        <span className="text-[10px] font-bold uppercase">Interações bloqueadas</span>
+                                      </div>
+                                    ) : item.prayer_feedback ? (
                                       <div className="flex items-center gap-2 bg-green-50 text-green-700 px-3 py-1.5 rounded-xl border border-green-100">
                                         <span className="text-lg">{FEEDBACK_OPTIONS[item.prayer_feedback]?.emoji}</span>
                                         <span className="text-[10px] font-bold uppercase">Graça alcançada!</span>
@@ -1045,7 +1183,7 @@ REGRAS ADICIONAIS:
                                       </div>
                                     )}
 
-                                    {!item.prayer_feedback && (
+                                    {!item.is_restricted && !item.prayer_feedback && (
                                       <Button 
                                         variant="outline" 
                                         size="sm" 
