@@ -239,6 +239,56 @@ export type Database = {
         }
         Relationships: []
       }
+      prayer_moderation_reviews: {
+        Row: {
+          id: string
+          prayer_request_id: string | null
+          user_id: string
+          original_title: string | null
+          original_content: string
+          normalized_content: string
+          detected_policies: Json
+          risk_score: number
+          decision: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          prayer_request_id?: string | null
+          user_id: string
+          original_title?: string | null
+          original_content: string
+          normalized_content: string
+          detected_policies?: Json
+          risk_score?: number
+          decision?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          prayer_request_id?: string | null
+          user_id?: string
+          original_title?: string | null
+          original_content?: string
+          normalized_content?: string
+          detected_policies?: Json
+          risk_score?: number
+          decision?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prayer_moderation_reviews_prayer_request_id_fkey"
+            columns: ["prayer_request_id"]
+            isOneToOne: false
+            referencedRelation: "prayer_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       prayer_reports: {
         Row: {
           id: string

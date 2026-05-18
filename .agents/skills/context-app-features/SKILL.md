@@ -76,7 +76,9 @@ O usuário compartilha sua necessidade espiritual com a comunidade.
 - Salvo na tabela `prayer_requests`.
 - O autor ganha pontos de XP (uma vez ao dia).
 - O usuário pode dar feedback depois para os intercessores (ex: "Deu certo", "Não foi dessa vez, mas confio").
-- **Anonimato (Feature Planejada/Regra de Produto):** Pedidos podem ser anônimos. Ao sortear um pedido anônimo, NÃO exibir dados do autor (nome, foto).
+- **Anonimato por Pedido:** Pedidos podem ser marcados como anônimos no envio. Ao sortear um pedido anônimo, NÃO exibir dados do autor (nome, foto) para a comunidade. O `user_id` continua preservado para auditoria interna.
+- **Moderação Local de Conteúdo:** O envio passa por uma Edge Function com regras locais para detectar PII, contatos, documentos, endereços, links, pedidos financeiros, ofensas, ódio, ameaças, conteúdo sexual explícito e automutilação explícita.
+- **Revisão:** Pedidos suspeitos podem ser enviados como `pending_review`; pedidos confirmados como violação usam `policy_violation`. Ambos ficam fora da fila de novos sorteios e têm interações bloqueadas. Históricos exibem aviso e ocultam o conteúdo quando o status é restrito.
 
 ---
 

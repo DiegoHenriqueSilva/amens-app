@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Sparkles, Heart, ArrowLeft, Users, Share2, Clock, Loader2, Flag, Eye, MessageCircle, Check } from "lucide-react";
+import { Sparkles, Heart, ArrowLeft, Users, Share2, Clock, Loader2, Flag, Eye, MessageCircle, Check, ShieldAlert } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useXp } from "@/hooks/use-xp";
@@ -34,6 +34,17 @@ const REACTIONS = [
   { type: "strength", emoji: "💪", label: "Força" },
   { type: "empathy", emoji: "🥺", label: "Empatia" },
 ];
+
+const isRestrictedPrayer = (status?: string | null) =>
+  status === "pending_review" || status === "policy_violation" || status === "banned";
+
+const getRestrictedPrayerMessage = (status?: string | null) => {
+  if (status === "pending_review") {
+    return "Este pedido está em revisão e ainda não está disponível para a comunidade.";
+  }
+
+  return "Este pedido não pode continuar público porque não está de acordo com as políticas do Améns.";
+};
 
 const fadeUp = {
   initial: { opacity: 0, y: 20 },
@@ -241,7 +252,7 @@ const Pray = () => {
           created_at: i.created_at, // when user interceded
           posted_at: p.created_at, // when cause was created
           prayer_title: p.title || null,
-          prayer_content: p.status === 'banned' ? "[Causa removida por infringir as diretrizes do Améns]" : (p.content || "Pedido removido"),
+          prayer_content: isRestrictedPrayer(p.status) ? getRestrictedPrayerMessage(p.status) : (p.content || "Pedido removido"),
           prayer_location: p.location || null,
           prayer_feedback: p.feedback || null,
           author_name: authorNameFinal,
@@ -250,6 +261,7 @@ const Pray = () => {
           is_anonymous: p.is_anonymous,
           user_reaction: reactionsMap[i.prayer_request_id] || null,
           status: p.status,
+          is_restricted: isRestrictedPrayer(p.status),
           intercessionsCount: i.intercessionsCount,
           allIntercessions: i.allIntercessions
         };
@@ -336,7 +348,7 @@ const Pray = () => {
 
       if (error) throw error;
       if (data) {
-        if (data.status === 'banned') {
+        if (isRestrictedPrayer(data.status)) {
           toast.error("Esta causa não está mais disponível.");
           fetchRandomPrayerRequest();
           return;
@@ -376,6 +388,11 @@ const Pray = () => {
 
   const handleAcceptSharedCause = async () => {
     if (!prayerRequest) return;
+    if (isRestrictedPrayer(prayerRequest.status)) {
+      toast.error("Esta causa não está disponível para novas interações.");
+      return;
+    }
+
     if (useOneDraw()) {
       setIsSharedCause(false);
       await recordIntercession(prayerRequest.id);
@@ -502,6 +519,12 @@ const Pray = () => {
   };
 
   const forceDrawFromHistory = async (historyId: string, prayerId: string) => {
+    const historyItem = intercessions.find(item => item.id === historyId);
+    if (isRestrictedPrayer(historyItem?.status)) {
+      toast.error("Esta causa não está disponível para novas interações.");
+      return;
+    }
+
     if (!useOneDraw()) {
       toast.error("Limite diário de sorteios atingido.");
       return;
@@ -650,6 +673,14 @@ REGRAS ADICIONAIS:
 
   const toggleReaction = async (reactionType: string, targetPrayerId: string, currentReaction: string | null, onHistoryItem?: boolean) => {
     if (!currentUser) return;
+
+    const targetStatus = onHistoryItem
+      ? intercessions.find(item => item.prayer_request_id === targetPrayerId)?.status
+      : prayerRequest?.status;
+    if (isRestrictedPrayer(targetStatus)) {
+      toast.error("Esta causa está com interações bloqueadas.");
+      return;
+    }
     
     const isRemoving = currentReaction === reactionType;
     const newReaction = isRemoving ? null : reactionType;
@@ -817,7 +848,13 @@ REGRAS ADICIONAIS:
                     {/* Integrated Reactions Section */}
                     <div className="bg-primary/5 rounded-2xl p-5 mb-6 border border-primary/10">
                       <h4 className="text-sm font-semibold text-center text-primary mb-3">Envie Energia e Solidariedade</h4>
-                      {prayerRequest.feedback ? (
+                      {isRestrictedPrayer(prayerRequest.status) ? (
+                         <div className="text-center p-3 bg-amber-50 rounded-xl border border-amber-200">
+                            <ShieldAlert className="w-5 h-5 mx-auto mb-2 text-amber-700" />
+                            <p className="text-xs font-medium text-amber-800">{getRestrictedPrayerMessage(prayerRequest.status)}</p>
+                            <p className="text-[10px] text-muted-foreground mt-1">Interações desativadas</p>
+                         </div>
+                      ) : prayerRequest.feedback ? (
                          <div className="text-center p-3 bg-white/50 rounded-xl">
                             <span className="text-2xl mb-1 block">{FEEDBACK_OPTIONS[prayerRequest.feedback]?.emoji}</span>
                             <p className="text-xs font-medium text-green-700">Esta causa já recebeu um testemunho de graça!</p>
@@ -859,7 +896,7 @@ REGRAS ADICIONAIS:
                         {isGenerating ? "Gerando..." : "Sugestão de Oração"}
                       </Button>
                       
-                      {!prayerRequest.feedback && !isSharedCause && (
+                      {!isRestrictedPrayer(prayerRequest.status) && !prayerRequest.feedback && !isSharedCause && (
                         <Button onClick={fetchRandomPrayerRequest} variant="outline" className="border-[#1D4ED8]/20 text-[#1D4ED8] hover:text-[#1D4ED8] hover:bg-[#1D4ED8]/5 shadow-sm">
                           Próxima Causa
                         </Button>
@@ -886,7 +923,7 @@ REGRAS ADICIONAIS:
                        </Button>
                     </div>
 
-                    {!prayerRequest.feedback && !prayerRequest.is_default && !isSharedCause && (
+                    {!isRestrictedPrayer(prayerRequest.status) && !prayerRequest.feedback && !prayerRequest.is_default && !isSharedCause && (
                       <div className="mt-4 flex flex-col gap-3 items-center text-center">
                         <button onClick={() => setReportDialogOpen(true)} className="text-[10px] text-muted-foreground hover:text-red-500 transition-colors uppercase font-medium flex items-center justify-center gap-1 mx-auto">
                           <Flag className="w-3 h-3" /> Reportar essa causa a um administrador
@@ -970,7 +1007,7 @@ REGRAS ADICIONAIS:
                             animate={{ opacity: 1, x: 0 }} 
                             transition={{ delay: i * 0.1 }}
                           >
-                            <Card className={`p-5 soft-shadow rounded-3xl ${item.prayer_feedback ? 'bg-green-50/80 border-green-200' : 'border-primary/5'}`}>
+                            <Card className={`p-5 soft-shadow rounded-3xl ${item.is_restricted ? 'bg-amber-50/80 border-amber-200' : item.prayer_feedback ? 'bg-green-50/80 border-green-200' : 'border-primary/5'}`}>
                               <div className="flex gap-4">
                                 <div className="flex-shrink-0 mt-1">
                                   {item.avatar_url ? (
@@ -990,7 +1027,14 @@ REGRAS ADICIONAIS:
                                   </div>
                                   
                                   {item.prayer_title && <h4 className="text-sm font-bold mb-1 line-clamp-1">{item.prayer_title}</h4>}
-                                  <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed mb-3">{item.prayer_content}</p>
+                                  {item.is_restricted ? (
+                                    <div className="text-xs text-amber-800 bg-white/70 border border-amber-200 rounded-xl p-3 mb-3">
+                                      <p className="font-bold mb-1">Conteúdo indisponível</p>
+                                      <p>{item.prayer_content}</p>
+                                    </div>
+                                  ) : (
+                                    <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed mb-3">{item.prayer_content}</p>
+                                  )}
                                   
                                   <div className="flex flex-col w-full gap-2 mt-3 text-[10px] text-muted-foreground">
                                     <div className="flex items-center flex-wrap gap-x-2 gap-y-1">
@@ -1032,7 +1076,12 @@ REGRAS ADICIONAIS:
 
                                   {/* History Reactions */}
                                   <div className="mt-4 pt-3 border-t border-primary/5 flex items-center justify-between">
-                                    {item.prayer_feedback ? (
+                                    {item.is_restricted ? (
+                                      <div className="flex items-center gap-2 bg-amber-50 text-amber-700 px-3 py-1.5 rounded-xl border border-amber-200">
+                                        <ShieldAlert className="w-3.5 h-3.5" />
+                                        <span className="text-[10px] font-bold uppercase">Interações bloqueadas</span>
+                                      </div>
+                                    ) : item.prayer_feedback ? (
                                       <div className="flex items-center gap-2 bg-green-50 text-green-700 px-3 py-1.5 rounded-xl border border-green-100">
                                         <span className="text-lg">{FEEDBACK_OPTIONS[item.prayer_feedback]?.emoji}</span>
                                         <span className="text-[10px] font-bold uppercase">Graça alcançada!</span>
@@ -1068,7 +1117,7 @@ REGRAS ADICIONAIS:
                                       </div>
                                     )}
 
-                                    {!item.prayer_feedback && (
+                                    {!item.is_restricted && !item.prayer_feedback && (
                                       <Button 
                                         variant="outline" 
                                         size="sm" 
