@@ -6,14 +6,14 @@ import { Card } from "@/components/ui/card";
 import { Sparkles, ArrowLeft, Sun, Wind, CloudRain } from "lucide-react";
 import PageTransition from "@/components/PageTransition";
 import { motion, AnimatePresence } from "framer-motion";
-import { useXp } from "@/hooks/use-xp";
+import { useFaithPoints } from "@/hooks/use-faith-points";
 import { Player } from "@remotion/player";
 import PrayerTree from "@/remotion/PrayerTree/PrayerTree";
 
 const Tree = () => {
   const navigate = useNavigate();
-  const { totalXp } = useXp();
-  const [communityXp, setCommunityXp] = useState(0);
+  const { totalFaithPoints } = useFaithPoints();
+  const [communityFaithPoints, setCommunityFaithPoints] = useState(0);
   const [loading, setLoading] = useState(true);
   const [recentPrayers, setRecentPrayers] = useState<{ name: string; timestamp: string }[]>([]);
 
@@ -60,14 +60,14 @@ const Tree = () => {
     const { data: xpRows } = await supabase.from("user_xp").select("total_xp");
     if (xpRows) {
       const sum = xpRows.reduce((acc, curr) => acc + curr.total_xp, 0);
-      setCommunityXp(sum);
+      setCommunityFaithPoints(sum);
     }
     setLoading(false);
   };
 
   // Determine tree growth level (0-5)
   // Level threshold: 1000 Pontos de Fé per level for initial stages to show progress faster
-  const growthLevel = Math.min(Math.floor(communityXp / 1000), 5); 
+  const growthLevel = Math.min(Math.floor(communityFaithPoints / 1000), 5); 
   
   const getFlowStage = () => {
     if (growthLevel === 0) return { label: "Sussurro de Fé", description: "O solo está sendo preparado no seu coração...", icon: <Wind className="w-16 h-16 text-primary/40 animate-pulse" /> };
@@ -188,12 +188,12 @@ const Tree = () => {
                       <motion.div 
                         className="h-full bg-primary shadow-[0_0_10px_rgba(212,175,55,0.4)]"
                         initial={{ width: 0 }}
-                        animate={{ width: `${(communityXp % 1000) / 10}%` }}
-                        transition={{ duration: 1.5, delay: 0.5 }}
+                        animate={{ width: `${(communityFaithPoints % 1000) / 10}%` }}
+                        transition={{ duration: 1 }}
                       />
                    </div>
                    <div className="flex justify-between items-center px-1">
-                      <span className="text-[10px] font-bold text-muted-foreground uppercase">{communityXp.toLocaleString()} Pontos de Fé Coletivos</span>
+                      <span className="text-[10px] font-bold text-muted-foreground uppercase">{communityFaithPoints.toLocaleString()} Pontos de Fé Coletivos</span>
                       <span className="text-[10px] font-bold text-primary uppercase">Próxima Fase</span>
                    </div>
                 </div>

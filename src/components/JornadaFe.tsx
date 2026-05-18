@@ -88,7 +88,7 @@ export const JornadaFe = () => {
                                 )}
                             >
                                 <span className={cn("text-[11px] font-semibold transition-colors", isDone ? "text-primary/60 line-through decoration-primary/20" : "text-foreground group-hover:text-primary")}>
-                                    {task.title} <span className="opacity-40 text-[9px] font-bold ml-1">+{task.xpReward} XP</span>
+                                    {task.title} <span className="opacity-40 text-[9px] font-bold ml-1">+{task.xpReward} Pontos de Fé</span>
                                 </span>
                                 {isDone ? (
                                     <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />

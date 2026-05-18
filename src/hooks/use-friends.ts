@@ -80,10 +80,55 @@ export const useFriends = () => {
         .from("profiles")
         .select("friend_code")
         .eq("id", user.id)
-        .single();
+        .maybeSingle();
 
-      if (error) throw error;
-      setMyCode(data?.friend_code || null);
+      if (error) {
+        console.error("Error fetching friend code:", error);
+        return;
+      }
+      
+      if (data?.friend_code) {
+        setMyCode(data.friend_code);
+      } else {
+        // Generate a new code if missing
+        const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+        const generate = () => {
+          let code = 'AMEN-';
+          for (let i = 0; i < 6; i++) {
+            code += chars.charAt(Math.floor(Math.random() * chars.length));
+          }
+          return code;
+        };
+        
+        const newCode = generate();
+        console.log("Generating new friend code for user:", user.id);
+        
+        // Use upsert instead of update to handle missing profile records
+        const { error: updateError } = await supabase
+          .from("profiles")
+          .upsert({ 
+            id: user.id, 
+            friend_code: newCode,
+            updated_at: new Date().toISOString()
+          }, { onConflict: 'id' });
+          
+        if (!updateError) {
+          setMyCode(newCode);
+        } else {
+          console.error("Failed to generate and save friend code:", updateError);
+          // If upsert fails (e.g. 403), we might try to just update if it exists
+          const { error: retryError } = await supabase
+            .from("profiles")
+            .update({ friend_code: newCode })
+            .eq("id", user.id);
+            
+          if (!retryError) {
+            setMyCode(newCode);
+          } else {
+            console.error("Retry update also failed:", retryError);
+          }
+        }
+      }
     } catch (e) {
       console.warn("useFriends: fetchMyCode failed:", e);
     }

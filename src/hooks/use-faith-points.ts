@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
-export function useXp() {
-  const [totalXp, setTotalXp] = useState(0);
+export function useFaithPoints() {
+  const [totalFaithPoints, setTotalFaithPoints] = useState(0);
   const [loading, setLoading] = useState(true);
 
-  const fetchXp = async () => {
+  const fetchFaithPoints = async () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) { setLoading(false); return; }
 
@@ -15,27 +15,27 @@ export function useXp() {
       .eq("user_id", session.user.id)
       .maybeSingle();
 
-    setTotalXp(data?.total_xp ?? 0);
+    setTotalFaithPoints(data?.total_xp ?? 0);
     setLoading(false);
   };
 
-  useEffect(() => { fetchXp(); }, []);
+  useEffect(() => { fetchFaithPoints(); }, []);
 
-  const addXp = async (action: "pray" | "submit" | "react") => {
+  const addFaithPoints = async (action: "pray" | "submit" | "react", customAmount?: number) => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return;
 
-    const xpMap = { pray: 10, submit: 20, react: 5 };
+    const faithPointsMap = { pray: 10, submit: 20, react: 5 };
     const { data, error } = await supabase.rpc("add_xp", {
       p_user_id: session.user.id,
-      p_xp_amount: xpMap[action],
+      p_xp_amount: customAmount ?? faithPointsMap[action],
       p_action: action,
     });
 
     if (!error && data != null) {
-      setTotalXp(data);
+      setTotalFaithPoints(data);
     }
   };
 
-  return { totalXp, loading, addXp, refetch: fetchXp };
+  return { totalFaithPoints, loading, addFaithPoints, refetch: fetchFaithPoints };
 }

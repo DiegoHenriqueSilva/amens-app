@@ -1,20 +1,30 @@
 import { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { getLevel, getNextLevel, getLevelProgress, CELESTIAL_LEVELS } from "@/lib/xp";
+import { getLevel, getNextLevel, getLevelProgress, CELESTIAL_LEVELS } from "@/lib/faith-points";
 import { Progress } from "@/components/ui/progress";
-import { BookOpen, User } from "lucide-react";
+import { Info, User } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
-interface XpBadgeProps {
-  totalXp: number;
+interface FaithPointsBadgeProps {
+  totalFaithPoints: number;
   userName?: string;
   avatarUrl?: string | null;
 }
 
-export function XpBadge({ totalXp, userName, avatarUrl }: XpBadgeProps) {
-  const level = getLevel(totalXp);
-  const next = getNextLevel(totalXp);
-  const progress = getLevelProgress(totalXp);
+export function FaithPointsBadge({ totalFaithPoints, userName, avatarUrl }: FaithPointsBadgeProps) {
+  const navigate = useNavigate();
+  const level = getLevel(totalFaithPoints);
+  const next = getNextLevel(totalFaithPoints);
+  const progress = getLevelProgress(totalFaithPoints);
 
   const levelIndex = CELESTIAL_LEVELS.findIndex(l => l.name === level.name);
   const displayLevel = levelIndex !== -1 ? levelIndex + 1 : 1;
@@ -48,6 +58,7 @@ export function XpBadge({ totalXp, userName, avatarUrl }: XpBadgeProps) {
         duration: 2,
         ease: "easeInOut"
       } : {}}
+      onClick={() => navigate("/profile")}
       className={cn(
         "flex flex-col gap-2 group cursor-pointer transition-all p-2 rounded-2xl -m-2 relative",
         showLevelUpAnim ? "bg-white/90 ring-2 ring-primary/20" : "hover:bg-black/5"
@@ -75,8 +86,30 @@ export function XpBadge({ totalXp, userName, avatarUrl }: XpBadgeProps) {
         </div>
         <div className="flex-1">
           <div className="flex items-baseline justify-between mb-0.5">
-            {userName && <p className="text-sm font-black uppercase tracking-widest truncate max-w-[150px]" style={{ color: '#5a3e0a' }}>{userName.split(' ')[0]}</p>}
-            <span className="text-xs text-muted-foreground font-medium ml-auto">{totalXp} Pontos de Fé</span>
+            {userName && <p className="text-sm font-black uppercase tracking-widest truncate max-w-[150px]" style={{color: '#5a3e0a'}}>{userName.split(' ')[0]}</p>}
+            <div className="flex items-center gap-1.5 ml-auto">
+              <span className="text-xs text-muted-foreground font-medium">{totalFaithPoints} Pontos de Fé</span>
+              <Dialog>
+                <DialogTrigger asChild>
+                  <button className="p-0.5 hover:bg-primary/10 rounded-full transition-colors outline-none" onClick={(e) => e.stopPropagation()}>
+                    <Info className="w-3.5 h-3.5 text-primary/60" />
+                  </button>
+                </DialogTrigger>
+                <DialogContent className="max-w-[90vw] sm:max-w-[400px] rounded-[2rem] border-primary/20 bg-white/95 backdrop-blur-md">
+                  <DialogHeader className="flex flex-col items-center text-center">
+                    <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-2">
+                       <Info className="w-6 h-6 text-primary" />
+                    </div>
+                    <DialogTitle className="text-xl font-black text-foreground">Jornada da Fé</DialogTitle>
+                    <DialogDescription className="text-sm text-muted-foreground leading-relaxed pt-2">
+                      Sua dedicação é o que move esta comunidade. Os <span className="font-bold text-foreground">Pontos de Fé</span> são conquistados através de cada oração, pedido e interação dentro do aplicativo.
+                      <br /><br />
+                      Ao subir de nível, você fortalece sua caminhada espiritual e desbloqueia <span className="font-bold text-foreground">novas funcionalidades e utilidades exclusivas</span> que serão disponibilizadas em breve.
+                    </DialogDescription>
+                  </DialogHeader>
+                </DialogContent>
+              </Dialog>
+            </div>
           </div>
           <div className="flex items-center gap-2 mb-2">
             <span className="text-[10px] font-black text-[#5a3e0a]/60 uppercase tracking-[0.2em] whitespace-nowrap">

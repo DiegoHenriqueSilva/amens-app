@@ -11,6 +11,7 @@ import {
   Heart,
   Info,
   MessageCircle,
+  RefreshCw,
   Send,
   ShieldAlert,
   Users,
@@ -27,8 +28,8 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import PageTransition from "@/components/PageTransition";
 import { usePushPrompt } from "@/contexts/PushPromptContext";
 import { supabase } from "@/integrations/supabase/client";
-import { XP_REWARDS } from "@/lib/xp";
-import { useXp } from "@/hooks/use-xp";
+import { FAITH_POINTS_REWARDS } from "@/lib/faith-points";
+import { useFaithPoints } from "@/hooks/use-faith-points";
 import { formatTimeAgo } from "@/lib/utils";
 
 const REACTION_MAP: Record<string, { emoji: string; label: string }> = {
@@ -40,11 +41,27 @@ const REACTION_MAP: Record<string, { emoji: string; label: string }> = {
 };
 
 const FEEDBACK_OPTIONS = [
-  { value: "success", label: "Deu certo, obrigado pelas orações!", emoji: "🎉" },
-  { value: "not_this_time", label: "Não foi desta vez, mas obrigado pelas preces!", emoji: "🙏" },
-  { value: "keep_trying", label: "Não deu certo mas vou continuar tentando", emoji: "💪" },
-  { value: "god_knows", label: "Não deu certo mas Deus sabe o que faz, obrigado pelas orações", emoji: "✝️" },
-  { value: "grace_received", label: "Consegui a graça solicitada, obrigado!", emoji: "⭐" },
+  { 
+    value: "grace_received", 
+    label: "Graça alcançada!", 
+    emoji: "⭐",
+    info: "O pedido de oração chegou ao fim.",
+    isClosing: true 
+  },
+  { 
+    value: "keep_trying", 
+    label: "Obrigado pelas orações, mas ainda não alcançamos nosso objetivo.", 
+    emoji: "💪",
+    info: "O pedido vai continuar em aberto para orações.",
+    isClosing: false 
+  },
+  { 
+    value: "not_this_time", 
+    label: "Não deu certo, mas obrigado pelas orações.", 
+    emoji: "🙏",
+    info: "O pedido de oração chegou ao fim.",
+    isClosing: true 
+  },
 ];
 
 type ModerationPolicy = {
@@ -85,6 +102,7 @@ type PrayerHistoryItem = {
   title: string | null;
   content: string;
   created_at: string;
+  updated_at?: string | null;
   status: string;
   feedback: string | null;
   prayer_count: number;
@@ -105,7 +123,7 @@ const getRestrictedMessage = (status?: string | null) => {
 
 const Submit = () => {
   const navigate = useNavigate();
-  const { addXp } = useXp();
+  const { addFaithPoints } = useFaithPoints();
   const { triggerPushPrompt } = usePushPrompt();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isAnonymous, setIsAnonymous] = useState(false);
@@ -186,6 +204,33 @@ const Submit = () => {
         reactions: reactionsByPrayer[prayer.id] || {},
         intercessors: intercessorsByPrayer[prayer.id] || [],
       })) as PrayerHistoryItem[]);
+
+      // Check for old prayers without feedback
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+      const oldPrayers = prayerData.filter((prayer) =>
+        !prayer.feedback &&
+        new Date(prayer.created_at) < sevenDaysAgo &&
+        prayer.status === "active"
+      );
+
+      if (oldPrayers.length > 0) {
+        const first = oldPrayers[0];
+        toast("Retorno sugerido 🙏", {
+          description: `Pessoas intercederam por "${first.title || 'seu pedido'}". Elas ficariam muito felizes em saber como você está!`,
+          action: {
+            label: "Dar Retorno",
+            onClick: () => {
+              setShowHistory(true);
+              setTimeout(() => {
+                setFeedbackOpen(first.id);
+                document.getElementById(`prayer-${first.id}`)?.scrollIntoView({ behavior: 'smooth' });
+              }, 100);
+            }
+          },
+          duration: 10000,
+        });
+      }
     } catch (error) {
       console.error("Error loading history:", error);
     } finally {
@@ -250,7 +295,13 @@ const Submit = () => {
 
     setSendingFeedback(true);
     try {
-      const { error } = await supabase.from("prayer_requests").update({ feedback: feedbackValue }).eq("id", prayerId);
+      const option = FEEDBACK_OPTIONS.find((feedback) => feedback.value === feedbackValue);
+      const status = option?.isClosing ? "completed" : prayer?.status || "active";
+      const updatedAt = new Date().toISOString();
+      const { error } = await supabase
+        .from("prayer_requests")
+        .update({ feedback: feedbackValue, status, updated_at: updatedAt })
+        .eq("id", prayerId);
       if (error) throw error;
 
       const { data: intercessions } = await supabase
@@ -270,12 +321,37 @@ const Submit = () => {
         await supabase.from("notifications").insert(notifications);
       }
 
-      setPrayers((current) => current.map((item) => item.id === prayerId ? { ...item, feedback: feedbackValue } : item));
+      setPrayers((current) => current.map((item) => item.id === prayerId ? { ...item, feedback: feedbackValue, status, updated_at: updatedAt } : item));
       setFeedbackOpen(null);
       toast.success("Feedback enviado! Os intercessores serão notificados.");
     } catch (error) {
       console.error("Feedback error:", error);
       toast.error("Erro ao enviar feedback");
+    } finally {
+      setSendingFeedback(false);
+    }
+  };
+
+  const handleReopen = async (prayerId: string) => {
+    setSendingFeedback(true);
+    try {
+      const updatedAt = new Date().toISOString();
+      const { error } = await supabase
+        .from("prayer_requests")
+        .update({
+          status: "active",
+          feedback: null,
+          updated_at: updatedAt,
+        })
+        .eq("id", prayerId);
+
+      if (error) throw error;
+
+      setPrayers((current) => current.map((item) => item.id === prayerId ? { ...item, status: "active", feedback: null, updated_at: updatedAt } : item));
+      toast.success("Pedido reaberto com sucesso! 🙏");
+    } catch (error) {
+      console.error("Reopen error:", error);
+      toast.error("Erro ao reabrir pedido");
     } finally {
       setSendingFeedback(false);
     }
@@ -335,11 +411,11 @@ const Submit = () => {
 
       const userId = session.user.id;
       const today = new Date().toISOString().split("T")[0];
-      const submitXpKey = `amens_submit_xp_${userId}_${today}`;
-      if (userId && !localStorage.getItem(submitXpKey)) {
-        await addXp("submit");
-        localStorage.setItem(submitXpKey, "1");
-        toast.success(`Pedido enviado! Ganhou +${XP_REWARDS.submit} pontos de fé`);
+      const submitFaithPointsKey = `amens_submit_faith_points_${userId}_${today}`;
+      if (userId && !localStorage.getItem(submitFaithPointsKey)) {
+        await addFaithPoints("submit");
+        localStorage.setItem(submitFaithPointsKey, "1");
+        toast.success(`Pedido enviado! Ganhou +${FAITH_POINTS_REWARDS.submit} pontos de fé`);
       } else {
         toast.success("Pedido enviado com sucesso!");
       }
@@ -533,6 +609,7 @@ const Submit = () => {
                       return (
                         <motion.div
                           key={prayer.id}
+                          id={`prayer-${prayer.id}`}
                           initial={{ opacity: 0, scale: 0.98 }}
                           animate={{ opacity: 1, scale: 1 }}
                           transition={{ delay: index * 0.1 }}
@@ -592,9 +669,34 @@ const Submit = () => {
                                   <span>Interações bloqueadas para este pedido.</span>
                                 </div>
                               ) : prayer.feedback ? (
-                                <div className="flex items-center gap-2 text-[11px] font-bold text-primary">
-                                  <Check className="w-3.5 h-3.5" />
-                                  <span>Seu retorno: {FEEDBACK_OPTIONS.find((feedback) => feedback.value === prayer.feedback)?.emoji} {FEEDBACK_OPTIONS.find((feedback) => feedback.value === prayer.feedback)?.label}</span>
+                                <div className="flex items-center justify-between gap-3">
+                                  <div className="flex flex-col gap-1">
+                                    <div className="flex items-center gap-2 text-[11px] font-bold text-primary">
+                                      <Check className="w-3.5 h-3.5" />
+                                      <span>Seu retorno: {FEEDBACK_OPTIONS.find((feedback) => feedback.value === prayer.feedback)?.emoji} {FEEDBACK_OPTIONS.find((feedback) => feedback.value === prayer.feedback)?.label}</span>
+                                    </div>
+                                    <div className="flex items-center gap-2 text-[9px] text-muted-foreground ml-5 font-medium">
+                                      <span>Solicitado: {new Date(prayer.created_at).toLocaleDateString()}</span>
+                                      {prayer.updated_at && (
+                                        <>
+                                          <span>•</span>
+                                          <span>Retorno: {new Date(prayer.updated_at).toLocaleDateString()}</span>
+                                        </>
+                                      )}
+                                    </div>
+                                  </div>
+                                  {prayer.status === "completed" && (
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => handleReopen(prayer.id)}
+                                      disabled={sendingFeedback}
+                                      className="h-8 rounded-full text-[10px] font-bold text-muted-foreground hover:text-primary transition-colors flex items-center gap-1.5"
+                                    >
+                                      <RefreshCw className={`w-3 h-3 ${sendingFeedback ? "animate-spin" : ""}`} />
+                                      Reabrir pedido
+                                    </Button>
+                                  )}
                                 </div>
                               ) : (
                                 <div>
@@ -607,10 +709,13 @@ const Submit = () => {
                                             key={option.value}
                                             disabled={sendingFeedback}
                                             onClick={() => handleFeedback(prayer.id, option.value)}
-                                            className="text-left px-3 py-2 rounded-xl border border-primary/10 hover:bg-primary/5 text-xs flex items-center gap-2 transition-all"
+                                            className="text-left px-3 py-2.5 rounded-xl border border-primary/10 hover:bg-primary/5 transition-all group"
                                           >
-                                            <span>{option.emoji}</span>
-                                            <span className="text-stone-700">{option.label}</span>
+                                            <div className="flex items-center gap-2 mb-1">
+                                              <span className="text-lg">{option.emoji}</span>
+                                              <span className="text-xs font-bold text-stone-700">{option.label}</span>
+                                            </div>
+                                            <p className="text-[10px] text-muted-foreground ml-7 font-medium leading-tight">{option.info}</p>
                                           </button>
                                         ))}
                                       </div>

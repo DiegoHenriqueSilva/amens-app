@@ -13,36 +13,32 @@ const RosarySelection = () => {
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-background relative overflow-hidden pb-28">
-        <div className="absolute top-[-10rem] right-[-10rem] w-[30rem] h-[30rem] rounded-full bg-primary/5 blur-3xl opacity-50" />
-        <div className="absolute bottom-[-10rem] left-[-10rem] w-[30rem] h-[30rem] rounded-full bg-accent/5 blur-3xl opacity-50" />
+      <div className="min-h-screen bg-background/70 backdrop-blur-sm relative overflow-hidden pb-28">
+        {/* Ambient Blurs */}
+        <div className="absolute top-[-6rem] left-[-4rem] w-80 h-80 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-[-6rem] right-[-4rem] w-80 h-80 bg-accent/5 rounded-full blur-3xl pointer-events-none" />
 
         <div className="container mx-auto px-6 py-8 relative z-10 max-w-lg">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/")} className="mb-6">
-            <ArrowLeft className="w-5 h-5" />
-          </Button>
+          <div className="max-w-2xl mx-auto mb-6 flex items-center">
+            <Button variant="ghost" size="icon" onClick={() => navigate("/")} className="shrink-0 hover:bg-primary/10 transition-colors">
+              <ArrowLeft className="w-5 h-5 text-foreground" />
+            </Button>
+          </div>
 
           <motion.div 
-            className="text-center mb-10"
-            initial={{ opacity: 0, y: 15 }}
+            className="max-w-2xl mx-auto text-center mb-10"
+            initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
           >
-            <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-primary/20">
-              <Sparkles className="w-8 h-8 text-primary" />
-            </div>
-            <h1 className="text-4xl font-bold text-foreground mb-1 text-glow">Sagrado Terço</h1>
-            <p className="text-[11px] uppercase tracking-[0.25em] font-bold text-muted-foreground opacity-60">Escolha sua devoção</p>
+            <p className="text-sm uppercase tracking-[0.25em] text-primary mb-2">✦</p>
+            <h1 className="text-4xl md:text-5xl font-bold mb-3 text-foreground">Sagrado Terço</h1>
+            <div className="divider-gold max-w-[10rem] mx-auto mb-3" />
+            <p className="text-muted-foreground">Escolha sua devoção e inicie sua prece</p>
           </motion.div>
 
-          <div className="space-y-4">
+          <div className="space-y-5">
             {ROSARY_TYPES.map((type, idx) => {
-              const Icon = {
-                'misterios': BookOpen,
-                'misericordia': Heart,
-                'libertacao': Sparkles,
-                'miguel': ArrowLeft // Placeholders, will update icons in imports
-              }[type.id] || Sparkles;
-
               // Correcting icons based on devotion
               let DisplayIcon = BookOpen;
               let iconColor = "text-primary";
@@ -71,14 +67,14 @@ const RosarySelection = () => {
                 >
                   <Card 
                     onClick={() => navigate(`/rosary/${type.id}`)}
-                    className="p-5 border-primary/5 bg-white/60 hover:bg-white/90 backdrop-blur-sm transition-all rounded-[1.8rem] cursor-pointer flex items-center gap-5 group hover:scale-[1.02] soft-shadow"
+                    className="p-6 border-primary/5 bg-white/80 hover:bg-white backdrop-blur-sm transition-all duration-300 rounded-[2rem] cursor-pointer flex items-center gap-5 group hover:-translate-y-1 hover:shadow-xl soft-shadow"
                   >
-                    <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110", bgColor, iconColor)}>
-                       <DisplayIcon className={cn("w-6 h-6", type.id === 'misericordia' && "fill-current")} />
+                    <div className={cn("w-14 h-14 rounded-2xl flex items-center justify-center transition-transform duration-500 group-hover:scale-110 shadow-sm", bgColor, iconColor)}>
+                       <DisplayIcon className={cn("w-7 h-7", type.id === 'misericordia' && "fill-current")} />
                     </div>
                     <div className="flex-1">
-                      <h3 className="text-base font-bold text-stone-800">{type.name}</h3>
-                      <p className="text-[11px] text-muted-foreground leading-tight">{type.description}</p>
+                      <h3 className="text-lg font-bold text-foreground mb-1">{type.name}</h3>
+                      <p className="text-xs text-muted-foreground leading-snug font-medium">{type.description}</p>
                     </div>
                   </Card>
                 </motion.div>
@@ -96,3 +92,4 @@ const RosarySelection = () => {
 };
 
 export default RosarySelection;
+

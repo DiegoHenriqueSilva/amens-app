@@ -243,7 +243,10 @@ const Auth = () => {
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+      <div className="min-h-screen bg-background/70 backdrop-blur-sm flex items-center justify-center p-4 relative overflow-hidden">
+        {/* Ambient Blurs */}
+        <div className="absolute top-[-6rem] left-[-4rem] w-80 h-80 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-[-6rem] right-[-4rem] w-80 h-80 bg-accent/5 rounded-full blur-3xl pointer-events-none" />
         
         {/* MODAL PARA GOOGLE LOGIN SEM PERFIL */}
         <Dialog open={showIncompleteProfile} onOpenChange={(val) => {
@@ -396,8 +399,8 @@ const Auth = () => {
           </DialogContent>
         </Dialog>
 
-        <motion.div initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: showIncompleteProfile ? 0 : 1, scale: showIncompleteProfile ? 0.96 : 1 }} transition={{ duration: 0.45 }} className="w-full max-w-md">
-          <Card className="w-full max-w-md p-8 soft-shadow border-primary/15 relative">
+        <motion.div initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: showIncompleteProfile ? 0 : 1, scale: showIncompleteProfile ? 0.96 : 1 }} transition={{ duration: 0.45 }} className="w-full max-w-md relative z-10">
+          <Card className="w-full max-w-md p-8 soft-shadow border-primary/10 bg-white/80 backdrop-blur-md rounded-[2.5rem] relative">
             <Button variant="ghost" size="icon" onClick={() => navigate("/")} className="absolute top-4 left-4">
               <ArrowLeft className="w-5 h-5" />
             </Button>
@@ -422,9 +425,9 @@ const Auth = () => {
               {googleLoading ? "Entrando..." : "Continuar com Google"}
             </Button>
 
-            <div className="relative mb-5">
+            <div className="relative mb-8">
               <div className="divider-gold" />
-              <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-card px-3 text-xs text-muted-foreground">ou</span>
+              <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white/80 backdrop-blur-sm px-3 text-[10px] uppercase tracking-widest font-bold text-muted-foreground/60">ou</span>
             </div>
 
             <Tabs defaultValue="login" className="w-full">

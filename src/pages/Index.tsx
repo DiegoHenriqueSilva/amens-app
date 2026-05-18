@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import type { User as SupabaseUser } from "@supabase/supabase-js";
-import { useXp } from "@/hooks/use-xp";
-import { XpBadge } from "@/components/XpBadge";
+import { useFaithPoints } from "@/hooks/use-faith-points";
+import { FaithPointsBadge } from "@/components/FaithPointsBadge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Heart, Send, Sparkles, LogOut, User, BookOpen, HandHeart, Sun, Users, Wind, Mail, Home } from "lucide-react";
@@ -32,7 +32,7 @@ const Index = () => {
   const [user, setUser] = useState<SupabaseUser | null>(null);
   const [onlineCount, setOnlineCount] = useState(0);
   const navigate = useNavigate();
-  const { totalXp, loading: xpLoading } = useXp();
+  const { totalFaithPoints, loading: faithPointsLoading } = useFaithPoints();
   const [profile, setProfile] = useState<any>(null);
   const location = useLocation();
   const [activeIntercessionNotifId, setActiveIntercessionNotifId] = useState<string | null>(null);
@@ -165,10 +165,10 @@ const Index = () => {
           )}
 
           {/* User / Faith Points Card */}
-          {user && !xpLoading && (
+          {user && !faithPointsLoading && (
             <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.1 }}>
               <Card className="p-5 mb-8 soft-shadow border-primary/5 bg-white/70 backdrop-blur-sm rounded-[2rem]">
-                <XpBadge totalXp={totalXp} userName={profile?.full_name || user.user_metadata?.full_name || ""} avatarUrl={profile?.avatar_url} />
+                 <FaithPointsBadge totalFaithPoints={totalFaithPoints} userName={profile?.full_name || user.user_metadata?.full_name || ""} avatarUrl={profile?.avatar_url} />
               </Card>
             </motion.div>
           )}

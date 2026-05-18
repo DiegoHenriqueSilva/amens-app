@@ -7,8 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { LogOut, ArrowLeft, Trophy, Heart, Send, Sparkles, User, MapPin, Pencil, Check, X } from "lucide-react";
-import { useXp } from "@/hooks/use-xp";
-import { getLevel, CELESTIAL_LEVELS, getLevelProgress } from "@/lib/xp";
+import { useFaithPoints } from "@/hooks/use-faith-points";
+import { getLevel, CELESTIAL_LEVELS, getLevelProgress } from "@/lib/faith-points";
 import { toast } from "sonner";
 import PageTransition from "@/components/PageTransition";
 import { motion, AnimatePresence } from "framer-motion";
@@ -25,7 +25,7 @@ import { useDailyTasks } from "@/hooks/use-daily-tasks";
 const Profile = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState<any>(null);
-  const { totalXp, loading: xpLoading } = useXp();
+  const { totalFaithPoints, loading: faithPointsLoading } = useFaithPoints();
   const [stats, setStats] = useState({ requests: 0, intercessions: 0 });
   const [savingCity, setSavingCity] = useState(false);
   const { completeTask } = useDailyTasks();
@@ -243,7 +243,7 @@ const Profile = () => {
     navigate("/auth");
   };
 
-  if (!user || xpLoading) {
+  if (!user || faithPointsLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Sparkles className="w-8 h-8 animate-pulse text-primary" />
@@ -251,13 +251,14 @@ const Profile = () => {
     );
   }
 
-  const level = getLevel(totalXp);
+  const level = getLevel(totalFaithPoints);
   const levelIndex = CELESTIAL_LEVELS.indexOf(level);
-  const levelProgress = getLevelProgress(totalXp);
+  const levelProgress = getLevelProgress(totalFaithPoints);
   const fullName = editData.showRealName 
     ? (editData.displayName || editData.fullName.split(' ')[0]) 
     : (editData.fullName || "Usuário Améns");
   const currentCity = user.user_metadata?.city || "";
+  const availableInvites = (levelIndex + 1) * 2 - invitedUsers.length;
 
   return (
     <PageTransition>
@@ -506,7 +507,7 @@ const Profile = () => {
                   <Trophy className="w-5 h-5 text-primary" />
                   <span className="text-sm font-bold">Progresso de Fé</span>
                 </div>
-                <span className="text-xs font-bold text-primary">{totalXp} Pontos de Fé</span>
+                <span className="text-xs font-bold text-primary">{totalFaithPoints} Pontos de Fé</span>
               </div>
               
               <div className="w-full h-4 bg-secondary/30 rounded-full overflow-hidden mb-2 p-1 border border-primary/5">
@@ -518,7 +519,7 @@ const Profile = () => {
                 />
               </div>
               <p className="text-[10px] text-center text-muted-foreground font-medium uppercase tracking-widest">
-                Próximo nível em {1000 - (totalXp % 1000)} pontos
+                Próximo nível em {1000 - (totalFaithPoints % 1000)} pontos
               </p>
             </Card>
           </motion.div>
@@ -581,8 +582,8 @@ const Profile = () => {
                             <h3 className="text-xs uppercase font-bold text-primary/70 tracking-widest mb-1 ml-2">Histórico de Indicações</h3>
                             {invitedUsers.map((item) => {
                               const invitedProfile = item.profiles;
-                              const invitedXp = item.user_xp?.total_xp || 0;
-                              const invitedLevel = getLevel(invitedXp);
+                              const invitedFaithPoints = item.user_xp?.total_xp || 0;
+                              const invitedLevel = getLevel(invitedFaithPoints);
                               
                               return (
                                 <div 

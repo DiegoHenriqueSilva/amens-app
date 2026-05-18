@@ -68,15 +68,7 @@ export const InviteGatePopup = ({ isAuthenticated }: Props) => {
                     Acesso Exclusivo
                   </h3>
                   <p className="text-sm text-muted-foreground leading-relaxed">
-                    O Améns está em fase de expansão divina. Solicite um convite
-                    a um amigo ou familiar, ou envie uma mensagem para{" "}
-                    <a
-                      href="mailto:dieguh@gmail.com"
-                      className="text-primary font-semibold hover:underline"
-                    >
-                      dieguh@gmail.com
-                    </a>{" "}
-                    para solicitar um convite. Obrigado!
+                    O Améns está em fase de expansão divina. Se junte a esta corrente do bem, crie sua conta e Deus te abençoe sempre.
                   </p>
                 </div>
 
