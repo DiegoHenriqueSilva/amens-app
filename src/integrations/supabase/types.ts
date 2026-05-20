@@ -14,6 +14,48 @@ export type Database = {
   }
   public: {
     Tables: {
+      churches: {
+        Row: {
+          id: string
+          name: string
+          diocese: string | null
+          city: string | null
+          state: string | null
+          cnpj: string | null
+          is_active: boolean
+          deleted_at: string | null
+          deleted_by: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          diocese?: string | null
+          city?: string | null
+          state?: string | null
+          cnpj?: string | null
+          is_active?: boolean
+          deleted_at?: string | null
+          deleted_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          diocese?: string | null
+          city?: string | null
+          state?: string | null
+          cnpj?: string | null
+          is_active?: boolean
+          deleted_at?: string | null
+          deleted_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       friend_requests: {
         Row: {
           created_at: string
@@ -92,6 +134,39 @@ export type Database = {
           },
         ]
       }
+      moderation_logs: {
+        Row: {
+          id: string
+          moderator_id: string
+          target_type: string
+          target_id: string
+          action: string
+          reason: string | null
+          metadata: Json
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          moderator_id: string
+          target_type: string
+          target_id: string
+          action: string
+          reason?: string | null
+          metadata?: Json
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          moderator_id?: string
+          target_type?: string
+          target_id?: string
+          action?: string
+          reason?: string | null
+          metadata?: Json
+          created_at?: string
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           created_at: string
@@ -133,6 +208,76 @@ export type Database = {
           },
         ]
       }
+      prayer_contributions: {
+        Row: {
+          id: string
+          user_id: string | null
+          target_timestamp: number
+          author_name: string
+          author_city: string | null
+          deleted_at: string | null
+          deleted_by: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id?: string | null
+          target_timestamp: number
+          author_name: string
+          author_city?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string | null
+          target_timestamp?: number
+          author_name?: string
+          author_city?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prayer_contributions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      prayer_intentions: {
+        Row: {
+          id: string
+          user_id: string | null
+          content: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id?: string | null
+          content: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string | null
+          content?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prayer_intentions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       prayer_intercessions: {
         Row: {
           created_at: string
@@ -161,83 +306,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
-      }
-      prayer_reactions: {
-        Row: {
-          created_at: string
-          id: string
-          prayer_request_id: string
-          reaction_type: string
-          reactor_user_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          prayer_request_id: string
-          reaction_type: string
-          reactor_user_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          prayer_request_id?: string
-          reaction_type?: string
-          reactor_user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "prayer_reactions_prayer_request_id_fkey"
-            columns: ["prayer_request_id"]
-            isOneToOne: false
-            referencedRelation: "prayer_requests"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      prayer_requests: {
-        Row: {
-          content: string
-          created_at: string
-          feedback: string | null
-          id: string
-          location: string | null
-          prayer_count: number
-          title: string | null
-          updated_at: string
-          user_id: string | null
-          author_name: string | null
-          status: string
-          is_anonymous: boolean
-        }
-        Insert: {
-          content: string
-          created_at?: string
-          feedback?: string | null
-          id?: string
-          location?: string | null
-          prayer_count?: number
-          title?: string | null
-          updated_at?: string
-          user_id?: string | null
-          author_name?: string | null
-          status?: string
-          is_anonymous?: boolean
-        }
-        Update: {
-          content?: string
-          created_at?: string
-          feedback?: string | null
-          id?: string
-          location?: string | null
-          prayer_count?: number
-          title?: string | null
-          updated_at?: string
-          user_id?: string | null
-          author_name?: string | null
-          status?: string
-          is_anonymous?: boolean
-        }
-        Relationships: []
       }
       prayer_moderation_reviews: {
         Row: {
@@ -289,98 +357,212 @@ export type Database = {
           },
         ]
       }
+      prayer_reactions: {
+        Row: {
+          created_at: string
+          id: string
+          prayer_request_id: string
+          reaction_type: string
+          reactor_user_id: string
+          deleted_at: string | null
+          deleted_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          prayer_request_id: string
+          reaction_type: string
+          reactor_user_id: string
+          deleted_at?: string | null
+          deleted_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          prayer_request_id?: string
+          reaction_type?: string
+          reactor_user_id?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prayer_reactions_prayer_request_id_fkey"
+            columns: ["prayer_request_id"]
+            isOneToOne: false
+            referencedRelation: "prayer_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       prayer_reports: {
         Row: {
           id: string
-          prayer_request_id: string
+          prayer_request_id: string | null
           reporter_user_id: string
           category: string
           description: string | null
           status: string
+          moderator_id: string | null
+          resolved_by: string | null
+          resolved_at: string | null
+          resolution_notes: string | null
+          target_type: string
+          target_user_id: string | null
+          target_contribution_id: string | null
+          deleted_at: string | null
           created_at: string
         }
         Insert: {
           id?: string
-          prayer_request_id: string
+          prayer_request_id?: string | null
           reporter_user_id: string
           category: string
           description?: string | null
           status?: string
+          moderator_id?: string | null
+          resolved_by?: string | null
+          resolved_at?: string | null
+          resolution_notes?: string | null
+          target_type?: string
+          target_user_id?: string | null
+          target_contribution_id?: string | null
+          deleted_at?: string | null
           created_at?: string
         }
         Update: {
           id?: string
-          prayer_request_id?: string
+          prayer_request_id?: string | null
           reporter_user_id?: string
           category?: string
           description?: string | null
           status?: string
+          moderator_id?: string | null
+          resolved_by?: string | null
+          resolved_at?: string | null
+          resolution_notes?: string | null
+          target_type?: string
+          target_user_id?: string | null
+          target_contribution_id?: string | null
+          deleted_at?: string | null
           created_at?: string
         }
         Relationships: []
       }
-      prayer_contributions: {
+      prayer_requests: {
         Row: {
-          id: string
-          user_id: string | null
-          target_timestamp: number
-          author_name: string
-          author_city: string | null
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          user_id?: string | null
-          target_timestamp: number
-          author_name: string
-          author_city?: string | null
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          user_id?: string | null
-          target_timestamp?: number
-          author_name?: string
-          author_city?: string | null
-          created_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "prayer_contributions_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          }
-        ]
-      }
-      prayer_intentions: {
-        Row: {
-          id: string
-          user_id: string | null
           content: string
           created_at: string
+          feedback: string | null
+          id: string
+          location: string | null
+          prayer_count: number
+          title: string | null
+          updated_at: string
+          user_id: string | null
+          author_name: string | null
+          status: string
+          is_anonymous: boolean
+          deleted_at: string | null
+          deleted_by: string | null
         }
         Insert: {
-          id?: string
-          user_id?: string | null
           content: string
           created_at?: string
+          feedback?: string | null
+          id?: string
+          location?: string | null
+          prayer_count?: number
+          title?: string | null
+          updated_at?: string
+          user_id?: string | null
+          author_name?: string | null
+          status?: string
+          is_anonymous?: boolean
+          deleted_at?: string | null
+          deleted_by?: string | null
         }
         Update: {
-          id?: string
-          user_id?: string | null
           content?: string
           created_at?: string
+          feedback?: string | null
+          id?: string
+          location?: string | null
+          prayer_count?: number
+          title?: string | null
+          updated_at?: string
+          user_id?: string | null
+          author_name?: string | null
+          status?: string
+          is_anonymous?: boolean
+          deleted_at?: string | null
+          deleted_by?: string | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          id: string
+          full_name: string | null
+          state: string | null
+          city: string | null
+          parish: string | null
+          church_id: string | null
+          show_real_name: boolean
+          display_name: string | null
+          friend_code: string | null
+          avatar_url: string | null
+          is_public_in_parish: boolean
+          suspended_until: string | null
+          deleted_at: string | null
+          deleted_by: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id: string
+          full_name?: string | null
+          state?: string | null
+          city?: string | null
+          parish?: string | null
+          church_id?: string | null
+          show_real_name?: boolean
+          display_name?: string | null
+          friend_code?: string | null
+          avatar_url?: string | null
+          is_public_in_parish?: boolean
+          suspended_until?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          full_name?: string | null
+          state?: string | null
+          city?: string | null
+          parish?: string | null
+          church_id?: string | null
+          show_real_name?: boolean
+          display_name?: string | null
+          friend_code?: string | null
+          avatar_url?: string | null
+          is_public_in_parish?: boolean
+          suspended_until?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          created_at?: string
+          updated_at?: string
         }
         Relationships: [
           {
-            foreignKeyName: "prayer_intentions_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
+            foreignKeyName: "profiles_id_fkey"
+            columns: ["id"]
+            isOneToOne: true
             referencedRelation: "users"
             referencedColumns: ["id"]
-          }
+          },
         ]
       }
       referrals: {
@@ -406,6 +588,56 @@ export type Database = {
           xp_awarded?: boolean
         }
         Relationships: []
+      }
+      roles: {
+        Row: {
+          id: string
+          name: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          created_at?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          id: string
+          user_id: string
+          role_id: string
+          assigned_by: string | null
+          assigned_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          role_id: string
+          assigned_by?: string | null
+          assigned_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          role_id?: string
+          assigned_by?: string | null
+          assigned_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_roles_role_id_fkey"
+            columns: ["role_id"]
+            isOneToOne: false
+            referencedRelation: "roles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_xp: {
         Row: {
@@ -440,59 +672,6 @@ export type Database = {
         }
         Relationships: []
       }
-      profiles: {
-        Row: {
-          id: string
-          full_name: string | null
-          state: string | null
-          city: string | null
-          parish: string | null
-          show_real_name: boolean
-          display_name: string | null
-          friend_code: string | null
-          avatar_url: string | null
-          is_public_in_parish: boolean
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id: string
-          full_name?: string | null
-          state?: string | null
-          city?: string | null
-          parish?: string | null
-          show_real_name?: boolean
-          display_name?: string | null
-          friend_code?: string | null
-          avatar_url?: string | null
-          is_public_in_parish?: boolean
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          full_name?: string | null
-          state?: string | null
-          city?: string | null
-          parish?: string | null
-          show_real_name?: boolean
-          display_name?: string | null
-          friend_code?: string | null
-          avatar_url?: string | null
-          is_public_in_parish?: boolean
-          created_at?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "profiles_id_fkey"
-            columns: ["id"]
-            isOneToOne: true
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
     }
     Views: {
       [_ in never]: never
@@ -501,6 +680,14 @@ export type Database = {
       add_xp: {
         Args: { p_action: string; p_user_id: string; p_xp_amount: number }
         Returns: number
+      }
+      is_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      is_moderator_or_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
       }
     }
     Enums: {
