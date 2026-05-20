@@ -26,3 +26,13 @@ dist-ssr
 .env.*
 !.env.example
 tmp/
+
+# Claude Code project settings
+.claude/
+
+# Planning / scratch docs
+ADMIN_PANEL_PLAN.md
+
+# Church data source files (large binary / raw data)
+igrejas_brasil_google.xlsx
+igrejas_brasil_import.csv

@@ -3,17 +3,19 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Mail, Sparkles, ArrowLeft, Heart, CheckCircle2, MessageCircle } from "lucide-react";
+import { Mail, Sparkles, ArrowLeft, Heart, CheckCircle2, MessageCircle, Flag } from "lucide-react";
 import PageTransition from "@/components/PageTransition";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { formatTimeAgo } from "@/lib/utils";
 import { usePushPrompt } from "@/contexts/PushPromptContext";
+import { ReportMessageDialog } from "@/components/ReportMessageDialog";
 
 const Messages = () => {
   const navigate = useNavigate();
   const [notifications, setNotifications] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [reportMsg, setReportMsg] = useState<{ userId: string } | null>(null);
 
   const { triggerPushPrompt } = usePushPrompt();
 
@@ -141,7 +143,7 @@ const Messages = () => {
                           <div className={`w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0 ${notif.message.includes('reagiu') ? 'bg-accent/10 text-accent' : 'bg-primary/10 text-primary'}`}>
                              {notif.message.includes('reagiu') ? <Heart className="w-5 h-5" /> : <Sparkles className="w-5 h-5" />}
                           </div>
-                          
+
                           <div className="flex-1">
                              <p className={`text-[14px] leading-tight mb-2 ${notif.is_read ? 'text-foreground/70' : 'font-bold text-foreground'}`}>
                                 {notif.message}
@@ -150,9 +152,18 @@ const Messages = () => {
                                <p className="text-[10px] text-muted-foreground font-medium">
                                  {formatTimeAgo(notif.created_at)}
                                </p>
-                               {notif.is_read && (
-                                 <CheckCircle2 className="w-3 h-3 text-primary/40" />
-                               )}
+                               <div className="flex items-center gap-2">
+                                 {notif.is_read && <CheckCircle2 className="w-3 h-3 text-primary/40" />}
+                                 {notif.sender_id && (
+                                   <button
+                                     onClick={(e) => { e.stopPropagation(); setReportMsg({ userId: notif.sender_id }); }}
+                                     className="p-1 rounded-full hover:bg-red-50 text-muted-foreground/40 hover:text-red-400 transition-colors"
+                                     title="Reportar remetente"
+                                   >
+                                     <Flag className="w-3 h-3" />
+                                   </button>
+                                 )}
+                               </div>
                              </div>
                           </div>
                        </div>
@@ -180,6 +191,13 @@ const Messages = () => {
           </motion.div>
         </div>
       </div>
+
+      <ReportMessageDialog
+        open={!!reportMsg}
+        targetUserId={reportMsg?.userId ?? null}
+        onClose={() => setReportMsg(null)}
+        onConfirmed={() => setReportMsg(null)}
+      />
     </PageTransition>
   );
 };
