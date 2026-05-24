@@ -27,6 +27,12 @@ const ACTION_LABELS: Record<string, string> = {
   role_assign: "Role atribuída",
   role_revoke: "Role revogada",
   edit_content: "Conteúdo editado",
+  create: "Criado",
+  activate: "Ativado",
+  deactivate: "Inativado",
+  xp_override: "XP alterado",
+  xp_multiplier: "Multiplicador XP",
+  ban: "Banido",
 };
 
 const TARGET_LABELS: Record<string, string> = {
@@ -63,29 +69,54 @@ export default function AdminLogs() {
     refetchInterval: 30000,
   });
 
-  const { data: profilesData = [] } = useQuery({
-    queryKey: ["profiles-slim"],
+  const { data: authData = [] } = useQuery({
+    queryKey: ["admin-auth-users"],
     queryFn: async () => {
-      const { data } = await supabase.from("profiles").select("id, display_name, full_name").limit(1000);
+      const { data } = await (supabase as any).rpc("get_users_admin");
       return data || [];
     },
     staleTime: 5 * 60 * 1000,
   });
 
-  const profileMap = useMemo(() => {
-    const map: Record<string, { display_name: string | null; full_name: string | null }> = {};
-    (profilesData as any[]).forEach((p) => { map[p.id] = p; });
+  const authMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    (authData as any[]).forEach((u) => { map[u.id] = u.email || u.id.slice(0, 8) + "…"; });
     return map;
-  }, [profilesData]);
+  }, [authData]);
+
+  const churchIds = useMemo(
+    () => [...new Set((logs as any[]).filter((l) => l.target_type === "church" && l.target_id).map((l) => l.target_id))],
+    [logs]
+  );
+
+  const { data: churchesData = [] } = useQuery({
+    queryKey: ["admin-log-churches", churchIds],
+    queryFn: async () => {
+      if (!churchIds.length) return [];
+      const { data } = await supabase.from("churches").select("id, name, city, state").in("id", churchIds);
+      return data || [];
+    },
+    enabled: churchIds.length > 0,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const churchMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    (churchesData as any[]).forEach((c) => {
+      map[c.id] = [c.name, c.city && `${c.city}/${c.state}`].filter(Boolean).join(" — ");
+    });
+    return map;
+  }, [churchesData]);
 
   const filtered = logs.filter((l: any) => {
     const q = search.toLowerCase();
-    const moderator = profileMap[l.moderator_id];
+    const moderatorEmail = authMap[l.moderator_id] || "";
+    const targetEmail = l.target_type === "user" ? (authMap[l.target_id] || "") : "";
     return !q
       || l.action?.toLowerCase().includes(q)
       || l.reason?.toLowerCase().includes(q)
-      || moderator?.display_name?.toLowerCase().includes(q)
-      || moderator?.full_name?.toLowerCase().includes(q);
+      || moderatorEmail.toLowerCase().includes(q)
+      || targetEmail.toLowerCase().includes(q);
   });
 
   function actionVariant(action: string): any {
@@ -104,7 +135,7 @@ export default function AdminLogs() {
       <div className="flex flex-wrap items-center gap-3">
         <div className="relative flex-1 min-w-[200px] max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input className="pl-9" placeholder="Buscar moderador, ação ou motivo..." value={search} onChange={(e) => setSearch(e.target.value)} />
+          <Input className="pl-9" placeholder="Buscar login, ação ou motivo..." value={search} onChange={(e) => setSearch(e.target.value)} />
         </div>
 
         <Tooltip>
@@ -148,6 +179,11 @@ export default function AdminLogs() {
                   <SelectItem value="dismiss_report">Report descartado</SelectItem>
                   <SelectItem value="role_assign">Role atribuída</SelectItem>
                   <SelectItem value="edit_content">Conteúdo editado</SelectItem>
+                  <SelectItem value="create">Criado</SelectItem>
+                  <SelectItem value="activate">Ativado</SelectItem>
+                  <SelectItem value="deactivate">Inativado</SelectItem>
+                  <SelectItem value="xp_override">XP alterado</SelectItem>
+                  <SelectItem value="xp_multiplier">Multiplicador XP</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -164,33 +200,45 @@ export default function AdminLogs() {
               <TableHead>Moderador / Admin</TableHead>
               <TableHead>Ação</TableHead>
               <TableHead>Tipo</TableHead>
+              <TableHead>Alvo</TableHead>
               <TableHead>Motivo / Notas</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
-              <TableRow><TableCell colSpan={5} className="text-center py-8 text-muted-foreground">Carregando...</TableCell></TableRow>
+              <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">Carregando...</TableCell></TableRow>
             ) : filtered.length === 0 ? (
-              <TableRow><TableCell colSpan={5} className="text-center py-8 text-muted-foreground">Nenhum log encontrado.</TableCell></TableRow>
-            ) : filtered.map((l: any) => (
-              <TableRow key={l.id}>
-                <TableCell className="text-muted-foreground text-xs whitespace-nowrap">
-                  {format(new Date(l.created_at), "dd/MM/yy HH:mm", { locale: ptBR })}
-                </TableCell>
-                <TableCell className="text-sm">
-                  {profileMap[l.moderator_id]?.display_name || profileMap[l.moderator_id]?.full_name || (l.moderator_id ? l.moderator_id.slice(0, 8) + "…" : "—")}
-                </TableCell>
-                <TableCell>
-                  <Badge variant={actionVariant(l.action)}>{ACTION_LABELS[l.action] || l.action}</Badge>
-                </TableCell>
-                <TableCell className="text-sm text-muted-foreground">
-                  {TARGET_LABELS[l.target_type] || l.target_type}
-                </TableCell>
-                <TableCell className="text-muted-foreground text-xs max-w-xs">
-                  <p className="line-clamp-2">{l.reason || "—"}</p>
-                </TableCell>
-              </TableRow>
-            ))}
+              <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">Nenhum log encontrado.</TableCell></TableRow>
+            ) : filtered.map((l: any) => {
+              const targetLabel = l.target_type === "user"
+                ? (authMap[l.target_id] || (l.target_id ? l.target_id.slice(0, 8) + "…" : "—"))
+                : l.target_type === "church"
+                ? (churchMap[l.target_id] || (l.target_id ? l.target_id.slice(0, 8) + "…" : "—"))
+                : (l.target_id ? l.target_id.slice(0, 8) + "…" : "—");
+
+              return (
+                <TableRow key={l.id}>
+                  <TableCell className="text-muted-foreground text-xs whitespace-nowrap">
+                    {format(new Date(l.created_at), "dd/MM/yy HH:mm", { locale: ptBR })}
+                  </TableCell>
+                  <TableCell className="text-sm text-muted-foreground">
+                    {authMap[l.moderator_id] || (l.moderator_id ? l.moderator_id.slice(0, 8) + "…" : "—")}
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={actionVariant(l.action)}>{ACTION_LABELS[l.action] || l.action}</Badge>
+                  </TableCell>
+                  <TableCell className="text-sm text-muted-foreground">
+                    {TARGET_LABELS[l.target_type] || l.target_type}
+                  </TableCell>
+                  <TableCell className="text-sm text-muted-foreground">
+                    {targetLabel}
+                  </TableCell>
+                  <TableCell className="text-muted-foreground text-xs max-w-xs">
+                    <p className="line-clamp-2">{l.reason || "—"}</p>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
           </TableBody>
         </Table>
       </div>

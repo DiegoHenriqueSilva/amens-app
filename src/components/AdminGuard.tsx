@@ -19,7 +19,10 @@ export function AdminGuard({ children, requireAdmin = false }: AdminGuardProps) 
   }
 
   const allowed = requireAdmin ? isAdmin : isModeratorOrAdmin;
-  if (!allowed) return <Navigate to="/" replace />;
+  if (!allowed) {
+    if (requireAdmin && isModeratorOrAdmin) return <Navigate to="/admin/prayers" replace />;
+    return <Navigate to="/" replace />;
+  }
 
   return <>{children}</>;
 }

@@ -18,6 +18,7 @@ import { Check, X } from "lucide-react";
 import { JornadaFe } from "@/components/JornadaFe";
 import { AngelicalNotificationOverlay } from "@/components/AngelicalNotificationOverlay";
 import { useLocation } from "react-router-dom";
+import { FeedbackDialog } from "@/components/FeedbackDialog";
 
 const stagger = {
   animate: { transition: { staggerChildren: 0.1 } },
@@ -357,7 +358,8 @@ const Index = () => {
           )}
 
           {user && (
-            <motion.div className="flex justify-center mt-12 opacity-80" initial={{ opacity: 0 }} animate={{ opacity: 0.8 }}>
+            <motion.div className="flex flex-col items-center gap-1 mt-12 opacity-80" initial={{ opacity: 0 }} animate={{ opacity: 0.8 }}>
+              <FeedbackDialog />
               <Button onClick={handleSignOut} variant="ghost" size="sm" className="text-xs font-bold">
                 Sair da Conta
               </Button>

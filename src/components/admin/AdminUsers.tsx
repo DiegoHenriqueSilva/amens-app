@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useUserRole } from "@/hooks/use-user-role";
+import AdminUserDetail from "@/components/admin/AdminUserDetail";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
@@ -19,7 +20,7 @@ import {
 import {
   Tooltip, TooltipContent, TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { MoreHorizontal, Search, Undo2, ShieldBan } from "lucide-react";
+import { MoreHorizontal, Search, Undo2, ShieldBan, User } from "lucide-react";
 import { toast } from "sonner";
 import { format, formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -88,6 +89,7 @@ export default function AdminUsers() {
   const [suspendDays, setSuspendDays] = useState("7");
   const [suspendReason, setSuspendReason] = useState("");
   const [roleDialog, setRoleDialog] = useState<{ userId: string; name: string; current: string } | null>(null);
+  const [detailUser, setDetailUser] = useState<{ id: string; name: string } | null>(null);
 
   const { data: users = [], isLoading } = useQuery({
     queryKey: ["admin-users"],
@@ -176,11 +178,13 @@ export default function AdminUsers() {
 
   const assignRole = useMutation({
     mutationFn: async ({ userId, roleName }: { userId: string; roleName: string }) => {
-      const { data: role } = await supabase.from("roles").select("id").eq("name", roleName).single();
-      if (!role) throw new Error("Role not found");
-      await supabase.from("user_roles").delete().eq("user_id", userId);
+      const { data: role, error: roleErr } = await supabase.from("roles").select("id").eq("name", roleName).single();
+      if (roleErr || !role) throw new Error("Role not found");
+      const { error: delErr } = await supabase.from("user_roles").delete().eq("user_id", userId);
+      if (delErr) throw delErr;
       if (roleName !== "user") {
-        await supabase.from("user_roles").insert({ user_id: userId, role_id: role.id, assigned_by: currentUserId });
+        const { error: insErr } = await supabase.from("user_roles").insert({ user_id: userId, role_id: role.id, assigned_by: currentUserId });
+        if (insErr) throw insErr;
       }
       await logAction(currentUserId!, userId, "role_assign", roleName);
     },
@@ -295,6 +299,9 @@ export default function AdminUsers() {
                           {isAdmin && (
                             <>
                               <DropdownMenuSeparator />
+                                  <DropdownMenuItem onClick={() => setDetailUser({ id: user.id, name: user.display_name || user.full_name || user.id })}>
+                                <User className="w-4 h-4 mr-2" /> Ver detalhes
+                              </DropdownMenuItem>
                               <DropdownMenuItem onClick={() => setRoleDialog({ userId: user.id, name: user.display_name || user.full_name || user.id, current: user.role || "user" })}>
                                 Alterar role
                               </DropdownMenuItem>
@@ -342,6 +349,15 @@ export default function AdminUsers() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {detailUser && (
+        <AdminUserDetail
+          userId={detailUser.id}
+          userName={detailUser.name}
+          open={!!detailUser}
+          onClose={() => setDetailUser(null)}
+        />
+      )}
 
       <Dialog open={!!roleDialog} onOpenChange={() => setRoleDialog(null)}>
         <DialogContent>

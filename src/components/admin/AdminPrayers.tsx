@@ -15,14 +15,14 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { MoreHorizontal, Search, Undo2, Check, X } from "lucide-react";
+import { MoreHorizontal, Search, Undo2, Check, X, ChevronDown, ChevronUp } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
-type Tab = "all" | "pending" | "active" | "completed";
+type Tab = "all" | "pending" | "active" | "completed" | "banned_users";
 
 const STATUS_LABELS: Record<string, string> = {
   active: "Ativo",
@@ -44,26 +44,78 @@ function statusStyle(status: string, deleted: boolean): string {
 
 const TAB_TOOLTIPS: Record<Tab, string> = {
   all: "Todos os pedidos, incluindo deletados",
-  pending: "Em revisão + Violação de política — requerem ação",
+  pending: "Pedidos com status pending_review — aguardam aprovação do moderador. Inclui auto-escalados por reports.",
   active: "Pedidos aprovados e visíveis publicamente",
   completed: "Pedidos marcados como concluídos",
+  banned_users: "Pedidos com status policy_violation (ação de moderação tomada) + todos os pedidos de usuários banidos.",
 };
 
-async function fetchPrayers(tab: Tab) {
+const PRAYER_BASE_SELECT = "id, title, content, author_name, status, created_at, deleted_at, user_id, prayer_count";
+
+async function fetchPrayers(tab: Tab, bannedUserIds?: string[]) {
+  if (tab === "banned_users") {
+    const queries: Promise<any>[] = [
+      supabase.from("prayer_requests")
+        .select(PRAYER_BASE_SELECT)
+        .eq("status", "policy_violation")
+        .order("created_at", { ascending: false })
+        .limit(300),
+    ];
+    if (bannedUserIds && bannedUserIds.length > 0) {
+      queries.push(
+        supabase.from("prayer_requests")
+          .select(PRAYER_BASE_SELECT)
+          .in("user_id", bannedUserIds)
+          .order("created_at", { ascending: false })
+          .limit(300)
+      );
+    }
+    const results = await Promise.all(queries);
+    const seen = new Set<string>();
+    const merged: any[] = [];
+    results.forEach((res) => {
+      (res.data || []).forEach((r: any) => {
+        if (!seen.has(r.id)) { seen.add(r.id); merged.push(r); }
+      });
+    });
+    return merged.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+  }
+
   let q = supabase
     .from("prayer_requests")
-    .select("id, title, content, author_name, status, created_at, deleted_at, user_id, prayer_count")
+    .select(PRAYER_BASE_SELECT)
     .order("created_at", { ascending: false })
     .limit(300);
 
-  if (tab === "pending") q = q.in("status", ["pending_review", "policy_violation"]).is("deleted_at", null);
+  if (tab === "pending") q = q.eq("status", "pending_review").is("deleted_at", null);
   else if (tab === "active") q = q.eq("status", "active").is("deleted_at", null);
   else if (tab === "completed") q = q.eq("status", "completed").is("deleted_at", null);
-  // "all" — sem filtro
 
   const { data, error } = await q;
   if (error) throw error;
   return data || [];
+}
+
+function ExpandableContent({ title, content }: { title?: string | null; content?: string | null }) {
+  const [expanded, setExpanded] = useState(false);
+  const isLong = (content?.length ?? 0) > 120;
+
+  return (
+    <div style={{ width: "280px", wordBreak: "break-word" }}>
+      {title && <p className="font-medium text-sm mb-0.5">{title}</p>}
+      <p className={`text-muted-foreground text-xs whitespace-pre-wrap ${!expanded && isLong ? "line-clamp-2" : ""}`}>
+        {content}
+      </p>
+      {isLong && (
+        <button
+          className="text-[10px] text-primary flex items-center gap-0.5 mt-1 hover:underline"
+          onClick={(e) => { e.stopPropagation(); setExpanded((v) => !v); }}
+        >
+          {expanded ? <><ChevronUp className="w-3 h-3" /> Ver menos</> : <><ChevronDown className="w-3 h-3" /> Ver mais</>}
+        </button>
+      )}
+    </div>
+  );
 }
 
 export default function AdminPrayers() {
@@ -72,11 +124,26 @@ export default function AdminPrayers() {
   const [tab, setTab] = useState<Tab>("all");
   const [search, setSearch] = useState("");
   const [editDialog, setEditDialog] = useState<any>(null);
+  const [editTitle, setEditTitle] = useState("");
   const [editContent, setEditContent] = useState("");
+  const [editReason, setEditReason] = useState("");
+
+  const { data: bannedProfiles = [] } = useQuery({
+    queryKey: ["banned-profiles-ids"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("id")
+        .not("deleted_at", "is", null)
+        .limit(500);
+      return (data || []).map((p: any) => p.id);
+    },
+    staleTime: 2 * 60 * 1000,
+  });
 
   const { data: prayers = [], isLoading } = useQuery({
-    queryKey: ["admin-prayers", tab],
-    queryFn: () => fetchPrayers(tab),
+    queryKey: ["admin-prayers", tab, bannedProfiles],
+    queryFn: () => fetchPrayers(tab, bannedProfiles as string[]),
   });
 
   const filtered = prayers.filter((p: any) => {
@@ -107,8 +174,18 @@ export default function AdminPrayers() {
       const { error } = await supabase.from("prayer_requests").update({ status, updated_at: new Date().toISOString() }).eq("id", id);
       if (error) throw error;
       await log(id, status === "active" ? "approve" : "reject", r);
+      if (status === "active") {
+        await supabase.from("prayer_reports")
+          .update({ status: "open", resolved_by: null, resolved_at: null, resolution_notes: null, moderator_id: null })
+          .eq("prayer_request_id", id)
+          .eq("status", "resolved")
+          .or("resolution_notes.ilike.%editado%,resolution_notes.ilike.%banido%,resolution_notes.ilike.%violação%");
+        await supabase.from("notifications").delete()
+          .eq("prayer_request_id", id)
+          .eq("type", "prayer_edit_mod");
+      }
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["admin-prayers"] }); toast.success("Status atualizado."); },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["admin-prayers"] }); qc.invalidateQueries({ queryKey: ["admin-reports"] }); toast.success("Status atualizado."); },
     onError: (e: any) => toast.error("Erro: " + e.message),
   });
 
@@ -118,7 +195,7 @@ export default function AdminPrayers() {
       if (error) throw error;
       await log(id, "soft_delete", r);
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["admin-prayers"] }); toast.success("Pedido removido."); },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["admin-prayers"] }); qc.invalidateQueries({ queryKey: ["admin-reports"] }); toast.success("Pedido removido."); },
     onError: (e: any) => toast.error("Erro: " + e.message),
   });
 
@@ -128,20 +205,38 @@ export default function AdminPrayers() {
       if (error) throw error;
       await log(id, "restore");
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["admin-prayers"] }); toast.success("Pedido restaurado."); },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["admin-prayers"] }); qc.invalidateQueries({ queryKey: ["admin-reports"] }); toast.success("Pedido restaurado."); },
     onError: (e: any) => toast.error("Erro: " + e.message),
   });
 
   const saveEdit = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase.from("prayer_requests").update({ content: editContent, updated_at: new Date().toISOString() }).eq("id", editDialog.id);
+      const { error } = await supabase
+        .from("prayer_requests")
+        .update({
+          title: editTitle || null,
+          content: editContent,
+          status: "pending_review",
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", editDialog.id);
       if (error) throw error;
-      await log(editDialog.id, "edit_content");
+      await log(editDialog.id, "edit_content", editReason || undefined);
+      if (editDialog.user_id) {
+        await supabase.from("notifications").insert({
+          user_id: editDialog.user_id,
+          message: "Seu pedido de oração foi editado pelo moderador e aguarda nova aprovação.",
+          prayer_request_id: editDialog.id,
+          type: "prayer_edit_mod",
+          is_read: false,
+        });
+      }
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["admin-prayers"] });
+      qc.invalidateQueries({ queryKey: ["admin-reports"] });
       setEditDialog(null);
-      toast.success("Conteúdo atualizado.");
+      toast.success("Conteúdo atualizado. Pedido enviado para revisão.");
     },
     onError: (e: any) => toast.error("Erro: " + e.message),
   });
@@ -155,12 +250,12 @@ export default function AdminPrayers() {
 
       <Tabs value={tab} onValueChange={(v) => setTab(v as Tab)}>
         <TabsList>
-          {(["all", "pending", "active", "completed"] as Tab[]).map((t) => (
+          {(["all", "pending", "active", "completed", "banned_users"] as Tab[]).map((t) => (
             <Tooltip key={t}>
               <TooltipTrigger asChild>
                 <span>
                   <TabsTrigger value={t}>
-                    {{ all: "Todos", pending: "Pendentes", active: "Ativos", completed: "Concluídos" }[t]}
+                    {{ all: "Todos", pending: "Pendentes", active: "Ativos", completed: "Concluídos", banned_users: "Banidos" }[t]}
                   </TabsTrigger>
                 </span>
               </TooltipTrigger>
@@ -194,9 +289,8 @@ export default function AdminPrayers() {
               <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">Nenhum pedido encontrado.</TableCell></TableRow>
             ) : filtered.map((p: any) => (
               <TableRow key={p.id} className={p.deleted_at ? "bg-muted/20" : ""}>
-                <TableCell className="max-w-xs">
-                  {p.title && <p className="font-medium text-sm">{p.title}</p>}
-                  <p className="text-muted-foreground text-xs line-clamp-2">{p.content}</p>
+                <TableCell className="align-top">
+                  <ExpandableContent title={p.title} content={p.content} />
                 </TableCell>
                 <TableCell className="text-sm">{p.author_name || "Anônimo"}</TableCell>
                 <TableCell>
@@ -233,7 +327,7 @@ export default function AdminPrayers() {
                               Colocar em revisão
                             </DropdownMenuItem>
                           )}
-                          <DropdownMenuItem onClick={() => { setEditDialog(p); setEditContent(p.content); }}>
+                          <DropdownMenuItem onClick={() => { setEditDialog(p); setEditTitle(p.title || ""); setEditContent(p.content || ""); setEditReason(""); }}>
                             Editar conteúdo
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
@@ -258,11 +352,41 @@ export default function AdminPrayers() {
 
       <Dialog open={!!editDialog} onOpenChange={() => setEditDialog(null)}>
         <DialogContent>
-          <DialogHeader><DialogTitle>Editar conteúdo</DialogTitle></DialogHeader>
-          <Textarea className="min-h-[120px]" value={editContent} onChange={(e) => setEditContent(e.target.value)} />
+          <DialogHeader><DialogTitle>Editar pedido de oração</DialogTitle></DialogHeader>
+          <p className="text-xs text-muted-foreground -mt-2">
+            Após salvar, o pedido voltará para revisão e o autor será notificado.
+          </p>
+          <div className="space-y-3">
+            <div>
+              <Label>Título (opcional)</Label>
+              <Input
+                className="mt-1"
+                value={editTitle}
+                onChange={(e) => setEditTitle(e.target.value)}
+                placeholder="Título do pedido..."
+              />
+            </div>
+            <div>
+              <Label>Conteúdo</Label>
+              <Textarea
+                className="mt-1 min-h-[120px]"
+                value={editContent}
+                onChange={(e) => setEditContent(e.target.value)}
+              />
+            </div>
+            <div>
+              <Label>Motivo da edição *</Label>
+              <Textarea
+                className="mt-1 min-h-[70px]"
+                value={editReason}
+                onChange={(e) => setEditReason(e.target.value)}
+                placeholder="Descreva o motivo da edição para os logs de moderação..."
+              />
+            </div>
+          </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setEditDialog(null)}>Cancelar</Button>
-            <Button onClick={() => saveEdit.mutate()} disabled={saveEdit.isPending}>Salvar</Button>
+            <Button onClick={() => saveEdit.mutate()} disabled={!editContent || !editReason.trim() || saveEdit.isPending}>Salvar</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

@@ -6,7 +6,8 @@ import AdminPrayers from "@/components/admin/AdminPrayers";
 import AdminReports from "@/components/admin/AdminReports";
 import AdminChurches from "@/components/admin/AdminChurches";
 import AdminLogs from "@/components/admin/AdminLogs";
-import AdminPrayerChain from "@/components/admin/AdminPrayerChain";
+import AdminFeedback from "@/components/admin/AdminFeedback";
+import AdminSettings from "@/components/admin/AdminSettings";
 import { AdminGuard } from "@/components/AdminGuard";
 
 const Admin = () => {
@@ -15,12 +16,13 @@ const Admin = () => {
       <AdminSidebar />
       <main className="flex-1 overflow-auto">
         <Routes>
-          <Route index element={<AdminDashboard />} />
-          <Route path="users" element={<AdminUsers />} />
-          <Route path="prayers" element={<AdminPrayers />} />
-          <Route path="reports" element={<AdminReports />} />
+          <Route index element={<AdminGuard requireAdmin><AdminDashboard /></AdminGuard>} />
+          <Route path="users" element={<AdminGuard requireAdmin><AdminUsers /></AdminGuard>} />
+          <Route path="prayers" element={<AdminGuard><AdminPrayers /></AdminGuard>} />
+          <Route path="reports" element={<AdminGuard><AdminReports /></AdminGuard>} />
           <Route path="churches" element={<AdminGuard requireAdmin><AdminChurches /></AdminGuard>} />
-          <Route path="prayer-chain" element={<AdminPrayerChain />} />
+          <Route path="feedback" element={<AdminGuard><AdminFeedback /></AdminGuard>} />
+          <Route path="settings" element={<AdminGuard requireAdmin><AdminSettings /></AdminGuard>} />
           <Route path="logs" element={<AdminGuard requireAdmin><AdminLogs /></AdminGuard>} />
         </Routes>
       </main>

@@ -1,25 +1,42 @@
 import { Link, useLocation } from "react-router-dom";
 import {
   LayoutDashboard, Users, BookOpen, Flag, Church, ScrollText,
-  Link as LinkIcon, LogOut, ChevronLeft,
+  ChevronLeft, Settings, MessageSquare,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useUserRole } from "@/hooks/use-user-role";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 
 const allItems = [
-  { path: "/admin", icon: LayoutDashboard, label: "Dashboard", adminOnly: false },
-  { path: "/admin/users", icon: Users, label: "Usuários", adminOnly: false },
+  { path: "/admin", icon: LayoutDashboard, label: "Dashboard", adminOnly: true },
+  { path: "/admin/users", icon: Users, label: "Usuários", adminOnly: true },
   { path: "/admin/prayers", icon: BookOpen, label: "Pedidos de Oração", adminOnly: false },
   { path: "/admin/reports", icon: Flag, label: "Reports", adminOnly: false },
   { path: "/admin/churches", icon: Church, label: "Igrejas", adminOnly: true },
-  { path: "/admin/prayer-chain", icon: LinkIcon, label: "Corrente de Oração", adminOnly: false },
+  { path: "/admin/feedback", icon: MessageSquare, label: "Feedback", adminOnly: false },
+  { path: "/admin/settings", icon: Settings, label: "Configurações", adminOnly: true },
   { path: "/admin/logs", icon: ScrollText, label: "Logs de Moderação", adminOnly: true },
 ];
 
 export function AdminSidebar() {
   const location = useLocation();
-  const { isAdmin } = useUserRole();
+  const { isAdmin, isModeratorOrAdmin } = useUserRole();
+
+  const { data: unreadFeedback = 0 } = useQuery({
+    queryKey: ["admin-feedback-unread"],
+    queryFn: async () => {
+      const { count } = await supabase
+        .from("user_feedback" as any)
+        .select("id", { count: "exact", head: true })
+        .eq("status", "unread");
+      return count ?? 0;
+    },
+    refetchInterval: 60000,
+    enabled: isModeratorOrAdmin,
+  });
 
   const items = allItems.filter(item => !item.adminOnly || isAdmin);
 
@@ -39,6 +56,7 @@ export function AdminSidebar() {
               ? location.pathname === "/admin"
               : location.pathname.startsWith(item.path);
           const Icon = item.icon;
+          const showBadge = item.path === "/admin/feedback" && unreadFeedback > 0;
 
           return (
             <Link
@@ -52,7 +70,12 @@ export function AdminSidebar() {
               )}
             >
               <Icon className="w-4 h-4 shrink-0" />
-              {item.label}
+              <span className="flex-1">{item.label}</span>
+              {showBadge && (
+                <Badge variant="destructive" className="text-[10px] px-1.5 py-0 h-4 min-w-4 flex items-center justify-center">
+                  {unreadFeedback > 99 ? "99+" : unreadFeedback}
+                </Badge>
+              )}
             </Link>
           );
         })}

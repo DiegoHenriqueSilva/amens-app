@@ -50,10 +50,11 @@ export const ReportPrayerDialog = ({
 
       const { error } = await supabase.from("prayer_reports" as any).insert({
         prayer_request_id: prayerRequestId,
+        target_type: "prayer_request",
         reporter_user_id: session.user.id,
         category,
         description: description.trim() || null,
-        status: "pending",
+        status: "open",
       });
 
       if (error) throw error;
