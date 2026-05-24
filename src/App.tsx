@@ -27,6 +27,8 @@ import RosaryPrayer from "./pages/RosaryPrayer";
 import BottomNav from "./components/BottomNav";
 import { PushPromptProvider } from "./contexts/PushPromptContext";
 import Terco from "./pages/Terco";
+import Admin from "./pages/Admin";
+import { AdminGuard } from "./components/AdminGuard";
 
 const queryClient = new QueryClient();
 
@@ -74,6 +76,7 @@ const App = () => {
             <Route path="/novenas" element={<Novenas />} />
             <Route path="/novena/:id" element={<NovenaPrayer />} />
             <Route path="/terco" element={<Terco />} />
+            <Route path="/admin/*" element={<AdminGuard><Admin /></AdminGuard>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           <BottomNav />

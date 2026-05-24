@@ -19,9 +19,10 @@ import { formatTimeAgo } from "@/lib/utils";
 import BrazilMap from "@/components/BrazilMap";
 import { fetchCitiesByState, type IBGECity } from "@/lib/ibge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { User as UserIcon, LogOut, Mail, Home, Search } from "lucide-react";
+import { User as UserIcon, LogOut, Mail, Home, Search, Flag } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { ReportUserDialog } from "@/components/ReportUserDialog";
 
 const Community = () => {
   const navigate = useNavigate();
@@ -42,6 +43,7 @@ const Community = () => {
   const [pendingRequests, setPendingRequests] = useState<Set<string>>(new Set());
   const [friendIds, setFriendIds] = useState<Set<string>>(new Set());
   const [selectedParish, setSelectedParish] = useState<string | null>(null);
+  const [reportUser, setReportUser] = useState<{ id: string; name: string } | null>(null);
 
   useEffect(() => {
     fetchGlobalStats();
@@ -359,26 +361,36 @@ const Community = () => {
                                              </div>
                                            </div>
                                            
-                                           {!isMe && !isFriend && (
-                                             <Button
-                                               variant="ghost"
-                                               size="sm"
-                                               className={cn(
-                                                 "rounded-full h-9 px-5 text-[10px] font-black uppercase tracking-widest transition-all",
-                                                 isPending ? "text-muted-foreground bg-secondary/50" : "bg-primary/10 text-primary hover:bg-primary hover:text-white"
-                                               )}
-                                               disabled={isPending}
-                                               onClick={() => handleAddFriend(member.id)}
-                                             >
-                                               {isPending ? "Pendente" : "Seguir"}
-                                             </Button>
-                                           )}
-                                           
-                                           {isFriend && (
-                                             <div className="p-2.5 bg-green-50 text-green-600 rounded-full">
-                                               <Heart className="w-4 h-4 fill-current" />
-                                             </div>
-                                           )}
+                                           <div className="flex items-center gap-2">
+                                             {!isMe && !isFriend && (
+                                               <Button
+                                                 variant="ghost"
+                                                 size="sm"
+                                                 className={cn(
+                                                   "rounded-full h-9 px-5 text-[10px] font-black uppercase tracking-widest transition-all",
+                                                   isPending ? "text-muted-foreground bg-secondary/50" : "bg-primary/10 text-primary hover:bg-primary hover:text-white"
+                                                 )}
+                                                 disabled={isPending}
+                                                 onClick={() => handleAddFriend(member.id)}
+                                               >
+                                                 {isPending ? "Pendente" : "Seguir"}
+                                               </Button>
+                                             )}
+                                             {isFriend && (
+                                               <div className="p-2.5 bg-green-50 text-green-600 rounded-full">
+                                                 <Heart className="w-4 h-4 fill-current" />
+                                               </div>
+                                             )}
+                                             {!isMe && currentUser && (
+                                               <button
+                                                 onClick={(e) => { e.stopPropagation(); setReportUser({ id: member.id, name: member.show_real_name ? (member.display_name || member.full_name?.split(' ')[0] || "Membro") : "Membro da Fé" }); }}
+                                                 className="p-2 rounded-full hover:bg-red-50 text-muted-foreground hover:text-red-500 transition-colors"
+                                                 title="Reportar usuário"
+                                               >
+                                                 <Flag className="w-3.5 h-3.5" />
+                                               </button>
+                                             )}
+                                           </div>
                                          </Card>
                                        </motion.div>
                                      );
@@ -438,6 +450,14 @@ const Community = () => {
           </motion.div>
         </div>
       </div>
+
+      <ReportUserDialog
+        open={!!reportUser}
+        targetUserId={reportUser?.id ?? null}
+        targetName={reportUser?.name}
+        onClose={() => setReportUser(null)}
+        onConfirmed={() => setReportUser(null)}
+      />
     </PageTransition>
   );
 };

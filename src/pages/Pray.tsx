@@ -159,16 +159,17 @@ const Pray = () => {
   };
 
   useEffect(() => {
-    if (!currentUser) return;
-    
-    const init = async () => {
-      if (prayerIdParam) {
-        setIsSharedCause(true);
-        setHasRequestedCause(true);
-        fetchPrayerById(prayerIdParam, true);
-        return;
-      }
+    if (prayerIdParam) {
+      // Shared cause: load even without login so the report button is visible
+      setIsSharedCause(true);
+      setHasRequestedCause(true);
+      fetchPrayerById(prayerIdParam, true);
+      return;
+    }
 
+    if (!currentUser) return;
+
+    const init = async () => {
       const currentCauseId = await loadDailyCurrentCause(currentUser.id);
       if (currentCauseId) {
         setHasRequestedCause(true);

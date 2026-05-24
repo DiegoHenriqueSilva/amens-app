@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { PRAYERS, PHRASE_DURATION, PRAYER_GAP, COMMON_NAMES, BR_CITIES_200K, TOTAL_CYCLE_TIME } from "@/data/prayer-data";
 
 export interface Contributor {
+  id?: string;
   user_id?: string;
   name: string;
   city: string;
@@ -21,10 +22,11 @@ export const usePrayerQueue = (currentPrayerId: string | undefined, currentPhras
       try {
         const { data, error } = await supabase
           .from('prayer_contributions')
-          .select('user_id, target_timestamp, author_name, author_city')
+          .select('id, user_id, target_timestamp, author_name, author_city')
+          .is('deleted_at', null)
           .gte('target_timestamp', globalTime - 20000)
           .lte('target_timestamp', globalTime + 180000); // 3 min window
-        
+
         if (error) {
           console.warn("[Queue] Feed error:", error);
           return;
@@ -34,6 +36,7 @@ export const usePrayerQueue = (currentPrayerId: string | undefined, currentPhras
           const mapped = data.reduce((acc, curr) => ({
             ...acc,
             [String(curr.target_timestamp)]: {
+              id: curr.id,
               user_id: curr.user_id,
               name: curr.author_name,
               city: curr.author_city
@@ -63,6 +66,7 @@ export const usePrayerQueue = (currentPrayerId: string | undefined, currentPhras
           setContributions(prev => ({
             ...prev,
             [String(newContrib.target_timestamp)]: {
+              id: newContrib.id,
               user_id: newContrib.user_id,
               name: newContrib.author_name,
               city: newContrib.author_city

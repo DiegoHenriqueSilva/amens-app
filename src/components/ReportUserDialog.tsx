@@ -7,66 +7,48 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 const REPORT_CATEGORIES = [
-  { value: "inappropriate", label: "Conteúdo ofensivo ou inapropriado" },
-  { value: "fake", label: "Pedido falso ou enganoso" },
-  { value: "spam", label: "Spam ou pedido repetido" },
-  { value: "off_topic", label: "Conteúdo fora do contexto religioso" },
+  { value: "inappropriate", label: "Comportamento ofensivo ou inapropriado" },
+  { value: "spam", label: "Spam ou perfil falso" },
+  { value: "hate", label: "Discurso de ódio ou discriminação" },
+  { value: "harassment", label: "Assédio ou ameaça" },
   { value: "other", label: "Outro motivo" },
 ];
 
 interface Props {
   open: boolean;
-  prayerRequestId: string | null;
+  targetUserId: string | null;
+  targetName?: string;
   onClose: () => void;
   onConfirmed: () => void;
 }
 
-export const ReportPrayerDialog = ({
-  open,
-  prayerRequestId,
-  onClose,
-  onConfirmed,
-}: Props) => {
+export const ReportUserDialog = ({ open, targetUserId, targetName, onClose, onConfirmed }: Props) => {
   const [category, setCategory] = useState("");
   const [description, setDescription] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async () => {
-    if (!category) {
-      toast.error("Selecione uma categoria para o reporte.");
-      return;
-    }
-    if (!prayerRequestId) return;
-
+    if (!category || !targetUserId) return;
     setIsSubmitting(true);
     try {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      if (!session) {
-        toast.error("Você precisa estar logado para reportar.");
-        return;
-      }
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) { toast.error("Você precisa estar logado para reportar."); return; }
 
-      const { error } = await supabase.from("prayer_reports" as any).insert({
-        prayer_request_id: prayerRequestId,
-        target_type: "prayer_request",
+      const { error } = await supabase.from("prayer_reports").insert({
         reporter_user_id: session.user.id,
         category,
         description: description.trim() || null,
         status: "open",
+        target_type: "user",
+        target_user_id: targetUserId,
       });
 
       if (error) throw error;
-
-      toast.success(
-        "Reporte enviado com sucesso. Nossa equipe irá analisar. 🙏"
-      );
+      toast.success("Reporte enviado. Nossa equipe irá analisar. 🙏");
       setCategory("");
       setDescription("");
       onConfirmed();
-    } catch (e) {
-      console.error("Report error:", e);
+    } catch {
       toast.error("Erro ao enviar o reporte. Tente novamente.");
     } finally {
       setIsSubmitting(false);
@@ -77,16 +59,11 @@ export const ReportPrayerDialog = ({
     <AnimatePresence>
       {open && (
         <>
-          {/* Backdrop */}
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             className="fixed inset-0 z-[100] bg-black/40 backdrop-blur-sm"
             onClick={onClose}
           />
-
-          {/* Dialog */}
           <motion.div
             initial={{ opacity: 0, scale: 0.92, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -95,34 +72,23 @@ export const ReportPrayerDialog = ({
             className="fixed inset-x-4 top-1/2 -translate-y-1/2 z-[100] max-w-md mx-auto"
           >
             <div className="bg-white rounded-[2rem] shadow-2xl border border-red-100 p-6">
-              {/* Header */}
               <div className="flex items-center justify-between mb-5">
                 <div className="flex items-center gap-2">
                   <div className="w-9 h-9 rounded-full bg-red-50 flex items-center justify-center">
                     <Flag className="w-4 h-4 text-red-500" />
                   </div>
                   <div>
-                    <h3 className="text-base font-bold text-foreground">
-                      Reportar Causa
-                    </h3>
-                    <p className="text-[10px] text-muted-foreground">
-                      Nossa equipe irá analisar seu reporte
-                    </p>
+                    <h3 className="text-base font-bold text-foreground">Reportar Usuário</h3>
+                    {targetName && <p className="text-[10px] text-muted-foreground">{targetName}</p>}
                   </div>
                 </div>
-                <button
-                  onClick={onClose}
-                  className="w-8 h-8 rounded-full bg-muted/50 flex items-center justify-center hover:bg-muted transition-colors"
-                >
+                <button onClick={onClose} className="w-8 h-8 rounded-full bg-muted/50 flex items-center justify-center hover:bg-muted transition-colors">
                   <X className="w-4 h-4 text-muted-foreground" />
                 </button>
               </div>
 
-              {/* Categoria */}
               <div className="mb-4">
-                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-2">
-                  Motivo do reporte *
-                </p>
+                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-2">Motivo do reporte *</p>
                 <div className="space-y-2">
                   {REPORT_CATEGORIES.map((cat) => (
                     <button
@@ -140,11 +106,8 @@ export const ReportPrayerDialog = ({
                 </div>
               </div>
 
-              {/* Descrição */}
               <div className="mb-5">
-                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-2">
-                  Descrição adicional (opcional)
-                </p>
+                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-2">Descrição adicional (opcional)</p>
                 <Textarea
                   placeholder="Descreva o motivo com mais detalhes..."
                   value={description}
@@ -154,21 +117,9 @@ export const ReportPrayerDialog = ({
                 />
               </div>
 
-              {/* Ações */}
               <div className="flex gap-3">
-                <Button
-                  variant="outline"
-                  onClick={onClose}
-                  className="flex-1 rounded-xl border-primary/15"
-                  disabled={isSubmitting}
-                >
-                  Cancelar
-                </Button>
-                <Button
-                  onClick={handleSubmit}
-                  disabled={!category || isSubmitting}
-                  className="flex-1 rounded-xl bg-red-500 hover:bg-red-600 text-white border-0"
-                >
+                <Button variant="outline" onClick={onClose} className="flex-1 rounded-xl border-primary/15" disabled={isSubmitting}>Cancelar</Button>
+                <Button onClick={handleSubmit} disabled={!category || isSubmitting} className="flex-1 rounded-xl bg-red-500 hover:bg-red-600 text-white border-0">
                   {isSubmitting ? "Enviando..." : "Reportar"}
                 </Button>
               </div>

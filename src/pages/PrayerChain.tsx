@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Send, Sparkles, Wind, Users, Heart } from "lucide-react";
+import { ArrowLeft, Send, Sparkles, Wind, Users, Heart, Flag } from "lucide-react";
 import PageTransition from "@/components/PageTransition";
 import { PRAYERS, PHRASE_DURATION, PRAYER_GAP, TOTAL_CYCLE_TIME } from "@/data/prayer-data";
 import { motion, AnimatePresence } from "framer-motion";
@@ -12,6 +12,7 @@ import { usePrayerQueue } from "@/hooks/use-prayer-queue";
 import { useFriends } from "@/hooks/use-friends";
 import { cn } from "@/lib/utils";
 import { useDailyTasks } from "@/hooks/use-daily-tasks";
+import { ReportContributionDialog } from "@/components/ReportContributionDialog";
 
 // Marco zero para a sincronização global (1º de Janeiro de 2024)
 const EPOCH = new Date("2024-01-01T00:00:00Z").getTime();
@@ -33,6 +34,7 @@ const PrayerChain = () => {
   const { completeTask } = useDailyTasks();
   const { friends } = useFriends();
   const syncAttempted = useRef(false);
+  const [reportContrib, setReportContrib] = useState<{ id: string; name: string } | null>(null);
 
   const friendIds = useMemo(() => new Set(friends?.map(f => f.id)), [friends]);
 
@@ -363,17 +365,26 @@ const PrayerChain = () => {
                   <div className="flex flex-col gap-1.5 w-full justify-end h-[240px] overflow-hidden pt-6" style={{ maskImage: 'linear-gradient(to bottom, transparent 0%, black 25%, black 100%)', WebkitMaskImage: 'linear-gradient(to bottom, transparent 0%, black 25%, black 100%)' }}>
                     <AnimatePresence initial={false}>
                       {recentContributors.map((contrib) => (
-                        <motion.div 
+                        <motion.div
                           key={contrib.id || `${contrib.name}-${contrib.timestamp}`}
                           initial={{ opacity: 0, scale: 0.9, y: -10 }}
                           animate={{ opacity: 1, scale: 1, y: 0 }}
                           className={cn(
-                            "text-[#3d2800]/70 font-semibold text-[11px] md:text-[13px] text-center tracking-wide px-2 py-1 rounded-full transition-all",
+                            "group flex items-center justify-center gap-1 text-[#3d2800]/70 font-semibold text-[11px] md:text-[13px] text-center tracking-wide px-2 py-1 rounded-full transition-all",
                             contrib?.user_id === currentUser?.id && "text-primary font-bold bg-[#d4a017]/10 soft-shadow",
                             contrib?.user_id && friendIds.has(contrib.user_id) && "text-friend-accent font-bold bg-friend-accent/10 soft-shadow"
                           )}
                         >
-                          {contrib.name} ({contrib.city}) — entrou na oração
+                          <span>{contrib.name} ({contrib.city}) — entrou na oração</span>
+                          {currentUser && contrib?.user_id !== currentUser?.id && contrib?.id && (
+                            <button
+                              onClick={() => setReportContrib({ id: contrib.id!, name: contrib.name })}
+                              className="opacity-0 group-hover:opacity-60 hover:!opacity-100 text-red-400 transition-opacity ml-1"
+                              title="Reportar"
+                            >
+                              <Flag className="w-3 h-3" />
+                            </button>
+                          )}
                         </motion.div>
                       ))}
                     </AnimatePresence>
@@ -457,6 +468,14 @@ const PrayerChain = () => {
         {/* Global Progress Indicator (Hidden or reduced) */}
         <div className="h-2 shrink-0 bg-transparent" />
       </div>
+
+      <ReportContributionDialog
+        open={!!reportContrib}
+        contributionId={reportContrib?.id ?? null}
+        authorName={reportContrib?.name}
+        onClose={() => setReportContrib(null)}
+        onConfirmed={() => setReportContrib(null)}
+      />
     </PageTransition>
   );
 };
