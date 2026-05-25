@@ -42,6 +42,13 @@ O aplicativo depende de um arquivo `.env` local para se comunicar com as platafo
 ## 🗄️ Banco de Dados (Supabase / PostgreSQL)
 O aplicativo usa **PostgreSQL** gerenciado pelo Supabase. O agente deve assumir a estrutura abaixo como base da arquitetura de dados e referenciá-las para queries ou RPCs.
 
+### Database Change Communication
+- When adding or changing any migration, schema, RLS policy, RPC, trigger, or Supabase type, explicitly tell the user in chat that a database change exists.
+- State whether the change was only created locally or was also applied to the target Supabase project.
+- If remote application is still needed, provide the exact SQL or CLI steps and ask the user which access path they prefer: Supabase CLI token, temporary DB URL, or SQL copy-paste in the dashboard.
+- Never assume the linked Supabase project is production. Verify `supabase/config.toml`, `.env` project refs, or an explicit user confirmation before applying a remote database change.
+- Prefer explicit `--project-ref` or an intentionally relinked Supabase project for production operations.
+
 ### Tabelas Principais (Estrutura Básica)
 
 #### 1. `users` (ou `profiles`)

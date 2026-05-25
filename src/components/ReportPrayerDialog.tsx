@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Flag, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -28,12 +29,17 @@ export const ReportPrayerDialog = ({
   onConfirmed,
 }: Props) => {
   const [category, setCategory] = useState("");
+  const [customReason, setCustomReason] = useState("");
   const [description, setDescription] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async () => {
     if (!category) {
       toast.error("Selecione uma categoria para o reporte.");
+      return;
+    }
+    if (category === "other" && !customReason.trim()) {
+      toast.error("Escreva o motivo do reporte.");
       return;
     }
     if (!prayerRequestId) return;
@@ -53,6 +59,7 @@ export const ReportPrayerDialog = ({
         target_type: "prayer_request",
         reporter_user_id: session.user.id,
         category,
+        custom_reason: category === "other" ? customReason.trim() : null,
         description: description.trim() || null,
         status: "open",
       });
@@ -63,6 +70,7 @@ export const ReportPrayerDialog = ({
         "Reporte enviado com sucesso. Nossa equipe irá analisar. 🙏"
       );
       setCategory("");
+      setCustomReason("");
       setDescription("");
       onConfirmed();
     } catch (e) {
@@ -73,28 +81,26 @@ export const ReportPrayerDialog = ({
     }
   };
 
-  return (
+  const dialog = (
     <AnimatePresence>
       {open && (
-        <>
-          {/* Backdrop */}
+        <div className="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto p-4">
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] bg-black/40 backdrop-blur-sm"
+            className="absolute inset-0 bg-black/40 backdrop-blur-sm"
             onClick={onClose}
           />
 
-          {/* Dialog */}
           <motion.div
             initial={{ opacity: 0, scale: 0.92, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.92, y: 20 }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="fixed inset-x-4 top-1/2 -translate-y-1/2 z-[100] max-w-md mx-auto"
+            className="relative z-10 w-full max-w-md"
           >
-            <div className="bg-white rounded-[2rem] shadow-2xl border border-red-100 p-6">
+            <div className="max-h-[calc(100vh-2rem)] overflow-y-auto bg-white rounded-[2rem] shadow-2xl border border-red-100 p-6">
               {/* Header */}
               <div className="flex items-center justify-between mb-5">
                 <div className="flex items-center gap-2">
@@ -127,7 +133,10 @@ export const ReportPrayerDialog = ({
                   {REPORT_CATEGORIES.map((cat) => (
                     <button
                       key={cat.value}
-                      onClick={() => setCategory(cat.value)}
+                      onClick={() => {
+                        setCategory(cat.value);
+                        if (cat.value !== "other") setCustomReason("");
+                      }}
                       className={`w-full text-left px-3 py-2.5 rounded-xl border text-sm transition-all ${
                         category === cat.value
                           ? "border-red-400 bg-red-50 text-red-700 font-medium"
@@ -141,6 +150,21 @@ export const ReportPrayerDialog = ({
               </div>
 
               {/* Descrição */}
+              {category === "other" && (
+                <div className="mb-4">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-2">
+                    Qual motivo deseja reportar? *
+                  </p>
+                  <Textarea
+                    placeholder="Escreva o motivo do reporte..."
+                    value={customReason}
+                    onChange={(e) => setCustomReason(e.target.value)}
+                    className="min-h-[72px] rounded-xl border-primary/15 text-sm resize-none"
+                    maxLength={300}
+                  />
+                </div>
+              )}
+
               <div className="mb-5">
                 <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-2">
                   Descrição adicional (opcional)
@@ -166,7 +190,7 @@ export const ReportPrayerDialog = ({
                 </Button>
                 <Button
                   onClick={handleSubmit}
-                  disabled={!category || isSubmitting}
+                  disabled={!category || (category === "other" && !customReason.trim()) || isSubmitting}
                   className="flex-1 rounded-xl bg-red-500 hover:bg-red-600 text-white border-0"
                 >
                   {isSubmitting ? "Enviando..." : "Reportar"}
@@ -174,8 +198,12 @@ export const ReportPrayerDialog = ({
               </div>
             </div>
           </motion.div>
-        </>
+        </div>
       )}
     </AnimatePresence>
   );
+
+  if (typeof document === "undefined") return null;
+
+  return createPortal(dialog, document.body);
 };

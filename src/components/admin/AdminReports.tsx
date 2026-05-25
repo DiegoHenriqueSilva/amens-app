@@ -36,7 +36,9 @@ const TARGET_LABELS: Record<string, string> = {
 
 const CATEGORY_LABELS: Record<string, string> = {
   inappropriate: "Inapropriado",
+  fake: "Falso ou enganoso",
   spam: "Spam",
+  off_topic: "Fora do contexto",
   hate: "Ódio/Discriminação",
   harassment: "Assédio",
   misinformation: "Desinformação",
@@ -59,7 +61,7 @@ const TAB_TOOLTIPS: Record<Tab, string> = {
 async function fetchReports(tab: Tab) {
   let q = supabase
     .from("prayer_reports")
-    .select("id, reporter_user_id, target_type, prayer_request_id, target_user_id, target_contribution_id, category, description, status, resolution_notes, created_at, deleted_at, moderator_id")
+    .select("id, reporter_user_id, target_type, prayer_request_id, target_user_id, target_contribution_id, category, custom_reason, description, status, resolution_notes, created_at, deleted_at, moderator_id")
     .is("deleted_at", null)
     .order("created_at", { ascending: false })
     .limit(200);
@@ -122,6 +124,7 @@ export default function AdminReports() {
     const q = search.toLowerCase();
     return !q
       || r.description?.toLowerCase().includes(q)
+      || r.custom_reason?.toLowerCase().includes(q)
       || r.category?.toLowerCase().includes(q)
       || r.resolution_notes?.toLowerCase().includes(q);
   });
@@ -410,6 +413,9 @@ export default function AdminReports() {
                 </TableCell>
                 <TableCell className="text-sm">{CATEGORY_LABELS[r.category] || r.category}</TableCell>
                 <TableCell className="text-muted-foreground text-xs max-w-xs">
+                  {r.custom_reason && (
+                    <p className="mb-1 font-medium text-foreground">Motivo informado: {r.custom_reason}</p>
+                  )}
                   <p className="line-clamp-2">{r.description || "—"}</p>
                   {prayer && (
                     <div className="mt-1.5 p-2 bg-muted/40 rounded border border-border/60">

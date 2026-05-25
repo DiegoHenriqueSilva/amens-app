@@ -28,6 +28,7 @@ ALTER TABLE public.prayer_reports
   ADD COLUMN IF NOT EXISTS resolved_by      uuid REFERENCES auth.users(id) ON DELETE SET NULL,
   ADD COLUMN IF NOT EXISTS resolved_at      timestamp WITH TIME ZONE,
   ADD COLUMN IF NOT EXISTS resolution_notes text,
+  ADD COLUMN IF NOT EXISTS custom_reason    text,
   ADD COLUMN IF NOT EXISTS target_type      text DEFAULT 'prayer_request',
   ADD COLUMN IF NOT EXISTS target_user_id   uuid REFERENCES auth.users(id) ON DELETE SET NULL,
   ADD COLUMN IF NOT EXISTS target_contribution_id uuid REFERENCES public.prayer_contributions(id) ON DELETE SET NULL;

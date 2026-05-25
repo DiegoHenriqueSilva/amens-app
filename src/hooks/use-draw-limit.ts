@@ -10,6 +10,7 @@ const getTodayDate = () => new Date().toISOString().split("T")[0];
 interface DrawLimitState {
   drawsUsed: number;
   drawsLeft: number;
+  dailyLimit: number;
   isLimitReached: boolean;
   nextResetLabel: string;
   useOneDraw: () => boolean;
@@ -99,6 +100,7 @@ export function useDrawLimit(userId: string | null): DrawLimitState {
   return {
     drawsUsed,
     drawsLeft,
+    dailyLimit,
     isLimitReached,
     nextResetLabel,
     useOneDraw,
