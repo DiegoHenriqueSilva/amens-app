@@ -83,7 +83,7 @@ const Pray = () => {
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [userFriends, setUserFriends] = useState<string[]>([]);
   const [seenPrayerIds, setSeenPrayerIds] = useState<string[]>([]);
-  const [reportDialogOpen, setReportDialogOpen] = useState(false);
+  const [reportTarget, setReportTarget] = useState<{ prayerId: string; fromCurrentPrayer: boolean } | null>(null);
   const [isSharedCause, setIsSharedCause] = useState(false);
   const [editingReactionHistoryId, setEditingReactionHistoryId] = useState<string | null>(null);
   const [expandedHistoryItems, setExpandedHistoryItems] = useState<Record<string, boolean>>({});
@@ -119,7 +119,7 @@ const Pray = () => {
     setExpandedHistoryItems(prev => ({ ...prev, [id]: !prev[id] }));
   };
   
-  const { drawsUsed, drawsLeft, isLimitReached, nextResetLabel, useOneDraw, returnOneDraw } = useDrawLimit(currentUser?.id || null);
+  const { drawsLeft, dailyLimit, isLimitReached, nextResetLabel, useOneDraw, returnOneDraw } = useDrawLimit(currentUser?.id || null);
 
   const fetchUserFriends = async (userId: string) => {
     const { data } = await supabase.from("friendships").select("friend_id").eq("user_id", userId);
@@ -424,6 +424,11 @@ const Pray = () => {
       return;
     }
 
+    if (prayerRequest.feedback) {
+      toast.info("Esta causa já recebeu um testemunho e não pode ser sorteada novamente.");
+      return;
+    }
+
     if (useOneDraw()) {
       setIsSharedCause(false);
       await recordIntercession(prayerRequest.id);
@@ -439,6 +444,11 @@ const Pray = () => {
   const fetchRandomPrayerRequest = async () => {
     if (!currentUser) {
       toast.error("Faça login para receber causas");
+      return;
+    }
+
+    if (historyItem?.prayer_feedback) {
+      toast.info("Esta causa já recebeu um testemunho e não pode ser sorteada novamente.");
       return;
     }
 
@@ -460,18 +470,25 @@ const Pray = () => {
     }
 
     try {
+      const { data: priorIntercessions } = await supabase
+        .from("prayer_intercessions")
+        .select("prayer_request_id")
+        .eq("user_id", currentUser.id);
+      const priorPrayerIds = new Set((priorIntercessions || []).map((item) => item.prayer_request_id));
+
       // Fetch 50 eligible
       const { data, error } = await supabase
         .from('prayer_requests')
         .select('*')
         .eq('status', 'active')
+        .is('feedback', null)
         .neq('user_id', currentUser.id)
         .order('created_at', { ascending: false })
         .limit(PRAY_SETTINGS.maxCausesToFetch);
 
       if (error) throw error;
       // Filter seen
-      const eligible = (data || []).filter(p => !seenPrayerIds.includes(p.id));
+      const eligible = (data || []).filter(p => !seenPrayerIds.includes(p.id) && !priorPrayerIds.has(p.id));
 
       if (eligible.length > 0) {
         const isFullyRandom = Math.random() < 0.20;
@@ -771,7 +788,11 @@ REGRAS ADICIONAIS:
   };
 
   const handleReportConfirmed = () => {
-    setReportDialogOpen(false);
+    const reportedFromCurrentPrayer = reportTarget?.fromCurrentPrayer && prayerRequest?.id === reportTarget.prayerId;
+    setReportTarget(null);
+
+    if (!reportedFromCurrentPrayer) return;
+
     returnOneDraw();
     setSeenPrayerIds(prev => [...prev, prayerRequest.id]);
     setPrayerRequest(null); // Clear screen
@@ -792,11 +813,20 @@ REGRAS ADICIONAIS:
             </Button>
           </div>
           
-          <motion.div className="max-w-2xl mx-auto text-center mb-10" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+          <motion.div className="max-w-2xl mx-auto text-center mb-6" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
             <p className="text-sm uppercase tracking-[0.25em] text-primary mb-2">✦</p>
             <h1 className="text-4xl md:text-5xl font-bold mb-3 text-foreground">Orar por uma Causa</h1>
             <div className="divider-gold max-w-[10rem] mx-auto mb-3" />
             <p className="text-muted-foreground">Seja um instrumento da graça divina</p>
+            {currentUser && (
+              <p className="mt-3 text-xs text-muted-foreground">
+                {isLimitReached ? (
+                  <span className="text-red-500 font-medium">Limite atingido. Próximo sorteio {nextResetLabel}.</span>
+                ) : (
+                  <>Você tem <strong className="text-primary font-semibold">{drawsLeft}</strong> de {dailyLimit} sorteios disponíveis hoje.</>
+                )}
+              </p>
+            )}
           </motion.div>
 
           <div className="max-w-2xl mx-auto space-y-6">
@@ -811,17 +841,6 @@ REGRAS ADICIONAIS:
                       <Button onClick={fetchRandomPrayerRequest} disabled={isLoading || isLimitReached} size="lg" className={`w-full h-16 bg-gradient-to-br from-[#d4a017] to-[#e8c547] text-[#3d2800] hover:opacity-90 transition-opacity font-bold text-lg rounded-2xl shadow-lg border-0 ${!currentUser || isLimitReached ? 'opacity-60 pointer-events-none' : ''}`}>
                         {isLoading ? "Buscando..." : "Receber uma Causa"}
                       </Button>
-                      
-                      {/* Limit Indicator */}
-                      {currentUser && (
-                        <div className="text-sm mt-2">
-                          {isLimitReached ? (
-                            <span className="text-red-500 font-medium">Limite atingido. Próximo sorteio {nextResetLabel}.</span>
-                          ) : (
-                            <span className="text-muted-foreground">Você tem <strong className="text-primary">{drawsLeft}</strong> de {PRAY_SETTINGS.dailyDrawLimit} sorteios disponíveis hoje.</span>
-                          )}
-                        </div>
-                      )}
                     </div>
                   </Card>
                 </motion.div>
@@ -847,7 +866,7 @@ REGRAS ADICIONAIS:
                   {isSharedCause && (
                     <div className="bg-blue-50 border border-blue-100 rounded-2xl p-4 text-center">
                       <p className="text-blue-800 text-sm font-medium mb-3">Você acessou uma causa compartilhada.</p>
-                      <Button onClick={handleAcceptSharedCause} disabled={isLimitReached} className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm h-9">
+                      <Button onClick={handleAcceptSharedCause} disabled={isLimitReached || !!prayerRequest.feedback} className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm h-9">
                         Aceitar interceder
                       </Button>
                       {isLimitReached && <p className="text-xs text-red-500 mt-2">Você não tem sorteios disponíveis hoje.</p>}
@@ -992,7 +1011,7 @@ REGRAS ADICIONAIS:
 
                     {!isRestrictedPrayer(prayerRequest.status) && !prayerRequest.feedback && !prayerRequest.is_default && !isSharedCause && (
                       <div className="mt-4 flex flex-col gap-3 items-center text-center">
-                        <button onClick={() => setReportDialogOpen(true)} className="text-[10px] text-muted-foreground hover:text-red-500 transition-colors uppercase font-medium flex items-center justify-center gap-1 mx-auto">
+                        <button onClick={() => setReportTarget({ prayerId: prayerRequest.id, fromCurrentPrayer: true })} className="text-[10px] text-muted-foreground hover:text-red-500 transition-colors uppercase font-medium flex items-center justify-center gap-1 mx-auto">
                           <Flag className="w-3 h-3" /> Reportar essa causa a um administrador
                         </button>
                       </div>
@@ -1074,7 +1093,19 @@ REGRAS ADICIONAIS:
                             animate={{ opacity: 1, x: 0 }} 
                             transition={{ delay: i * 0.1 }}
                           >
-                            <Card className={`p-5 soft-shadow rounded-3xl ${item.is_restricted ? 'bg-amber-50/80 border-amber-200' : item.prayer_feedback ? 'bg-green-50/80 border-green-200' : 'border-primary/5'}`}>
+                            <Card className={`relative p-5 pr-12 soft-shadow rounded-3xl ${item.is_restricted ? 'bg-amber-50/80 border-amber-200' : item.prayer_feedback ? 'bg-green-50/80 border-green-200' : 'border-primary/5'}`}>
+                              {!item.is_restricted && !item.prayer_request_id?.startsWith("default-") && (
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => setReportTarget({ prayerId: item.prayer_request_id, fromCurrentPrayer: false })}
+                                  title="Reportar essa causa a um administrador"
+                                  aria-label="Reportar essa causa a um administrador"
+                                  className="absolute right-3 top-3 h-8 w-8 rounded-full text-muted-foreground/60 hover:bg-red-50 hover:text-red-500"
+                                >
+                                  <Flag className="h-3.5 w-3.5" />
+                                </Button>
+                              )}
                               <div className="flex gap-4">
                                 <div className="flex-shrink-0 mt-1">
                                   {item.avatar_url ? (
@@ -1209,10 +1240,10 @@ REGRAS ADICIONAIS:
           </div>
         </div>
         
-        <ReportPrayerDialog 
-          open={reportDialogOpen} 
-          prayerRequestId={prayerRequest?.id || null} 
-          onClose={() => setReportDialogOpen(false)}
+        <ReportPrayerDialog
+          open={!!reportTarget}
+          prayerRequestId={reportTarget?.prayerId || null}
+          onClose={() => setReportTarget(null)}
           onConfirmed={handleReportConfirmed}
         />
       </div>

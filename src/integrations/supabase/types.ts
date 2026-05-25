@@ -401,6 +401,7 @@ export type Database = {
           prayer_request_id: string | null
           reporter_user_id: string
           category: string
+          custom_reason: string | null
           description: string | null
           status: string
           moderator_id: string | null
@@ -418,6 +419,7 @@ export type Database = {
           prayer_request_id?: string | null
           reporter_user_id: string
           category: string
+          custom_reason?: string | null
           description?: string | null
           status?: string
           moderator_id?: string | null
@@ -435,6 +437,7 @@ export type Database = {
           prayer_request_id?: string | null
           reporter_user_id?: string
           category?: string
+          custom_reason?: string | null
           description?: string | null
           status?: string
           moderator_id?: string | null

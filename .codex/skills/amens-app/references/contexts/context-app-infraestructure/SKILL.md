@@ -31,6 +31,12 @@ Ao planejar novas features de backend, rotas de API, ou integrações de banco d
 - O gerenciamento de variáveis de ambiente ocorre diretamente no dashboard da Vercel.
 - Chaves do Supabase e do Gemini API possuem chaves separadas para Produção vs. Desenvolvimento/Preview.
 
+## Database Operations
+- For schema changes, always separate local migration creation from remote application in the user-facing chat.
+- Before running remote Supabase commands, confirm the target project ref and avoid relying on the current linked project when production is involved.
+- If the agent needs to apply a database change, request one of these access paths from the user: Supabase CLI token, temporary DB URL, or SQL copy-paste execution by the user.
+- When using Supabase CLI for production, prefer `supabase login --token` followed by an explicit project ref or a deliberately confirmed relink.
+
 ---
 
 ## 📦 CI/CD
