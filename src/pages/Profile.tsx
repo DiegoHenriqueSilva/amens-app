@@ -45,7 +45,19 @@ const Profile = () => {
     displayName: "",
     avatarUrl: ""
   });
-  const [uploading, setUploading] = useState(false);
+  const [disableAnimations, setDisableAnimations] = useState(() => {
+    return localStorage.getItem("reduce_motion") === "true";
+  });
+
+  useEffect(() => {
+    if (disableAnimations) {
+      document.documentElement.classList.add("reduce-motion");
+      localStorage.setItem("reduce_motion", "true");
+    } else {
+      document.documentElement.classList.remove("reduce-motion");
+      localStorage.setItem("reduce_motion", "false");
+    }
+  }, [disableAnimations]);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -396,7 +408,20 @@ const Profile = () => {
                                     onChange={(e) => setEditData({...editData, showRealName: e.target.checked})}
                                 />
                                 <Label htmlFor="show-real-name-profile" className="text-xs font-medium cursor-pointer">
-                                    Desejo utilizar um apelido ou outro nome para manter o anonimato.
+                                    Desejo configurar um Nome Preferido para ser exibido nas minhas intercessões.
+                                </Label>
+                            </div>
+
+                            <div className="flex items-center space-x-2 pt-2">
+                                <input 
+                                    type="checkbox" 
+                                    id="disable-animations" 
+                                    className="w-4 h-4 rounded border-primary/20 text-primary focus:ring-primary"
+                                    checked={disableAnimations}
+                                    onChange={(e) => setDisableAnimations(e.target.checked)}
+                                />
+                                <Label htmlFor="disable-animations" className="text-xs font-medium cursor-pointer">
+                                    Modo Desempenho (Desativar animações e efeitos visuais para economia de bateria).
                                 </Label>
                             </div>
 
@@ -408,9 +433,9 @@ const Profile = () => {
                                         exit={{ opacity: 0, height: 0 }}
                                         className="space-y-2 overflow-hidden px-1 py-2 bg-primary/5 rounded-xl border border-primary/10"
                                     >
-                                        <Label className="text-[10px] font-bold uppercase tracking-wider text-primary/70">Qual apelido você gostaria de usar?</Label>
+                                        <Label className="text-[10px] font-bold uppercase tracking-wider text-primary/70">Qual Nome Preferido você gostaria de usar?</Label>
                                         <Input 
-                                            placeholder="Ex: Pedro, Ana..." 
+                                            placeholder="Ex: Pedro, Ana, Maria..." 
                                             value={editData.displayName} 
                                             onChange={(e) => setEditData({...editData, displayName: e.target.value})}
                                         />

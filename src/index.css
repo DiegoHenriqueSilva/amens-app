@@ -104,3 +104,12 @@
     border-top: 1px solid rgba(200, 180, 150, 0.2);
   }
 }
+
+.reduce-motion *,
+.reduce-motion *::before,
+.reduce-motion *::after {
+  animation: none !important;
+  transition: none !important;
+  backdrop-filter: none !important;
+}
+
