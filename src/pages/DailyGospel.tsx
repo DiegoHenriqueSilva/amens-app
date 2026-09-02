@@ -278,7 +278,7 @@ Responda APENAS com um objeto JSON válido no formato:
             <p className="text-xs uppercase tracking-[0.25em] text-primary mb-2 text-glow font-bold">✦</p>
             <h1 className="text-4xl font-bold text-foreground mb-2 text-glow text-soft-outline">Evangelho do Dia</h1>
             <div className="divider-gold max-w-[6rem] mx-auto my-3" />
-            <p className="text-sm text-muted-foreground text-glow font-medium">Catálogo e Liturgia Católica Diária</p>
+            <p className="text-sm text-muted-foreground text-glow font-medium">Catálogo e liturgia católica diária</p>
           </motion.div>
 
           {loadingGospel ? (
