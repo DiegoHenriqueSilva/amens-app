@@ -31,6 +31,7 @@ export function FaithPointsBadge({ totalFaithPoints, userName, avatarUrl }: Fait
   const iconPath = `/level-icons/${displayLevel}.png`;
 
   const [showLevelUpAnim, setShowLevelUpAnim] = useState(false);
+  const [isInfoOpen, setIsInfoOpen] = useState(false);
   const lastLevelRef = useRef(displayLevel);
 
   useEffect(() => {
@@ -58,7 +59,13 @@ export function FaithPointsBadge({ totalFaithPoints, userName, avatarUrl }: Fait
         duration: 2,
         ease: "easeInOut"
       } : {}}
-      onClick={() => navigate("/profile")}
+      onClick={(e) => {
+        const target = e.target as HTMLElement;
+        if (target.closest('button') || target.closest('[role="dialog"]') || target.closest('[data-radix-portal]')) {
+          return;
+        }
+        navigate("/profile");
+      }}
       className={cn(
         "flex flex-col gap-2 group cursor-pointer transition-all p-2 rounded-2xl -m-2 relative",
         showLevelUpAnim ? "bg-white/90 ring-2 ring-primary/20" : "hover:bg-black/5"
@@ -89,13 +96,26 @@ export function FaithPointsBadge({ totalFaithPoints, userName, avatarUrl }: Fait
             {userName && <p className="text-sm font-black uppercase tracking-widest truncate max-w-[150px]" style={{color: '#5a3e0a'}}>{userName.split(' ')[0]}</p>}
             <div className="flex items-center gap-1.5 ml-auto">
               <span className="text-xs text-muted-foreground font-medium">{totalFaithPoints} Pontos de Fé</span>
-              <Dialog>
-                <DialogTrigger asChild>
-                  <button className="p-0.5 hover:bg-primary/10 rounded-full transition-colors outline-none" onClick={(e) => e.stopPropagation()}>
-                    <Info className="w-3.5 h-3.5 text-primary/60" />
-                  </button>
-                </DialogTrigger>
-                <DialogContent className="max-w-[90vw] sm:max-w-[400px] rounded-[2rem] border-primary/20 bg-white/95 backdrop-blur-md">
+              <Dialog open={isInfoOpen} onOpenChange={setIsInfoOpen}>
+                <button
+                  type="button"
+                  className="w-7 h-7 flex items-center justify-center hover:bg-primary/10 rounded-full transition-all outline-none text-primary/60 hover:text-primary z-20 relative active:scale-95"
+                  aria-label="Informações sobre Pontos de Fé"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setIsInfoOpen(true);
+                  }}
+                  onPointerDown={(e) => e.stopPropagation()}
+                  onTouchStart={(e) => e.stopPropagation()}
+                >
+                  <Info className="w-4 h-4" />
+                </button>
+                <DialogContent 
+                  className="max-w-[90vw] sm:max-w-[400px] rounded-[2rem] border-primary/20 bg-white/95 backdrop-blur-md"
+                  onClick={(e) => e.stopPropagation()}
+                  onPointerDown={(e) => e.stopPropagation()}
+                >
                   <DialogHeader className="flex flex-col items-center text-center">
                     <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-2">
                        <Info className="w-6 h-6 text-primary" />
