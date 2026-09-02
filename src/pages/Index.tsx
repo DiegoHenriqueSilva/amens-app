@@ -40,7 +40,7 @@ const Index = () => {
 
   const fetchProfile = async (userId: string) => {
     try {
-      const { data } = await supabase.from('profiles').select('full_name, avatar_url').eq('id', userId).single();
+      const { data } = await supabase.from('profiles').select('full_name, display_name, avatar_url').eq('id', userId).single();
       if (data) setProfile(data);
     } catch (e) {
       console.warn("Profile fetch error (Expected if disconnected or empty):", e);
@@ -165,11 +165,30 @@ const Index = () => {
             </motion.div>
           )}
 
-          {/* User / Faith Points Card */}
-          {user && !faithPointsLoading && (
-            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.1 }}>
+          {/* User / Faith Points Card Placeholder Skeleton while loading */}
+          {user && faithPointsLoading ? (
+            <Card className="p-5 mb-8 soft-shadow border-primary/5 bg-white/70 backdrop-blur-sm rounded-[2rem] animate-pulse">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-full bg-primary/10 flex-shrink-0" />
+                <div className="flex-1 space-y-2.5">
+                  <div className="flex justify-between items-center">
+                    <div className="h-4 w-28 bg-primary/15 rounded-full" />
+                    <div className="h-3 w-20 bg-primary/10 rounded-full" />
+                  </div>
+                  <div className="h-2.5 w-16 bg-primary/10 rounded-full" />
+                  <div className="h-2 w-full bg-secondary rounded-full" />
+                </div>
+                <div className="w-14 h-14 bg-primary/5 rounded-2xl flex-shrink-0" />
+              </div>
+            </Card>
+          ) : user && (
+            <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.3 }}>
               <Card className="p-5 mb-8 soft-shadow border-primary/5 bg-white/70 backdrop-blur-sm rounded-[2rem]">
-                 <FaithPointsBadge totalFaithPoints={totalFaithPoints} userName={profile?.full_name || user.user_metadata?.full_name || ""} avatarUrl={profile?.avatar_url} />
+                 <FaithPointsBadge 
+                   totalFaithPoints={totalFaithPoints} 
+                   userName={profile?.display_name || profile?.full_name || user.user_metadata?.display_name || user.user_metadata?.full_name || ""} 
+                   avatarUrl={profile?.avatar_url || user.user_metadata?.avatar_url} 
+                 />
               </Card>
             </motion.div>
           )}

@@ -62,9 +62,11 @@ const Profile = () => {
         return;
       }
       setUser(session.user);
-      fetchProfile(session.user.id);
-      fetchStats(session.user.id);
-      fetchReferrals(session.user.id);
+      Promise.all([
+        fetchProfile(session.user.id),
+        fetchStats(session.user.id),
+        fetchReferrals(session.user.id),
+      ]);
     });
     fetchStates().then(setStates);
   }, [navigate]);
@@ -165,27 +167,29 @@ const Profile = () => {
     }
     setSavingCity(true);
     
+    const cleanDisplayName = editData.displayName?.trim() || null;
+
     // Update Profile Table
     const { error: profileError } = await (supabase.from('profiles' as any) as any).upsert({
       id: user.id,
-      full_name: editData.fullName,
+      full_name: editData.fullName.trim(),
       state: editData.state,
       city: editData.city,
       parish: editData.parish,
       show_real_name: editData.showRealName,
-      display_name: editData.showRealName ? editData.displayName : null,
+      display_name: cleanDisplayName,
       is_public_in_parish: editData.isPublicInParish
     });
 
     // Update Auth User Metadata
     const { error: authError } = await supabase.auth.updateUser({
       data: { 
-        full_name: editData.fullName,
+        full_name: editData.fullName.trim(),
         state: editData.state,
         city: editData.city, 
         parish: editData.parish,
         show_real_name: editData.showRealName,
-        display_name: editData.showRealName ? editData.displayName : null,
+        display_name: cleanDisplayName,
         is_public_in_parish: editData.isPublicInParish
       },
     });
@@ -209,12 +213,12 @@ const Profile = () => {
 
       const file = event.target.files[0];
       const fileExt = file.name.split(".").pop();
-      const filePath = `${user.id}/${Math.random()}.${fileExt}`;
+      const filePath = `${user.id}/${Date.now()}.${fileExt}`;
 
       // 1. Upload to Storage
       const { error: uploadError } = await supabase.storage
         .from("avatars")
-        .upload(filePath, file);
+        .upload(filePath, file, { cacheControl: "3600", upsert: true });
 
       if (uploadError) throw uploadError;
 
@@ -231,6 +235,12 @@ const Profile = () => {
 
       if (updateError) throw updateError;
 
+      // 4. Update Auth User Metadata
+      await supabase.auth.updateUser({
+        data: { avatar_url: publicUrl }
+      });
+
+      // 5. Update local state immediately
       setEditData(prev => ({ ...prev, avatarUrl: publicUrl }));
       toast.success("Foto de perfil atualizada! 🙏");
     } catch (error: any) {
@@ -257,9 +267,7 @@ const Profile = () => {
   const level = getLevel(totalFaithPoints);
   const levelIndex = CELESTIAL_LEVELS.indexOf(level);
   const levelProgress = getLevelProgress(totalFaithPoints);
-  const fullName = editData.showRealName 
-    ? (editData.displayName || editData.fullName.split(' ')[0]) 
-    : (editData.fullName || "Usuário Améns");
+  const fullName = editData.displayName?.trim() || editData.fullName || "Usuário Améns";
   const currentCity = user.user_metadata?.city || "";
   const availableInvites = (levelIndex + 1) * 2 - invitedUsers.length;
 
@@ -443,20 +451,26 @@ const Profile = () => {
                             </Popover>
                         </div>
 
-                        <div className="space-y-4 pt-4 border-t border-primary/5">
-                            <div className="flex items-center space-x-2">
-                                <input 
-                                    type="checkbox" 
-                                    id="show-real-name-profile" 
-                                    className="w-4 h-4 rounded border-primary/20 text-primary focus:ring-primary"
-                                    checked={editData.showRealName}
-                                    onChange={(e) => setEditData({...editData, showRealName: e.target.checked})}
-                                />
-                                <Label htmlFor="show-real-name-profile" className="text-xs font-medium cursor-pointer">
-                                    Desejo utilizar um apelido ou outro nome para manter o anonimato.
-                                </Label>
+                        <div className="space-y-2">
+                            <div className="flex items-baseline justify-between">
+                                <Label htmlFor="display-name" className="text-sm font-semibold">Nome Preferido</Label>
+                                <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-bold">Opcional</span>
                             </div>
+                            <Input 
+                                id="display-name"
+                                placeholder="Ex: Dani, Irmão Pedro, Ana Paula..." 
+                                value={editData.displayName} 
+                                onChange={(e) => setEditData({...editData, displayName: e.target.value})} 
+                                className="rounded-xl border-primary/20"
+                                maxLength={40}
+                            />
+                            <p className="text-[11px] text-muted-foreground leading-relaxed">
+                                Como você gostaria de ser chamado(a). Se preenchido, este nome substituirá seu nome completo na Home, orações e pedidos. 
+                                <span className="italic block text-primary/70 mt-0.5">Nota: Para ocultar sua identidade ao enviar um pedido, utilize a opção "Anônimo" na hora do envio.</span>
+                            </p>
+                        </div>
 
+                        <div className="space-y-4 pt-4 border-t border-primary/5">
                             <div className="flex items-center space-x-2">
                                 <input 
                                     type="checkbox" 
@@ -466,27 +480,9 @@ const Profile = () => {
                                     onChange={(e) => setEditData({...editData, isPublicInParish: e.target.checked})}
                                 />
                                 <Label htmlFor="is-public-parish-profile" className="text-xs font-medium cursor-pointer">
-                                    Desejo que minha foto e nome de usuário fique disponível na lista da minha paróquia.
+                                    Desejo que minha foto e nome fiquem visíveis na lista da minha paróquia.
                                 </Label>
                             </div>
-
-                            <AnimatePresence>
-                                {editData.showRealName && (
-                                    <motion.div 
-                                        initial={{ opacity: 0, height: 0 }}
-                                        animate={{ opacity: 1, height: "auto" }}
-                                        exit={{ opacity: 0, height: 0 }}
-                                        className="space-y-2 overflow-hidden px-1 py-2 bg-primary/5 rounded-xl border border-primary/10"
-                                    >
-                                        <Label className="text-[10px] font-bold uppercase tracking-wider text-primary/70">Qual apelido você gostaria de usar?</Label>
-                                        <Input 
-                                            placeholder="Ex: Pedro, Ana..." 
-                                            value={editData.displayName} 
-                                            onChange={(e) => setEditData({...editData, displayName: e.target.value})} 
-                                        />
-                                    </motion.div>
-                                )}
-                            </AnimatePresence>
 
                             <div className="pt-4 border-t border-primary/10 flex items-center justify-between gap-3">
                                 <div className="space-y-0.5">
