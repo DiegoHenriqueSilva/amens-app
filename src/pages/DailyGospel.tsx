@@ -359,29 +359,15 @@ Responda APENAS com um objeto JSON válido no formato:
         <div className="absolute top-[-8rem] right-[-6rem] w-[28rem] h-[28rem] rounded-full bg-primary/5 blur-3xl" />
         <div className="absolute bottom-[-6rem] left-[-6rem] w-[24rem] h-[24rem] rounded-full bg-accent/5 blur-3xl" />
 
-        <div className="container mx-auto px-4 py-6 relative z-10 max-w-lg">
-          {/* Top Bar with Back Button and Reset-to-today if date != today */}
-          <div className="flex items-center justify-between mb-4">
-            <Button variant="ghost" size="icon" onClick={() => navigate("/")} className="rounded-full">
-              <ArrowLeft className="w-5 h-5" />
-            </Button>
-            {!isSameDay(selectedDate, new Date()) && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={resetToToday}
-                className="rounded-full border-primary/20 text-xs font-bold text-primary flex items-center gap-1.5 h-8 px-3"
-              >
-                <RotateCcw className="w-3.5 h-3.5" />
-                Voltar para Hoje
-              </Button>
-            )}
-          </div>
+        <Button variant="ghost" size="icon" onClick={() => navigate("/")} className="absolute top-4 left-4 z-20 rounded-full hover:bg-primary/10">
+          <ArrowLeft className="w-5 h-5 text-foreground" />
+        </Button>
 
-          <motion.div className="text-center mb-6" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+        <div className="container mx-auto px-4 py-8 relative z-10 max-w-lg">
+          <motion.div className="text-center mb-6 pt-2" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
             <p className="text-xs uppercase tracking-[0.25em] text-primary mb-2 text-glow font-bold">✦</p>
             <h1 className="text-3xl font-bold text-foreground mb-1 text-glow text-soft-outline font-serif">Liturgia Diária</h1>
-            <p className="text-xs text-muted-foreground font-medium">Evangelho, 1ª Leitura e Salmo</p>
+            <p className="text-xs text-muted-foreground font-medium">A palavra sagrada com as leituras e o evangelho do dia</p>
             <div className="divider-gold max-w-[5rem] mx-auto my-3" />
           </motion.div>
 
@@ -440,6 +426,20 @@ Responda APENAS com um objeto JSON válido no formato:
               <ChevronRight className="w-4 h-4" />
             </Button>
           </div>
+
+          {!isSameDay(selectedDate, new Date()) && (
+            <div className="flex justify-center -mt-3 mb-5">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={resetToToday}
+                className="rounded-full border-primary/20 text-xs font-bold text-primary flex items-center gap-1.5 h-7 px-3.5 bg-white/80 backdrop-blur-sm hover:bg-primary/10 shadow-sm"
+              >
+                <RotateCcw className="w-3 h-3" />
+                Voltar para a liturgia de hoje
+              </Button>
+            </div>
+          )}
 
           {loadingLiturgy ? (
             <Card className="p-8 soft-shadow border-primary/15 text-center bg-card/80 backdrop-blur-md rounded-3xl">
@@ -535,39 +535,42 @@ Responda APENAS com um objeto JSON válido no formato:
 
                     <div className="divider-gold mx-auto my-4" />
 
-                    {/* Opções de Compartilhamento */}
-                    <div className="space-y-2">
-                      <Button
-                        onClick={() => handleShare(true)}
-                        disabled={generating}
-                        className="gradient-divine w-full rounded-full py-5 text-xs font-bold shadow-md shadow-primary/20 hover:opacity-95"
-                      >
-                        <Share2 className="w-4 h-4 mr-2" />
-                        Compartilhar com Curiosidade
-                      </Button>
-                      <Button
-                        onClick={() => handleShare(false)}
-                        disabled={generating}
-                        variant="outline"
-                        className="w-full rounded-full py-5 text-xs font-bold border-primary/20 text-foreground hover:bg-primary/5"
-                      >
-                        <Share2 className="w-4 h-4 mr-2 text-primary" />
-                        Compartilhar Apenas Evangelho
-                      </Button>
-                    </div>
-
-                    {user && (
-                      <div className="pt-2 text-center">
-                        <p className="text-xs text-muted-foreground">
-                          {CELESTIAL_LEVELS.indexOf(level) + 1 <= 20 ? (
-                            <img src={`/level-icons/${CELESTIAL_LEVELS.indexOf(level) + 1}.png`} alt={level.name} className="h-5 object-contain inline-block mr-1" />
-                          ) : (
-                            level.emoji
-                          )}
-                          Compartilhe para fortalecer a comunidade e ganhar +30 pontos de fé!
-                        </p>
+                    {/* Bloco de Compartilhamento Acoplado */}
+                    <div className="bg-primary/5 border border-primary/10 rounded-2xl p-4 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-primary flex items-center gap-1.5 uppercase tracking-wider">
+                          <Share2 className="w-3.5 h-3.5" /> Compartilhar a Palavra
+                        </span>
+                        {user && (
+                          <span className="text-[11px] font-bold text-amber-700 bg-amber-100/80 px-2 py-0.5 rounded-full border border-amber-200 flex items-center gap-1 shadow-sm">
+                            ✨ +30 Pontos de Fé
+                          </span>
+                        )}
                       </div>
-                    )}
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <Button
+                          onClick={() => handleShare(true)}
+                          disabled={generating}
+                          className="gradient-divine w-full rounded-xl py-3 text-xs font-bold shadow-sm hover:opacity-95 h-11"
+                        >
+                          <Share2 className="w-3.5 h-3.5 mr-1.5" />
+                          Com Curiosidade
+                        </Button>
+                        <Button
+                          onClick={() => handleShare(false)}
+                          disabled={generating}
+                          variant="outline"
+                          className="w-full rounded-xl py-3 text-xs font-bold border-primary/20 text-foreground hover:bg-primary/10 h-11"
+                        >
+                          Apenas Evangelho
+                        </Button>
+                      </div>
+
+                      <p className="text-[11px] text-center text-muted-foreground font-medium">
+                        Compartilhe para evangelizar e acumule pontos de fé hoje!
+                      </p>
+                    </div>
                   </Card>
                 </TabsContent>
 
