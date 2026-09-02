@@ -32,7 +32,6 @@ const ACTION_LABELS: Record<string, string> = {
   deactivate: "Inativado",
   xp_override: "XP alterado",
   xp_multiplier: "Multiplicador XP",
-  ban: "Banido",
 };
 
 const TARGET_LABELS: Record<string, string> = {
