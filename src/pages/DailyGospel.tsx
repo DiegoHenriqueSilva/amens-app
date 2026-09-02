@@ -266,13 +266,14 @@ Responda APENAS com um objeto JSON válido no formato:
   return (
     <PageTransition>
       <div className="min-h-screen bg-background relative overflow-hidden pb-28">
+        <Button variant="ghost" size="icon" onClick={() => navigate("/")} className="absolute top-4 left-4 z-20 hover:bg-primary/10 transition-colors">
+          <ArrowLeft className="w-5 h-5 text-foreground" />
+        </Button>
+
         <div className="absolute top-[-8rem] right-[-6rem] w-[28rem] h-[28rem] rounded-full bg-primary/5 blur-3xl" />
         <div className="absolute bottom-[-6rem] left-[-6rem] w-[24rem] h-[24rem] rounded-full bg-accent/5 blur-3xl" />
 
-        <div className="container mx-auto px-4 py-6 relative z-10 max-w-lg">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/")} className="mb-4">
-            <ArrowLeft className="w-5 h-5" />
-          </Button>
+        <div className="container mx-auto px-4 py-8 relative z-10 max-w-2xl">
 
           <motion.div className="text-center mb-8" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
             <p className="text-xs uppercase tracking-[0.25em] text-primary mb-2 text-glow font-bold">✦</p>
