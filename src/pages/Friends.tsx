@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Users, UserPlus, Check, X, Copy, ArrowLeft, Sparkles, Heart, User, ChevronLeft, ChevronRight } from "lucide-react";
+import { Users, UserPlus, Check, X, Copy, ArrowLeft, Sparkles, Heart, User, ChevronLeft, ChevronRight, Globe } from "lucide-react";
 import PageTransition from "@/components/PageTransition";
 import { motion, AnimatePresence } from "framer-motion";
 import { useFriends } from "@/hooks/use-friends";
@@ -26,7 +26,7 @@ const Friends = () => {
   const handleCopyCode = () => {
     if (myCode) {
       navigator.clipboard.writeText(myCode);
-      toast.success("Código copiado! Compartilhe com seus amigos. ðŸ™");
+      toast.success("Código copiado! Compartilhe com seus amigos. 🙏");
     }
   };
 
@@ -114,6 +114,28 @@ const Friends = () => {
                 <span className="hidden sm:inline">Adicionar</span>
               </Button>
             </form>
+          </motion.div>
+
+          {/* Atalho para Comunidade Paroquial e Mapa */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.25 }}
+            className="mb-6"
+          >
+            <Button
+              variant="outline"
+              onClick={() => navigate("/community")}
+              className="w-full h-12 rounded-2xl border-primary/20 bg-primary/5 hover:bg-primary/10 flex items-center justify-between px-4 text-xs font-bold text-foreground transition-all"
+            >
+              <div className="flex items-center gap-2.5">
+                <div className="w-7 h-7 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                  <Globe className="w-4 h-4" />
+                </div>
+                <span>Explorar Comunidades e Paróquias do Brasil</span>
+              </div>
+              <span className="text-primary text-xs font-semibold">Ver Mapa →</span>
+            </Button>
           </motion.div>
 
           {/* Friend List / Tabs */}

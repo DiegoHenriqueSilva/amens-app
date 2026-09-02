@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Home, Users, Link as LinkIcon, User, Mail, Globe, ShieldCheck } from "lucide-react";
+import { Home, Users, Flame, User, Mail, ShieldCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useFriends } from "@/hooks/use-friends";
 import { supabase } from "@/integrations/supabase/client";
@@ -48,9 +48,8 @@ const BottomNav = () => {
   const navItems = [
     { path: "/", icon: Home, label: "Início" },
     { path: "/messages", icon: Mail, label: "Mensagens", badge: unreadCount },
-    { path: "/prayer-chain", icon: LinkIcon, label: "Oração ao vivo" },
+    { path: "/prayer-chain", icon: Flame, label: "Oração ao vivo" },
     { path: "/friends", icon: Users, label: "Amigos", badge: requests?.length || 0 },
-    { path: "/community", icon: Globe, label: "Comunidade" },
     { path: "/profile", icon: User, label: "Perfil" },
     ...(isModeratorOrAdmin
       ? [{ path: "/admin", icon: ShieldCheck, label: "Admin", badge: 0 }]
@@ -67,26 +66,26 @@ const BottomNav = () => {
           <Link
             key={item.path}
             to={item.path}
-            className="flex flex-col items-center gap-1 group relative"
+            className="flex flex-col items-center justify-center flex-1 max-w-[76px] py-1 group relative transition-transform active:scale-95"
           >
             <div className={cn(
-              "w-12 h-1 bg-primary rounded-full mb-1 transition-opacity",
-              isActive ? "opacity-100" : "opacity-0 group-hover:opacity-50"
+              "w-8 h-1 bg-primary rounded-full mb-1 transition-all duration-300",
+              isActive ? "opacity-100 scale-100" : "opacity-0 scale-50 group-hover:opacity-40"
             )} />
             <div className="relative">
               <Icon className={cn(
-                "w-6 h-6 transition-colors",
-                isActive ? "text-primary" : "text-muted-foreground group-hover:text-primary"
+                "w-6 h-6 transition-all duration-200",
+                isActive ? "text-primary scale-110 drop-shadow-sm" : "text-muted-foreground group-hover:text-primary"
               )} />
               {item.badge > 0 && (
-                <span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-red-500 text-white text-[9px] rounded-full flex items-center justify-center border border-background font-bold animate-pulse">
+                <span className="absolute -top-1.5 -right-2 min-w-[18px] h-[18px] px-1 bg-red-500 text-white text-[10px] rounded-full flex items-center justify-center border-2 border-background font-bold shadow-sm animate-pulse">
                   {item.badge}
                 </span>
               )}
             </div>
             <span className={cn(
-              "text-[9px] font-bold transition-all truncate max-w-[60px]",
-              isActive ? "text-primary" : "text-muted-foreground group-hover:text-primary font-medium"
+              "text-[10px] tracking-tight transition-colors text-center whitespace-nowrap",
+              isActive ? "text-primary font-bold" : "text-muted-foreground group-hover:text-primary font-medium"
             )}>
               {item.label}
             </span>
