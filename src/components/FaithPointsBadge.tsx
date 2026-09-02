@@ -91,11 +91,26 @@ export function FaithPointsBadge({ totalFaithPoints, userName, avatarUrl }: Fait
               <span className="text-xs text-muted-foreground font-medium">{totalFaithPoints} Pontos de Fé</span>
               <Dialog>
                 <DialogTrigger asChild>
-                  <button className="p-0.5 hover:bg-primary/10 rounded-full transition-colors outline-none" onClick={(e) => e.stopPropagation()}>
+                  <button
+                    type="button"
+                    aria-label="Informações da Jornada da Fé"
+                    className="p-1 hover:bg-primary/10 rounded-full transition-colors outline-none z-10"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                    }}
+                    onPointerDown={(e) => e.stopPropagation()}
+                    onMouseDown={(e) => e.stopPropagation()}
+                  >
                     <Info className="w-3.5 h-3.5 text-primary/60" />
                   </button>
                 </DialogTrigger>
-                <DialogContent className="max-w-[90vw] sm:max-w-[400px] rounded-[2rem] border-primary/20 bg-white/95 backdrop-blur-md">
+                <DialogContent
+                  className="max-w-[90vw] sm:max-w-[400px] rounded-[2rem] border-primary/20 bg-white/95 backdrop-blur-md"
+                  onClick={(e) => e.stopPropagation()}
+                  onPointerDown={(e) => e.stopPropagation()}
+                  onMouseDown={(e) => e.stopPropagation()}
+                >
                   <DialogHeader className="flex flex-col items-center text-center">
                     <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-2">
                        <Info className="w-6 h-6 text-primary" />
