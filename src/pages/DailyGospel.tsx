@@ -3,7 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { ArrowLeft, Share2, Loader2, BookOpen, Sparkles } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ArrowLeft, Share2, Loader2, BookOpen, Sparkles, FileText, Music } from "lucide-react";
 import PageTransition from "@/components/PageTransition";
 import { motion } from "framer-motion";
 import { useFaithPoints } from "@/hooks/use-faith-points";
@@ -13,14 +14,30 @@ import type { User as SupabaseUser } from "@supabase/supabase-js";
 import { useDailyTasks } from "@/hooks/use-daily-tasks";
 import { InviteGatePopup } from "@/components/InviteGatePopup";
 
+interface LiturgyReading {
+  referencia?: string;
+  titulo?: string;
+  texto?: string;
+}
+
+interface LiturgySalmo {
+  referencia?: string;
+  refrao?: string;
+  texto?: string;
+}
+
 interface GospelData {
   verse: string; // O resumo poético principal
   fullText: string; // O texto original completo
   reference: string;
   liturgicalDay?: string;
+  color?: string;
   title?: string;
   curiosity?: string;
   imageUrl?: string;
+  firstReading?: LiturgyReading | null;
+  salmo?: LiturgySalmo | null;
+  secondReading?: LiturgyReading | null;
 }
 
 const DailyGospel = () => {
@@ -95,13 +112,12 @@ const DailyGospel = () => {
   const fetchDailyGospel = async () => {
     setLoadingGospel(true);
     try {
-      const CACHE_KEY = "daily_gospel_cache_v11";
+      const CACHE_KEY = "daily_gospel_cache_v12";
       const cached = localStorage.getItem(CACHE_KEY);
       const todayString = new Date().toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" });
       
       if (cached) {
         const parsed = JSON.parse(cached);
-        const liturgicalDay = "Evangelho do Dia"; // Fallback se não carregar a liturgia
         if (parsed.date === todayString && parsed.data.curiosity) {
           console.log("Using cached gospel for today:", parsed.data.reference);
           setGospel(parsed.data);
@@ -120,9 +136,27 @@ const DailyGospel = () => {
       
       // Limpa números de versículos (ex: [1], 1., 20, etc) para uma leitura mais fluida
       const evangelhoTextoCompleto = evangelhoTextoBruto.replace(/\[\d+\]|\d+\.|\d+/g, '').replace(/\s+/g, ' ').trim();
-         const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
+      const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
       let verseResumo = evangelhoTextoCompleto;
       let curiosidade = "";
+
+      const primeiraLeituraData = (typeof liturgiaData.primeiraLeitura === 'object' && liturgiaData.primeiraLeitura !== null) ? {
+        referencia: liturgiaData.primeiraLeitura.referencia || "",
+        titulo: liturgiaData.primeiraLeitura.titulo || "Primeira Leitura",
+        texto: (liturgiaData.primeiraLeitura.texto || "").replace(/\[\d+\]|\d+\.|\d+/g, '').replace(/\s+/g, ' ').trim(),
+      } : null;
+
+      const salmoData = (typeof liturgiaData.salmo === 'object' && liturgiaData.salmo !== null) ? {
+        referencia: liturgiaData.salmo.referencia || "",
+        refrao: liturgiaData.salmo.refrao || "",
+        texto: liturgiaData.salmo.texto || "",
+      } : null;
+
+      const segundaLeituraData = (typeof liturgiaData.segundaLeitura === 'object' && liturgiaData.segundaLeitura !== null) ? {
+        referencia: liturgiaData.segundaLeitura.referencia || "",
+        titulo: liturgiaData.segundaLeitura.titulo || "Segunda Leitura",
+        texto: (liturgiaData.segundaLeitura.texto || "").replace(/\[\d+\]|\d+\.|\d+/g, '').replace(/\s+/g, ' ').trim(),
+      } : null;
       
       // O sistema resume o pão diário e gera o extra!
       if (GEMINI_API_KEY && evangelhoTextoCompleto.length > 50) {
@@ -173,20 +207,24 @@ Responda APENAS com um objeto JSON válido no formato:
         curiosidade = fallbacks[Math.floor(Math.random() * fallbacks.length)];
       }
 
-      const finalGospel = {
+      const finalGospel: GospelData = {
         verse: verseResumo,
         fullText: evangelhoTextoCompleto,
         reference: evangelhoReferencia,
         liturgicalDay: liturgiaData.liturgia || "Evangelho do Dia",
+        color: liturgiaData.cor || "Verde",
         title: "Palavra de Salvação",
         curiosity: curiosidade,
-        imageUrl: "/daily-gospel/today-gospel.webp"
+        imageUrl: "/daily-gospel/today-gospel.webp",
+        firstReading: primeiraLeituraData,
+        salmo: salmoData,
+        secondReading: segundaLeituraData,
       };
 
       // Salva no cache incluindo o dia litúrgico para evitar repetições se a data for a mesma mas o conteúdo mudar
       setGospel(finalGospel);
       const cacheData = { data: finalGospel, date: todayString, liturgy: liturgiaData.liturgia };
-      localStorage.setItem("daily_gospel_cache_v11", JSON.stringify(cacheData));
+      localStorage.setItem("daily_gospel_cache_v12", JSON.stringify(cacheData));
       // (task is already counted on page mount)
 
     } catch (err) {
@@ -197,6 +235,7 @@ Responda APENAS com um objeto JSON válido no formato:
         fullText: fallbackText,
         reference: "João 3:16",
         liturgicalDay: "Evangelho Perene",
+        color: "Verde",
         title: "O Amor de Deus",
         curiosity: "João 3:16 é frequentemente chamado de 'O Evangelho em Miniatura' porque resume brilhantemente toda a mensagem da salvação cristã.",
         imageUrl: "/daily-gospel/today-gospel.webp"
@@ -291,13 +330,18 @@ Responda APENAS com um objeto JSON válido no formato:
               <Card className="p-8 soft-shadow border-primary/15 text-center space-y-6 bg-card/80 backdrop-blur-md">
 
 
-                {gospel.liturgicalDay && (
-                  <p className="text-xs uppercase tracking-[0.2em] text-primary font-medium">
-                    {gospel.liturgicalDay}
-                  </p>
-                )}
-
-
+                <div className="space-y-2">
+                  {gospel.liturgicalDay && (
+                    <p className="text-xs uppercase tracking-[0.2em] text-primary font-bold">
+                      {gospel.liturgicalDay}
+                    </p>
+                  )}
+                  {gospel.color && (
+                    <span className="inline-block text-[10px] uppercase font-bold tracking-widest px-3 py-1 rounded-full bg-primary/10 text-primary border border-primary/20">
+                      Cor Litúrgica: {gospel.color}
+                    </span>
+                  )}
+                </div>
 
                 {gospel.imageUrl && (
                   <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.3 }} className="w-full relative rounded-2xl overflow-hidden aspect-square border-2 border-primary/20 shadow-lg my-6">
@@ -310,16 +354,85 @@ Responda APENAS com um objeto JSON válido no formato:
                   </motion.div>
                 )}
 
+                <Tabs defaultValue="gospel" className="w-full text-left pt-2">
+                  <TabsList className={`grid w-full rounded-xl bg-primary/10 p-1 mb-4 ${
+                    gospel.secondReading ? 'grid-cols-4' : (gospel.firstReading || gospel.salmo ? 'grid-cols-3' : 'grid-cols-1')
+                  }`}>
+                    <TabsTrigger value="gospel" className="text-[11px] font-bold gap-1 rounded-lg">
+                      <BookOpen className="w-3.5 h-3.5" />
+                      Evangelho
+                    </TabsTrigger>
+                    {gospel.firstReading && (
+                      <TabsTrigger value="first-reading" className="text-[11px] font-bold gap-1 rounded-lg">
+                        <FileText className="w-3.5 h-3.5" />
+                        1ª Leitura
+                      </TabsTrigger>
+                    )}
+                    {gospel.salmo && (
+                      <TabsTrigger value="salmo" className="text-[11px] font-bold gap-1 rounded-lg">
+                        <Music className="w-3.5 h-3.5" />
+                        Salmo
+                      </TabsTrigger>
+                    )}
+                    {gospel.secondReading && (
+                      <TabsTrigger value="second-reading" className="text-[11px] font-bold gap-1 rounded-lg">
+                        <FileText className="w-3.5 h-3.5" />
+                        2ª Leitura
+                      </TabsTrigger>
+                    )}
+                  </TabsList>
 
-                <div className="text-left space-y-3 pt-4">
-                  <h3 className="text-xs uppercase tracking-widest text-muted-foreground font-bold flex items-center">
-                    <BookOpen className="w-3.5 h-3.5 mr-2" /> 
-                    Leitura Completa ({gospel.reference})
-                  </h3>
-                  <p className="text-sm text-foreground/70 leading-relaxed font-serif bg-white/30 p-4 rounded-xl">
-                    {gospel.fullText}
-                  </p>
-                </div>
+                  <TabsContent value="gospel" className="space-y-3">
+                    <h3 className="text-xs uppercase tracking-widest text-muted-foreground font-bold flex items-center">
+                      <BookOpen className="w-3.5 h-3.5 mr-2 text-primary" /> 
+                      Evangelho ({gospel.reference})
+                    </h3>
+                    <p className="text-sm text-foreground/80 leading-relaxed font-serif bg-white/40 p-4 rounded-xl border border-primary/10">
+                      {gospel.fullText}
+                    </p>
+                  </TabsContent>
+
+                  {gospel.firstReading && (
+                    <TabsContent value="first-reading" className="space-y-3">
+                      <h3 className="text-xs uppercase tracking-widest text-muted-foreground font-bold flex items-center">
+                        <FileText className="w-3.5 h-3.5 mr-2 text-primary" /> 
+                        {gospel.firstReading.titulo || "1ª Leitura"} ({gospel.firstReading.referencia})
+                      </h3>
+                      <p className="text-sm text-foreground/80 leading-relaxed font-serif bg-white/40 p-4 rounded-xl border border-primary/10">
+                        {gospel.firstReading.texto}
+                      </p>
+                    </TabsContent>
+                  )}
+
+                  {gospel.salmo && (
+                    <TabsContent value="salmo" className="space-y-3">
+                      <h3 className="text-xs uppercase tracking-widest text-muted-foreground font-bold flex items-center">
+                        <Music className="w-3.5 h-3.5 mr-2 text-primary" /> 
+                        Salmo Responsorial ({gospel.salmo.referencia})
+                      </h3>
+                      {gospel.salmo.refrao && (
+                        <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl text-xs font-semibold text-amber-900 leading-relaxed">
+                          <span className="font-bold text-amber-700">R. </span> {gospel.salmo.refrao}
+                        </div>
+                      )}
+                      <p className="text-sm text-foreground/80 leading-relaxed font-serif bg-white/40 p-4 rounded-xl border border-primary/10 whitespace-pre-line">
+                        {gospel.salmo.texto}
+                      </p>
+                    </TabsContent>
+                  )}
+
+                  {gospel.secondReading && (
+                    <TabsContent value="second-reading" className="space-y-3">
+                      <h3 className="text-xs uppercase tracking-widest text-muted-foreground font-bold flex items-center">
+                        <FileText className="w-3.5 h-3.5 mr-2 text-primary" /> 
+                        {gospel.secondReading.titulo || "2ª Leitura"} ({gospel.secondReading.referencia})
+                      </h3>
+                      <p className="text-sm text-foreground/80 leading-relaxed font-serif bg-white/40 p-4 rounded-xl border border-primary/10">
+                        {gospel.secondReading.texto}
+                      </p>
+                    </TabsContent>
+                  )}
+                </Tabs>
                 
                 {gospel.curiosity && (
                   <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.7 }} className="mt-8 p-5 rounded-xl bg-accent/10 border border-accent/20 text-left relative overflow-hidden">
