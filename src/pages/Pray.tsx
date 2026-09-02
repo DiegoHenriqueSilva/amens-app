@@ -683,6 +683,11 @@ const Pray = () => {
 
   const generatePrayer = async () => {
     if (!prayerRequest) return;
+    if (!currentUser) {
+      toast.info("Faça login para gerar orações personalizadas.");
+      navigate(`/auth?redirect=/pray${prayerRequest?.id ? `?id=${prayerRequest.id}` : ""}`);
+      return;
+    }
     setIsGenerating(true);
     try {
       const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
@@ -723,7 +728,11 @@ REGRAS ADICIONAIS:
   };
 
   const toggleReaction = async (reactionType: string, targetPrayerId: string, currentReaction: string | null, onHistoryItem?: boolean) => {
-    if (!currentUser) return;
+    if (!currentUser) {
+      toast.info("Faça login para enviar reações a esta causa.");
+      navigate(`/auth?redirect=/pray${targetPrayerId ? `?id=${targetPrayerId}` : ""}`);
+      return;
+    }
 
     const targetStatus = onHistoryItem
       ? intercessions.find(item => item.prayer_request_id === targetPrayerId)?.status
@@ -831,7 +840,26 @@ REGRAS ADICIONAIS:
 
           <div className="max-w-2xl mx-auto space-y-6">
             <AnimatePresence mode="wait">
-              {!hasRequestedCause ? (
+              {!currentUser && !prayerIdParam ? (
+                <motion.div key="unauth" variants={fadeUp} initial="initial" animate="animate" exit="exit" className="space-y-4">
+                  <Card className="p-8 sm:p-10 text-center soft-shadow border-primary/10 rounded-[2.5rem] bg-white/80 backdrop-blur-md">
+                    <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4 text-primary">
+                      <Heart className="w-8 h-8 text-primary" />
+                    </div>
+                    <h2 className="text-2xl font-bold text-foreground font-serif mb-2">Participe da Corrente de Oração</h2>
+                    <p className="text-sm text-muted-foreground leading-relaxed max-w-md mx-auto mb-6">
+                      Para receber causas da comunidade, interceder por irmãos e acumular Pontos de Fé na sua caminhada espiritual, acesse ou crie sua conta gratuitamente.
+                    </p>
+                    <Button 
+                      onClick={() => navigate("/auth?redirect=/pray")} 
+                      size="lg" 
+                      className="w-full max-w-sm mx-auto h-14 gradient-divine text-black hover:opacity-90 font-bold text-base rounded-2xl shadow-md"
+                    >
+                      Fazer Login ou Cadastrar
+                    </Button>
+                  </Card>
+                </motion.div>
+              ) : !hasRequestedCause ? (
                 <motion.div key="initial" variants={fadeUp} initial="initial" animate="animate" exit="exit" className="space-y-4">
                   <Card className="p-10 text-center soft-shadow border-primary/10">
                     <motion.div animate={{ scale: [1, 1.05, 1] }} transition={{ duration: 4, repeat: Infinity }}>
@@ -847,7 +875,9 @@ REGRAS ADICIONAIS:
               ) : isLoading ? (
                 <motion.div key="loading" variants={fadeUp} initial="initial" animate="animate" exit="exit" className="flex flex-col items-center justify-center py-20">
                   <div className="animate-spin w-10 h-10 border-4 border-primary border-t-transparent rounded-full mb-4" />
-                  <p className="text-primary font-medium animate-pulse">Buscando causa...</p>
+                  <p className="text-primary font-medium animate-pulse text-sm">
+                    {prayerIdParam ? "Localizando o pedido de oração compartilhado..." : "Buscando uma causa na corrente de oração..."}
+                  </p>
                 </motion.div>
               ) : !prayerRequest ? (
                 <motion.div key="empty" variants={fadeUp} initial="initial" animate="animate" exit="exit">
@@ -864,12 +894,26 @@ REGRAS ADICIONAIS:
                 <motion.div key="prayer" variants={fadeUp} initial="initial" animate="animate" exit="exit" className="space-y-6">
                   
                   {isSharedCause && (
-                    <div className="bg-blue-50 border border-blue-100 rounded-2xl p-4 text-center">
-                      <p className="text-blue-800 text-sm font-medium mb-3">Você acessou uma causa compartilhada.</p>
-                      <Button onClick={handleAcceptSharedCause} disabled={isLimitReached || !!prayerRequest.feedback} className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm h-9">
-                        Aceitar interceder
-                      </Button>
-                      {isLimitReached && <p className="text-xs text-red-500 mt-2">Você não tem sorteios disponíveis hoje.</p>}
+                    <div className="bg-blue-50/90 border border-blue-200/80 rounded-2xl p-5 text-center shadow-sm backdrop-blur-xs">
+                      <p className="text-blue-900 text-sm font-bold mb-1">Causa recebida por compartilhamento</p>
+                      <p className="text-blue-700 text-xs mb-4 max-w-md mx-auto">
+                        {!currentUser 
+                          ? "Você pode ler o pedido abaixo. Para confirmar sua intenção oficial e confortar este irmão(ã), entre ou cadastre-se no Améns."
+                          : "Confirme sua intenção para registrar sua intercessão oficial e fortalecer esta corrente de fé."}
+                      </p>
+                      {!currentUser ? (
+                        <Button 
+                          onClick={() => navigate(`/auth?redirect=/pray?id=${prayerRequest.id}`)} 
+                          className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs h-10 px-6 font-bold shadow-md"
+                        >
+                          Entrar para Confirmar Oração
+                        </Button>
+                      ) : (
+                        <Button onClick={handleAcceptSharedCause} disabled={isLimitReached || !!prayerRequest.feedback} className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm h-10 px-6 font-bold shadow-md">
+                          Aceitar interceder
+                        </Button>
+                      )}
+                      {currentUser && isLimitReached && <p className="text-xs text-red-500 mt-2">Você não tem sorteios disponíveis hoje.</p>}
                     </div>
                   )}
 
@@ -885,7 +929,7 @@ REGRAS ADICIONAIS:
                     </motion.div>
                   )}
 
-                  <Card className={`p-8 soft-shadow border-primary/10 ${!currentUser ? 'opacity-60 pointer-events-none' : ''}`}>
+                  <Card className="p-8 soft-shadow border-primary/10">
                     <div className="flex items-start gap-4 mb-6">
                       <div className="flex-shrink-0 relative">
                         {prayerRequest.avatar_url ? (
