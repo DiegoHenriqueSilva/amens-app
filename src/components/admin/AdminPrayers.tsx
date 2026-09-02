@@ -15,9 +15,10 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { MoreHorizontal, Search, Undo2, Check, X, ChevronDown, ChevronUp } from "lucide-react";
+import { MoreHorizontal, Search, Undo2, Check, X, ChevronDown, ChevronUp, Trash2, Filter } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -123,6 +124,8 @@ export default function AdminPrayers() {
   const qc = useQueryClient();
   const [tab, setTab] = useState<Tab>("all");
   const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [editDialog, setEditDialog] = useState<any>(null);
   const [editTitle, setEditTitle] = useState("");
   const [editContent, setEditContent] = useState("");
@@ -148,8 +151,24 @@ export default function AdminPrayers() {
 
   const filtered = prayers.filter((p: any) => {
     const q = search.toLowerCase();
-    return !q || p.content?.toLowerCase().includes(q) || p.title?.toLowerCase().includes(q) || p.author_name?.toLowerCase().includes(q);
+    const matchesSearch = !q || p.content?.toLowerCase().includes(q) || p.title?.toLowerCase().includes(q) || p.author_name?.toLowerCase().includes(q);
+    const matchesStatus = statusFilter === "all" ? true : statusFilter === "deleted" ? !!p.deleted_at : p.status === statusFilter && !p.deleted_at;
+    return matchesSearch && matchesStatus;
   });
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+    );
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.length === filtered.length && filtered.length > 0) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(filtered.map((p: any) => p.id));
+    }
+  };
 
   const { data: sessionData } = useQuery({
     queryKey: ["session"],
@@ -241,6 +260,46 @@ export default function AdminPrayers() {
     onError: (e: any) => toast.error("Erro: " + e.message),
   });
 
+  const bulkUpdateStatus = useMutation({
+    mutationFn: async ({ ids, status, reason }: { ids: string[]; status: string; reason?: string }) => {
+      const updatedAt = new Date().toISOString();
+      const { error } = await supabase
+        .from("prayer_requests")
+        .update({ status, updated_at: updatedAt })
+        .in("id", ids);
+      if (error) throw error;
+
+      await Promise.all(ids.map((id) => log(id, status === "active" ? "approve" : "reject", reason)));
+    },
+    onSuccess: (_, variables) => {
+      qc.invalidateQueries({ queryKey: ["admin-prayers"] });
+      qc.invalidateQueries({ queryKey: ["admin-reports"] });
+      setSelectedIds([]);
+      toast.success(`${variables.ids.length} pedidos atualizados com sucesso!`);
+    },
+    onError: (e: any) => toast.error("Erro na ação em massa: " + e.message),
+  });
+
+  const bulkSoftDelete = useMutation({
+    mutationFn: async (ids: string[]) => {
+      const deletedAt = new Date().toISOString();
+      const { error } = await supabase
+        .from("prayer_requests")
+        .update({ deleted_at: deletedAt, deleted_by: currentUserId })
+        .in("id", ids);
+      if (error) throw error;
+
+      await Promise.all(ids.map((id) => log(id, "soft_delete")));
+    },
+    onSuccess: (_, ids) => {
+      qc.invalidateQueries({ queryKey: ["admin-prayers"] });
+      qc.invalidateQueries({ queryKey: ["admin-reports"] });
+      setSelectedIds([]);
+      toast.success(`${ids.length} pedidos removidos com sucesso.`);
+    },
+    onError: (e: any) => toast.error("Erro ao remover pedidos: " + e.message),
+  });
+
   return (
     <div className="p-6 space-y-4">
       <div>
@@ -248,7 +307,7 @@ export default function AdminPrayers() {
         <p className="text-muted-foreground text-sm">Modere, aprove ou remova pedidos</p>
       </div>
 
-      <Tabs value={tab} onValueChange={(v) => setTab(v as Tab)}>
+      <Tabs value={tab} onValueChange={(v) => { setTab(v as Tab); setSelectedIds([]); }}>
         <TabsList>
           {(["all", "pending", "active", "completed", "banned_users"] as Tab[]).map((t) => (
             <Tooltip key={t}>
@@ -265,15 +324,91 @@ export default function AdminPrayers() {
         </TabsList>
       </Tabs>
 
-      <div className="relative max-w-sm">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-        <Input className="pl-9" placeholder="Buscar conteúdo, título ou autor..." value={search} onChange={(e) => setSearch(e.target.value)} />
+      {/* Barra de Filtros: Busca textual + Filtro de status */}
+      <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
+        <div className="relative flex-1 max-w-sm">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input 
+            className="pl-9" 
+            placeholder="Buscar conteúdo, título ou autor..." 
+            value={search} 
+            onChange={(e) => setSearch(e.target.value)} 
+          />
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Filter className="w-4 h-4 text-muted-foreground hidden sm:inline" />
+          <Select value={statusFilter} onValueChange={(val) => { setStatusFilter(val); setSelectedIds([]); }}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Filtrar status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos os status</SelectItem>
+              <SelectItem value="active">🟢 Ativos</SelectItem>
+              <SelectItem value="pending_review">🟡 Em revisão</SelectItem>
+              <SelectItem value="policy_violation">🟠 Violação</SelectItem>
+              <SelectItem value="completed">🔵 Concluídos</SelectItem>
+              <SelectItem value="deleted">⚪ Deletados</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
+
+      {/* Barra Flutuante de Ações em Massa */}
+      {selectedIds.length > 0 && (
+        <div className="bg-primary/10 border border-primary/20 p-3 rounded-2xl flex flex-wrap items-center justify-between gap-3 animate-in fade-in slide-in-from-top-2">
+          <div className="flex items-center gap-2">
+            <span className="bg-primary text-primary-foreground text-xs font-bold px-3 py-1 rounded-full shadow-sm">
+              {selectedIds.length} selecionado{selectedIds.length > 1 ? "s" : ""}
+            </span>
+            <Button variant="ghost" size="sm" onClick={() => setSelectedIds([])} className="text-xs h-8">
+              Desmarcar todos
+            </Button>
+          </div>
+          <div className="flex items-center gap-2 flex-wrap">
+            <Button
+              size="sm"
+              className="bg-green-600 hover:bg-green-700 text-white text-xs h-8 shadow-sm"
+              disabled={bulkUpdateStatus.isPending}
+              onClick={() => bulkUpdateStatus.mutate({ ids: selectedIds, status: "active" })}
+            >
+              <Check className="w-3.5 h-3.5 mr-1" /> Aprovar Selecionados
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              className="border-orange-500 text-orange-600 hover:bg-orange-50 text-xs h-8"
+              disabled={bulkUpdateStatus.isPending}
+              onClick={() => bulkUpdateStatus.mutate({ ids: selectedIds, status: "policy_violation" })}
+            >
+              <X className="w-3.5 h-3.5 mr-1" /> Marcar Violação
+            </Button>
+            <Button
+              size="sm"
+              variant="destructive"
+              className="text-xs h-8"
+              disabled={bulkSoftDelete.isPending}
+              onClick={() => bulkSoftDelete.mutate(selectedIds)}
+            >
+              <Trash2 className="w-3.5 h-3.5 mr-1" /> Remover Selecionados
+            </Button>
+          </div>
+        </div>
+      )}
 
       <div className="rounded-lg border border-border overflow-hidden">
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-12 text-center">
+                <input 
+                  type="checkbox" 
+                  className="w-4 h-4 rounded cursor-pointer accent-primary" 
+                  checked={selectedIds.length === filtered.length && filtered.length > 0} 
+                  onChange={toggleSelectAll} 
+                  title="Selecionar todos os filtrados"
+                />
+              </TableHead>
               <TableHead>Conteúdo</TableHead>
               <TableHead>Autor</TableHead>
               <TableHead>Status</TableHead>
@@ -284,11 +419,19 @@ export default function AdminPrayers() {
           </TableHeader>
           <TableBody>
             {isLoading ? (
-              <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">Carregando...</TableCell></TableRow>
+              <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">Carregando...</TableCell></TableRow>
             ) : filtered.length === 0 ? (
-              <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">Nenhum pedido encontrado.</TableCell></TableRow>
+              <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">Nenhum pedido encontrado.</TableCell></TableRow>
             ) : filtered.map((p: any) => (
-              <TableRow key={p.id} className={p.deleted_at ? "bg-muted/20" : ""}>
+              <TableRow key={p.id} className={p.deleted_at ? "bg-muted/20" : selectedIds.includes(p.id) ? "bg-primary/5" : ""}>
+                <TableCell className="w-12 text-center align-top pt-4">
+                  <input 
+                    type="checkbox" 
+                    className="w-4 h-4 rounded cursor-pointer accent-primary" 
+                    checked={selectedIds.includes(p.id)} 
+                    onChange={() => toggleSelect(p.id)} 
+                  />
+                </TableCell>
                 <TableCell className="align-top">
                   <ExpandableContent title={p.title} content={p.content} />
                 </TableCell>
