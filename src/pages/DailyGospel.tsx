@@ -3,7 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { ArrowLeft, Share2, Loader2, BookOpen, Sparkles } from "lucide-react";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { ArrowLeft, Share2, Loader2, BookOpen, Sparkles, Calendar as CalendarIcon, ChevronLeft, ChevronRight, RotateCcw } from "lucide-react";
 import PageTransition from "@/components/PageTransition";
 import { motion } from "framer-motion";
 import { useFaithPoints } from "@/hooks/use-faith-points";
@@ -12,6 +14,8 @@ import { toast } from "sonner";
 import type { User as SupabaseUser } from "@supabase/supabase-js";
 import { useDailyTasks } from "@/hooks/use-daily-tasks";
 import { InviteGatePopup } from "@/components/InviteGatePopup";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 interface GospelData {
   verse: string; // O resumo poético principal
@@ -33,6 +37,8 @@ const DailyGospel = () => {
   const [videoId, setVideoId] = useState<string | null>(null);
   const [loadingVideo, setLoadingVideo] = useState(false);
   const [viewingYesterday, setViewingYesterday] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const { completeTask } = useDailyTasks();
 
   const now = new Date();
@@ -51,12 +57,12 @@ const DailyGospel = () => {
   }, []);
 
   useEffect(() => {
-    fetchDailyGospel();
+    fetchDailyGospel(selectedDate);
     // Só busca vídeo hoje se já for mais de 6h da manhã
     if (!isBeforeSix) {
       fetchLatestReflectionVideo();
     }
-  }, []);
+  }, [selectedDate]);
 
   const fetchLatestReflectionVideo = async (dateOffset: number = 0) => {
     const API_KEY = "AIzaSyAvWJ3SdQa6yaEFe5CPTzX7CWJ-65_tiXg";
@@ -92,26 +98,33 @@ const DailyGospel = () => {
     }
   };
 
-  const fetchDailyGospel = async () => {
+  const fetchDailyGospel = async (targetDate: Date = new Date()) => {
     setLoadingGospel(true);
     try {
-      const CACHE_KEY = "daily_gospel_cache_v11";
+      const day = String(targetDate.getDate()).padStart(2, '0');
+      const month = String(targetDate.getMonth() + 1).padStart(2, '0');
+      const year = targetDate.getFullYear();
+      const dateString = `${day}/${month}/${year}`;
+      const CACHE_KEY = `daily_gospel_cache_${day}_${month}_${year}`;
       const cached = localStorage.getItem(CACHE_KEY);
-      const todayString = new Date().toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" });
-      
+
       if (cached) {
         const parsed = JSON.parse(cached);
-        const liturgicalDay = "Evangelho do Dia"; // Fallback se não carregar a liturgia
-        if (parsed.date === todayString && parsed.data.curiosity) {
-          console.log("Using cached gospel for today:", parsed.data.reference);
+        if (parsed.data && parsed.data.curiosity) {
+          console.log("Using cached gospel for date:", dateString);
           setGospel(parsed.data);
           setLoadingGospel(false);
           return;
         }
       }
 
+      const isToday = targetDate.toDateString() === new Date().toDateString();
+      const endpoint = isToday
+        ? "https://liturgia.up.railway.app/"
+        : `https://liturgia.up.railway.app/${day}/${month}`;
+
       // Baixa a leitura da Igreja Católica Brasileira
-      const liturgiaRes = await fetch("https://liturgia.up.railway.app/");
+      const liturgiaRes = await fetch(endpoint);
       if (!liturgiaRes.ok) throw new Error("Falha na liturgia");
       const liturgiaData = await liturgiaRes.json();
       
@@ -274,11 +287,81 @@ Responda APENAS com um objeto JSON válido no formato:
             <ArrowLeft className="w-5 h-5" />
           </Button>
 
-          <motion.div className="text-center mb-8" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+          <motion.div className="text-center mb-6" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
             <p className="text-xs uppercase tracking-[0.25em] text-primary mb-2 text-glow font-bold">✦</p>
             <h1 className="text-4xl font-bold text-foreground mb-2 text-glow text-soft-outline">Evangelho do Dia</h1>
             <div className="divider-gold max-w-[6rem] mx-auto my-3" />
-            <p className="text-sm text-muted-foreground text-glow font-medium">Catálogo e Liturgia Católica Diária</p>
+            <p className="text-sm text-muted-foreground text-glow font-medium mb-4">Catálogo e liturgia católica diária</p>
+
+            {/* Date Navigation Bar */}
+            <div className="flex flex-wrap items-center justify-center gap-2 pt-1">
+              <Button
+                variant="outline"
+                size="sm"
+                className="rounded-full text-xs font-bold gap-1 border-primary/20 bg-white/80 backdrop-blur-sm h-8 px-3"
+                onClick={() => {
+                  const prev = new Date(selectedDate);
+                  prev.setDate(prev.getDate() - 1);
+                  setSelectedDate(prev);
+                }}
+              >
+                <ChevronLeft className="w-3.5 h-3.5" />
+                Anterior
+              </Button>
+
+              <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="rounded-full text-xs font-bold gap-1.5 border-primary/30 bg-primary/10 text-primary hover:bg-primary/20 h-8 px-3.5"
+                  >
+                    <CalendarIcon className="w-3.5 h-3.5" />
+                    {format(selectedDate, "dd 'de' MMMM", { locale: ptBR })}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent align="center" className="w-auto p-0 rounded-2xl border-primary/20 shadow-xl bg-white">
+                  <Calendar
+                    mode="single"
+                    selected={selectedDate}
+                    onSelect={(date) => {
+                      if (date) {
+                        setSelectedDate(date);
+                        setIsCalendarOpen(false);
+                      }
+                    }}
+                    locale={ptBR}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+
+              <Button
+                variant="outline"
+                size="sm"
+                className="rounded-full text-xs font-bold gap-1 border-primary/20 bg-white/80 backdrop-blur-sm h-8 px-3"
+                onClick={() => {
+                  const next = new Date(selectedDate);
+                  next.setDate(next.getDate() + 1);
+                  setSelectedDate(next);
+                }}
+              >
+                Próximo
+                <ChevronRight className="w-3.5 h-3.5" />
+              </Button>
+
+              {selectedDate.toDateString() !== new Date().toDateString() && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setSelectedDate(new Date())}
+                  className="rounded-full text-[11px] font-bold text-primary hover:bg-primary/10 h-8 px-3 gap-1"
+                >
+                  <RotateCcw className="w-3 h-3" />
+                  Hoje
+                </Button>
+              )}
+            </div>
           </motion.div>
 
           {loadingGospel ? (
