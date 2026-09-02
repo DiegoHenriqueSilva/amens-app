@@ -111,5 +111,16 @@
   animation: none !important;
   transition: none !important;
   backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
+
+.reduce-motion .blur-3xl,
+.reduce-motion .blur-2xl,
+.reduce-motion .blur-xl,
+.reduce-motion .blur-lg,
+.reduce-motion .blur-md,
+.reduce-motion .blur {
+  display: none !important;
+}
+
 

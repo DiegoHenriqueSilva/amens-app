@@ -21,6 +21,8 @@ import Tree from "./pages/Tree";
 import Messages from "./pages/Messages";
 import Friends from "./pages/Friends";
 
+import { PerformanceProvider } from "@/contexts/PerformanceContext";
+
 const queryClient = new QueryClient();
 
 const App = () => {
@@ -39,9 +41,10 @@ const App = () => {
 
   return (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
+    <PerformanceProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
@@ -62,6 +65,7 @@ const App = () => {
         </Routes>
       </BrowserRouter>
     </TooltipProvider>
+    </PerformanceProvider>
   </QueryClientProvider>
   );
 };

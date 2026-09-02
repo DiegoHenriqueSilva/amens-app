@@ -19,10 +19,12 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import BottomNav from "@/components/BottomNav";
-import { Camera } from "lucide-react";
+import { Camera, Zap } from "lucide-react";
+import { usePerformance } from "@/contexts/PerformanceContext";
 
 const Profile = () => {
   const navigate = useNavigate();
+  const { isPerformanceMode, setPerformanceMode, togglePerformanceMode } = usePerformance();
   const [user, setUser] = useState<any>(null);
   const { totalXp, loading: xpLoading } = useXp();
   const [stats, setStats] = useState({ requests: 0, intercessions: 0 });
@@ -45,19 +47,6 @@ const Profile = () => {
     displayName: "",
     avatarUrl: ""
   });
-  const [disableAnimations, setDisableAnimations] = useState(() => {
-    return localStorage.getItem("reduce_motion") === "true";
-  });
-
-  useEffect(() => {
-    if (disableAnimations) {
-      document.documentElement.classList.add("reduce-motion");
-      localStorage.setItem("reduce_motion", "true");
-    } else {
-      document.documentElement.classList.remove("reduce-motion");
-      localStorage.setItem("reduce_motion", "false");
-    }
-  }, [disableAnimations]);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -308,15 +297,31 @@ const Profile = () => {
             </div>
             <p className="text-[11px] text-primary/70 font-bold mt-1 uppercase tracking-wider">{user.user_metadata?.parish}</p>
             
-            <Button 
-                variant="outline" 
-                size="sm" 
-                className="mt-4 rounded-full border-primary/20 text-[10px] uppercase font-bold tracking-widest h-8 px-4"
-                onClick={() => setIsEditing(true)}
-            >
-                <Pencil className="w-3 h-3 mr-2" />
-                Editar Perfil
-            </Button>
+            <div className="flex items-center justify-center gap-2 mt-4">
+              <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="rounded-full border-primary/20 text-[10px] uppercase font-bold tracking-widest h-8 px-4"
+                  onClick={() => setIsEditing(true)}
+              >
+                  <Pencil className="w-3 h-3 mr-2" />
+                  Editar Perfil
+              </Button>
+
+              <Button 
+                  variant={isPerformanceMode ? "default" : "outline"} 
+                  size="sm" 
+                  className={cn(
+                    "rounded-full text-[10px] uppercase font-bold tracking-widest h-8 px-3.5 transition-all",
+                    isPerformanceMode ? "bg-amber-500 hover:bg-amber-600 text-white border-transparent shadow-sm" : "border-primary/20 text-muted-foreground hover:text-primary"
+                  )}
+                  onClick={togglePerformanceMode}
+                  title="Alternar Modo Desempenho para economizar bateria e melhorar a fluidez"
+              >
+                  <Zap className="w-3.5 h-3.5 mr-1 fill-current" />
+                  {isPerformanceMode ? "Modo Leve ⚡" : "Efeitos ✨"}
+              </Button>
+            </div>
           </motion.div>
 
           {/* EDIT PROFILE DIALOG CLONE (INLINE OR MODAL) */}
@@ -417,11 +422,11 @@ const Profile = () => {
                                     type="checkbox" 
                                     id="disable-animations" 
                                     className="w-4 h-4 rounded border-primary/20 text-primary focus:ring-primary"
-                                    checked={disableAnimations}
-                                    onChange={(e) => setDisableAnimations(e.target.checked)}
+                                    checked={isPerformanceMode}
+                                    onChange={(e) => setPerformanceMode(e.target.checked)}
                                 />
                                 <Label htmlFor="disable-animations" className="text-xs font-medium cursor-pointer">
-                                    Modo Desempenho (Desativar animações e efeitos visuais para economia de bateria).
+                                    Modo Desempenho ⚡ (Simplifica efeitos visuais e melhora a fluidez em celulares antigos).
                                 </Label>
                             </div>
 
