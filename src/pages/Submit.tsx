@@ -14,8 +14,10 @@ import {
   MessageCircle,
   Pencil,
   RefreshCw,
+  RotateCcw,
   Send,
   ShieldAlert,
+  Sparkles,
   Users,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -130,6 +132,8 @@ const Submit = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isAnonymous, setIsAnonymous] = useState(false);
   const [isAnonymousInfoOpen, setIsAnonymousInfoOpen] = useState(false);
+  const [examplesOpen, setExamplesOpen] = useState(false);
+  const [submittedPrayer, setSubmittedPrayer] = useState<{ id: string; title: string; content: string } | null>(null);
   const [formData, setFormData] = useState({ title: "", content: "", location: "" });
   const [moderationReview, setModerationReview] = useState<{ policies: ModerationPolicy[]; riskScore: number } | null>(null);
 
@@ -515,6 +519,12 @@ const Submit = () => {
         toast.success("Pedido enviado com sucesso!");
       }
 
+      setSubmittedPrayer({
+        id: data?.prayer_request?.id || "novo",
+        title: formData.title.trim(),
+        content: formData.content.trim(),
+      });
+      fetchHistory();
       setFormData({ title: "", content: "", location: "" });
       setIsAnonymous(false);
       setModerationReview(null);
@@ -522,8 +532,6 @@ const Submit = () => {
       setTimeout(() => {
         triggerPushPrompt("Saiba quando alguém orar por seu pedido, autorize as notificações");
       }, 800);
-
-      setTimeout(() => navigate("/"), 3000);
     } catch (error: unknown) {
       console.error("Error submitting prayer request:", error);
       const errorMessage = error instanceof Error ? error.message : JSON.stringify(error);
@@ -556,77 +564,219 @@ const Submit = () => {
             <p className="text-muted-foreground">Compartilhe sua necessidade com a comunidade</p>
           </motion.div>
 
-          <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.55, delay: 0.15 }}>
-            <Card className="max-w-2xl mx-auto p-8 soft-shadow border-primary/10">
-              <form onSubmit={handleSubmit} className="space-y-6">
+          {submittedPrayer ? (
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="max-w-2xl mx-auto">
+              <Card className="p-8 soft-shadow border-primary/20 bg-card/90 backdrop-blur-md rounded-[2.5rem] text-center space-y-6">
+                <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto text-primary">
+                  <Check className="w-8 h-8 stroke-[2.5]" />
+                </div>
                 <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <Label htmlFor="title" className="text-base">Título *</Label>
-                    <div className="w-10 h-10 overflow-visible relative flex-shrink-0">
-                      <img
-                        src="/enviar_pergaminho_3d.png"
-                        alt="Pergaminho solitário"
-                        className={`w-full h-full object-contain transition-all duration-500 ${isSubmitting ? "drop-shadow-[0_0_25px_rgba(255,215,0,1)] brightness-125 scale-110" : "drop-shadow-sm"}`}
-                      />
+                  <h2 className="text-2xl font-bold text-foreground font-serif">Pedido Enviado com Sucesso!</h2>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Sua intenção já está registrada e em breve será acolhida pela comunidade em oração.
+                  </p>
+                </div>
+
+                <div className="bg-primary/5 border border-primary/10 rounded-2xl p-5 text-left space-y-2">
+                  <p className="text-[10px] uppercase font-bold tracking-widest text-primary">Resumo do seu pedido</p>
+                  <h3 className="text-base font-bold text-foreground">{submittedPrayer.title}</h3>
+                  <p className="text-xs text-foreground/75 font-serif line-clamp-3 leading-relaxed">
+                    "{submittedPrayer.content}"
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+                  <Button
+                    onClick={() => {
+                      setSubmittedPrayer(null);
+                      setShowHistory(true);
+                    }}
+                    className="gradient-divine rounded-2xl font-bold text-xs h-12 shadow-md shadow-primary/20"
+                  >
+                    <Clock className="w-4 h-4 mr-2" />
+                    Ver no Meu Histórico
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => setSubmittedPrayer(null)}
+                    className="rounded-2xl border-primary/20 font-bold text-xs h-12 hover:bg-primary/5"
+                  >
+                    <RotateCcw className="w-4 h-4 mr-2 text-primary" />
+                    Enviar Outro Pedido
+                  </Button>
+                </div>
+
+                <Button
+                  variant="ghost"
+                  onClick={() => navigate("/")}
+                  className="text-xs text-muted-foreground hover:text-foreground font-medium"
+                >
+                  Voltar para a Página Inicial →
+                </Button>
+              </Card>
+            </motion.div>
+          ) : (
+            <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.55, delay: 0.15 }}>
+              <Card className="max-w-2xl mx-auto p-8 soft-shadow border-primary/10 rounded-[2.5rem]">
+                <form onSubmit={handleSubmit} className="space-y-6">
+                  {/* Legenda de campos obrigatórios */}
+                  <div className="flex items-center gap-1 text-[11px] text-muted-foreground bg-primary/5 px-3 py-1.5 rounded-full border border-primary/10 w-fit">
+                    <span className="text-primary font-bold text-xs">*</span>
+                    <span>Campos de preenchimento obrigatório</span>
+                  </div>
+
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <Label htmlFor="title" className="text-sm font-bold flex items-center gap-1">
+                        Título <span className="text-primary">*</span>
+                      </Label>
+                      <div className="w-10 h-10 overflow-visible relative flex-shrink-0">
+                        <img
+                          src="/enviar_pergaminho_3d.png"
+                          alt="Pergaminho solitário"
+                          className={`w-full h-full object-contain transition-all duration-500 ${isSubmitting ? "drop-shadow-[0_0_25px_rgba(255,215,0,1)] brightness-125 scale-110" : "drop-shadow-sm"}`}
+                        />
+                      </div>
+                    </div>
+                    <Input
+                      id="title"
+                      placeholder="Ex: Cura e saúde para meu filho Miguel"
+                      value={formData.title}
+                      onChange={(event) => {
+                        setFormData({ ...formData, title: event.target.value });
+                        setModerationReview(null);
+                      }}
+                      maxLength={100}
+                      className="rounded-xl border-primary/20 focus-visible:ring-primary"
+                    />
+                  </div>
+
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <Label htmlFor="content" className="text-sm font-bold flex items-center gap-1">
+                        Seu Pedido de Oração <span className="text-primary">*</span>
+                      </Label>
+                      <Popover open={examplesOpen} onOpenChange={setExamplesOpen}>
+                        <PopoverTrigger asChild>
+                          <button
+                            type="button"
+                            className="text-primary hover:text-primary/80 transition-colors p-1 rounded-full hover:bg-primary/10 flex items-center gap-1 text-xs font-semibold"
+                            title="Ver exemplos e orientações"
+                          >
+                            <HelpCircle className="w-3.5 h-3.5" />
+                            <span className="text-[11px] underline">Exemplos e Dicas</span>
+                          </button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-80 p-4 rounded-2xl soft-shadow border-primary/20 bg-card text-xs space-y-3" align="end">
+                          <p className="font-bold text-foreground text-sm flex items-center gap-1.5">
+                            <Sparkles className="w-4 h-4 text-primary" /> Exemplos de Pedidos
+                          </p>
+                          <p className="text-muted-foreground leading-relaxed text-[11px]">
+                            Escreva com o coração aberto. Clique em uma das sugestões abaixo para preencher automaticamente:
+                          </p>
+                          <div className="space-y-2 border-t border-primary/10 pt-2">
+                            <div 
+                              onClick={() => {
+                                setFormData(prev => ({ 
+                                  ...prev, 
+                                  title: prev.title || "Cura e saúde na família",
+                                  content: "Peço a intercessão de todos pela recuperação e restauração da saúde de um ente querido que está passando por um momento delicado." 
+                                }));
+                                setExamplesOpen(false);
+                                toast.info("Exemplo aplicado ao formulário!");
+                              }}
+                              className="p-2.5 rounded-xl bg-primary/5 hover:bg-primary/10 cursor-pointer transition-colors border border-primary/10"
+                            >
+                              <p className="font-bold text-primary text-[11px]">🕊️ Saúde e Cura</p>
+                              <p className="text-foreground/80 text-[11px] mt-0.5 italic line-clamp-2">"Peço a intercessão de todos pela recuperação e restauração da saúde..."</p>
+                            </div>
+
+                            <div 
+                              onClick={() => {
+                                setFormData(prev => ({ 
+                                  ...prev, 
+                                  title: prev.title || "Agradecimento por bênção alcançada",
+                                  content: "Agradeço a Deus por uma grande bênção recebida em minha vida e peço sabedoria para continuar trilhando o caminho da fé." 
+                                }));
+                                setExamplesOpen(false);
+                                toast.info("Exemplo aplicado ao formulário!");
+                              }}
+                              className="p-2.5 rounded-xl bg-primary/5 hover:bg-primary/10 cursor-pointer transition-colors border border-primary/10"
+                            >
+                              <p className="font-bold text-primary text-[11px]">⭐ Ação de Graças</p>
+                              <p className="text-foreground/80 text-[11px] mt-0.5 italic line-clamp-2">"Agradeço a Deus por uma grande bênção recebida em minha vida..."</p>
+                            </div>
+
+                            <div 
+                              onClick={() => {
+                                setFormData(prev => ({ 
+                                  ...prev, 
+                                  title: prev.title || "Paz e união no lar",
+                                  content: "Peço orações pela paz, concórdia e harmonia em nosso lar, para que Deus abençoe nossas decisões e afaste qualquer desavença." 
+                                }));
+                                setExamplesOpen(false);
+                                toast.info("Exemplo aplicado ao formulário!");
+                              }}
+                              className="p-2.5 rounded-xl bg-primary/5 hover:bg-primary/10 cursor-pointer transition-colors border border-primary/10"
+                            >
+                              <p className="font-bold text-primary text-[11px]">🏡 Família e Trabalho</p>
+                              <p className="text-foreground/80 text-[11px] mt-0.5 italic line-clamp-2">"Peço orações pela paz, concórdia e harmonia em nosso lar..."</p>
+                            </div>
+                          </div>
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                    <Textarea
+                      id="content"
+                      placeholder="Descreva seu pedido de oração com detalhes..."
+                      value={formData.content}
+                      onChange={(event) => {
+                        setFormData({ ...formData, content: event.target.value });
+                        setModerationReview(null);
+                      }}
+                      className="mt-1 min-h-[180px] custom-scrollbar rounded-2xl border-primary/20 focus-visible:ring-primary p-4 text-sm font-serif leading-relaxed"
+                      required
+                      maxLength={1000}
+                    />
+                    <div className="flex items-center justify-between text-xs text-muted-foreground mt-1">
+                      <span>Mínimo 5 letras no título</span>
+                      <span>{formData.content.length}/1000 caracteres</span>
                     </div>
                   </div>
-                  <Input
-                    id="title"
-                    placeholder="Ex: Cura para meu filho Miguel"
-                    value={formData.title}
-                    onChange={(event) => {
-                      setFormData({ ...formData, title: event.target.value });
-                      setModerationReview(null);
-                    }}
-                    maxLength={100}
-                  />
-                </div>
 
-                <div>
-                  <Label htmlFor="content" className="text-base">Seu Pedido de Oração *</Label>
-                  <Textarea
-                    id="content"
-                    placeholder="Descreva seu pedido de oração com detalhes..."
-                    value={formData.content}
-                    onChange={(event) => {
-                      setFormData({ ...formData, content: event.target.value });
-                      setModerationReview(null);
-                    }}
-                    className="mt-2 min-h-[180px]"
-                    required
-                    maxLength={1000}
-                  />
-                  <p className="text-sm text-muted-foreground mt-1">{formData.content.length}/1000 caracteres</p>
-                </div>
-
-                <div className="flex items-center justify-between gap-3 rounded-2xl border border-primary/10 bg-primary/5 px-4 py-3">
-                  <div className="flex items-center gap-3">
-                    <Checkbox
-                      id="is-anonymous"
-                      checked={isAnonymous}
-                      onCheckedChange={(checked) => setIsAnonymous(checked === true)}
-                    />
-                    <Label htmlFor="is-anonymous" className="text-sm font-semibold cursor-pointer">
-                      Enviar como anônimo
-                    </Label>
+                  <div className="flex items-center justify-between gap-3 rounded-2xl border border-primary/10 bg-primary/5 px-4 py-3">
+                    <div className="flex items-center gap-3">
+                      <Checkbox
+                        id="is-anonymous"
+                        checked={isAnonymous}
+                        onCheckedChange={(checked) => setIsAnonymous(checked === true)}
+                      />
+                      <div>
+                        <Label htmlFor="is-anonymous" className="text-sm font-semibold cursor-pointer block">
+                          Publicar de forma anônima
+                        </Label>
+                        <p className="text-[11px] text-muted-foreground">
+                          Seu nome, foto e paróquia não serão vinculados publicamente a este pedido.
+                        </p>
+                      </div>
+                    </div>
+                    <Popover open={isAnonymousInfoOpen} onOpenChange={setIsAnonymousInfoOpen}>
+                      <PopoverTrigger asChild>
+                        <button
+                          type="button"
+                          className="rounded-full p-1.5 text-primary hover:bg-primary/10 shrink-0"
+                          aria-label="Entenda o envio anônimo"
+                          onMouseEnter={() => setIsAnonymousInfoOpen(true)}
+                          onFocus={() => setIsAnonymousInfoOpen(true)}
+                        >
+                          <Info className="w-4 h-4" />
+                        </button>
+                      </PopoverTrigger>
+                      <PopoverContent align="end" className="max-w-xs text-xs leading-relaxed rounded-2xl">
+                        Ao marcar como anônimo, sua identidade permanecerá totalmente preservada perante a comunidade. Mesmo quem orar por você verá apenas "Irmão(ã) em Cristo". Você ainda receberá reações e notificações normalmente.
+                      </PopoverContent>
+                    </Popover>
                   </div>
-                  <Popover open={isAnonymousInfoOpen} onOpenChange={setIsAnonymousInfoOpen}>
-                    <PopoverTrigger asChild>
-                      <button
-                        type="button"
-                        className="rounded-full p-1 text-primary hover:bg-primary/10"
-                        aria-label="Entenda o envio anônimo"
-                        onMouseEnter={() => setIsAnonymousInfoOpen(true)}
-                        onFocus={() => setIsAnonymousInfoOpen(true)}
-                      >
-                        <Info className="w-4 h-4" />
-                      </button>
-                    </PopoverTrigger>
-                    <PopoverContent align="end" className="max-w-xs text-sm leading-relaxed">
-                      Seu nome e foto não aparecerão para quem rezar por este pedido. Você ainda poderá receber reações e enviar retornos, mas sua identidade ficará preservada para a comunidade.
-                    </PopoverContent>
-                  </Popover>
-                </div>
 
                 {moderationReview && (
                   <Alert className="border-amber-300 bg-amber-50 text-amber-950">
@@ -663,6 +813,7 @@ const Submit = () => {
               </form>
             </Card>
           </motion.div>
+          )}
 
           <div className="max-w-2xl mx-auto mt-16 pb-20 px-2">
             {!showHistory ? (

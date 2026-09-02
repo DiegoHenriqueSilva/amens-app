@@ -137,6 +137,36 @@
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
+
+  /* Scrollbars estilizadas nos tons sacros do aplicativo */
+  .custom-scrollbar,
+  .style-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(197, 160, 89, 0.4) transparent;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar,
+  .style-scrollbar::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track,
+  .style-scrollbar::-webkit-scrollbar-track {
+    background: rgba(197, 160, 89, 0.05);
+    border-radius: 9999px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb,
+  .style-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(197, 160, 89, 0.35);
+    border-radius: 9999px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover,
+  .style-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(197, 160, 89, 0.65);
+  }
 }
 
 @keyframes shimmer-sweep {
