@@ -139,6 +139,11 @@ const Submit = () => {
   const [sendingFeedback, setSendingFeedback] = useState(false);
   const [intercessorsOpen, setIntercessorsOpen] = useState<string | null>(null);
   const [showHistory, setShowHistory] = useState(false);
+  const [editingPrayer, setEditingPrayer] = useState<{ id: string; title: string; content: string } | null>(null);
+  const [isSavingEdit, setIsSavingEdit] = useState(false);
+  const [editModerationReview, setEditModerationReview] = useState<{ policies: ModerationPolicy[]; riskScore: number } | null>(null);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const fetchHistory = async () => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -360,6 +365,90 @@ const Submit = () => {
       toast.error("Erro ao reabrir pedido");
     } finally {
       setSendingFeedback(false);
+    }
+  };
+
+  // Edit a prayer request — sends through moderation, setting status to pending_review
+  const handleSaveEdit = async (confirmReview = false) => {
+    if (!editingPrayer) return;
+    const cleanTitle = editingPrayer.title.trim();
+    const cleanContent = editingPrayer.content.trim();
+
+    if (cleanTitle.length < 5) {
+      toast.error("O título deve ter pelo menos 5 letras");
+      return;
+    }
+    if (!cleanContent) {
+      toast.error("O conteúdo não pode estar vazio");
+      return;
+    }
+
+    setIsSavingEdit(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) { navigate("/auth"); return; }
+
+      // Reuse the submit-prayer-request edge function with an edit flag
+      const { data, error } = await supabase.functions.invoke<SubmitPrayerResponse>("submit-prayer-request", {
+        body: {
+          prayer_request_id: editingPrayer.id,
+          title: cleanTitle,
+          content: cleanContent,
+          is_edit: true,
+          confirm_review: confirmReview,
+        },
+      });
+
+      if (error) throw error;
+
+      if (data?.status === "needs_review") {
+        setEditModerationReview({
+          policies: data.policies || [],
+          riskScore: data.risk_score || 0,
+        });
+        toast.info("Revise o aviso antes de salvar a edição.");
+        return;
+      }
+
+      const newStatus = data?.status === "pending_review" ? "pending_review" : "pending_review";
+      const updatedAt = new Date().toISOString();
+      setPrayers((current) =>
+        current.map((item) =>
+          item.id === editingPrayer.id
+            ? { ...item, title: cleanTitle, content: cleanContent, status: newStatus, updated_at: updatedAt }
+            : item
+        )
+      );
+      setEditingPrayer(null);
+      setEditModerationReview(null);
+      toast.success("Pedido editado! Ele ficará em revisão antes de voltar ao público. 🔎");
+    } catch (error) {
+      console.error("Edit error:", error);
+      toast.error("Erro ao salvar edição");
+    } finally {
+      setIsSavingEdit(false);
+    }
+  };
+
+  // Delete a prayer request permanently
+  const handleDeletePrayer = async (prayerId: string) => {
+    setIsDeleting(true);
+    try {
+      const { error } = await supabase
+        .from("prayer_requests")
+        .delete()
+        .eq("id", prayerId);
+
+      if (error) throw error;
+
+      setPrayers((current) => current.filter((item) => item.id !== prayerId));
+      setDeleteConfirmId(null);
+      toast.success("Pedido removido com sucesso.");
+    } catch (error) {
+      console.error("Delete error:", error);
+      toast.error("Erro ao remover pedido");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -620,11 +709,127 @@ const Submit = () => {
                           animate={{ opacity: 1, scale: 1 }}
                           transition={{ delay: index * 0.1 }}
                         >
-                          <Card className={`p-6 soft-shadow bg-white/70 backdrop-blur-sm rounded-[2rem] ${isRestricted ? "border-amber-200" : "border-primary/5"}`}>
+                          <Card className={`p-6 soft-shadow bg-white/70 backdrop-blur-sm rounded-[2rem] ${isRestricted ? "border-amber-200" : editingPrayer?.id === prayer.id ? "border-primary/40 ring-1 ring-primary/20" : "border-primary/5"}`}>
+                            {/* Inline edit form */}
+                            {editingPrayer?.id === prayer.id ? (
+                              <div className="space-y-3">
+                                <p className="text-[10px] font-black text-primary uppercase tracking-widest flex items-center gap-1.5">
+                                  <Pencil className="w-3 h-3" /> Editando pedido
+                                </p>
+                                <Input
+                                  value={editingPrayer.title}
+                                  onChange={(e) => setEditingPrayer({ ...editingPrayer, title: e.target.value })}
+                                  placeholder="Título do pedido"
+                                  className="text-sm rounded-xl border-primary/20"
+                                  maxLength={120}
+                                />
+                                <Textarea
+                                  value={editingPrayer.content}
+                                  onChange={(e) => setEditingPrayer({ ...editingPrayer, content: e.target.value })}
+                                  placeholder="Descreva seu pedido..."
+                                  className="text-sm rounded-xl border-primary/20 min-h-[90px] custom-scrollbar"
+                                  maxLength={1000}
+                                />
+                                <p className="text-[10px] text-amber-700 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2 font-medium">
+                                  ⚠️ Após salvar, o pedido ficará em <strong>revisão</strong> até ser aprovado pelo sistema antes de voltar ao público.
+                                </p>
+
+                                {/* Edit moderation alert */}
+                                {editModerationReview && (
+                                  <Alert variant="destructive" className="rounded-2xl">
+                                    <AlertTitle className="text-xs font-black">Aviso de conteúdo</AlertTitle>
+                                    <AlertDescription className="text-xs space-y-1 mt-1">
+                                      <p>Seu pedido pode conter:</p>
+                                      {editModerationReview.policies.map((policy) => (
+                                        <span key={policy.code} className="inline-flex items-center gap-1 bg-red-100 text-red-800 rounded-full px-2 py-0.5 text-[10px] font-bold mr-1">
+                                          {policy.label}
+                                        </span>
+                                      ))}
+                                      <div className="flex gap-2 mt-3">
+                                        <Button type="button" size="sm" variant="outline" onClick={() => { setEditingPrayer(null); setEditModerationReview(null); }} className="text-xs rounded-full">
+                                          Cancelar
+                                        </Button>
+                                        <Button type="button" size="sm" onClick={() => handleSaveEdit(true)} disabled={isSavingEdit} className="bg-amber-600 text-white hover:bg-amber-700 border-0 text-xs rounded-full">
+                                          Confirmar mesmo assim
+                                        </Button>
+                                      </div>
+                                    </AlertDescription>
+                                  </Alert>
+                                )}
+
+                                <div className="flex gap-2 pt-1">
+                                  <Button
+                                    size="sm"
+                                    onClick={() => handleSaveEdit(false)}
+                                    disabled={isSavingEdit}
+                                    className="rounded-full text-xs font-bold gradient-divine text-black hover:opacity-90 h-8 px-4"
+                                  >
+                                    {isSavingEdit ? "Salvando..." : "Salvar edição"}
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() => { setEditingPrayer(null); setEditModerationReview(null); }}
+                                    className="rounded-full text-xs font-bold h-8 px-3"
+                                  >
+                                    Cancelar
+                                  </Button>
+                                </div>
+                              </div>
+                            ) : (
+                              <>
                             <div className="mb-4">
                               <div className="flex justify-between items-start gap-3 mb-2">
                                 {prayer.title && <h3 className="text-base font-bold text-foreground">{prayer.title}</h3>}
-                                <span className="text-[10px] bg-primary/5 px-2 py-1 rounded-full text-primary font-bold">{formatTimeAgo(prayer.created_at)}</span>
+                                <div className="flex items-center gap-1.5 flex-shrink-0">
+                                  <span className="text-[10px] bg-primary/5 px-2 py-1 rounded-full text-primary font-bold">{formatTimeAgo(prayer.created_at)}</span>
+                                  {!isRestricted && (
+                                    <div className="relative">
+                                      {deleteConfirmId === prayer.id ? (
+                                        <div className="flex items-center gap-1">
+                                          <Button
+                                            size="sm"
+                                            variant="destructive"
+                                            onClick={() => handleDeletePrayer(prayer.id)}
+                                            disabled={isDeleting}
+                                            className="h-6 rounded-full text-[9px] font-bold px-2"
+                                          >
+                                            {isDeleting ? "..." : "Confirmar"}
+                                          </Button>
+                                          <Button
+                                            size="sm"
+                                            variant="ghost"
+                                            onClick={() => setDeleteConfirmId(null)}
+                                            className="h-6 rounded-full text-[9px] font-bold px-2"
+                                          >
+                                            Não
+                                          </Button>
+                                        </div>
+                                      ) : (
+                                        <div className="flex items-center gap-1">
+                                          <Button
+                                            size="sm"
+                                            variant="ghost"
+                                            onClick={() => setEditingPrayer({ id: prayer.id, title: prayer.title || "", content: prayer.content })}
+                                            className="h-6 w-6 p-0 rounded-full hover:bg-primary/10 text-muted-foreground hover:text-primary"
+                                            title="Editar pedido"
+                                          >
+                                            <Pencil className="w-3 h-3" />
+                                          </Button>
+                                          <Button
+                                            size="sm"
+                                            variant="ghost"
+                                            onClick={() => setDeleteConfirmId(prayer.id)}
+                                            className="h-6 w-6 p-0 rounded-full hover:bg-red-50 text-muted-foreground hover:text-red-500"
+                                            title="Remover pedido"
+                                          >
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+                                          </Button>
+                                        </div>
+                                      )}
+                                    </div>
+                                  )}
+                                </div>
                               </div>
                               {isRestricted ? (
                                 <div className="rounded-2xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900">
@@ -635,6 +840,8 @@ const Submit = () => {
                                 <p className="text-sm text-muted-foreground leading-relaxed line-clamp-2">{prayer.content}</p>
                               )}
                             </div>
+                            </>
+                            )}
 
                             <div className="flex items-center gap-4 text-[11px] text-muted-foreground mb-4">
                               <div className="flex items-center gap-1"><Eye className="w-3.5 h-3.5" /> <span>{prayer.prayer_count}</span></div>

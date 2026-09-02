@@ -321,6 +321,8 @@ serve(async (req) => {
       location = "",
       is_anonymous = false,
       confirm_review = false,
+      is_edit = false,
+      prayer_request_id = null,
     } = await req.json();
 
     const cleanTitle = String(title).trim();
@@ -349,10 +351,62 @@ serve(async (req) => {
       });
     }
 
+    const requestStatus = moderation.decision === "needs_review" ? "pending_review" : "active";
+
+    // --- EDIT MODE ---
+    if (is_edit && prayer_request_id) {
+      // Verify the prayer belongs to the authenticated user
+      const { data: existing, error: fetchError } = await serviceClient
+        .from("prayer_requests")
+        .select("id, user_id, status")
+        .eq("id", prayer_request_id)
+        .single();
+
+      if (fetchError || !existing) {
+        return jsonResponse({ error: "Prayer request not found" }, 404);
+      }
+
+      if (existing.user_id !== userData.user.id) {
+        return jsonResponse({ error: "Forbidden" }, 403);
+      }
+
+      const { data: updatedPrayer, error: updateError } = await serviceClient
+        .from("prayer_requests")
+        .update({
+          title: cleanTitle,
+          content: cleanContent,
+          status: "pending_review", // Always requires re-review after an edit
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", prayer_request_id)
+        .select("id, title, status, is_anonymous")
+        .single();
+
+      if (updateError) throw updateError;
+
+      await serviceClient.from("prayer_moderation_reviews").insert({
+        prayer_request_id,
+        user_id: userData.user.id,
+        original_title: cleanTitle,
+        original_content: cleanContent,
+        normalized_content: moderation.normalizedContent,
+        detected_policies: moderation.policies,
+        risk_score: moderation.riskScore,
+        decision: "pending_review",
+      });
+
+      return jsonResponse({
+        status: "pending_review",
+        prayer_request: updatedPrayer,
+        policies: moderation.policies,
+        risk_score: moderation.riskScore,
+      });
+    }
+
+    // --- CREATE MODE ---
     const metadata = userData.user.user_metadata ?? {};
     const fullName = typeof metadata.full_name === "string" ? metadata.full_name : "";
     const firstName = fullName.split(" ")[0] || "Anônimo";
-    const requestStatus = moderation.decision === "needs_review" ? "pending_review" : "active";
 
     const { data: prayerRequest, error: insertError } = await serviceClient
       .from("prayer_requests")
