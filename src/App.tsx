@@ -26,6 +26,7 @@ import RosarySelection from "./pages/RosarySelection";
 import RosaryPrayer from "./pages/RosaryPrayer";
 import BottomNav from "./components/BottomNav";
 import { PushPromptProvider } from "./contexts/PushPromptContext";
+import { PerformanceProvider } from "./contexts/PerformanceContext";
 import Terco from "./pages/Terco";
 import Admin from "./pages/Admin";
 import { AdminGuard } from "./components/AdminGuard";
@@ -52,11 +53,12 @@ const App = () => {
   return (
   <QueryClientProvider client={queryClient}>
     <PushPromptProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <div className="min-h-screen relative">
+      <PerformanceProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <div className="min-h-screen relative">
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/old" element={<IndexOld />} />
@@ -83,6 +85,7 @@ const App = () => {
         </div>
       </BrowserRouter>
     </TooltipProvider>
+    </PerformanceProvider>
     </PushPromptProvider>
   </QueryClientProvider>
   );

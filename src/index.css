@@ -233,3 +233,49 @@
   50% { transform: scale(1.1); opacity: 0.8; }
 }
 
+/* Modo Alto Desempenho / Redução de Efeitos Visuais */
+.reduce-motion *,
+.reduce-motion *::before,
+.reduce-motion *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+  scroll-behavior: auto !important;
+}
+
+.reduce-motion .disney-shimmer::after {
+  display: none !important;
+}
+
+.reduce-motion .halo-angelical,
+.reduce-motion .gold-glow,
+.reduce-motion .sacred-ripple,
+.reduce-motion .sway,
+.reduce-motion .shimmer-effect {
+  animation: none !important;
+  box-shadow: none !important;
+}
+
+.reduce-motion .text-glow,
+.reduce-motion .text-glow-gold {
+  text-shadow: none !important;
+}
+
+.reduce-motion .backdrop-blur-md,
+.reduce-motion .backdrop-blur-sm,
+.reduce-motion .backdrop-blur-lg,
+.reduce-motion .backdrop-blur-xl,
+.reduce-motion .nav-blur {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+.reduce-motion .nav-blur {
+  background: rgba(253, 252, 247, 0.98) !important;
+}
+
+.reduce-motion body::before {
+  opacity: 0.12 !important;
+}
+
+

@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { LogOut, ArrowLeft, Trophy, Heart, Send, Sparkles, User, MapPin, Pencil, Check, X } from "lucide-react";
+import { LogOut, ArrowLeft, Trophy, Heart, Send, Sparkles, User, MapPin, Pencil, Check, X, Zap } from "lucide-react";
 import { useFaithPoints } from "@/hooks/use-faith-points";
 import { getLevel, CELESTIAL_LEVELS, getLevelProgress } from "@/lib/faith-points";
 import { toast } from "sonner";
@@ -21,6 +21,8 @@ import { cn } from "@/lib/utils";
 import { Camera, Users, Lock, Ticket } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useDailyTasks } from "@/hooks/use-daily-tasks";
+import { usePerformance } from "@/contexts/PerformanceContext";
+import { Switch } from "@/components/ui/switch";
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -29,6 +31,7 @@ const Profile = () => {
   const [stats, setStats] = useState({ requests: 0, intercessions: 0 });
   const [savingCity, setSavingCity] = useState(false);
   const { completeTask } = useDailyTasks();
+  const { isPerformanceMode, togglePerformanceMode } = usePerformance();
   
   // Advanced Editing
   const [isEditing, setIsEditing] = useState(false);
@@ -479,11 +482,27 @@ const Profile = () => {
                                         <Input 
                                             placeholder="Ex: Pedro, Ana..." 
                                             value={editData.displayName} 
-                                            onChange={(e) => setEditData({...editData, displayName: e.target.value})}
+                                            onChange={(e) => setEditData({...editData, displayName: e.target.value})} 
                                         />
                                     </motion.div>
                                 )}
                             </AnimatePresence>
+
+                            <div className="pt-4 border-t border-primary/10 flex items-center justify-between gap-3">
+                                <div className="space-y-0.5">
+                                    <Label className="text-xs font-semibold flex items-center gap-1.5 cursor-pointer">
+                                        <Zap className="w-3.5 h-3.5 text-primary" />
+                                        Modo Desempenho
+                                    </Label>
+                                    <p className="text-[10px] text-muted-foreground leading-tight">
+                                        Reduz animações e efeitos para economizar bateria e deixar o app mais rápido.
+                                    </p>
+                                </div>
+                                <Switch 
+                                    checked={isPerformanceMode} 
+                                    onCheckedChange={togglePerformanceMode} 
+                                />
+                            </div>
                         </div>
                         
                         <Button className="w-full gradient-divine h-12 rounded-2xl font-bold mt-4" onClick={handleSaveProfile} disabled={savingCity}>
@@ -525,7 +544,7 @@ const Profile = () => {
           </motion.div>
 
           {/* Statistics Grid */}
-          <div className="grid grid-cols-2 gap-4 mb-10">
+          <div className="grid grid-cols-2 gap-4 mb-8">
             <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.2 }}>
               <Card className="p-6 text-center border-primary/5 soft-shadow bg-white/50 rounded-[2rem]">
                 <Send className="w-6 h-6 text-primary/60 mx-auto mb-3" />
@@ -542,6 +561,29 @@ const Profile = () => {
               </Card>
             </motion.div>
           </div>
+
+          {/* Modo Alto Desempenho */}
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}>
+            <Card className="p-6 mb-8 soft-shadow border-primary/10 bg-white/70 backdrop-blur-md rounded-[2.5rem]">
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3.5">
+                  <div className="w-10 h-10 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                    <Zap className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold text-foreground">Modo Alto Desempenho</h3>
+                    <p className="text-xs text-muted-foreground leading-relaxed mt-0.5">
+                      Desativa animações e efeitos pesados para economizar bateria e deixar a navegação mais veloz.
+                    </p>
+                  </div>
+                </div>
+                <Switch
+                  checked={isPerformanceMode}
+                  onCheckedChange={togglePerformanceMode}
+                />
+              </div>
+            </Card>
+          </motion.div>
 
             </TabsContent>
 
