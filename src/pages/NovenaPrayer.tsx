@@ -11,12 +11,14 @@ import PageTransition from "@/components/PageTransition";
 import { cn } from "@/lib/utils";
 import { MercyChaplet } from "@/components/novenas/MercyChaplet";
 import { usePushPrompt } from "@/contexts/PushPromptContext";
+import { useDailyTasks } from "@/hooks/use-daily-tasks";
 
 const NovenaPrayer = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const novena = NOVENAS.find(n => n.id === id);
   const { state, updateProgress, setReminder } = useNovenaState(id || "");
+  const { completeTask } = useDailyTasks();
   
   const [step, setStep] = useState(0); 
   const [showReminder, setShowReminder] = useState(false);
@@ -91,6 +93,7 @@ const NovenaPrayer = () => {
 
   const handleComplete = () => {
     updateProgress(state.currentDay);
+    completeTask("pray_novena");
     setShowConclusion(true);
   };
 
@@ -118,22 +121,25 @@ const NovenaPrayer = () => {
             <motion.div 
               initial={{ scale: 0.8, opacity: 0 }} 
               animate={{ scale: 1, opacity: 1 }}
-              className="w-20 h-20 bg-primary/20 rounded-full flex items-center justify-center mb-6"
+              className="w-20 h-20 bg-primary/20 rounded-full flex items-center justify-center mb-4"
             >
                <CheckCircle2 className="w-10 h-10 text-primary" />
             </motion.div>
-            <h2 className="text-3xl font-bold mb-4">
-              {state.currentDay === 9 ? "Novena Concluída!" : "Dia Concluído! 🙏"}
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-100 text-amber-800 border border-amber-200 text-xs font-bold mb-3 shadow-sm">
+              <Sparkles className="w-3.5 h-3.5" /> +30 Pontos de Fé Conquistados!
+            </div>
+            <h2 className="text-3xl font-bold mb-3 font-serif text-soft-outline">
+              {state.currentDay === 9 ? "Novena Concluída!" : `Dia ${state.currentDay} Concluído! 🙏`}
             </h2>
-            <Card className="p-8 soft-shadow border-primary/10 max-w-md bg-white/50 backdrop-blur-sm mb-8">
-               <p className="text-foreground/80 leading-relaxed italic text-sm">
+            <Card className="p-6 soft-shadow border-primary/10 max-w-md bg-white/70 backdrop-blur-sm mb-6 rounded-3xl">
+               <p className="text-foreground/85 leading-relaxed italic text-sm font-serif">
                  {state.currentDay === 9 
-                   ? "Parabéns por concluir sua jornada de 9 dias. Que as graças solicitadas sejam alcançadas segundo a vontade do Pai. Amém."
-                   : "Que a paz de Cristo esteja com você. Amanhã continuaremos nossa caminhada de fé."
+                   ? "Parabéns por concluir sua jornada de 9 dias. Que as graças solicitadas sejam alcançadas segundo a bondosa vontade de Deus. Amém."
+                   : "Que a paz de Cristo permaneça em seu coração. Amanhã continuaremos nossa caminhada de oração e fé."
                  }
                </p>
             </Card>
-            <Button onClick={handleFinish} className="w-full max-w-xs h-16 rounded-2xl gradient-divine shadow-lg text-lg font-bold">
+            <Button onClick={handleFinish} className="w-full max-w-xs h-14 rounded-2xl gradient-divine shadow-lg text-base font-bold">
               {state.currentDay < 9 ? "Definir Lembrete de Amanhã" : "Finalizar Novena"}
             </Button>
 

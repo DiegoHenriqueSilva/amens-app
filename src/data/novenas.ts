@@ -435,5 +435,72 @@ export const NOVENAS: Novena[] = [
         content: '"Porque aos seus anjos dará ordens a teu respeito, para que te guardem em todos os teus caminhos. Eles te sustentarão nas suas mãos, para que não tropeces nalguma pedra."\n\nMeditação: "Pela intercessão de São Miguel e do coro celeste de todos os Anjos, para que sejamos guardados por eles nesta vida mortal, e por eles conduzidos à glória eterna do Céu. Agradeço-vos, glorioso Arcanjo, por ouvirdes as minhas preces nesta novena. Coloco minha vida e minha família sob a vossa guarda."' 
       }
     ]
+  },
+  {
+    id: "ns-aparecida",
+    name: "Nossa Senhora Aparecida",
+    focus: "Proteção das famílias, saúde e bênçãos para o Brasil",
+    image: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nossa_Senhora_Aparecida.jpg/640px-Nossa_Senhora_Aparecida.jpg",
+    colors: { from: "#1e3a8a", to: "#d97706" },
+    prayers: {
+      initial: "Ó Virgem Imaculada, Senhora da Conceição Aparecida, Mãe amada de todos os brasileiros! Vós que fostes encontrada nas redes dos humildes pescadores no Rio Paraíba do Sul, enchendo seus barcos de peixes e seus corações de esperança, olhai com carinho de Mãe para as aflições da minha vida. Acolhei sob o vosso manto azul a minha família, o nosso país e a súplica especial que agora vos apresento nesta novena: [Fazer o pedido da graça aqui]. Amém.",
+      final: "Querida Mãe Aparecida, nós vos agradecemos por vosso amparo incessante. Sob o vosso olhar compassivo colocamos as nossas dores, os nossos projetos e a nossa fé. Concedei-nos a graça de amar a Jesus como vós o amastes e de perseverar no caminho do bem até o Reino Celeste. Nossa Senhora da Conceição Aparecida, Rainha e Padroeira do Brasil, rogai por nós que recorremos a vós! Amém."
+    },
+    days: [
+      {
+        day: 1,
+        title: "Mãe da Esperança e do Encontro",
+        reading: "Lucas 1, 39-45",
+        content: '"Naqueles dias, Maria partiu apressadamente para a região montanhosa... Entrou na casa de Zacarias e saudou Isabel. Quando Isabel ouviu a saudação de Maria, a criança estremeceu em seu ventre e Isabel ficou cheia do Espírito Santo."\n\nMeditação: "Nossa Senhora Aparecida, assim como fostes apressadamente ao encontro de Isabel, viestes ao encontro dos pescadores nas águas escuras do rio, trazendo consolo em meio à escassez. Vinde também ao meu encontro hoje. Dai-me a virtude da esperança viva para jamais duvidar da misericórdia de Deus."'
+      },
+      {
+        day: 2,
+        title: "Senhora da Humildade e do Serviço",
+        reading: "Lucas 1, 46-48",
+        content: '"A minha alma engrandece o Senhor e o meu espírito se alegra em Deus, meu Salvador, porque olhou para a humildade de sua serva. De agora em diante, todas as gerações me chamarão bem-aventurada."\n\nMeditação: "Ó Mãe de cor morena e coração humilde, ensinai-me a simplicidade evangélica. Livrai-me da soberba, do egoísmo e da vaidade. Que eu aprenda convosco a servir aos meus irmãos com amor sincero e alegria, encontrando a verdadeira grandeza na humildade diante do Pai."'
+      },
+      {
+        day: 3,
+        title: "Rainha da Paz e das Famílias",
+        reading: "Colossenses 3, 12-14",
+        content: '"Revesti-vos, pois, como eleitos de Deus, santos e amados, de entranhas de misericórdia, de bondade, humildade, mansidão, paciência... Acima de tudo, revesti-vos do amor, que é o vínculo da perfeição."\n\nMeditação: "Mãe Aparecida, padroeira dos nossos lares, derramai a paz nas famílias brasileiras e no meu lar. Afastai as discussões, a incompreensão e a frieza. Que em nossa casa reine o diálogo, a oração e o perdão mútuo, transformando o nosso lar numa pequena igreja doméstica."'
+      },
+      {
+        day: 4,
+        title: "Refúgio dos Aflitos e Libertadora",
+        reading: "Mateus 11, 28-30",
+        content: '"Vinde a mim, todos vós que estais cansados e carregados de fardos, e eu vos darei descanso. Tomai sobre vós o meu jugo e aprendei de mim, porque sou manso e humilde de coração."\n\nMeditação: "Mãe carinhosa, que acolhestes o escravo Zacarias no milagre da libertação de suas correntes, olhai para as amarras e prisões que afligem a minha alma. Sede o refúgio dos pobres, dos enfermos e de todos os que choram. Sustentai-me na fraqueza com vosso amparo maternal."'
+      },
+      {
+        day: 5,
+        title: "Intercessora nas Dificuldades (Caná)",
+        reading: "João 2, 1-5",
+        content: '"Faltando o vinho, a mãe de Jesus disse-lhe: \'Eles não têm mais vinho\'. Disse Maria aos serventes: \'Fazei tudo o que ele vos disser\'."\n\nMeditação: "Virgem de Caná e de Aparecida, que percebeis antes de todos quando nos falta a alegria, a saúde ou a paz. Dizei a Jesus a respeito da minha necessidade: \'Eles não têm mais vinho\'. Ensinai-me a fazer tudo o que o Teu Filho disser, confiando na Sua providência."'
+      },
+      {
+        day: 6,
+        title: "Estrela da Evangelização e da Fé",
+        reading: "Atos 1, 14",
+        content: '"Todos estes perseveravam unânimes na oração, juntamente com as mulheres e Maria, mãe de Jesus, e com os irmãos dele."\n\nMeditação: "Mãe fiel, presente no Cenáculo com os Apóstolos no nascimento da Igreja, animai a nossa fé. Que a chama do Espírito Santo arda em nossos corações. Ajudai-me a não ter vergonha do Evangelho e a testemunhar o amor de Cristo na minha comunidade e em meu trabalho."'
+      },
+      {
+        day: 7,
+        title: "Mãe Consoladora aos Pés da Cruz",
+        reading: "João 19, 25-27",
+        content: '"Estavam de pé, junto à cruz de Jesus, sua mãe... Jesus, vendo sua mãe e, perto dela, o discípulo que ele amava, disse à sua mãe: \'Mulher, eis aí o teu filho\'. Depois disse ao discípulo: \'Eis aí a tua mãe\'."\n\nMeditação: "Mãe Dolorosa e Gloriosa, que soubestes permanecer de pé diante da dor extrema do Calvário, ensinai-me a fortaleza nas horas de sofrimento e provação. Quando a dor bater à minha porta, lembrai-me de que sou vosso filho amado, entregue aos vossos cuidados pelo próprio Cristo na cruz."'
+      },
+      {
+        day: 8,
+        title: "Defensora da Vida e da Criação",
+        reading: "Salmo 24, 1-2",
+        content: '"Do Senhor é a terra e a sua plenitude, o mundo e os que nele habitam. Pois ele a fundou sobre os mares e a firmou sobre os rios."\n\nMeditação: "Mãe Aparecida, que surgistes nas águas límpidas do Paraíba, ensinai-nos a cuidar da criação de Deus e a defender a vida desde a concepção. Abençoai os que trabalham pela preservação das nossas águas, das nossas famílias e do futuro das nossas crianças."'
+      },
+      {
+        day: 9,
+        title: "Consagração a Nossa Senhora Aparecida",
+        reading: "Apocalipse 12, 1",
+        content: '"Apareceu no céu um grande sinal: uma mulher vestida de sol, com a lua debaixo dos pés e uma coroa de doze estrelas sobre a cabeça."\n\nMeditação: "Ó incomparável Senhora da Conceição Aparecida, Mãe de Deus e nossa Padroeira! Chegando ao fim desta novena, consagro-vos os meus olhos, os meus ouvidos, a minha boca, o meu coração e inteiramente todo o meu ser. Guardai-me e defendei-me como coisa e propriedade vossa. Obrigado por tudo, querida Mãe. Amém."'
+      }
+    ]
   }
 ];
