@@ -9,6 +9,7 @@ import {
   Clock,
   Eye,
   Heart,
+  HelpCircle,
   Info,
   MessageCircle,
   RefreshCw,
@@ -464,9 +465,15 @@ const Submit = () => {
           <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.55, delay: 0.15 }}>
             <Card className="max-w-2xl mx-auto p-8 soft-shadow border-primary/10">
               <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="flex items-center justify-between text-xs text-muted-foreground bg-muted/40 px-3 py-2 rounded-lg border border-border/40">
+                  <span><span className="text-amber-500 font-bold">*</span> Indica campo de preenchimento obrigatório</span>
+                </div>
+
                 <div>
                   <div className="flex items-center justify-between mb-2">
-                    <Label htmlFor="title" className="text-base">Título *</Label>
+                    <Label htmlFor="title" className="text-base font-semibold">
+                      Título do Pedido <span className="text-amber-500 font-bold">*</span>
+                    </Label>
                     <div className="w-10 h-10 overflow-visible relative flex-shrink-0">
                       <img
                         src="/enviar_pergaminho_3d.png"
@@ -477,18 +484,42 @@ const Submit = () => {
                   </div>
                   <Input
                     id="title"
-                    placeholder="Ex: Cura para meu filho Miguel"
+                    placeholder="Ex: Cura e saúde para meu familiar"
                     value={formData.title}
                     onChange={(event) => {
                       setFormData({ ...formData, title: event.target.value });
                       setModerationReview(null);
                     }}
                     maxLength={100}
+                    required
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="content" className="text-base">Seu Pedido de Oração *</Label>
+                  <div className="flex items-center justify-between mb-2">
+                    <Label htmlFor="content" className="text-base font-semibold">
+                      Seu Pedido de Oração <span className="text-amber-500 font-bold">*</span>
+                    </Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button type="button" variant="ghost" size="sm" className="h-7 text-xs text-primary gap-1 px-2 hover:bg-primary/10">
+                          <HelpCircle className="w-3.5 h-3.5" />
+                          Exemplo de pedido
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent align="end" className="w-80 text-xs space-y-2.5 p-4">
+                        <p className="font-bold text-foreground flex items-center gap-1.5">
+                          💡 Exemplo de Pedido de Oração
+                        </p>
+                        <p className="italic text-muted-foreground bg-muted/50 p-3 rounded-lg border border-border/50 leading-relaxed">
+                          "Peço orações pela restauração da saúde de minha mãe Maria, que fará um procedimento esta semana, e para que toda a nossa família permaneça em paz e fé."
+                        </p>
+                        <p className="text-[11px] text-muted-foreground">
+                          Escreva com sinceridade e fé para guiar as orações dos intercessores.
+                        </p>
+                      </PopoverContent>
+                    </Popover>
+                  </div>
                   <Textarea
                     id="content"
                     placeholder="Descreva seu pedido de oração com detalhes..."
@@ -497,40 +528,50 @@ const Submit = () => {
                       setFormData({ ...formData, content: event.target.value });
                       setModerationReview(null);
                     }}
-                    className="mt-2 min-h-[180px]"
+                    className="mt-1 min-h-[180px]"
                     required
                     maxLength={1000}
                   />
-                  <p className="text-sm text-muted-foreground mt-1">{formData.content.length}/1000 caracteres</p>
+                  <p className="text-xs text-muted-foreground mt-1 text-right">{formData.content.length}/1000 caracteres</p>
                 </div>
 
-                <div className="flex items-center justify-between gap-3 rounded-2xl border border-primary/10 bg-primary/5 px-4 py-3">
-                  <div className="flex items-center gap-3">
-                    <Checkbox
-                      id="is-anonymous"
-                      checked={isAnonymous}
-                      onCheckedChange={(checked) => setIsAnonymous(checked === true)}
-                    />
-                    <Label htmlFor="is-anonymous" className="text-sm font-semibold cursor-pointer">
-                      Enviar como anônimo
-                    </Label>
+                <div className="rounded-2xl border border-primary/10 bg-primary/5 p-4 space-y-2">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <Checkbox
+                        id="is-anonymous"
+                        checked={isAnonymous}
+                        onCheckedChange={(checked) => setIsAnonymous(checked === true)}
+                      />
+                      <Label htmlFor="is-anonymous" className="text-sm font-semibold cursor-pointer">
+                        Enviar este pedido como Anônimo
+                      </Label>
+                    </div>
+                    <Popover open={isAnonymousInfoOpen} onOpenChange={setIsAnonymousInfoOpen}>
+                      <PopoverTrigger asChild>
+                        <button
+                          type="button"
+                          className="rounded-full p-1 text-primary hover:bg-primary/10"
+                          aria-label="Entenda o envio anônimo"
+                          onMouseEnter={() => setIsAnonymousInfoOpen(true)}
+                          onFocus={() => setIsAnonymousInfoOpen(true)}
+                        >
+                          <Info className="w-4 h-4" />
+                        </button>
+                      </PopoverTrigger>
+                      <PopoverContent align="end" className="max-w-xs text-xs leading-relaxed space-y-1">
+                        <p className="font-bold">Privacidade do Pedido</p>
+                        <p>
+                          Ao marcar como anônimo, seu pedido será exibido como <strong>"Anônimo"</strong>. Seu Nome Preferido e foto de perfil não serão exibidos publicamente na comunidade.
+                        </p>
+                      </PopoverContent>
+                    </Popover>
                   </div>
-                  <Popover open={isAnonymousInfoOpen} onOpenChange={setIsAnonymousInfoOpen}>
-                    <PopoverTrigger asChild>
-                      <button
-                        type="button"
-                        className="rounded-full p-1 text-primary hover:bg-primary/10"
-                        aria-label="Entenda o envio anônimo"
-                        onMouseEnter={() => setIsAnonymousInfoOpen(true)}
-                        onFocus={() => setIsAnonymousInfoOpen(true)}
-                      >
-                        <Info className="w-4 h-4" />
-                      </button>
-                    </PopoverTrigger>
-                    <PopoverContent align="end" className="max-w-xs text-sm leading-relaxed">
-                      Seu nome e foto não aparecerão para quem rezar por este pedido. Você ainda poderá receber reações e enviar retornos, mas sua identidade ficará preservada para a comunidade.
-                    </PopoverContent>
-                  </Popover>
+                  <p className="text-[11px] text-muted-foreground pl-7">
+                    {isAnonymous
+                      ? "Seu pedido será exibido publicamente como \"Anônimo\"."
+                      : "Seu pedido será assinado publicamente com seu Nome Preferido configurado no perfil."}
+                  </p>
                 </div>
 
                 {moderationReview && (
