@@ -815,20 +815,18 @@ REGRAS ADICIONAIS:
         <div className="absolute top-[-6rem] left-[-4rem] w-80 h-80 bg-primary/5 rounded-full blur-3xl" />
         <div className="absolute bottom-[-6rem] right-[-4rem] w-80 h-80 bg-accent/5 rounded-full blur-3xl" />
 
-        <div className="container mx-auto px-4 py-8 relative z-10">
-          <div className="max-w-2xl mx-auto mb-6 flex items-center">
-            <Button variant="ghost" size="icon" onClick={() => navigate("/")} className="shrink-0 hover:bg-primary/10 transition-colors">
-              <ArrowLeft className="w-5 h-5 text-foreground" />
-            </Button>
-          </div>
-          
-          <motion.div className="max-w-2xl mx-auto text-center mb-6" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-            <p className="text-sm uppercase tracking-[0.25em] text-primary mb-2">✦</p>
-            <h1 className="text-4xl md:text-5xl font-bold mb-3 text-foreground">Orar por uma Causa</h1>
-            <div className="divider-gold max-w-[10rem] mx-auto mb-3" />
-            <p className="text-muted-foreground">Seja um instrumento da graça divina</p>
+        <Button variant="ghost" size="icon" onClick={() => navigate("/")} className="absolute top-4 left-4 z-20 rounded-full hover:bg-primary/10 transition-colors">
+          <ArrowLeft className="w-5 h-5 text-foreground" />
+        </Button>
+
+        <div className="container mx-auto px-4 py-8 relative z-10 max-w-lg">
+          <motion.div className="text-center mb-6 pt-2" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+            <p className="text-xs uppercase tracking-[0.25em] text-primary mb-2 text-glow font-bold">✦</p>
+            <h1 className="text-3xl md:text-4xl font-bold mb-2 text-foreground font-serif text-soft-outline">Orar por uma Causa</h1>
+            <p className="text-xs text-muted-foreground font-medium">Seja um instrumento da graça e interceda por quem precisa</p>
+            <div className="divider-gold max-w-[5rem] mx-auto my-3" />
             {currentUser && (
-              <p className="mt-3 text-xs text-muted-foreground">
+              <p className="mt-2 text-xs text-muted-foreground">
                 {isLimitReached ? (
                   <span className="text-red-500 font-medium">Limite atingido. Próximo sorteio {nextResetLabel}.</span>
                 ) : (

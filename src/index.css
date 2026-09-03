@@ -87,6 +87,14 @@
 }
 
 @layer components {
+  .interactive-card {
+    @apply transition-all duration-200 cursor-pointer select-none active:scale-[0.97] hover:scale-[1.015] hover:shadow-xl;
+  }
+
+  .interactive-press {
+    @apply transition-transform duration-150 active:scale-95 cursor-pointer select-none;
+  }
+
   .soft-shadow {
     box-shadow: var(--shadow-soft);
   }

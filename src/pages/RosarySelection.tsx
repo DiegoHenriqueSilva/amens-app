@@ -18,23 +18,21 @@ const RosarySelection = () => {
         <div className="absolute top-[-6rem] left-[-4rem] w-80 h-80 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute bottom-[-6rem] right-[-4rem] w-80 h-80 bg-accent/5 rounded-full blur-3xl pointer-events-none" />
 
-        <div className="container mx-auto px-6 py-8 relative z-10 max-w-lg">
-          <div className="max-w-2xl mx-auto mb-6 flex items-center">
-            <Button variant="ghost" size="icon" onClick={() => navigate("/")} className="shrink-0 hover:bg-primary/10 transition-colors">
-              <ArrowLeft className="w-5 h-5 text-foreground" />
-            </Button>
-          </div>
+        <Button variant="ghost" size="icon" onClick={() => navigate("/")} className="absolute top-4 left-4 z-20 rounded-full hover:bg-primary/10 transition-colors">
+          <ArrowLeft className="w-5 h-5 text-foreground" />
+        </Button>
 
+        <div className="container mx-auto px-4 py-8 relative z-10 max-w-lg">
           <motion.div 
-            className="max-w-2xl mx-auto text-center mb-10"
+            className="text-center mb-8 pt-2"
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <p className="text-sm uppercase tracking-[0.25em] text-primary mb-2">✦</p>
-            <h1 className="text-4xl md:text-5xl font-bold mb-3 text-foreground">Sagrado Terço</h1>
-            <div className="divider-gold max-w-[10rem] mx-auto mb-3" />
-            <p className="text-muted-foreground">Escolha sua devoção e inicie sua prece</p>
+            <p className="text-xs uppercase tracking-[0.25em] text-primary mb-2 text-glow font-bold">✦</p>
+            <h1 className="text-3xl md:text-4xl font-bold mb-2 text-foreground font-serif text-soft-outline">Sagrado Terço</h1>
+            <p className="text-xs text-muted-foreground font-medium">Escolha sua devoção e inicie sua prece com fé</p>
+            <div className="divider-gold max-w-[5rem] mx-auto my-3" />
           </motion.div>
 
           <div className="space-y-5">
@@ -48,11 +46,11 @@ const RosarySelection = () => {
                   DisplayIcon = Heart;
                   iconColor = "text-red-500";
                   bgColor = "bg-red-50";
-              } else if (type.id === 'libertacao') {
+              } else if (type.id === 'providencia') {
                   DisplayIcon = Shield;
                   iconColor = "text-blue-500";
                   bgColor = "bg-blue-50";
-              } else if (type.id === 'miguel') {
+              } else if (type.id === 'saomiguel') {
                   DisplayIcon = Sword;
                   iconColor = "text-amber-600";
                   bgColor = "bg-amber-50";
@@ -61,14 +59,12 @@ const RosarySelection = () => {
               return (
                 <motion.div
                   key={type.id}
-                  initial={{ opacity: 0, y: 20 }}
+                  initial={{ opacity: 0, y: 16 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: idx * 0.1 }}
+                  transition={{ delay: idx * 0.1, duration: 0.4 }}
+                  onClick={() => navigate(`/rosary/${type.id}`)}
                 >
-                  <Card 
-                    onClick={() => navigate(`/rosary/${type.id}`)}
-                    className="p-6 border-primary/5 bg-white/80 hover:bg-white backdrop-blur-sm transition-all duration-300 rounded-[2rem] cursor-pointer flex items-center gap-5 group hover:-translate-y-1 hover:shadow-xl soft-shadow"
-                  >
+                  <Card className="p-6 transition-all duration-300 relative overflow-hidden group cursor-pointer border-primary/10 bg-white/70 backdrop-blur-md rounded-3xl interactive-card">
                     <div className={cn("w-14 h-14 rounded-2xl flex items-center justify-center transition-transform duration-500 group-hover:scale-110 shadow-sm", bgColor, iconColor)}>
                        <DisplayIcon className={cn("w-7 h-7", type.id === 'misericordia' && "fill-current")} />
                     </div>

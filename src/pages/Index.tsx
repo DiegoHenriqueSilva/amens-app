@@ -232,7 +232,7 @@ const Index = () => {
 
             <motion.div variants={fadeUp}>
               <Link to="/daily-gospel">
-                <Card className="p-6 h-full text-center flex flex-col items-center justify-between border-primary/5 soft-shadow bg-[#FAFAFA] hover:-translate-y-1 hover:shadow-xl transition-all duration-300 rounded-[2rem]">
+                <Card className="p-6 h-full text-center flex flex-col items-center justify-between border-primary/5 soft-shadow bg-[#FAFAFA] interactive-card rounded-[2rem]">
                   <div className="w-14 h-14 bg-transparent rounded-full flex items-center justify-center mb-4 overflow-hidden">
                     <img src="/evangelho_3d.png" alt="Evangelho do Dia" className="w-full h-full object-cover rounded-full drop-shadow-md" />
                   </div>
@@ -240,7 +240,7 @@ const Index = () => {
                     <h2 className="text-lg font-bold mb-2">Evangelho do Dia</h2>
                     <p className="text-[13.5px] text-slate-700 leading-snug mb-4 font-semibold [text-shadow:_0_1px_2px_rgb(255_255_255_/_80%)] px-2">A palavra sagrada com reflexões da IA</p>
                   </div>
-                  <Button size="sm" className="w-full rounded-full text-xs py-5 font-bold shadow-md bg-gradient-to-br from-[#d4a017] to-[#e8c547] text-[#3d2800] hover:opacity-90 transition-opacity border-0">
+                  <Button size="sm" className="w-full rounded-full text-xs py-5 font-bold shadow-md bg-gradient-to-br from-[#d4a017] to-[#e8c547] text-[#3d2800] hover:opacity-90 transition-opacity border-0 interactive-press">
                     <Sun className="w-3.5 h-3.5 mr-2" />
                     Ler
                   </Button>
@@ -250,7 +250,7 @@ const Index = () => {
 
             <motion.div variants={fadeUp}>
               <Link to="/novenas">
-                <Card className="p-6 h-full text-center flex flex-col items-center justify-between border-primary/5 soft-shadow bg-[#FAFAFA] hover:-translate-y-1 hover:shadow-xl transition-all duration-300 rounded-[2rem]">
+                <Card className="p-6 h-full text-center flex flex-col items-center justify-between border-primary/5 soft-shadow bg-[#FAFAFA] interactive-card rounded-[2rem]">
                   <div className="w-14 h-14 bg-transparent rounded-full flex items-center justify-center mb-4 overflow-hidden">
                     <img src="/novenas.png" alt="Novenas" className="w-full h-full object-cover rounded-full drop-shadow-md" />
                   </div>
@@ -258,7 +258,7 @@ const Index = () => {
                     <h2 className="text-lg font-bold mb-2">Novenas</h2>
                     <p className="text-xs text-muted-foreground leading-tight mb-4 font-medium">Escolha uma novena para seguir com fé</p>
                   </div>
-                  <Button size="sm" className="w-full rounded-full text-xs py-5 font-bold shadow-md bg-gradient-to-br from-[#d4a017] to-[#e8c547] text-[#3d2800] hover:opacity-90 transition-opacity border-0">
+                  <Button size="sm" className="w-full rounded-full text-xs py-5 font-bold shadow-md bg-gradient-to-br from-[#d4a017] to-[#e8c547] text-[#3d2800] hover:opacity-90 transition-opacity border-0 interactive-press">
                     <BookOpen className="w-3.5 h-3.5 mr-2" />
                     Iniciar
                   </Button>
@@ -268,7 +268,7 @@ const Index = () => {
 
             <motion.div variants={fadeUp}>
               <Link to="/rosary-selection">
-                <Card className="p-6 h-full text-center flex flex-col items-center justify-between border-primary/5 soft-shadow bg-[#FAFAFA] hover:-translate-y-1 hover:shadow-xl transition-all duration-300 rounded-[2rem] border-dashed border-primary/20">
+                <Card className="p-6 h-full text-center flex flex-col items-center justify-between border-primary/5 soft-shadow bg-[#FAFAFA] interactive-card rounded-[2rem] border-dashed border-primary/20">
                   <div className="w-14 h-14 bg-transparent rounded-full flex items-center justify-center mb-4 overflow-hidden">
                     <img src="/sagrado_terco.png" alt="Sagrado Terço" className="w-full h-full object-cover rounded-full drop-shadow-md" />
                   </div>
@@ -276,7 +276,7 @@ const Index = () => {
                     <h2 className="text-lg font-bold mb-2">Sagrado Terço</h2>
                     <p className="text-xs text-muted-foreground leading-tight mb-4 font-medium">Reze seus mistérios com auxílio de voz</p>
                   </div>
-                  <Button size="sm" className="w-full rounded-full text-xs py-5 font-bold shadow-md bg-gradient-to-br from-[#d4a017] to-[#e8c547] text-[#3d2800] hover:opacity-90 transition-opacity border-0">
+                  <Button size="sm" className="w-full rounded-full text-xs py-5 font-bold shadow-md bg-gradient-to-br from-[#d4a017] to-[#e8c547] text-[#3d2800] hover:opacity-90 transition-opacity border-0 interactive-press">
                     <Sparkles className="w-3.5 h-3.5 mr-2" />
                     Iniciar
                   </Button>
@@ -286,7 +286,7 @@ const Index = () => {
 
             <motion.div variants={fadeUp}>
               <Link to="/divine-promise">
-                <Card className="p-6 h-full text-center flex flex-col items-center justify-between border-primary/5 soft-shadow bg-[#FAFAFA] hover:-translate-y-1 hover:shadow-xl transition-all duration-300 rounded-[2rem] border-dashed">
+                <Card className="p-6 h-full text-center flex flex-col items-center justify-between border-primary/5 soft-shadow bg-[#FAFAFA] interactive-card rounded-[2rem] border-dashed">
                   <div className="w-14 h-14 bg-transparent rounded-full flex items-center justify-center mb-4 overflow-hidden">
                     <img src="/divinaspromessas_3d.png" alt="Divina Promessa" className="w-full h-full object-cover rounded-full drop-shadow-md" />
                   </div>
@@ -294,7 +294,7 @@ const Index = () => {
                     <h2 className="text-lg font-bold mb-2">Divina Promessa</h2>
                     <p className="text-[13.5px] text-slate-700 leading-snug mb-4 font-semibold [text-shadow:_0_1px_2px_rgb(255_255_255_/_80%)] px-2">Uma citação bíblica para seu coração</p>
                   </div>
-                  <Button size="sm" className="w-full rounded-full text-xs py-5 font-bold shadow-md bg-gradient-to-br from-[#d4a017] to-[#e8c547] text-[#3d2800] hover:opacity-90 transition-opacity border-0">
+                  <Button size="sm" className="w-full rounded-full text-xs py-5 font-bold shadow-md bg-gradient-to-br from-[#d4a017] to-[#e8c547] text-[#3d2800] hover:opacity-90 transition-opacity border-0 interactive-press">
                     <Wind className="w-3.5 h-3.5 mr-2" />
                     Sortear
                   </Button>
@@ -307,7 +307,7 @@ const Index = () => {
           <motion.div className="space-y-4 mb-10" variants={stagger} initial="initial" animate="animate">
             <motion.div variants={fadeUp}>
               <Link to="/terco">
-                <Card className="p-4 flex items-center gap-4 border-primary/5 soft-shadow bg-gradient-to-r from-primary/10 to-primary/5 rounded-3xl hover:bg-white transition-colors relative overflow-hidden">
+                <Card className="p-4 flex items-center gap-4 border-primary/5 soft-shadow bg-gradient-to-r from-primary/10 to-primary/5 rounded-3xl interactive-card relative overflow-hidden">
                   <div className="absolute right-0 top-0 w-32 h-32 bg-primary/10 rounded-full blur-2xl pointer-events-none" />
                   <div className="w-10 h-10 bg-primary/20 rounded-2xl flex items-center justify-center text-primary">
                     <Sparkles className="w-5 h-5" />
@@ -316,14 +316,14 @@ const Index = () => {
                     <h3 className="text-sm font-bold text-foreground">Terço Guiado</h3>
                     <p className="text-[11px] text-muted-foreground font-medium w-full truncate">Reze acompanhando visualmente por voz</p>
                   </div>
-                  <Button variant="outline" size="sm" className="rounded-full text-[10px] h-8 px-4 border-primary/20 text-primary bg-background/50 hover:bg-primary hover:text-white">Iniciar</Button>
+                  <Button variant="outline" size="sm" className="rounded-full text-[10px] h-8 px-4 border-primary/20 text-primary bg-background/50 hover:bg-primary hover:text-white interactive-press">Iniciar</Button>
                 </Card>
               </Link>
             </motion.div>
 
             <motion.div variants={fadeUp}>
               <Link to="/my-prayers">
-                <Card className="p-4 flex items-center gap-4 border-primary/5 soft-shadow bg-white/60 rounded-3xl hover:bg-white transition-colors">
+                <Card className="p-4 flex items-center gap-4 border-primary/5 soft-shadow bg-white/60 rounded-3xl interactive-card transition-colors">
                   <div className="w-10 h-10 bg-secondary/50 rounded-2xl flex items-center justify-center text-primary/60">
                     <BookOpen className="w-5 h-5" />
                   </div>
@@ -331,14 +331,14 @@ const Index = () => {
                     <h3 className="text-sm font-bold">Minhas Preces</h3>
                     <p className="text-[11px] text-muted-foreground font-medium">Veja quem orou por você</p>
                   </div>
-                  <Button variant="outline" size="sm" className="rounded-full text-[10px] h-8 px-4 border-primary/20 text-primary">Ver Histórico</Button>
+                  <Button variant="outline" size="sm" className="rounded-full text-[10px] h-8 px-4 border-primary/20 text-primary interactive-press">Ver Histórico</Button>
                 </Card>
               </Link>
             </motion.div>
 
             <motion.div variants={fadeUp}>
               <Link to="/my-intercessions">
-                <Card className="p-4 flex items-center gap-4 border-primary/5 soft-shadow bg-white/60 rounded-3xl hover:bg-white transition-colors">
+                <Card className="p-4 flex items-center gap-4 border-primary/5 soft-shadow bg-white/60 rounded-3xl interactive-card transition-colors">
                   <div className="w-10 h-10 bg-secondary/50 rounded-2xl flex items-center justify-center text-primary/60">
                     <HandHeart className="w-5 h-5" />
                   </div>
@@ -346,14 +346,14 @@ const Index = () => {
                     <h3 className="text-sm font-bold">Minhas Intercessões</h3>
                     <p className="text-[11px] text-muted-foreground font-medium">Causas que você apoiou</p>
                   </div>
-                  <Button variant="outline" size="sm" className="rounded-full text-[10px] h-8 px-4 border-primary/20 text-primary">Ver Lista</Button>
+                  <Button variant="outline" size="sm" className="rounded-full text-[10px] h-8 px-4 border-primary/20 text-primary interactive-press">Ver Lista</Button>
                 </Card>
               </Link>
             </motion.div>
 
             <motion.div variants={fadeUp}>
               <Link to='/friends'>
-                <Card className='p-4 flex items-center gap-4 border-primary/5 soft-shadow bg-white/60 rounded-3xl hover:bg-white transition-colors'>
+                <Card className='p-4 flex items-center gap-4 border-primary/5 soft-shadow bg-white/60 rounded-3xl interactive-card transition-colors'>
                   <div className='w-10 h-10 bg-secondary/50 rounded-2xl flex items-center justify-center text-primary/60'>
                     <Users className='w-5 h-5' />
                   </div>
@@ -361,7 +361,7 @@ const Index = () => {
                     <h3 className='text-sm font-bold'>Amigos da Fé</h3>
                     <p className='text-[11px] text-muted-foreground font-medium'>Conecte-se com outros intercessores</p>
                   </div>
-                  <Button variant='outline' size='sm' className='rounded-full text-[10px] h-8 px-4 border-primary/20 text-primary'>Conectar</Button>
+                  <Button variant='outline' size='sm' className='rounded-full text-[10px] h-8 px-4 border-primary/20 text-primary interactive-press'>Conectar</Button>
                 </Card>
               </Link>
             </motion.div>

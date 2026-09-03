@@ -119,16 +119,22 @@ const DivinePromise = () => {
         <div className="absolute top-[-10rem] right-[-10rem] w-[30rem] h-[30rem] rounded-full bg-primary/5 blur-3xl pointer-events-none" />
         <div className="absolute bottom-[-10rem] left-[-10rem] w-[30rem] h-[30rem] rounded-full bg-accent/5 blur-3xl pointer-events-none" />
 
-        <div className="container mx-auto px-6 py-12 relative z-10 max-w-lg flex-1 flex flex-col">
-          <header className="flex items-center mb-10">
-            <Button variant="ghost" size="icon" onClick={() => navigate("/")} className="rounded-full hover:bg-primary/10">
-              <ArrowLeft className="w-5 h-5 text-primary" />
-            </Button>
-            <div className="ml-4">
-              <h1 className="text-2xl font-black text-foreground tracking-tight">Divina Promessa</h1>
-              <p className="text-[10px] uppercase font-bold tracking-widest text-primary/60">Uma palavra de luz para você</p>
-            </div>
-          </header>
+        <Button variant="ghost" size="icon" onClick={() => navigate("/")} className="absolute top-4 left-4 z-20 rounded-full hover:bg-primary/10 transition-colors">
+          <ArrowLeft className="w-5 h-5 text-foreground" />
+        </Button>
+
+        <div className="container mx-auto px-4 py-8 relative z-10 max-w-lg flex-1 flex flex-col">
+          <motion.div 
+            className="text-center mb-8 pt-2"
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <p className="text-xs uppercase tracking-[0.25em] text-primary mb-2 text-glow font-bold">✦</p>
+            <h1 className="text-3xl md:text-4xl font-bold mb-2 text-foreground font-serif text-soft-outline">Divina Promessa</h1>
+            <p className="text-xs text-muted-foreground font-medium">Uma palavra de luz e fortalecimento para o seu coração</p>
+            <div className="divider-gold max-w-[5rem] mx-auto my-3" />
+          </motion.div>
 
           <main className="flex-1 flex flex-col justify-center">
             <AnimatePresence mode="wait">
