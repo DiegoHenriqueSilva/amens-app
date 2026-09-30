@@ -257,7 +257,7 @@ const RosaryPrayer = () => {
                     );
                   }
 
-                  // Large Bead (Our Father / Mystery)
+                  // Large Bead (Our Father / Mystery - Distinct Imperial Gold styling)
                   if (bead.type === "large") {
                     return (
                       <div 
@@ -265,45 +265,48 @@ const RosaryPrayer = () => {
                         ref={isActive ? activeBeadRef : null}
                         onClick={() => setCurrentIndex(i)}
                         className={cn(
-                          "w-5 h-5 rounded-full transition-all duration-300 cursor-pointer shrink-0 active:scale-90 relative",
+                          "w-5.5 h-5.5 sm:w-6 sm:h-6 rounded-full transition-all duration-300 cursor-pointer shrink-0 active:scale-90 relative flex items-center justify-center my-0.5",
                           isActive 
-                            ? "scale-150 ring-4 ring-amber-300/70 shadow-[0_0_20px_rgba(245,158,11,0.7)] border-2 border-white" 
+                            ? "scale-135 ring-4 ring-amber-400 shadow-[0_0_24px_rgba(245,158,11,0.95)] border-2 border-white z-20" 
                             : isPassed 
-                            ? "shadow-sm border border-amber-600/30 hover:scale-125" 
-                            : "shadow-sm border border-amber-900/20 hover:scale-125"
+                            ? "ring-2 ring-amber-600/40 shadow-md shadow-amber-900/25 hover:scale-120 z-10" 
+                            : "ring-2 ring-amber-500/60 shadow-md shadow-amber-900/20 hover:scale-120 hover:ring-amber-400 z-10"
                         )}
                         style={{
                           background: isActive
-                            ? "radial-gradient(circle at 35% 30%, #ffffff 0%, #fbbf24 45%, #b45309 100%)"
+                            ? "radial-gradient(circle at 30% 25%, #ffffff 0%, #fef08a 25%, #f59e0b 55%, #b45309 85%, #78350f 100%)"
                             : isPassed
-                            ? "radial-gradient(circle at 35% 30%, #fff7ed 0%, #d97706 60%, #92400e 100%)"
-                            : "radial-gradient(circle at 35% 30%, #ffffff 0%, #fef3c7 40%, #d1c1a5 100%)"
+                            ? "radial-gradient(circle at 30% 25%, #fef3c7 0%, #d97706 35%, #92400e 75%, #451a03 100%)"
+                            : "radial-gradient(circle at 30% 25%, #fffbeb 0%, #f59e0b 35%, #b45309 70%, #78350f 100%)"
                         }}
-                        title={bead.mysteryTitle || "Pai Nosso"}
-                      />
+                        title={bead.mysteryTitle || "Pai Nosso / Mistério"}
+                      >
+                        {/* Subtle inner metallic jewel ring for large beads */}
+                        <div className="w-2 h-2 rounded-full border border-white/40 pointer-events-none opacity-60" />
+                      </div>
                     );
                   }
 
-                  // Small Bead (Hail Mary)
+                  // Small Bead (Hail Mary - Pearlescent White/Cream styling)
                   return (
                     <div 
                       key={i} 
                       ref={isActive ? activeBeadRef : null}
                       onClick={() => setCurrentIndex(i)}
                       className={cn(
-                        "w-3.5 h-3.5 rounded-full transition-all duration-300 cursor-pointer shrink-0 active:scale-90",
+                        "w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-full transition-all duration-300 cursor-pointer shrink-0 active:scale-90 relative",
                         isActive 
-                          ? "scale-150 ring-4 ring-amber-300/80 shadow-[0_0_16px_rgba(245,158,11,0.8)] border border-white" 
+                          ? "scale-140 ring-4 ring-amber-300/90 shadow-[0_0_18px_rgba(245,158,11,0.85)] border-2 border-white z-20" 
                           : isPassed 
-                          ? "shadow-sm border border-amber-600/20" 
-                          : "shadow-sm border border-stone-300/40 hover:scale-125"
+                          ? "shadow-sm border border-amber-600/30 hover:scale-125" 
+                          : "shadow-sm border border-stone-300/60 hover:scale-125"
                       )}
                       style={{
                         background: isActive
-                          ? "radial-gradient(circle at 35% 30%, #ffffff 0%, #f59e0b 50%, #b45309 100%)"
+                          ? "radial-gradient(circle at 35% 30%, #ffffff 0%, #fde68a 35%, #f59e0b 70%, #b45309 100%)"
                           : isPassed
-                          ? "radial-gradient(circle at 35% 30%, #fef3c7 0%, #d97706 60%, #92400e 100%)"
-                          : "radial-gradient(circle at 35% 30%, #ffffff 0%, #f3ede2 50%, #cdc2b0 100%)"
+                          ? "radial-gradient(circle at 35% 30%, #fffdfa 0%, #f6deb4 45%, #c49a45 90%, #9a7322 100%)"
+                          : "radial-gradient(circle at 35% 30%, #ffffff 0%, #f7f3ec 45%, #d8cdba 85%, #b8ab96 100%)"
                       }}
                       title="Ave Maria"
                     />
