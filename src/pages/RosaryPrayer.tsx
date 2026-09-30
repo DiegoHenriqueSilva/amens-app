@@ -191,170 +191,221 @@ const RosaryPrayer = () => {
           </Button>
         </header>
 
-        {/* Main Body: Vertical Rosary Rail on Left + Central Prayer Card */}
-        <div className="flex-1 flex flex-row items-stretch min-h-0 relative z-20 px-3 sm:px-6 py-4 gap-3 sm:gap-6 overflow-hidden">
-          
-          {/* Vertical Beads Column (Left Rail) */}
-          <aside className="w-14 sm:w-16 shrink-0 flex flex-col items-center relative rounded-3xl bg-white/50 backdrop-blur-md border border-amber-900/10 shadow-sm py-4 overflow-hidden">
-            {/* Golden Thread/Cord Line */}
-            <div className="absolute top-4 bottom-4 left-1/2 -translate-x-1/2 w-[1.5px] bg-gradient-to-b from-amber-400/40 via-amber-500/60 to-amber-400/40 rounded-full" />
-
-            {/* Scrollable Beads List */}
-            <div className="w-full h-full overflow-y-auto no-scrollbar flex flex-col items-center gap-3 py-2 px-1 relative z-10">
-              {beads.map((bead, i) => {
-                const isActive = currentIndex === i;
-                const isPassed = currentIndex > i;
-
-                if (bead.type === "cross") {
-                  return (
-                    <div
-                      key={i}
-                      ref={isActive ? activeBeadRef : null}
-                      onClick={() => setCurrentIndex(i)}
-                      className={cn(
-                        "p-1.5 rounded-full transition-all duration-300 cursor-pointer flex items-center justify-center shrink-0 active:scale-90",
-                        isActive ? "scale-125 bg-amber-100 ring-2 ring-amber-400 shadow-md shadow-amber-400/30" : "hover:scale-110"
-                      )}
-                    >
-                      <svg 
-                        width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" 
-                        className={cn(
-                          "w-5 h-5 transition-colors",
-                          isActive ? "text-amber-600" : isPassed ? "text-amber-500" : "text-amber-800/30"
-                        )}
-                      >
-                        <path d="M12 2v20M6 8h12"/>
-                      </svg>
-                    </div>
-                  );
-                }
-
-                if (bead.type === "medal") {
-                  return (
-                    <div
-                      key={i}
-                      ref={isActive ? activeBeadRef : null}
-                      onClick={() => setCurrentIndex(i)}
-                      className={cn(
-                        "w-7 h-7 rounded-full transition-all duration-300 cursor-pointer flex items-center justify-center shrink-0 active:scale-90",
-                        isActive ? "bg-amber-400 text-white scale-125 ring-2 ring-amber-300 shadow-md shadow-amber-400/40" :
-                        isPassed ? "bg-amber-200 text-amber-700 border border-amber-300" : "bg-white/80 border border-amber-900/15 text-amber-800/30 hover:scale-110"
-                      )}
-                    >
-                      <Heart className={cn("w-3.5 h-3.5", isActive || isPassed ? "fill-current" : "")} />
-                    </div>
-                  );
-                }
-
-                // Small & Large Beads
-                return (
-                  <div 
-                    key={i} 
-                    ref={isActive ? activeBeadRef : null}
-                    onClick={() => setCurrentIndex(i)}
-                    className={cn(
-                      "rounded-full transition-all duration-300 cursor-pointer shrink-0 active:scale-90",
-                      bead.type === "large" ? "w-4 h-4" : "w-2.5 h-2.5",
-                      isActive ? "bg-gradient-to-tr from-amber-600 via-amber-400 to-amber-200 scale-150 ring-2 ring-amber-300 shadow-lg shadow-amber-500/40 border border-white" : 
-                      isPassed ? "bg-amber-500/80 border border-amber-600/30" : 
-                      bead.type === "large" ? "border-2 border-amber-500/40 bg-white/90 hover:scale-125" : "bg-amber-900/15 hover:bg-amber-900/30 hover:scale-125"
-                    )}
-                  />
-                );
-              })}
-            </div>
-          </aside>
-
-          {/* Central Prayer View */}
-          <main className="flex-1 flex flex-col items-center justify-between min-h-0 bg-white/70 backdrop-blur-md rounded-3xl border border-amber-900/10 shadow-sm p-6 sm:p-10 overflow-hidden">
+        {/* Main Body: Centered Container with Beads immediately next to Prayer Card */}
+        <div className="flex-1 flex items-center justify-center min-h-0 relative z-20 px-3 sm:px-6 py-2 pb-6 overflow-hidden">
+          <div className="w-full max-w-4xl h-full flex flex-row items-stretch justify-center gap-3 sm:gap-6 min-h-0">
             
-            {/* Bead Header Subtitle */}
-            <div className="w-full text-center shrink-0 mb-4">
-              <span className="text-[11px] sm:text-xs font-black uppercase tracking-[0.3em] text-amber-700/80">
-                {beadHeaderTitle}
-              </span>
-              <div className="w-8 h-[2px] bg-amber-400/50 rounded-full mx-auto mt-1.5" />
-            </div>
+            {/* Vertical Beads Rail (Directly beside prayer card) */}
+            <aside className="w-16 sm:w-20 shrink-0 flex flex-col items-center relative rounded-[2rem] bg-white/70 backdrop-blur-md border border-amber-900/10 shadow-md py-4 overflow-hidden">
+              {/* Golden Thread/Cord Line */}
+              <div className="absolute top-6 bottom-6 left-1/2 -translate-x-1/2 w-[2px] bg-gradient-to-b from-amber-400/30 via-amber-500/60 to-amber-400/30 rounded-full" />
 
-            {/* Prayer Content with smooth transitions */}
-            <div className="flex-1 w-full flex flex-col items-center justify-center overflow-y-auto px-2 sm:px-6 my-auto style-scrollbar">
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={currentIndex}
-                  initial={{ opacity: 0, y: 12, scale: 0.98 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: -12, scale: 1.02 }}
-                  transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-                  className="max-w-2xl w-full text-center space-y-5"
-                >
-                  {currentBead?.mysteryTitle && (
-                    <div className="flex flex-col justify-center items-center mb-2">
-                      <span className="text-[9px] font-black uppercase tracking-[0.3em] text-amber-800 bg-amber-100/90 px-3.5 py-1 rounded-full shadow-sm border border-amber-200 block mb-2">
-                        Mistério
-                      </span>
-                      <h3 className="text-xs sm:text-sm font-bold text-amber-950 uppercase tracking-[0.12em] leading-relaxed">
-                        {currentBead.mysteryTitle}
-                      </h3>
-                    </div>
-                  )}
-                  
-                  <p className="font-serif italic text-lg sm:text-2xl md:text-3xl text-amber-950 font-semibold leading-[1.4] px-2 drop-shadow-sm whitespace-pre-wrap">
-                    "{currentBead?.prayer}"
-                  </p>
-                </motion.div>
-              </AnimatePresence>
-            </div>
-
-            {/* Bottom Status / Listening Banner */}
-            {listening && isVoiceActive && (
-              <motion.div 
-                initial={{ opacity: 0, y: 6 }} 
-                animate={{ opacity: 1, y: 0 }}
-                className="shrink-0 mb-2 flex items-center gap-2 px-4 py-1.5 bg-amber-100/80 backdrop-blur-sm rounded-full border border-amber-300 shadow-sm"
+              {/* Scrollable Beads List with hidden scrollbars */}
+              <div 
+                className="w-full h-full overflow-y-auto flex flex-col items-center gap-3.5 py-4 px-1 relative z-10 select-none"
+                style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
               >
-                <div className="w-2 h-2 bg-amber-500 rounded-full animate-ping" />
-                <span className="text-[10px] font-black text-amber-800 uppercase tracking-widest">
-                  Ouvindo oração...
-                </span>
-              </motion.div>
-            )}
+                {beads.map((bead, i) => {
+                  const isActive = currentIndex === i;
+                  const isPassed = currentIndex > i;
 
-            {/* Ergonomic Bottom Controls */}
-            <div className="w-full flex items-center justify-between pt-4 border-t border-amber-900/5 shrink-0 mt-2">
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                onClick={handlePrevious} 
-                disabled={currentIndex === 0} 
-                className="w-11 h-11 rounded-full bg-white/80 hover:bg-white shadow-sm border border-amber-900/10 disabled:opacity-20 active:scale-95 transition-all"
-                title="Voltar oração"
-              >
-                <ChevronLeft className="w-5 h-5 text-amber-950/70" />
-              </Button>
+                  if (bead.type === "cross") {
+                    return (
+                      <div
+                        key={i}
+                        ref={isActive ? activeBeadRef : null}
+                        onClick={() => setCurrentIndex(i)}
+                        className={cn(
+                          "w-9 h-9 rounded-full transition-all duration-300 cursor-pointer flex items-center justify-center shrink-0 active:scale-90",
+                          isActive 
+                            ? "scale-125 bg-gradient-to-b from-amber-100 to-amber-200 ring-4 ring-amber-400/50 shadow-[0_0_16px_rgba(245,158,11,0.6)]" 
+                            : "hover:scale-110 bg-white/80 shadow-sm border border-amber-900/10"
+                        )}
+                        title="Sinal da Cruz"
+                      >
+                        <svg 
+                          width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" 
+                          className={cn(
+                            "w-5 h-5 transition-colors filter drop-shadow-sm",
+                            isActive ? "text-amber-700" : isPassed ? "text-amber-600" : "text-amber-800/40"
+                          )}
+                        >
+                          <path d="M12 2v20M6 8h12"/>
+                        </svg>
+                      </div>
+                    );
+                  }
+
+                  if (bead.type === "medal") {
+                    return (
+                      <div
+                        key={i}
+                        ref={isActive ? activeBeadRef : null}
+                        onClick={() => setCurrentIndex(i)}
+                        className={cn(
+                          "w-8 h-8 rounded-full transition-all duration-300 cursor-pointer flex items-center justify-center shrink-0 active:scale-90",
+                          isActive 
+                            ? "bg-gradient-to-tr from-amber-600 via-amber-400 to-amber-200 text-white scale-125 ring-4 ring-amber-300 shadow-[0_0_18px_rgba(245,158,11,0.6)] border border-white" 
+                            : isPassed 
+                            ? "bg-gradient-to-tr from-amber-500 to-amber-300 text-white shadow-sm border border-amber-400/50" 
+                            : "bg-gradient-to-tr from-[#f0ebe1] to-[#ffffff] border border-amber-900/15 text-amber-800/40 shadow-sm hover:scale-110"
+                        )}
+                        title="Medalha"
+                      >
+                        <Heart className={cn("w-4 h-4 transition-transform", isActive ? "scale-110 fill-current" : isPassed ? "fill-current" : "")} />
+                      </div>
+                    );
+                  }
+
+                  // Large Bead (Our Father / Mystery)
+                  if (bead.type === "large") {
+                    return (
+                      <div 
+                        key={i} 
+                        ref={isActive ? activeBeadRef : null}
+                        onClick={() => setCurrentIndex(i)}
+                        className={cn(
+                          "w-5 h-5 rounded-full transition-all duration-300 cursor-pointer shrink-0 active:scale-90 relative",
+                          isActive 
+                            ? "scale-150 ring-4 ring-amber-300/70 shadow-[0_0_20px_rgba(245,158,11,0.7)] border-2 border-white" 
+                            : isPassed 
+                            ? "shadow-sm border border-amber-600/30 hover:scale-125" 
+                            : "shadow-sm border border-amber-900/20 hover:scale-125"
+                        )}
+                        style={{
+                          background: isActive
+                            ? "radial-gradient(circle at 35% 30%, #ffffff 0%, #fbbf24 45%, #b45309 100%)"
+                            : isPassed
+                            ? "radial-gradient(circle at 35% 30%, #fff7ed 0%, #d97706 60%, #92400e 100%)"
+                            : "radial-gradient(circle at 35% 30%, #ffffff 0%, #fef3c7 40%, #d1c1a5 100%)"
+                        }}
+                        title={bead.mysteryTitle || "Pai Nosso"}
+                      />
+                    );
+                  }
+
+                  // Small Bead (Hail Mary)
+                  return (
+                    <div 
+                      key={i} 
+                      ref={isActive ? activeBeadRef : null}
+                      onClick={() => setCurrentIndex(i)}
+                      className={cn(
+                        "w-3.5 h-3.5 rounded-full transition-all duration-300 cursor-pointer shrink-0 active:scale-90",
+                        isActive 
+                          ? "scale-150 ring-4 ring-amber-300/80 shadow-[0_0_16px_rgba(245,158,11,0.8)] border border-white" 
+                          : isPassed 
+                          ? "shadow-sm border border-amber-600/20" 
+                          : "shadow-sm border border-stone-300/40 hover:scale-125"
+                      )}
+                      style={{
+                        background: isActive
+                          ? "radial-gradient(circle at 35% 30%, #ffffff 0%, #f59e0b 50%, #b45309 100%)"
+                          : isPassed
+                          ? "radial-gradient(circle at 35% 30%, #fef3c7 0%, #d97706 60%, #92400e 100%)"
+                          : "radial-gradient(circle at 35% 30%, #ffffff 0%, #f3ede2 50%, #cdc2b0 100%)"
+                      }}
+                      title="Ave Maria"
+                    />
+                  );
+                })}
+              </div>
+            </aside>
+
+            {/* Central Prayer View */}
+            <main className="flex-1 flex flex-col items-center justify-between min-h-0 bg-white/80 backdrop-blur-md rounded-[2rem] border border-amber-900/10 shadow-lg p-6 sm:p-10 overflow-hidden relative">
               
-              {/* Circular Progress Bead Number */}
-              <div className="flex items-center gap-2 px-3.5 py-1.5 bg-amber-50/80 border border-amber-200/80 rounded-full shadow-inner">
-                <span className="text-xs font-black text-amber-900">
-                  {currentIndex + 1}
+              {/* Top Golden Border Line */}
+              <div className="absolute top-0 left-8 right-8 h-[3px] bg-gradient-to-r from-transparent via-amber-400 to-transparent opacity-70" />
+
+              {/* Bead Header Subtitle */}
+              <div className="w-full text-center shrink-0 mb-3 pt-1">
+                <span className="text-[11px] sm:text-xs font-black uppercase tracking-[0.35em] text-amber-800/80">
+                  {beadHeaderTitle}
                 </span>
-                <span className="text-[11px] text-amber-800/40">/</span>
-                <span className="text-[11px] font-semibold text-amber-800/60">
-                  {beads.length}
-                </span>
+                <div className="w-10 h-[2px] bg-gradient-to-r from-transparent via-amber-400 to-transparent rounded-full mx-auto mt-2" />
               </div>
 
-              {/* Primary Next Button */}
-              <Button 
-                variant="default"
-                onClick={handleNext} 
-                className="h-11 px-5 sm:px-6 rounded-full bg-amber-500 hover:bg-amber-600 shadow-lg shadow-amber-500/25 flex items-center gap-1.5 active:scale-95 transition-all text-white font-bold text-xs uppercase tracking-wider"
-              >
-                <span>Avançar</span>
-                <ChevronRight className="w-4 h-4" />
-              </Button>
-            </div>
+              {/* Prayer Content with smooth transitions */}
+              <div className="flex-1 w-full flex flex-col items-center justify-center overflow-y-auto px-2 sm:px-8 my-auto style-scrollbar">
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={currentIndex}
+                    initial={{ opacity: 0, y: 12, scale: 0.98 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -12, scale: 1.02 }}
+                    transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+                    className="max-w-2xl w-full text-center space-y-6"
+                  >
+                    {currentBead?.mysteryTitle && (
+                      <div className="flex flex-col justify-center items-center mb-2">
+                        <span className="text-[9px] font-black uppercase tracking-[0.3em] text-amber-800 bg-amber-100/90 px-4 py-1.5 rounded-full shadow-sm border border-amber-300/50 block mb-2.5">
+                          Mistério
+                        </span>
+                        <h3 className="text-xs sm:text-sm font-bold text-amber-950 uppercase tracking-[0.12em] leading-relaxed">
+                          {currentBead.mysteryTitle}
+                        </h3>
+                      </div>
+                    )}
+                    
+                    <p className="font-serif italic text-lg sm:text-2xl md:text-3xl text-[#2c1d0a] font-semibold leading-[1.45] px-2 drop-shadow-sm whitespace-pre-wrap">
+                      "{currentBead?.prayer}"
+                    </p>
+                  </motion.div>
+                </AnimatePresence>
+              </div>
 
-          </main>
+              {/* Bottom Status / Listening Banner */}
+              {listening && isVoiceActive && (
+                <motion.div 
+                  initial={{ opacity: 0, y: 6 }} 
+                  animate={{ opacity: 1, y: 0 }}
+                  className="shrink-0 mb-2 flex items-center gap-2 px-4 py-1.5 bg-amber-100/90 backdrop-blur-sm rounded-full border border-amber-300 shadow-sm"
+                >
+                  <div className="w-2 h-2 bg-amber-500 rounded-full animate-ping" />
+                  <span className="text-[10px] font-black text-amber-800 uppercase tracking-widest">
+                    Ouvindo oração...
+                  </span>
+                </motion.div>
+              )}
+
+              {/* Ergonomic Bottom Controls */}
+              <div className="w-full flex items-center justify-between pt-4 border-t border-amber-900/5 shrink-0 mt-2">
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  onClick={handlePrevious} 
+                  disabled={currentIndex === 0} 
+                  className="w-11 h-11 rounded-full bg-white/90 hover:bg-white shadow-sm border border-amber-900/10 disabled:opacity-20 active:scale-95 transition-all"
+                  title="Voltar oração"
+                >
+                  <ChevronLeft className="w-5 h-5 text-amber-950/70" />
+                </Button>
+                
+                {/* Circular Progress Bead Number */}
+                <div className="flex items-center gap-2 px-4 py-1.5 bg-amber-50 border border-amber-200/90 rounded-full shadow-inner">
+                  <span className="text-xs font-black text-amber-900">
+                    {currentIndex + 1}
+                  </span>
+                  <span className="text-[11px] text-amber-800/40">/</span>
+                  <span className="text-[11px] font-semibold text-amber-800/60">
+                    {beads.length}
+                  </span>
+                </div>
+
+                {/* Primary Next Button */}
+                <Button 
+                  variant="default"
+                  onClick={handleNext} 
+                  className="h-11 px-6 sm:px-7 rounded-full bg-amber-500 hover:bg-amber-600 shadow-lg shadow-amber-500/25 flex items-center gap-2 active:scale-95 transition-all text-white font-bold text-xs uppercase tracking-wider"
+                >
+                  <span>Avançar</span>
+                  <ChevronRight className="w-4 h-4" />
+                </Button>
+              </div>
+
+            </main>
+          </div>
         </div>
       </div>
     </PageTransition>
