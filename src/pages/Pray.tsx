@@ -447,11 +447,6 @@ const Pray = () => {
       return;
     }
 
-    if (historyItem?.prayer_feedback) {
-      toast.info("Esta causa já recebeu um testemunho e não pode ser sorteada novamente.");
-      return;
-    }
-
     if (!useOneDraw()) {
       toast.error("Limite diário de sorteios atingido.");
       return;
