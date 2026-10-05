@@ -944,7 +944,7 @@ REGRAS ADICIONAIS:
                     </motion.div>
                   )}
 
-                  <Card className="p-8 soft-shadow border-primary/10">
+                  <Card className="p-6 sm:p-8 soft-shadow border-primary/10 overflow-hidden w-full">
                     <div className="flex items-start gap-4 mb-6">
                       <div className="flex-shrink-0 relative">
                         {prayerRequest.avatar_url ? (
@@ -956,9 +956,9 @@ REGRAS ADICIONAIS:
                         )}
                       </div>
                       
-                      <div className="flex-1">
-                        {prayerRequest.title && <h3 className="text-xl font-semibold mb-1 text-foreground">{prayerRequest.title}</h3>}
-                        <div className="flex items-center gap-2 mb-3">
+                      <div className="flex-1 min-w-0">
+                        {prayerRequest.title && <h3 className="text-xl font-semibold mb-1 text-foreground break-words">{prayerRequest.title}</h3>}
+                        <div className="flex items-center gap-2 mb-3 flex-wrap">
                           <p className="text-xs text-primary font-bold uppercase tracking-widest opacity-80">
                             Enviado por {prayerRequest.display_name}
                           </p>
@@ -966,7 +966,7 @@ REGRAS ADICIONAIS:
                             <span className="text-[9px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-sm font-bold uppercase">Amigo 🤝</span>
                           )}
                         </div>
-                        <p className="text-foreground/80 leading-relaxed">{prayerRequest.content}</p>
+                        <p className="text-foreground/80 leading-relaxed break-words">{prayerRequest.content}</p>
                         
                         <div className="flex flex-col gap-2 mt-4 pt-3 border-t border-primary/5">
                           <div className="flex items-center flex-wrap gap-x-4 gap-y-1">
@@ -1035,36 +1035,46 @@ REGRAS ADICIONAIS:
 
                     <div className="divider-gold mb-5" />
                     
-                    <div className="flex gap-3 flex-wrap">
-                      <Button onClick={generatePrayer} disabled={isGenerating} className="bg-gradient-to-br from-[#d4a017] to-[#e8c547] text-[#3d2800] hover:opacity-90 font-semibold border-0 flex-1">
-                        <Sparkles className="w-4 h-4 mr-2" />
-                        {isGenerating ? "Gerando..." : "Sugestão de Oração"}
+                    {/* Primary Action Buttons: Sugestão de Oração + Próxima Causa */}
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 w-full">
+                      <Button 
+                        onClick={generatePrayer} 
+                        disabled={isGenerating} 
+                        className="sm:col-span-2 bg-gradient-to-br from-[#d4a017] to-[#e8c547] text-[#3d2800] hover:opacity-90 font-bold border-0 h-11 rounded-xl shadow-md flex items-center justify-center gap-2 active:scale-95 transition-all text-xs sm:text-sm"
+                      >
+                        <Sparkles className="w-4 h-4 shrink-0" />
+                        <span>{isGenerating ? "Gerando Oração..." : "Sugestão de Oração"}</span>
                       </Button>
                       
                       {!isRestrictedPrayer(prayerRequest.status) && !prayerRequest.feedback && !isSharedCause && (
-                        <Button onClick={fetchRandomPrayerRequest} variant="outline" className="border-[#1D4ED8]/20 text-[#1D4ED8] hover:text-[#1D4ED8] hover:bg-[#1D4ED8]/5 shadow-sm">
+                        <Button 
+                          onClick={fetchRandomPrayerRequest} 
+                          variant="outline" 
+                          className="sm:col-span-1 border-[#1D4ED8]/20 text-[#1D4ED8] hover:text-[#1D4ED8] hover:bg-[#1D4ED8]/5 shadow-sm h-11 rounded-xl font-bold text-xs active:scale-95 transition-all"
+                        >
                           Próxima Causa
                         </Button>
                       )}
                     </div>
 
-                    <div className="flex gap-2 w-full mt-3">
+                    {/* Secondary Sharing Buttons: Enviar a Amigo + Compartilhar fora do Améns */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 w-full mt-3">
                        <Button 
                          variant="outline" 
                          onClick={() => setFriendSelectorOpen(true)}
-                         className="flex-1 rounded-xl border-[#1D4ED8]/20 text-[#1D4ED8] hover:text-[#1D4ED8] hover:bg-[#1D4ED8]/10 shadow-sm transition-colors text-xs h-9"
+                         className="w-full h-auto min-h-[42px] py-2.5 px-3 rounded-xl border-[#1D4ED8]/20 text-[#1D4ED8] hover:text-[#1D4ED8] hover:bg-[#1D4ED8]/10 shadow-sm transition-colors text-xs font-semibold flex items-center justify-center gap-2 whitespace-normal text-center leading-tight active:scale-95"
                        >
-                         <Users className="w-3.5 h-3.5 mr-2" />
-                         Enviar a um amigo do Améns
+                         <Users className="w-4 h-4 shrink-0" />
+                         <span>Enviar a um amigo do Améns</span>
                        </Button>
                        
                        <Button 
                          variant="outline" 
                          onClick={handleShareCompartilhar}
-                         className="flex-1 rounded-xl border-green-600/20 text-green-700 hover:text-green-700 hover:bg-green-50 shadow-sm transition-colors text-xs h-9"
+                         className="w-full h-auto min-h-[42px] py-2.5 px-3 rounded-xl border-green-600/20 text-green-700 hover:text-green-700 hover:bg-green-50 shadow-sm transition-colors text-xs font-semibold flex items-center justify-center gap-2 whitespace-normal text-center leading-tight active:scale-95"
                        >
-                         <Share2 className="w-3.5 h-3.5 mr-2" />
-                         Compartilhar fora do Améns
+                         <Share2 className="w-4 h-4 shrink-0" />
+                         <span>Compartilhar fora do Améns</span>
                        </Button>
                     </div>
 
