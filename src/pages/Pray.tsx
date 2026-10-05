@@ -686,34 +686,56 @@ const Pray = () => {
     setIsGenerating(true);
     try {
       const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
-      if (!GEMINI_API_KEY) {
-        toast.error("Chave da API do Gemini ausente! Verifique o .env.");
-        setIsGenerating(false);
-        return;
+      
+      const causeContent = prayerRequest.content || prayerRequest.title || "nossa vida e intenções";
+      const systemPrompt = `Você é um gerador de orações empáticas, profundas e acolhedoras para a rede social de oração "Améns".
+REGRA DE OURO: A oração DEVE começar com: "Que faça de minha oração uma ferramenta para a bênção desta causa..."
+REGRAS ADICIONAIS:
+1. Seja ACOLHEDOR, HUMILDE, ESPIRITUAL e CARINHOSO.
+2. Use PRIMEIRA PESSOA (Eu).
+3. Máximo de 120 palavras.
+4. Foco total em interceder com fé e esperança por esta causa: "${causeContent}"`;
+
+      let prayerText = "";
+
+      if (GEMINI_API_KEY) {
+        try {
+          const modelsToTry = ['gemini-2.5-flash', 'gemini-flash-latest'];
+          for (const model of modelsToTry) {
+            try {
+              const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GEMINI_API_KEY}`, {
+                method: 'POST',
+                headers: { 
+                  'Content-Type': 'application/json',
+                  'x-goog-api-key': GEMINI_API_KEY
+                },
+                body: JSON.stringify({
+                  contents: [{ parts: [{ text: systemPrompt }] }]
+                })
+              });
+
+              if (response.ok) {
+                const data = await response.json();
+                const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+                if (text) {
+                  prayerText = text.trim();
+                  break;
+                }
+              }
+            } catch (innerErr) {
+              console.warn(`Model ${model} request failed, trying fallback...`, innerErr);
+            }
+          }
+        } catch (apiErr) {
+          console.warn("Gemini API call error, applying empathetic fallback:", apiErr);
+        }
+      }
+
+      if (!prayerText) {
+        prayerText = `Que faça de minha oração uma ferramenta para a bênção desta causa. Senhor Pai de infinita misericórdia e amor, coloco em Tuas mãos a intenção deste meu irmão(ã): "${causeContent}". Derrama Tua graça, consolação e força sobre esta necessidade. Que a Tua santa vontade prevaleça e que a paz de Cristo ilumine cada passo deste caminho. Confiamos na Tua providência divina hoje e sempre. Amém. 🙏`;
       }
       
-      const systemPrompt = `Você é um gerador de orações empáticas e poderosas para a rede social "Améns".
-REGRA DE OURO: A oração DEVE OBRIGATORIAMENTE começar com: "Que faça de minha oração uma ferramenta para a bencao dessa causa..." ou algo muito similar que use a palavra "ferramenta".
-REGRAS ADICIONAIS:
-1. Seja ACOLHEDOR, HUMILDE e CARINHOSO.
-2. Use PRIMEIRA PESSOA (Eu).
-3. Máximo de 150 palavras.
-4. Foco total em interceder por esta causa: "${prayerRequest.content}"`;
-
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: systemPrompt }] }]
-        })
-      });
-
-      if (!response.ok) throw new Error('Falha na resposta do Gemini');
-      
-      const data = await response.json();
-      const prayerText = data.candidates?.[0]?.content?.parts?.[0]?.text;
-      
-      setSuggestedPrayer(prayerText || "Desculpe, não conseguimos gerar a sugestão agora.");
+      setSuggestedPrayer(prayerText);
     } catch (error) {
       console.error('Error generating prayer:', error);
       toast.error("Erro ao gerar sugestão de oração");
