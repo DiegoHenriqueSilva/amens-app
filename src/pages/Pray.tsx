@@ -676,6 +676,23 @@ const Pray = () => {
     completeTask("share_cause");
   };
 
+  const getEmpatheticFallbackPrayer = (text: string) => {
+    const lower = text.toLowerCase();
+    if (lower.includes("cura") || lower.includes("doen") || lower.includes("saud") || lower.includes("reméd") || lower.includes("hospital") || lower.includes("dor")) {
+      return "Senhor Jesus, Divino Médico dos corpos e das almas, coloco diante de Vós este irmão(ã) que clama por restauração e saúde. Que Vossa mão confortadora toque onde há fragilidade, aliviando as dores e renovando as forças a cada amanhecer. Fazei desta minha oração um instrumento de cura, alento e esperança viva. Em Vosso santo amor confiamos. Amém. 🙏";
+    }
+    if (lower.includes("famíl") || lower.includes("filh") || lower.includes("mãe") || lower.includes("pai") || lower.includes("casam") || lower.includes("espos")) {
+      return "Pai celeste, fonte de todo amor e santidade, consagro a Vós esta família e suas intenções mais profundas. Derramai a graça da harmonia, do perdão mútuo e da fortaleza em cada coração. Que a Vossa presença dissipe as tribulações e construa um porto seguro de fé e proteção neste lar. Que minha prece se una ao Vosso abraço de acolhida. Amém. 🙏";
+    }
+    if (lower.includes("trabalh") || lower.includes("empreg") || lower.includes("dív") || lower.includes("financ") || lower.includes("fart") || lower.includes("lavour") || lower.includes("chuva")) {
+      return "Deus da Providência e bondade infinita, Vós que alimentais as aves do céu e vestis os lírios do campo, olhai com carinho para esta necessidade de sustento, prosperidade e paz. Abri caminhos de oportunidade e fazei frutificar os esforços com dignidade e abundância. Que minha intercessão seja um canal de bênçãos e confiança no Vosso socorro que nunca falha. Amém. 🙏";
+    }
+    if (lower.includes("paz") || lower.includes("ansied") || lower.includes("trist") || lower.includes("depress") || lower.includes("medo") || lower.includes("luto")) {
+      return "Espírito Santo Consolador, derramai Tua paz suave e profunda sobre o coração deste irmão(ã). Acalmai as tempestades da alma, enxugai as lágrimas e renovai a certeza de que nunca estamos sozinhos nas horas difíceis. Que esta oração seja um raio de luz que reacenda a fé e a alegria de viver. Confiamos no Vosso eterno cuidado. Amém. 🙏";
+    }
+    return "Senhor de infinita misericórdia, acolhei com ternura as preces e anseios deste Teu filho(a). Conheceis cada necessidade antes mesmo de ser dita; por isso, derramai Vossa luz, discernimento e bênção sobre todos os seus caminhos. Fazei com que minha humilde oração se torne um instrumento de fortalecimento e paz para esta caminhada. Em Vossas mãos soberanas descansamos. Amém. 🙏";
+  };
+
   const generatePrayer = async () => {
     if (!prayerRequest) return;
     if (!currentUser) {
@@ -687,14 +704,20 @@ const Pray = () => {
     try {
       const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
       
-      const causeContent = prayerRequest.content || prayerRequest.title || "nossa vida e intenções";
-      const systemPrompt = `Você é um gerador de orações empáticas, profundas e acolhedoras para a rede social de oração "Améns".
-REGRA DE OURO: A oração DEVE começar com: "Que faça de minha oração uma ferramenta para a bênção desta causa..."
-REGRAS ADICIONAIS:
-1. Seja ACOLHEDOR, HUMILDE, ESPIRITUAL e CARINHOSO.
-2. Use PRIMEIRA PESSOA (Eu).
-3. Máximo de 120 palavras.
-4. Foco total em interceder com fé e esperança por esta causa: "${causeContent}"`;
+      const rawText = `${prayerRequest.title ? `${prayerRequest.title}. ` : ""}${prayerRequest.content || ""}`.trim();
+      
+      const systemPrompt = `Você é um intercessor espiritual sensível, sábio e acolhedor para a rede católica de oração "Améns".
+Sua missão é criar uma oração personalizada, profunda e tocante em primeira pessoa ("Eu" ou "Nós"), intercedendo a Deus pela necessidade espiritual do irmão.
+
+DIRETRIZES FUNDAMENTAIS:
+1. INTERPRETE O SENTIDO REAL: NÃO repita, NÃO transcreva e NÃO coloque entre aspas o texto digitado pelo usuário (mesmo que haja ruído, erros ou palavras confusas). Compreenda a necessidade humana subjacente (cura, paz familiar, trabalho, alívio de angústia, bênção, proteção ou gratidão) e formule uma oração inspirada.
+2. LINGUAGEM NATURAL E ESPONTÂNEA: NÃO use fórmulas fixas ou repetitivas no início. Varie a invocação de forma acolhedora (ex: "Senhor meu Deus...", "Pai de infinita bondade...", "Ó Jesus misericordioso...", "Espírito Santo consolador...", "Pai celeste...").
+3. SENTIMENTO DE INTERCESSÃO: A ideia de ser um instrumento ou ferramenta de bênção pode aparecer naturalmente no meio ou na conclusão da oração, sem soar forçada ou mecânica.
+4. EXTENSÃO: Entre 50 e 90 palavras. Conciso, afetuoso e com profunda reverência.
+5. CONCLUA COM ESPERANÇA: Termine com "Amém. 🙏".
+
+Intenção a interpretar com empatia:
+${rawText || "Paz, saúde e bênçãos para esta pessoa e sua família."}`;
 
       let prayerText = "";
 
@@ -732,7 +755,7 @@ REGRAS ADICIONAIS:
       }
 
       if (!prayerText) {
-        prayerText = `Que faça de minha oração uma ferramenta para a bênção desta causa. Senhor Pai de infinita misericórdia e amor, coloco em Tuas mãos a intenção deste meu irmão(ã): "${causeContent}". Derrama Tua graça, consolação e força sobre esta necessidade. Que a Tua santa vontade prevaleça e que a paz de Cristo ilumine cada passo deste caminho. Confiamos na Tua providência divina hoje e sempre. Amém. 🙏`;
+        prayerText = getEmpatheticFallbackPrayer(rawText);
       }
       
       setSuggestedPrayer(prayerText);
