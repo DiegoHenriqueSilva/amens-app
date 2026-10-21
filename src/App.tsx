@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Index from "./pages/Index";
 import IndexOld from "./pages/IndexOld";
 import Pray from "./pages/Pray";
@@ -27,7 +27,6 @@ import RosaryPrayer from "./pages/RosaryPrayer";
 import BottomNav from "./components/BottomNav";
 import { PushPromptProvider } from "./contexts/PushPromptContext";
 import { PerformanceProvider } from "./contexts/PerformanceContext";
-import Terco from "./pages/Terco";
 import Admin from "./pages/Admin";
 import { AdminGuard } from "./components/AdminGuard";
 
@@ -77,7 +76,7 @@ const App = () => {
             <Route path="/friends" element={<Friends />} />
             <Route path="/novenas" element={<Novenas />} />
             <Route path="/novena/:id" element={<NovenaPrayer />} />
-            <Route path="/terco" element={<Terco />} />
+            <Route path="/terco" element={<Navigate to="/rosary-selection" replace />} />
             <Route path="/admin/*" element={<AdminGuard><Admin /></AdminGuard>} />
             <Route path="*" element={<NotFound />} />
           </Routes>

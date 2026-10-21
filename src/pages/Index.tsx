@@ -306,22 +306,6 @@ const Index = () => {
           {/* Secondary Actions List */}
           <motion.div className="space-y-4 mb-10" variants={stagger} initial="initial" animate="animate">
             <motion.div variants={fadeUp}>
-              <Link to="/terco">
-                <Card className="p-4 flex items-center gap-4 border-primary/5 soft-shadow bg-gradient-to-r from-primary/10 to-primary/5 rounded-3xl interactive-card relative overflow-hidden">
-                  <div className="absolute right-0 top-0 w-32 h-32 bg-primary/10 rounded-full blur-2xl pointer-events-none" />
-                  <div className="w-10 h-10 bg-primary/20 rounded-2xl flex items-center justify-center text-primary">
-                    <Sparkles className="w-5 h-5" />
-                  </div>
-                  <div className="flex-1 relative z-10">
-                    <h3 className="text-sm font-bold text-foreground">Terço Guiado</h3>
-                    <p className="text-[11px] text-muted-foreground font-medium w-full truncate">Reze acompanhando visualmente por voz</p>
-                  </div>
-                  <Button variant="outline" size="sm" className="rounded-full text-[10px] h-8 px-4 border-primary/20 text-primary bg-background/50 hover:bg-primary hover:text-white interactive-press">Iniciar</Button>
-                </Card>
-              </Link>
-            </motion.div>
-
-            <motion.div variants={fadeUp}>
               <Link to="/my-prayers">
                 <Card className="p-4 flex items-center gap-4 border-primary/5 soft-shadow bg-white/60 rounded-3xl interactive-card transition-colors">
                   <div className="w-10 h-10 bg-secondary/50 rounded-2xl flex items-center justify-center text-primary/60">
