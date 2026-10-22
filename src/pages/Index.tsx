@@ -5,7 +5,7 @@ import { useFaithPoints } from "@/hooks/use-faith-points";
 import { FaithPointsBadge } from "@/components/FaithPointsBadge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Heart, Send, Sparkles, LogOut, User, Sun, Wind, Mail, Home } from "lucide-react";
+import { Heart, Send, Sparkles, LogOut, User, Sun, Wind, Mail, Home, BookOpen } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import PageTransition from "@/components/PageTransition";
