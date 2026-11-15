@@ -6,12 +6,13 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Send, Sparkles, Wind, Users, Heart } from "lucide-react";
 import PageTransition from "@/components/PageTransition";
-import { PRAYERS, PHRASE_DURATION, PRAYER_GAP, TOTAL_CYCLE_TIME } from "@/data/prayer-data";
+import { PRAYERS, PHRASE_DURATION, PRAYER_GAP, TOTAL_CYCLE_TIME, BR_CITIES_200K, COMMON_NAMES } from "@/data/prayer-data";
 import { motion, AnimatePresence } from "framer-motion";
-import { usePrayerQueue } from "@/hooks/use-prayer-queue";
+import { Contributor, usePrayerQueue } from "@/hooks/use-prayer-queue";
 import { useFriends } from "@/hooks/use-friends";
 import { cn } from "@/lib/utils";
 import { useDailyTasks } from "@/hooks/use-daily-tasks";
+import "./prayer-chain.css";
 
 // Marco zero para a sincronização global (1º de Janeiro de 2024)
 const EPOCH = new Date("2024-01-01T00:00:00Z").getTime();
@@ -24,15 +25,14 @@ const PrayerChain = () => {
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
   const [onlineCount, setOnlineCount] = useState(0);
-  const [userCount, setUserCount] = useState<number>(0);
   const [hasSentIntentionToday, setHasSentIntentionToday] = useState(false);
   const [globalTime, setGlobalTime] = useState(Date.now());
   const [timeOffset, setTimeOffset] = useState<number>(0);
   const [isSyncing, setIsSyncing] = useState(true);
-  const [sparkles, setSparkles] = useState<{ id: number; x: number; y: number }[]>([]);
   const { completeTask } = useDailyTasks();
   const { friends } = useFriends();
   const syncAttempted = useRef(false);
+  const timeOffsetRef = useRef(0);
 
   const friendIds = useMemo(() => new Set(friends?.map(f => f.id)), [friends]);
 
@@ -63,9 +63,10 @@ const PrayerChain = () => {
       if (syncAttempted.current) return;
       syncAttempted.current = true;
       try {
-        const { data: serverMs, error } = await supabase.rpc('get_server_time');
+        const { data: serverMs, error } = await supabase.rpc('get_server_time' as any);
         if (!error && serverMs) {
           const offset = Number(serverMs) - Date.now();
+          timeOffsetRef.current = offset;
           setTimeOffset(offset);
           setGlobalTime(Date.now() + offset);
         }
@@ -79,27 +80,25 @@ const PrayerChain = () => {
     fetchInitialData();
     syncClock();
 
-    const fetchUserCount = async () => {
-      const { count } = await supabase.from('profiles').select('*', { count: 'exact', head: true });
-      if (count) setUserCount(count);
-    };
-    fetchUserCount();
-
     const timer = setInterval(() => {
-      setGlobalTime(Date.now() + (timeOffset || 0));
+      if (!document.hidden) setGlobalTime(Date.now() + timeOffsetRef.current);
     }, 1000);
     
     // Realtime Presence
     const channel = supabase.channel('prayer-chain-presence');
+    const updateOnlineCount = () => {
+      try { setOnlineCount(Object.keys(channel.presenceState()).length); } catch (e) {}
+    };
     channel
-      .on('presence', { event: 'sync' }, () => {
-        try {
-          setOnlineCount(Object.keys(channel.presenceState()).length);
-        } catch(e) {}
-      })
+      .on('presence', { event: 'sync' }, updateOnlineCount)
+      .on('presence', { event: 'join' }, updateOnlineCount)
+      .on('presence', { event: 'leave' }, updateOnlineCount)
       .subscribe(async (status) => {
         if (status === 'SUBSCRIBED') {
-          try { await channel.track({ online_at: new Date().toISOString() }); } catch(e) {}
+          try {
+            await channel.track({ online_at: new Date().toISOString() });
+            updateOnlineCount();
+          } catch(e) {}
         }
       });
 
@@ -107,7 +106,7 @@ const PrayerChain = () => {
       clearInterval(timer);
       supabase.removeChannel(channel);
     };
-  }, [timeOffset]);
+  }, []);
 
   // Lógica Determinística da Corrente
   const { currentPrayer, currentPhraseIndex, progress } = useMemo(() => {
@@ -142,6 +141,33 @@ const PrayerChain = () => {
 
   const { recentContributors, isLoading: queueLoading } = usePrayerQueue(currentPrayer?.id, currentPhraseIndex, globalTime);
   const [hasClickedOrarJunto, setHasClickedOrarJunto] = useState(false);
+  const [ambientContributor, setAmbientContributor] = useState<Contributor | null>(null);
+  const displayedPrayerCount = Math.max(6, onlineCount - 1 + 6 + (hasClickedOrarJunto ? 1 : 0));
+
+  useEffect(() => {
+    let nextMessageTimer: number | undefined;
+    let dismissTimer: number | undefined;
+    let stopped = false;
+
+    const showAmbientContributor = () => {
+      if (stopped || document.hidden) {
+        nextMessageTimer = window.setTimeout(showAmbientContributor, 8000);
+        return;
+      }
+      const name = COMMON_NAMES[Math.floor(Math.random() * COMMON_NAMES.length)];
+      const city = BR_CITIES_200K[Math.floor(Math.random() * BR_CITIES_200K.length)];
+      setAmbientContributor({ timestamp: Date.now(), name, city });
+      dismissTimer = window.setTimeout(() => setAmbientContributor(null), 5500);
+      nextMessageTimer = window.setTimeout(showAmbientContributor, 14000 + Math.floor(Math.random() * 9000));
+    };
+
+    nextMessageTimer = window.setTimeout(showAmbientContributor, 5000 + Math.floor(Math.random() * 5000));
+    return () => {
+      stopped = true;
+      if (nextMessageTimer) window.clearTimeout(nextMessageTimer);
+      if (dismissTimer) window.clearTimeout(dismissTimer);
+    };
+  }, []);
 
   const handleOrarJunto = async () => {
     if (!currentUser) {
@@ -155,14 +181,6 @@ const PrayerChain = () => {
       toast({ title: "Sinta a Paz", description: "Aguarde 10 segundos entre suas orações." });
       return;
     }
-
-    // Efeito Visual imediato
-    const newSparkles = Array.from({ length: 15 }).map((_, i) => ({
-      id: Date.now() + i,
-      x: 0, y: 0
-    }));
-    setSparkles(prev => [...prev, ...newSparkles]);
-    setTimeout(() => setSparkles([]), 2500);
 
     try {
       const elapsed = globalTime - EPOCH;
@@ -195,7 +213,7 @@ const PrayerChain = () => {
            const targetTs = EPOCH + cycleStart + cycleOffset + accum + (checkPhraseIndex * PHRASE_DURATION);
            
            if (targetTs > globalTime + 4000) { // Robust safety buffer
-             const { data: success, error } = await supabase.rpc('join_prayer_chain', {
+             const { data: success, error } = await supabase.rpc('join_prayer_chain' as any, {
                p_target_timestamp: targetTs,
                p_author_name: profile?.full_name || currentUser.user_metadata?.full_name || "Intercessor",
                p_author_city: profile?.city || "Améns"
@@ -238,20 +256,8 @@ const PrayerChain = () => {
 
   return (
     <PageTransition>
-      <div className="h-screen w-full bg-[#faf9f6] text-foreground flex flex-col relative overflow-hidden paper-texture">
+      <div className="prayer-chain-page min-h-[100dvh] w-full text-foreground flex flex-col relative overflow-x-hidden pb-20">
         
-        {/* Divine Glow Elements */}
-        <motion.div 
-          animate={{ opacity: [0.03, 0.08, 0.03], scale: [1, 1.2, 1] }}
-          transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute top-[-10rem] right-[-10rem] w-[40rem] h-[40rem] rounded-full bg-[#e8c547] blur-[120px] pointer-events-none" 
-        />
-        <motion.div 
-          animate={{ opacity: [0.02, 0.06, 0.02], scale: [1, 1.1, 1] }}
-          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut", delay: 2 }}
-          className="absolute bottom-[-10rem] left-[-10rem] w-[40rem] h-[40rem] rounded-full bg-[#b8860b] blur-[120px] pointer-events-none" 
-        />
-
         {/* Header Section */}
         <div className="pt-4 pb-2 px-6 relative z-20 shrink-0">
           <div className="max-w-md mx-auto flex flex-col items-center">
@@ -272,10 +278,10 @@ const PrayerChain = () => {
                
                <div className="pt-3 flex justify-center">
                  <motion.div 
-                   className="flex items-center gap-3 bg-white/90 backdrop-blur-xl px-6 py-2 rounded-full border border-[#d4a017]/30 soft-shadow ring-4 ring-[#d4a017]/5"
+                   className="flex items-center gap-3 bg-white/90  px-6 py-2 rounded-full border border-[#d4a017]/30 soft-shadow ring-4 ring-[#d4a017]/5"
                    whileHover={{ scale: 1.05 }}
                  >
-                   <div className="w-2.5 h-2.5 bg-green-500 rounded-full animate-pulse shadow-[0_0_15px_rgba(34,197,94,0.6)]" />
+                   <div className="w-2.5 h-2.5 bg-green-500 rounded-full  shadow-[0_0_15px_rgba(34,197,94,0.6)]" />
                    <span className="text-[12px] font-black tracking-[0.25em] uppercase text-[#3d2800] text-glow-gold">
                      {currentPrayer ? currentPrayer.name : "Momento de Silêncio"}
                    </span>
@@ -318,7 +324,7 @@ const PrayerChain = () => {
           {isSyncing ? (
             <div className="flex flex-col items-center gap-4">
               <div className="w-8 h-8 border-3 border-[#d4a017] border-t-transparent rounded-full animate-spin shadow-sm" />
-              <p className="text-[#3d2800]/40 text-[10px] font-black uppercase tracking-[0.3em] animate-pulse">Sincronizando...</p>
+              <p className="text-[#3d2800]/40 text-[10px] font-black uppercase tracking-[0.3em] ">Sincronizando...</p>
             </div>
           ) : (
             <div className="flex-1 flex flex-col justify-center items-center w-full mt-4">
@@ -326,17 +332,17 @@ const PrayerChain = () => {
                 {currentPrayer && currentPhraseIndex >= 0 ? (
                 <motion.div 
                   key={`${currentPrayer.id}-${currentPhraseIndex}`}
-                  initial={{ opacity: 0, scale: 0.95, filter: "blur(8px)" }}
-                  animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
-                  exit={{ opacity: 0, scale: 1.05, filter: "blur(8px)" }}
-                  transition={{ duration: 1.5, ease: [0.22, 1, 0.36, 1] }}
+                  initial={{ opacity: 0, scale: 0.95,  }}
+                  animate={{ opacity: 1, scale: 1,  }}
+                  exit={{ opacity: 0, scale: 1.05,  }}
+                  transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
                   className="w-full flex flex-col items-center mb-6"
                 >
                   <div className="w-14 h-14 bg-gradient-to-tr from-[#d4a017] to-[#f0c040] rounded-full flex items-center justify-center mx-auto mb-6 shadow-xl border-2 border-white/50 ring-4 ring-[#d4a017]/5">
                     <Sparkles className="text-white w-7 h-7" />
                   </div>
                   
-                  <h2 className="font-serif italic font-bold text-[1.4rem] md:text-[2.2rem] text-center leading-[1.3] text-[#3d2800] max-w-3xl mx-auto drop-shadow-sm px-4 transition-all duration-700">
+                  <h2 className="font-serif italic font-bold text-[1.4rem] md:text-[2.2rem] text-center leading-[1.3] text-[#3d2800] max-w-3xl mx-auto drop-shadow-sm px-4 ">
                     "{currentPrayer.phrases[currentPhraseIndex]}"
                   </h2>
                 </motion.div>
@@ -348,25 +354,27 @@ const PrayerChain = () => {
                   exit={{ opacity: 0 }}
                   className="text-center space-y-4 mb-6"
                 >
-                  <Wind className="w-14 h-14 text-[#d4a017]/20 mx-auto animate-pulse" />
+                  <Wind className="w-14 h-14 text-[#d4a017]/20 mx-auto " />
                   <p className="text-[#3d2800]/50 font-serif italic text-lg md:text-xl tracking-wide">O silêncio é o abraço de Deus...</p>
                 </motion.div>
                 )}
               </AnimatePresence>
 
               {/* Fixed List (Outside AnimatePresence) */}
-              {recentContributors.length > 0 && !queueLoading && (
+              {(recentContributors.length > 0 || ambientContributor) && !queueLoading && (
                 <div className="mt-2 flex flex-col items-center w-full max-w-xs shrink-0">
                   <p className="text-[#a0720a] text-[10px] uppercase tracking-[0.3em] font-bold mb-3 opacity-60 border-b border-[#a0720a]/20 pb-1 w-full text-center">
                     Unidos em oração agora
                   </p>
-                  <div className="flex flex-col gap-1.5 w-full justify-end h-[240px] overflow-hidden pt-6" style={{ maskImage: 'linear-gradient(to bottom, transparent 0%, black 25%, black 100%)', WebkitMaskImage: 'linear-gradient(to bottom, transparent 0%, black 25%, black 100%)' }}>
+                  <div className="flex flex-col gap-1.5 w-full justify-end max-h-[160px] overflow-y-auto py-2">
                     <AnimatePresence initial={false}>
-                      {recentContributors.map((contrib) => (
+                      {[...recentContributors, ...(ambientContributor ? [ambientContributor] : [])].slice(0, 3).map((contrib) => (
                         <motion.div 
-                          key={contrib.id || `${contrib.name}-${contrib.timestamp}`}
+                          key={`${contrib.user_id || contrib.name}-${contrib.timestamp}`}
                           initial={{ opacity: 0, scale: 0.9, y: -10 }}
                           animate={{ opacity: 1, scale: 1, y: 0 }}
+                          exit={{ opacity: 0, scale: 0.95, y: -6 }}
+                          transition={{ duration: 0.35 }}
                           className={cn(
                             "text-[#3d2800]/70 font-semibold text-[11px] md:text-[13px] text-center tracking-wide px-2 py-1 rounded-full transition-all",
                             contrib?.user_id === currentUser?.id && "text-primary font-bold bg-[#d4a017]/10 soft-shadow",
@@ -386,32 +394,6 @@ const PrayerChain = () => {
 
         {/* Action Button & Online Info Section */}
         <div className="shrink-0 relative z-30 flex flex-col items-center pb-8 pt-4">
-           {/* Sparkles Emitter Container */}
-           <div className="absolute top-0 left-1/2 -translate-x-1/2 pointer-events-none w-full h-full overflow-visible">
-            <AnimatePresence>
-                {sparkles.map((s) => (
-                  <motion.div
-                    key={s.id}
-                    initial={{ opacity: 1, scale: 0, x: 0, y: 0 }}
-                    animate={{ 
-                      opacity: 0, 
-                      scale: [0, 2.5, 0], 
-                      x: (Math.random() - 0.5) * 350, 
-                      y: -window.innerHeight * 0.45 // Moves towards the vertical center
-                    }}
-                    transition={{ 
-                      duration: 2.5, 
-                      ease: [0.22, 1, 0.36, 1],
-                      delay: Math.random() * 0.2
-                    }}
-                    className="absolute"
-                  >
-                    <Sparkles className="text-[#f0c040] w-6 h-6 drop-shadow-[0_0_10px_rgba(240,192,64,0.6)]" />
-                  </motion.div>
-                ))}
-            </AnimatePresence>
-           </div>
-
            {!hasClickedOrarJunto && (
              <motion.div 
                whileHover={{ scale: 1.05 }} 
@@ -420,7 +402,7 @@ const PrayerChain = () => {
              >
                <Button 
                  onClick={handleOrarJunto}
-                 className="rounded-full shadow-2xl bg-white/95 backdrop-blur-md hover:bg-white text-[#d4a017] border-2 border-[#d4a017]/30 flex items-center gap-4 px-10 py-8 group transition-all"
+                 className="rounded-full shadow-2xl bg-white/95  hover:bg-white text-[#d4a017] border-2 border-[#d4a017]/30 flex items-center gap-4 px-10 py-8 group transition-all"
                >
                  <div className="flex flex-col items-center">
                    <span className="text-[16px] font-black uppercase tracking-[0.2em] text-[#3d2800] group-hover:text-primary">Orar junto</span>
@@ -434,10 +416,10 @@ const PrayerChain = () => {
            )}
 
            <div className="flex flex-col items-center gap-3">
-              <div className="flex items-center gap-3 bg-white/40 backdrop-blur-sm px-4 py-1.5 rounded-full border border-black/5">
+              <div className="flex items-center gap-3 bg-white/40  px-4 py-1.5 rounded-full border border-black/5">
                 <Users className="w-4 h-4 text-[#d4a017]" />
                 <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#3d2800]/70">
-                  {onlineCount + 12} pessoas orando junto
+                  {displayedPrayerCount} pessoas orando junto
                 </span>
               </div>
               
@@ -448,7 +430,6 @@ const PrayerChain = () => {
                   animate={{ width: `${progress * 100}%` }}
                   transition={{ duration: 1, ease: "linear" }}
                 >
-                  <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/shimmer.png')] opacity-20" />
                 </motion.div>
               </div>
            </div>

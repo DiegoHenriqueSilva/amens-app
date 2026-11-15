@@ -3,9 +3,6 @@
  * Edite aqui para ajustar comportamento sem tocar na lógica.
  */
 export const PRAY_SETTINGS = {
-  /** Número máximo de sorteios por dia calendário */
-  dailyDrawLimit: 3,
-
   /** Dias para exibir data como relativa ("há X dias") vs absoluta (dd/mm/aaaa) */
   relativeTimeThresholdDays: 7,
 

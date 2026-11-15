@@ -1,10 +1,11 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
-import { LocalNotifications } from "@capacitor/local-notifications";
+import React, { createContext, useContext, useState, useEffect, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { BellRing, BellOff } from "lucide-react";
 import { toast } from "sonner";
-import { Capacitor } from '@capacitor/core';
+import { getNotificationPermission, initializePush, requestAndRegisterPush } from "@/lib/push";
+import { scheduleDailyPromiseNotification, syncActiveNovenaReminders } from "@/lib/notifications";
+import { supabase } from "@/integrations/supabase/client";
 
 interface PushPromptContextData {
   triggerPushPrompt: (message: string) => void;
@@ -17,22 +18,48 @@ export const usePushPrompt = () => useContext(PushPromptContext);
 export const PushPromptProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [promptMessage, setPromptMessage] = useState("");
-  const [isSupported, setIsSupported] = useState(true);
+  const launchPromptShown = useRef(false);
+  const launchPromptTimer = useRef<number>();
 
   useEffect(() => {
-    // Verificar se está nativo ou PWA
-    // O Capacitor.isNative ou check do Capacitor
-    if (!Capacitor.isPluginAvailable('LocalNotifications')) {
-       setIsSupported(false);
-    }
+    let disposed = false;
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!session) return;
+      window.setTimeout(() => {
+        if (!disposed) void initializePush().catch(() => console.warn("Push registration is not ready."));
+      }, 0);
+
+      // Exibe o convite uma vez a cada nova abertura do aplicativo enquanto
+      // a permissão continuar desativada. O atraso respeita a tela de abertura.
+      if (!launchPromptShown.current && !launchPromptTimer.current) {
+        launchPromptTimer.current = window.setTimeout(async () => {
+          launchPromptTimer.current = undefined;
+          if (disposed || launchPromptShown.current) return;
+          try {
+            const permission = await getNotificationPermission();
+            if (permission !== "prompt" && permission !== "denied") return;
+            launchPromptShown.current = true;
+            setPromptMessage(
+              "Ative as notificações para receber pedidos de oração, mensagens, lembretes das suas novenas e o Evangelho do Dia. Assim, você não perde nenhum momento importante da sua caminhada de fé."
+            );
+            setIsOpen(true);
+          } catch {
+            console.warn("Could not check notification permission at launch.");
+          }
+        }, 7400);
+      }
+    });
+    return () => {
+      disposed = true;
+      if (launchPromptTimer.current) window.clearTimeout(launchPromptTimer.current);
+      subscription.unsubscribe();
+    };
   }, []);
 
   const triggerPushPrompt = async (message: string) => {
-    if (!isSupported) return;
-
     try {
-      const permStatus = await LocalNotifications.checkPermissions();
-      if (permStatus.display === "granted") {
+      const permission = await getNotificationPermission();
+      if (permission === "granted" || permission === "unsupported" || permission === "unavailable") {
          return; // Já concedido
       }
       
@@ -64,20 +91,24 @@ export const PushPromptProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const handleAccept = async () => {
     setIsOpen(false);
     try {
-      const result = await LocalNotifications.requestPermissions();
-      if (result.display === "granted") {
+      const result = await requestAndRegisterPush();
+      if (result === "granted") {
+         await scheduleDailyPromiseNotification();
+         await syncActiveNovenaReminders();
          toast.success("Notificações ativadas! Você será avisado de suas graças.", { 
             icon: <BellRing className="w-4 h-4" /> 
          });
          localStorage.removeItem("amens_push_denied_date");
-      } else {
-         toast("Notificações não puderam ser ativadas. Reveja os ajustes do seu aparelho.", {
+      } else if (result === "denied") {
+         toast("O Android bloqueou as notificações. Você pode permiti-las nos ajustes do Amens.", {
            icon: <BellOff className="w-4 h-4 text-red-500" />
          });
          localStorage.setItem("amens_push_denied_date", new Date().toISOString());
+      } else {
+         toast("As notificações ainda não estão disponíveis nesta versão. Tente novamente após atualizar o Amens.");
       }
     } catch(e) {
-       console.error("Erro request push", e);
+       toast.error("Não foi possível concluir a ativação. Confira sua conexão e tente novamente.");
     }
   };
 

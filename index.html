@@ -11,15 +11,77 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="Amens" />
     <link rel="manifest" href="/manifest.json" />
+    <link rel="icon" href="/favicon.ico?v=amens-dove-1" sizes="any" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/amens-favicon-32.png?v=amens-dove-1" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/icons/amens-favicon-16.png?v=amens-dove-1" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/icons/amens-apple-touch-180.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Lora:ital,wght@0,400;0,600;0,700;1,400&family=Cormorant+Garamond:wght@600;700&display=swap" rel="stylesheet">
     <meta property="og:title" content="Amens - Rede de Oracao" />
-    <meta property="og:image" content="/og-image.png" />
+    <meta property="og:image" content="https://www.amens.com.br/icons/amens-512.png" />
+    <style>
+      #native-welcome-splash { display: none; }
+      html.amens-welcome #native-welcome-splash { position: fixed; z-index: 10000; inset: 0; display: grid; place-items: center; padding: max(2rem, env(safe-area-inset-top)) 1.75rem max(2rem, env(safe-area-inset-bottom)); background: #fff; color: #3d2800; text-align: center; }
+      #native-welcome-splash .app-welcome-content { display: flex; width: min(100%, 25rem); flex-direction: column; align-items: center; }
+      #native-welcome-splash h1 { margin: 0 0 1.1rem; font-family: Lora, Georgia, serif; font-size: clamp(2.5rem, 11vw, 3.4rem); line-height: 1; letter-spacing: -.05em; }
+      #native-welcome-splash .native-welcome-wordmark { width: min(14rem, 62vw); height: auto; margin: 0 0 .9rem; filter: drop-shadow(0 0 3px rgba(255,255,255,.98)) drop-shadow(0 0 8px rgba(255,255,255,.9)); }
+      #native-welcome-splash img { width: min(12rem, 52vw); height: auto; object-fit: contain; filter: drop-shadow(0 8px 11px rgba(61, 40, 0, .15)); }
+      #native-welcome-splash figure { margin: 1.5rem 0 0; }
+      #native-welcome-splash blockquote { margin: 0; font-family: Lora, Georgia, serif; font-size: clamp(1rem, 4.5vw, 1.2rem); font-style: italic; line-height: 1.55; }
+      #native-welcome-splash figcaption { margin-top: .75rem; font-family: Inter, Arial, sans-serif; font-size: .9rem; font-weight: 800; }
+    </style>
+    <script>
+      (function () {
+        var path = window.location.pathname.replace(/\/+$/, '') || '/';
+        var isHomepage = path === '/' || path === '/index.html';
+        var isAndroidApp = /\bwv\b/i.test(navigator.userAgent) ||
+          (window.location.hostname === 'localhost' && window.location.protocol !== 'https:');
+
+        // On the website, the welcome experience belongs only to the homepage.
+        // The Android shell still opens at localhost and keeps its native startup welcome.
+        if (!isHomepage && !isAndroidApp) return;
+
+        document.documentElement.classList.add('amens-welcome');
+        document.documentElement.dataset.amensWelcomeStartedAt = String(Date.now());
+        window.__amensWelcome = true;
+      })();
+    </script>
   </head>
 
   <body>
+    <section id="native-welcome-splash" aria-label="Boas-vindas ao Améns">
+      <div class="app-welcome-content">
+        <img class="native-welcome-wordmark" src="/amens-wordmark-gold.png" alt="Améns" />
+        <img src="/enviaroracao_3d.png" alt="Pomba levando um pergaminho" />
+        <figure>
+          <blockquote id="native-welcome-quote"></blockquote>
+          <figcaption id="native-welcome-author"></figcaption>
+        </figure>
+      </div>
+    </section>
     <div id="root"></div>
+    <script>
+      (function () {
+        if (!window.__amensWelcome) return;
+        var quotes = [
+          ['A oração feita pelos outros é a prova mais pura do amor ao próximo.', 'São João Crisóstomo'],
+          ['Interceder por alguém é a forma mais bonita de amar em segredo.', 'Santo Agostinho'],
+          ['A oração pelo próximo é a expressão mais alta de um coração generoso.', 'São João da Cruz'],
+          ['Pedir pelos outros é transformar o próprio amor em prece.', 'São Padre Pio'],
+          ['Nada aproxima tanto duas pessoas quanto orar uma pela outra.', 'Dietrich Bonhoeffer'],
+          ['Orar pelos outros é levar quem amamos diretamente ao coração de Deus.', 'São Francisco de Sales'],
+          ['A oração por outro é um abraço que a alma dá sem precisar de braços.', 'Santo Agostinho'],
+          ['Quando você ora pelo próximo, a bênção passa primeiro pelo seu próprio coração.', 'São João Maria Vianney'],
+          ['Quem intercede pelos outros nunca caminha sozinho, pois o amor de Deus o acompanha.', 'São Tomás de Aquino'],
+          ['A intercessão é a ponte que o amor constrói entre a dor de alguém e a graça de Deus.', 'São Gregório de Nissa'],
+          ['Carregar a dor do outro em oração é o primeiro passo para curar o mundo.', 'São João Paulo II']
+        ];
+        var quote = quotes[Math.floor(Math.random() * quotes.length)];
+        document.getElementById('native-welcome-quote').textContent = '“' + quote[0] + '”';
+        document.getElementById('native-welcome-author').textContent = quote[1];
+      })();
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

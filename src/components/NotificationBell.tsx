@@ -35,7 +35,7 @@ export const NotificationBell = () => {
 
     // Subscribe to real-time notifications
     const channel = supabase
-      .channel('schema-db-changes')
+      .channel('notification-bell')
       .on(
         'postgres_changes',
         {
@@ -64,8 +64,10 @@ export const NotificationBell = () => {
   const markAllRead = async () => {
     const unreadIds = notifications.filter(n => !n.is_read).map(n => n.id);
     if (unreadIds.length === 0) return;
-    await supabase.from("notifications").update({ is_read: true }).in("id", unreadIds);
+    const { error } = await supabase.from("notifications").update({ is_read: true }).in("id", unreadIds);
+    if (error) return;
     setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
+    window.dispatchEvent(new Event("notifications-read"));
   };
 
   return (

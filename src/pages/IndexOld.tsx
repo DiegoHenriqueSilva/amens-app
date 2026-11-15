@@ -10,6 +10,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import PageTransition from "@/components/PageTransition";
 import { NotificationBell } from "@/components/NotificationBell";
+import { signOutWithPushCleanup } from "@/lib/push";
 import { motion, AnimatePresence } from "framer-motion";
 import { scheduleDailyPromiseNotification } from "@/lib/notifications";
 import { CompleteProfileDialog } from "@/components/CompleteProfileDialog";
@@ -123,7 +124,7 @@ const Index = () => {
 
   const handleSignOut = async () => {
     try {
-      await supabase.auth.signOut();
+      await signOutWithPushCleanup();
       toast.success("Até breve!");
     } catch (e) {
       console.error("Sign out error:", e);
@@ -318,7 +319,7 @@ const Index = () => {
 
           {user && (
             <motion.div className="flex justify-center mt-12 opacity-80" initial={{ opacity: 0 }} animate={{ opacity: 0.8 }}>
-               <Button onClick={handleSignOut} variant="ghost" size="sm" className="text-xs text-glow font-bold">
+               <Button onClick={handleSignOut} variant="ghost" size="sm" className="text-xs font-bold">
                   Sair da Conta
                </Button>
             </motion.div>

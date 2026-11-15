@@ -1,18 +1,20 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { PRAYERS, PHRASE_DURATION, PRAYER_GAP, COMMON_NAMES, BR_CITIES_200K, TOTAL_CYCLE_TIME } from "@/data/prayer-data";
 
 export interface Contributor {
+  timestamp: number;
   user_id?: string;
   name: string;
   city: string;
 }
 
-const EPOCH = new Date("2024-01-01T00:00:00Z").getTime();
 
 export const usePrayerQueue = (currentPrayerId: string | undefined, currentPhraseIndex: number, globalTime: number) => {
-  const [contributions, setContributions] = useState<Record<string, Contributor>>({});
+  const [contributions, setContributions] = useState<Record<string, Omit<Contributor, "timestamp">>>({});
   const [isLoading, setIsLoading] = useState(true);
+
+  const clock = useRef(globalTime);
+  clock.current = globalTime;
 
   useEffect(() => {
     let refreshTimer: NodeJS.Timeout;
@@ -22,16 +24,18 @@ export const usePrayerQueue = (currentPrayerId: string | undefined, currentPhras
         const { data, error } = await supabase
           .from('prayer_contributions')
           .select('user_id, target_timestamp, author_name, author_city')
-          .gte('target_timestamp', globalTime - 20000)
-          .lte('target_timestamp', globalTime + 180000); // 3 min window
+          .gte('target_timestamp', clock.current - 20000)
+          .lte('target_timestamp', clock.current + 180000); // 3 min window
         
         if (error) {
+          setIsLoading(false);
           console.warn("[Queue] Feed error:", error);
           return;
         }
 
         if (data) {
-          const mapped = data.reduce((acc, curr) => ({
+          const records = data as Array<{ user_id?: string; target_timestamp: number | string; author_name: string; author_city: string }>;
+          const mapped = records.reduce<Record<string, Omit<Contributor, "timestamp">>>((acc, curr) => ({
             ...acc,
             [String(curr.target_timestamp)]: {
               user_id: curr.user_id,
@@ -40,10 +44,11 @@ export const usePrayerQueue = (currentPrayerId: string | undefined, currentPhras
             }
           }), {});
           // Merging ensures we don't lose updates from Realtime
-          setContributions(prev => ({ ...prev, ...mapped }));
+          setContributions(prev => Object.fromEntries(Object.entries({ ...prev, ...mapped }).filter(([ts]) => Number(ts) >= clock.current - 180000 && Number(ts) <= clock.current + 180000)) as Record<string, Omit<Contributor, "timestamp">>);
         }
         setIsLoading(false);
       } catch (e) {
+        setIsLoading(false);
         console.error("[Queue] Fetch error:", e);
       }
     };
@@ -86,52 +91,10 @@ export const usePrayerQueue = (currentPrayerId: string | undefined, currentPhras
     };
   }, []);
 
-  // Calculate the timestamp of the CURRENT phrase to find the author
-  const currentPhraseTimestamp = useMemo(() => {
-    if (!currentPrayerId || currentPhraseIndex === -1) return null;
-    
-    const elapsed = globalTime - EPOCH;
-    const cycleStart = Math.floor(elapsed / TOTAL_CYCLE_TIME) * TOTAL_CYCLE_TIME;
-    
-    let accumulatedTime = 0;
-    for (const prayer of PRAYERS) {
-      const prayerPeriod = (prayer.phrases.length * PHRASE_DURATION) + PRAYER_GAP;
-      if (prayer.id === currentPrayerId) {
-        const ts = EPOCH + cycleStart + accumulatedTime + (currentPhraseIndex * PHRASE_DURATION);
-        return String(ts);
-      }
-      accumulatedTime += prayerPeriod;
-    }
-    return null;
-  }, [currentPrayerId, currentPhraseIndex, globalTime]);
-
-  useEffect(() => {
-    const genFake = () => {
-      const name = COMMON_NAMES[Math.floor(Math.random() * COMMON_NAMES.length)];
-      const city = BR_CITIES_200K[Math.floor(Math.random() * BR_CITIES_200K.length)];
-      setContributions(prev => ({
-        ...prev,
-        [String(Date.now() + Math.random())]: { name, city } // Unique pseudo-timestamp
-      }));
-    };
-
-    // Preenchendo a tela inicialmente com alguns fakes
-    setTimeout(genFake, 500);
-    setTimeout(genFake, 1500);
-    setTimeout(genFake, 2500);
-    setTimeout(genFake, 3500);
-
-    // 2 fakes a cada 3 minutos = 1 a cada 90s em média
-    const interval = setInterval(() => {
-      genFake();
-    }, 90000);
-
-    return () => clearInterval(interval);
-  }, []);
-
   const recentContributors = useMemo(() => {
     const all = Object.entries(contributions)
-      .map(([ts, c]) => ({ ...c, timestamp: parseInt(ts) }))
+      .map(([ts, c]) => ({ ...c, timestamp: Number(ts) }))
+      .filter(c => c.timestamp <= globalTime && c.timestamp >= globalTime - 7000)
       .sort((a, b) => b.timestamp - a.timestamp); // most recent updates first
 
     const unique: Contributor[] = [];
@@ -142,11 +105,11 @@ export const usePrayerQueue = (currentPrayerId: string | undefined, currentPhras
         seen.add(key);
         unique.push(c);
       }
-      if (unique.length >= 10) break; // Mostra até 10 pessoas recentes
+      if (unique.length >= 3) break;
     }
     
     return unique;
-  }, [contributions]);
+  }, [contributions, globalTime]);
 
   return { recentContributors, isLoading };
 };

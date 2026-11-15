@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import type { User as SupabaseUser } from "@supabase/supabase-js";
 import { useDailyTasks } from "@/hooks/use-daily-tasks";
 import { InviteGatePopup } from "@/components/InviteGatePopup";
+import { recordAltarEvent } from '@/features/altar/events';
 
 interface GospelData {
   verse: string; // O resumo poético principal
@@ -34,6 +35,10 @@ const DailyGospel = () => {
   const [loadingVideo, setLoadingVideo] = useState(false);
   const [viewingYesterday, setViewingYesterday] = useState(false);
   const { completeTask } = useDailyTasks();
+
+  useEffect(() => {
+    if (gospel && user) void recordAltarEvent('gospel_read');
+  }, [gospel, user]);
 
   const now = new Date();
   const hour = now.getHours();
@@ -239,22 +244,26 @@ Responda APENAS com um objeto JSON válido no formato:
             });
             toast.success(mode === 'full' ? "Compartilhado completo! ✨" : "Resumo compartilhado! ✨");
             completeTask("share_word");
+            void recordAltarEvent('gospel_share');
             return;
           } else {
             await navigator.share(shareData);
             toast.success("Evangelho compartilhado!");
             completeTask("share_word");
+            void recordAltarEvent('gospel_share');
             return;
           }
         } catch (fileErr) {
           console.warn("Falha ao gerar arquivo de imagem, tentando texto apenas", fileErr);
           await navigator.share(shareData);
           toast.success("Evangelho compartilhado!");
+          void recordAltarEvent('gospel_share');
           return;
         }
       }
 
       await navigator.clipboard.writeText(shareText);
+      void recordAltarEvent('gospel_share');
       toast.success("Mensagem copiada para a área de transferência! 📋");
     } catch {
       toast.error("Não foi possível realizar o compartilhamento.");
@@ -265,7 +274,7 @@ Responda APENAS com um objeto JSON válido no formato:
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-background relative overflow-hidden pb-28">
+      <div className="min-h-screen bg-transparent relative overflow-hidden pb-28">
         <div className="absolute top-[-8rem] right-[-6rem] w-[28rem] h-[28rem] rounded-full bg-primary/5 blur-3xl" />
         <div className="absolute bottom-[-6rem] left-[-6rem] w-[24rem] h-[24rem] rounded-full bg-accent/5 blur-3xl" />
 

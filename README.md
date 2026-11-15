@@ -99,7 +99,17 @@ This project is built with:
 
 ## How can I deploy this project?
 
-Simply open [Lovable](https://lovable.dev/projects/249e0f77-c021-46c8-89b4-c2fec2a1a9c4) and click on Share -> Publish.
+Publish the website and Android live update together from the configured workspace:
+
+```powershell
+npm.cmd run deploy:production
+```
+
+This builds and signs the current web assets, publishes both targets in one Vercel
+deployment, and verifies the public release. The Android app must first have the
+OTA bootstrap APK installed. Native plugins, permissions, and Android changes can
+still require a new APK. See [automatic updates](docs/automatic-updates.md) for
+the signing-key backup, compatible changes, rollback, and build workflow.
 
 ## Can I connect a custom domain to my Lovable project?
 

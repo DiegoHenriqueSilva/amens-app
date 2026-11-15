@@ -1,12 +1,14 @@
 import { useState, useEffect } from "react";
+import {InsigniaSettings,NameWithInsignias,usePublicInsignias} from '@/features/insignias/Insignias';
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { signOutWithPushCleanup } from "@/lib/push";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { LogOut, ArrowLeft, Trophy, Heart, Send, Sparkles, User, MapPin, Pencil, Check, X } from "lucide-react";
+import { LogOut, ArrowLeft, Trophy, Heart, Send, Sparkles, User, MapPin, Pencil, Check, X, BellRing } from "lucide-react";
 import { useFaithPoints } from "@/hooks/use-faith-points";
 import { getLevel, CELESTIAL_LEVELS, getLevelProgress } from "@/lib/faith-points";
 import { toast } from "sonner";
@@ -21,10 +23,13 @@ import { cn } from "@/lib/utils";
 import { Camera, Users, Lock, Ticket } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useDailyTasks } from "@/hooks/use-daily-tasks";
+import { NO_DEVOTIONAL_SAINT, SAINTS } from "@/data/saints";
+import "./profile.css";
 
 const Profile = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState<any>(null);
+  const {data:insignias}=usePublicInsignias(user?[user.id]:[]);
   const { totalFaithPoints, loading: faithPointsLoading } = useFaithPoints();
   const [stats, setStats] = useState({ requests: 0, intercessions: 0 });
   const [savingCity, setSavingCity] = useState(false);
@@ -46,7 +51,8 @@ const Profile = () => {
     showRealName: false,
     displayName: "",
     avatarUrl: "",
-    isPublicInParish: false
+    isPublicInParish: false,
+    devotionalSaint: ""
   });
   const [uploading, setUploading] = useState(false);
   const [invitedUsers, setInvitedUsers] = useState<any[]>([]);
@@ -110,7 +116,8 @@ const Profile = () => {
         showRealName: profile.show_real_name || false,
         displayName: profile.display_name || "",
         avatarUrl: profile.avatar_url || "",
-        isPublicInParish: profile.is_public_in_parish || false
+        isPublicInParish: profile.is_public_in_parish || false,
+        devotionalSaint: profile.devotional_saint || NO_DEVOTIONAL_SAINT
       });
     }
   };
@@ -171,7 +178,8 @@ const Profile = () => {
       parish: editData.parish,
       show_real_name: editData.showRealName,
       display_name: editData.showRealName ? editData.displayName : null,
-      is_public_in_parish: editData.isPublicInParish
+      is_public_in_parish: editData.isPublicInParish,
+      devotional_saint: editData.devotionalSaint === NO_DEVOTIONAL_SAINT ? null : editData.devotionalSaint
     });
 
     // Update Auth User Metadata
@@ -183,7 +191,8 @@ const Profile = () => {
         parish: editData.parish,
         show_real_name: editData.showRealName,
         display_name: editData.showRealName ? editData.displayName : null,
-        is_public_in_parish: editData.isPublicInParish
+        is_public_in_parish: editData.isPublicInParish,
+        devotional_saint: editData.devotionalSaint === NO_DEVOTIONAL_SAINT ? null : editData.devotionalSaint
       },
     });
 
@@ -238,7 +247,7 @@ const Profile = () => {
   };
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut();
+    await signOutWithPushCleanup();
     toast.success("Até logo! Que a paz esteja com você. 🙏");
     navigate("/auth");
   };
@@ -262,14 +271,15 @@ const Profile = () => {
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-background relative overflow-hidden pb-28">
+      <div className="amens-profile-wallpaper min-h-screen relative overflow-hidden pb-28">
         <div className="absolute top-[-10rem] left-[-10rem] w-[30rem] h-[30rem] rounded-full bg-primary/5 blur-3xl" />
         <div className="absolute bottom-[-10rem] right-[-10rem] w-[30rem] h-[30rem] rounded-full bg-accent/5 blur-3xl" />
 
         <div className="container mx-auto px-6 py-8 relative z-10 max-w-lg">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/")} className="mb-6">
-            <ArrowLeft className="w-5 h-5" />
-          </Button>
+          <div className="flex items-center justify-between mb-6">
+            <Button variant="ghost" size="icon" onClick={() => navigate("/")}><ArrowLeft className="w-5 h-5" /></Button>
+            <Button variant="ghost" size="icon" onClick={() => navigate("/notifications")} aria-label="Configurações de notificações"><BellRing className="w-5 h-5" /></Button>
+          </div>
 
           <Tabs defaultValue="profile" className="w-full mt-6">
             <TabsList className="grid w-full grid-cols-2 mb-8 bg-white/50 backdrop-blur-sm rounded-full p-1 border border-primary/10 h-14">
@@ -328,7 +338,7 @@ const Profile = () => {
             </div>
             
             <div className="flex items-center justify-center gap-3 mb-1">
-              <h1 className="text-3xl font-bold text-foreground text-soft-outline">{fullName}</h1>
+              <h1 className="text-3xl font-bold text-foreground"><NameWithInsignias selection={insignias?.[user.id]}>{fullName}</NameWithInsignias></h1>
               <span className="text-xs font-bold text-primary/70 bg-primary/10 border border-primary/20 px-2.5 py-1 rounded-full tracking-wide whitespace-nowrap">
                 Nível {levelIndex + 1}
               </span>
@@ -440,6 +450,18 @@ const Profile = () => {
                             </Popover>
                         </div>
 
+                        <div className="space-y-2">
+                            <Label>Santo(a) de devoção</Label>
+                            <Select value={editData.devotionalSaint} onValueChange={(val) => setEditData({...editData, devotionalSaint: val})}>
+                                <SelectTrigger><SelectValue placeholder="Selecione uma opção" /></SelectTrigger>
+                                <SelectContent className="max-h-60">
+                                    <SelectItem value={NO_DEVOTIONAL_SAINT}>{NO_DEVOTIONAL_SAINT}</SelectItem>
+                                    {SAINTS.map((saint) => <SelectItem key={saint} value={saint}>{saint}</SelectItem>)}
+                                </SelectContent>
+                            </Select>
+                            <p className="text-[10px] text-muted-foreground">Você pode trocar esta escolha quando quiser.</p>
+                        </div>
+
                         <div className="space-y-4 pt-4 border-t border-primary/5">
                             <div className="flex items-center space-x-2">
                                 <input 
@@ -543,6 +565,7 @@ const Profile = () => {
             </motion.div>
           </div>
 
+            <InsigniaSettings key={user.id} userId={user.id}/>
             </TabsContent>
 
              <TabsContent value="invited" className="outline-none">

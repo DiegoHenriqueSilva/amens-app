@@ -200,7 +200,12 @@ export const useFriends = () => {
     const init = async () => {
       setLoading(true);
       try {
-        await Promise.all([fetchFriends(), fetchRequests(), fetchMyCode()]);
+        // Render the friends/requests lists as soon as their two core queries finish.
+        // The invite code is independent and can arrive afterward without blocking the page.
+        await Promise.all([fetchFriends(), fetchRequests()]);
+        setLoading(false);
+        void fetchMyCode();
+        return;
       } catch (e) {
         console.error("Error initializing friends data:", e);
       } finally {

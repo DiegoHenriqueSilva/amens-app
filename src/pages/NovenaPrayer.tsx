@@ -11,6 +11,8 @@ import PageTransition from "@/components/PageTransition";
 import { cn } from "@/lib/utils";
 import { MercyChaplet } from "@/components/novenas/MercyChaplet";
 import { usePushPrompt } from "@/contexts/PushPromptContext";
+import { cancelNovenaReminder } from "@/lib/notifications";
+import { recordAltarEvent } from '@/features/altar/events';
 
 const NovenaPrayer = () => {
   const { id } = useParams();
@@ -90,7 +92,9 @@ const NovenaPrayer = () => {
   };
 
   const handleComplete = () => {
+    void recordAltarEvent('novena_day', `${novena.id}:${state.currentDay}`);
     updateProgress(state.currentDay);
+    if (state.currentDay === 9) void cancelNovenaReminder(novena.id);
     setShowConclusion(true);
   };
 
@@ -114,7 +118,7 @@ const NovenaPrayer = () => {
   if (showConclusion) {
     return (
       <PageTransition>
-        <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 text-center">
+        <div className="min-h-screen bg-transparent flex flex-col items-center justify-center p-6 text-center">
             <motion.div 
               initial={{ scale: 0.8, opacity: 0 }} 
               animate={{ scale: 1, opacity: 1 }}
@@ -141,6 +145,8 @@ const NovenaPrayer = () => {
               open={showReminder} 
               onOpenChange={setShowReminder}
               currentDay={state.currentDay}
+              novenaId={novena.id}
+              novenaName={novena.name}
               onConfirm={handleConfirmReminder}
             />
         </div>
@@ -152,7 +158,7 @@ const NovenaPrayer = () => {
 
   return (
     <PageTransition>
-      <div className="min-h-screen w-full bg-[#faf9f6] text-foreground flex flex-col relative overflow-hidden paper-texture pb-32">
+      <div className="min-h-screen w-full bg-transparent text-foreground flex flex-col relative overflow-hidden pb-32">
         {/* Divine Glow Elements */}
         <motion.div 
           animate={{ opacity: [0.03, 0.08, 0.03], scale: [1, 1.2, 1] }}
@@ -166,7 +172,7 @@ const NovenaPrayer = () => {
         />
 
         {/* Header */}
-        <div className="bg-[#faf9f6]/90 backdrop-blur-md sticky top-0 z-30 border-b border-[#a0720a]/10 pt-12 pb-4 px-6">
+        <div className="bg-[#fff9ea]/85 backdrop-blur-md sticky top-0 z-30 border-b border-[#a0720a]/10 pt-12 pb-4 px-6">
           <div className="flex items-center gap-4 max-w-2xl mx-auto">
             <Button variant="ghost" size="icon" onClick={() => navigate("/novenas")} className="rounded-full hover:bg-primary/10">
               <ArrowLeft className="w-5 h-5 text-primary" />

@@ -1,0 +1,23 @@
+.prayer-chain-page {
+  min-height: 100dvh;
+  background-color: #fff9e9;
+  background-image: url('/backgrounds/bg-amens-orar-ao-vivo-mobile.png');
+  background-position: center top;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-attachment: scroll;
+}
+
+@media (min-width: 768px) {
+  .prayer-chain-page {
+    background-image: url('/backgrounds/bg-amens-orar-ao-vivo-desktop.png');
+    background-position: center top;
+    background-attachment: fixed;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .prayer-chain-page {
+    background-attachment: scroll;
+  }
+}

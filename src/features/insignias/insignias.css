@@ -1,0 +1,28 @@
+.insignia-name-group{display:inline-flex;align-items:center;gap:4px;flex-wrap:wrap;max-width:100%;vertical-align:middle}
+.insignia-name-group>span:first-child{overflow-wrap:anywhere;min-width:0}
+.insignia-symbol{display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;min-width:28px;min-height:28px;color:#b38224;border-radius:50%;background:transparent;border:0;cursor:pointer}
+.insignia-symbol svg{color:#b27718;stroke-width:1.65;filter:drop-shadow(0 1px 1px #6d431c35)}
+.insignia-symbol:focus-visible{outline:2px solid #8c6319;outline-offset:2px}
+.insignia-supporter-name{color:#876014}
+.insignia-supporter-glow{color:#946515;animation:insignia-warmth 3s ease-in-out infinite}
+.insignia-supporter-glow svg{fill:#e8bd5a;stroke:#946515;stroke-width:1.5}
+.insignia-supporter-glow .insignia-supporter-branch{fill:none;stroke:#946515;transform:rotate(-18deg);margin-left:-3px;}
+.insignia-supporter-cta{display:inline-block;margin-top:10px;color:#956515;font-weight:700;text-decoration:underline;text-underline-offset:3px}
+.insignia-supporter-cta:hover{color:#68430c}
+.insignia-supporter-cta:focus-visible{outline:2px solid #8c6319;outline-offset:3px;border-radius:2px}
+@keyframes insignia-warmth{0%,100%{filter:drop-shadow(0 0 2px #d8ad4d40)}50%{filter:drop-shadow(0 0 5px #d8ad4d90)}}
+.insignia-settings{padding:20px;margin:20px 0;background:#fffcf5e8;border:1px solid #dbcba9;border-radius:20px;text-align:left}
+.insignia-settings h2{font-size:20px;font-weight:700;color:#674627}
+.insignia-settings p{font-size:14px;line-height:1.6;margin:8px 0 14px}
+.insignia-options{display:grid;gap:12px}
+.insignia-options label{display:flex;align-items:center;gap:10px}
+.insignia-options svg{color:#a57622;flex-shrink:0}
+.insignia-options small{display:block;font-size:12px;color:#766a58}
+.insignia-option-locked{opacity:.55}
+.insignia-settings input{accent-color:#996e21;width:18px;height:18px;flex-shrink:0}
+.insignia-card-choice{display:flex;gap:10px;align-items:center;margin-top:20px;font-size:14px}
+.insignia-save{background:linear-gradient(110deg,#fae7ac,#e9bf58);border:1px solid #c8a052;border-radius:20px;padding:9px 20px;margin-top:18px;color:#553b12;font-weight:600}
+.insignia-save:disabled{opacity:.6}
+.supporter-card-art{position:relative;overflow:hidden;border-radius:18px;margin-bottom:20px;background:#fff2bf}
+.supporter-card-art img{display:block;width:100%;height:auto;pointer-events:none}
+@media(prefers-reduced-motion:reduce){.insignia-supporter-glow{animation:none}}

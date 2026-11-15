@@ -5,19 +5,21 @@ import { useFaithPoints } from "@/hooks/use-faith-points";
 import { FaithPointsBadge } from "@/components/FaithPointsBadge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Heart, Send, Sparkles, LogOut, User, BookOpen, HandHeart, Sun, Users, Wind, Mail, Home } from "lucide-react";
+import { Heart, Send, Sparkles, LogOut, User, BookOpen, Sun, Wind, Mail, Home, HandHeart, Cross } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import PageTransition from "@/components/PageTransition";
 import { NotificationBell } from "@/components/NotificationBell";
+import { signOutWithPushCleanup } from "@/lib/push";
 import { motion, AnimatePresence } from "framer-motion";
-import { scheduleDailyPromiseNotification } from "@/lib/notifications";
+import { scheduleDailyPromiseNotification, syncActiveNovenaReminders } from "@/lib/notifications";
 import { CompleteProfileDialog } from "@/components/CompleteProfileDialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Check, X } from "lucide-react";
 import { JornadaFe } from "@/components/JornadaFe";
 import { AngelicalNotificationOverlay } from "@/components/AngelicalNotificationOverlay";
 import { useLocation } from "react-router-dom";
+import { useMyInsignias } from "@/features/insignias/Insignias";
 
 const stagger = {
   animate: { transition: { staggerChildren: 0.1 } },
@@ -28,14 +30,71 @@ const fadeUp = {
   animate: { opacity: 1, y: 0, transition: { duration: 0.4 } },
 };
 
+const RosaryGlyph = () => (
+  <svg viewBox="0 0 44 44" fill="none" aria-hidden="true" className="amens-home-icon">
+    <circle cx="16" cy="14" r="10.5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeDasharray="0.8 2.2" />
+    <circle cx="16" cy="3.5" r="1.1" fill="currentColor" />
+    <path d="M16 24.5v6.2m0 0-2.5 2.6m2.5-2.6 2.5 2.6m-2.5 0v6.5m-3-3.2h6" stroke="currentColor" strokeWidth="1.65" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M28.5 27.2c2.8-1.5 5.5-1.4 8.2.1v10.1c-2.7-1.5-5.4-1.5-8.2 0-2.7-1.5-5.4-1.5-8.1 0V27.3c2.7-1.5 5.4-1.6 8.1-.1Z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
+    <path d="M28.5 27.2v10.2m-4.8-6.5c1.4-.5 2.4-.4 3.5.1m2.5 0c1.1-.5 2.1-.6 3.5-.1" stroke="currentColor" strokeWidth="1.35" strokeLinecap="round" />
+  </svg>
+);
+
+const NovenaGlyph = () => (
+  <svg viewBox="0 0 42 42" fill="none" aria-hidden="true" className="amens-home-icon">
+    <rect x="3.5" y="7.5" width="25" height="27" rx="3.4" stroke="currentColor" strokeWidth="1.8" />
+    <path d="M3.5 15h25M10.5 4v7M21.5 4v7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    <text x="11" y="29.5" fill="currentColor" fontSize="18" fontFamily="Georgia, serif" fontWeight="700">9</text>
+    <circle cx="33.2" cy="20" r="5.5" stroke="currentColor" strokeWidth="1.5" strokeDasharray="0.8 1.8" />
+    <path d="M33.2 25.5v7m-2.4-2.4h4.8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+  </svg>
+);
+
+const LegacyHomeActions = () => {
+  const actions = [
+    { to: "/pray", image: "/oracao_3d.png", title: "Orar por uma Causa", description: "Receba um pedido e seja um instrumento de graça", cta: "Começar", icon: Heart },
+    { to: "/submit", image: "/enviaroracao_3d.png", title: "Enviar Pedido", description: "Compartilhe sua necessidade e receba apoio", cta: "Enviar", icon: Send },
+    { to: "/daily-gospel", image: "/evangelho_3d.png", title: "Evangelho do Dia", description: "A palavra sagrada com reflexões da IA", cta: "Ler", icon: Sun },
+    { to: "/novenas", image: "/novenas.png", title: "Novenas", description: "Escolha uma novena para seguir com fé", cta: "Iniciar", icon: BookOpen },
+    { to: "/rosary-selection", image: "/sagrado_terco.png", title: "Sagrado Terço", description: "Reze seus mistérios com auxílio de voz", cta: "Iniciar", icon: Sparkles },
+    { to: "/divine-promise", image: "/divinaspromessas_3d.png", title: "Divina Promessa", description: "Uma citação bíblica para seu coração", cta: "Sortear", icon: Wind },
+  ];
+
+  return (
+    <motion.div className="grid grid-cols-2 gap-3 mb-5" variants={stagger} initial="initial" animate="animate">
+      {actions.map((action) => {
+        const Icon = action.icon;
+        return <motion.div key={action.to} variants={fadeUp}>
+          <Link to={action.to} className="block h-full">
+            <Card className="p-3 sm:p-4 h-full text-center flex flex-col items-center justify-between border-primary/5 soft-shadow bg-[#FAFAFA] hover:-translate-y-1 hover:shadow-xl transition-all duration-300 rounded-[2rem]">
+              <div className="w-11 h-11 bg-transparent rounded-full flex items-center justify-center mb-2 overflow-hidden"><img src={action.image} alt={action.title} className="w-full h-full object-cover rounded-full drop-shadow-md" /></div>
+              <div><h2 className="text-sm sm:text-base font-bold mb-1">{action.title}</h2><p className="text-xs text-slate-700 leading-snug mb-2 font-semibold px-2">{action.description}</p></div>
+              <Button size="sm" className="w-full rounded-full text-xs h-9 py-2 font-bold shadow-md bg-gradient-to-br from-[#d4a017] to-[#e8c547] text-[#3d2800] hover:opacity-90 transition-opacity border-0"><Icon className="w-3.5 h-3.5 mr-2" />{action.cta}</Button>
+            </Card>
+          </Link>
+        </motion.div>;
+      })}
+    </motion.div>
+  );
+};
+
 const Index = () => {
   const [user, setUser] = useState<SupabaseUser | null>(null);
   const [onlineCount, setOnlineCount] = useState(0);
   const navigate = useNavigate();
-  const { totalFaithPoints, loading: faithPointsLoading } = useFaithPoints();
+  const { totalFaithPoints } = useFaithPoints();
   const [profile, setProfile] = useState<any>(null);
   const location = useLocation();
   const [activeIntercessionNotifId, setActiveIntercessionNotifId] = useState<string | null>(null);
+  const [isLegacyTheme, setIsLegacyTheme] = useState(() => localStorage.getItem("amens-theme") === "legacy");
+  const myInsignias = useMyInsignias(user?.id);
+
+  const toggleTheme = () => {
+    const nextIsLegacy = !isLegacyTheme;
+    localStorage.setItem("amens-theme", nextIsLegacy ? "legacy" : "refresh");
+    setIsLegacyTheme(nextIsLegacy);
+    window.location.reload();
+  };
 
   const fetchProfile = async (userId: string) => {
     try {
@@ -61,6 +120,7 @@ const Index = () => {
         if (session) {
           fetchProfile(session.user.id);
           scheduleDailyPromiseNotification();
+          syncActiveNovenaReminders();
         }
       } catch (e) {
         console.error("Auth session check failed:", e);
@@ -130,7 +190,7 @@ const Index = () => {
 
   const handleSignOut = async () => {
     try {
-      await supabase.auth.signOut();
+      await signOutWithPushCleanup();
       toast.success("Até breve!");
     } catch (e) {
       console.error("Sign out error:", e);
@@ -146,206 +206,97 @@ const Index = () => {
           onClose={() => setActiveIntercessionNotifId(null)} 
         />
         
-        <div className="container mx-auto px-6 py-8 relative z-10 max-w-lg">
-          
-          <motion.div className="text-center mb-8 pt-4" initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
-             <h1 className="text-5xl font-bold text-foreground mb-1 tracking-tight text-glow text-soft-outline">Améns</h1>
-             <div className="flex items-center justify-center gap-2 text-[#8b6508] text-glow">
-                <Sparkles className="w-3 h-3" />
-                <span className="text-xs uppercase tracking-[0.2em] font-bold">Unidos pela Fé</span>
-                <Sparkles className="w-3 h-3" />
-             </div>
-          </motion.div>
+        <div className="container mx-auto px-4 pt-8 sm:pt-5 pb-8 relative z-10 max-w-lg">
+          <div className={user ? "amens-home-header grid grid-cols-[minmax(0,1fr)_clamp(140px,44%,168px)] min-[520px]:grid-cols-[minmax(0,1fr)_210px] items-center gap-3 mb-3 sm:mb-16 min-h-[76px]" : "flex justify-center mb-5"}>
+            <div className="min-w-0 text-center">
+              <h1 className="home-brand-outline amens-wordmark text-[clamp(2.5rem,11vw,3rem)] font-bold text-foreground tracking-tight leading-tight">
+                <img src="/amens-wordmark-gold.png" alt="Améns" className="amens-wordmark-image" />
+              </h1>
+              <div className="home-tagline-outline flex items-center justify-center gap-1 -mt-2 text-[#8b6508]">
+                <Sparkles className="w-2.5 h-2.5" aria-hidden="true" />
+                <span className="text-[9px] sm:text-[10px] uppercase tracking-[0.14em] font-bold whitespace-nowrap">Unidos pela Fé</span>
+                <Sparkles className="w-2.5 h-2.5" aria-hidden="true" />
+              </div>
+            </div>
+            {user && (
+              <div className="w-full min-w-0">
+                <FaithPointsBadge
+                  compact
+                  totalFaithPoints={totalFaithPoints}
+                  userName={profile?.full_name || user.user_metadata?.full_name || user.user_metadata?.name || ""}
+                  avatarUrl={profile?.avatar_url || user.user_metadata?.avatar_url || user.user_metadata?.picture}
+                  isSupporter={myInsignias.data?.showSupporterCard === true}
+                />
+              </div>
+            )}
+          </div>
+            {user && <div className="amens-home-journey mb-3.5 sm:mb-7"><JornadaFe compact /></div>}
 
-          {/* Jornada da Fé Diária */}
-          {user && (
-            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="mb-6 -mx-2">
-              <JornadaFe />
+          {isLegacyTheme && <LegacyHomeActions />}
+          {!isLegacyTheme && <motion.div className="amens-home-actions grid grid-cols-2 gap-3 mb-5" variants={stagger} initial="initial" animate="animate">
+            <motion.div variants={fadeUp}>
+                <Link to="/pray" className="block">
+                  <Card className="amens-home-action amens-art-orar">
+                    <img src="/cards/orar-por-causa.png" alt="Orar por uma Causa" className="amens-home-art-image" />
+                  </Card>
+              </Link>
+            </motion.div>
+
+            <motion.div variants={fadeUp}>
+                <Link to="/submit" className="block">
+                  <Card className="amens-home-action amens-art-enviar">
+                    <img src="/cards/enviar-oracao.png" alt="Enviar pedido de oração" className="amens-home-art-image" />
+                  </Card>
+              </Link>
+            </motion.div>
+
+            <motion.div variants={fadeUp}>
+                <Link to="/daily-gospel" className="block">
+                  <Card className="amens-home-action amens-art-evangelho">
+                    <img src="/cards/evangelho.png" alt="Evangelho do Dia" className="amens-home-art-image" />
+                  </Card>
+              </Link>
+            </motion.div>
+
+            <motion.div variants={fadeUp}>
+                <Link to="/novenas" className="block">
+                  <Card className="amens-home-action amens-art-novenas">
+                    <img src="/cards/novenas.png" alt="Novenas" className="amens-home-art-image" />
+                  </Card>
+              </Link>
+            </motion.div>
+
+            <motion.div variants={fadeUp}>
+                <Link to="/rosary-selection" className="block">
+                  <Card className="amens-home-action amens-art-terco">
+                    <img src="/cards/sagrado-terco.png" alt="Sagrado Terço" className="amens-home-art-image" />
+                  </Card>
+              </Link>
+            </motion.div>
+
+            <motion.div variants={fadeUp}>
+                <Link to="/divine-promise" className="block">
+                  <Card className="amens-home-action amens-art-promessas">
+                    <img src="/cards/divinas-promessas.png" alt="Divinas Promessas" className="amens-home-art-image" />
+                  </Card>
+              </Link>
+            </motion.div>
+          </motion.div>}
+
+          {!isLegacyTheme && (
+            <motion.div variants={fadeUp} initial="initial" animate="animate">
+            <Link className="amens-donation-banner" to="/donate" aria-labelledby="amens-donation-title">
+              <span className="amens-donation-banner__eyebrow">Faça parte desta missão</span>
+              <h2 id="amens-donation-title">Apoie o Améns</h2>
+              <p>Sua contribuição ajuda a manter o Améns gratuito, acolhedor e sempre disponível.</p>
+              <p className="amens-donation-banner__callout">
+                <HandHeart aria-hidden="true" />
+                <span><strong>Faça uma doação.</strong> Metade do valor doado será revertido para instituições de caridade.</span>
+              </p>
+              <Sparkles className="amens-donation-banner__ornament" aria-hidden="true" />
+            </Link>
             </motion.div>
           )}
-
-          {/* User / Faith Points Card */}
-          {user && !faithPointsLoading && (
-            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.1 }}>
-              <Card className="p-5 mb-8 soft-shadow border-primary/5 bg-white/70 backdrop-blur-sm rounded-[2rem]">
-                 <FaithPointsBadge totalFaithPoints={totalFaithPoints} userName={profile?.full_name || user.user_metadata?.full_name || ""} avatarUrl={profile?.avatar_url} />
-              </Card>
-            </motion.div>
-          )}
-
-          <motion.div className="grid grid-cols-2 gap-5 mb-8" variants={stagger} initial="initial" animate="animate">
-            <motion.div variants={fadeUp}>
-              <Link to="/pray">
-                <Card className="p-6 h-full text-center flex flex-col items-center justify-between border-primary/5 soft-shadow bg-[#FAFAFA] hover:-translate-y-1 hover:shadow-xl transition-all duration-300 rounded-[2rem]">
-                  <div className="w-14 h-14 bg-transparent rounded-full flex items-center justify-center mb-4 overflow-hidden">
-                    <img src="/oracao_3d.png" alt="Orar por uma causa" className="w-full h-full object-cover rounded-full drop-shadow-md" />
-                  </div>
-                  <div>
-                    <h2 className="text-lg font-bold mb-2">Orar por uma Causa</h2>
-                    <p className="text-[13.5px] text-slate-700 leading-snug mb-4 font-semibold [text-shadow:_0_1px_2px_rgb(255_255_255_/_80%)] px-2">Receba um pedido e seja um instrumento de graça</p>
-                  </div>
-                  <Button size="sm" className="w-full rounded-full text-xs py-5 font-bold shadow-md bg-gradient-to-br from-[#d4a017] to-[#e8c547] text-[#3d2800] hover:opacity-90 transition-opacity border-0">
-                    <Heart className="w-3.5 h-3.5 mr-2" />
-                    Começar
-                  </Button>
-                </Card>
-              </Link>
-            </motion.div>
-
-            <motion.div variants={fadeUp}>
-              <Link to="/submit">
-                <Card className="p-6 h-full text-center flex flex-col items-center justify-between border-primary/5 soft-shadow bg-[#FAFAFA] hover:-translate-y-1 hover:shadow-xl transition-all duration-300 rounded-[2rem]">
-                  <div className="w-14 h-14 bg-transparent rounded-full flex items-center justify-center mb-4 overflow-hidden">
-                    <img src="/enviaroracao_3d.png" alt="Enviar Pedido" className="w-full h-full object-cover rounded-full drop-shadow-md" />
-                  </div>
-                  <div>
-                    <h2 className="text-lg font-bold mb-2">Enviar Pedido</h2>
-                    <p className="text-[13.5px] text-slate-700 leading-snug mb-4 font-semibold [text-shadow:_0_1px_2px_rgb(255_255_255_/_80%)] px-2">Compartilhe sua necessidade e receba apoio</p>
-                  </div>
-                  <Button size="sm" className="w-full rounded-full text-xs py-5 font-bold shadow-md bg-gradient-to-br from-[#d4a017] to-[#e8c547] text-[#3d2800] hover:opacity-90 transition-opacity border-0">
-                    <Send className="w-3.5 h-3.5 mr-2" />
-                    Enviar
-                  </Button>
-                </Card>
-              </Link>
-            </motion.div>
-
-            <motion.div variants={fadeUp}>
-              <Link to="/daily-gospel">
-                <Card className="p-6 h-full text-center flex flex-col items-center justify-between border-primary/5 soft-shadow bg-[#FAFAFA] hover:-translate-y-1 hover:shadow-xl transition-all duration-300 rounded-[2rem]">
-                  <div className="w-14 h-14 bg-transparent rounded-full flex items-center justify-center mb-4 overflow-hidden">
-                    <img src="/evangelho_3d.png" alt="Evangelho do Dia" className="w-full h-full object-cover rounded-full drop-shadow-md" />
-                  </div>
-                  <div>
-                    <h2 className="text-lg font-bold mb-2">Evangelho do Dia</h2>
-                    <p className="text-[13.5px] text-slate-700 leading-snug mb-4 font-semibold [text-shadow:_0_1px_2px_rgb(255_255_255_/_80%)] px-2">A palavra sagrada com reflexões da IA</p>
-                  </div>
-                  <Button size="sm" className="w-full rounded-full text-xs py-5 font-bold shadow-md bg-gradient-to-br from-[#d4a017] to-[#e8c547] text-[#3d2800] hover:opacity-90 transition-opacity border-0">
-                    <Sun className="w-3.5 h-3.5 mr-2" />
-                    Ler
-                  </Button>
-                </Card>
-              </Link>
-            </motion.div>
-
-            <motion.div variants={fadeUp}>
-              <Link to="/novenas">
-                <Card className="p-6 h-full text-center flex flex-col items-center justify-between border-primary/5 soft-shadow bg-[#FAFAFA] hover:-translate-y-1 hover:shadow-xl transition-all duration-300 rounded-[2rem]">
-                  <div className="w-14 h-14 bg-transparent rounded-full flex items-center justify-center mb-4 overflow-hidden">
-                    <img src="/novenas.png" alt="Novenas" className="w-full h-full object-cover rounded-full drop-shadow-md" />
-                  </div>
-                  <div>
-                    <h2 className="text-lg font-bold mb-2">Novenas</h2>
-                    <p className="text-xs text-muted-foreground leading-tight mb-4 font-medium">Escolha uma novena para seguir com fé</p>
-                  </div>
-                  <Button size="sm" className="w-full rounded-full text-xs py-5 font-bold shadow-md bg-gradient-to-br from-[#d4a017] to-[#e8c547] text-[#3d2800] hover:opacity-90 transition-opacity border-0">
-                    <BookOpen className="w-3.5 h-3.5 mr-2" />
-                    Iniciar
-                  </Button>
-                </Card>
-              </Link>
-            </motion.div>
-
-            <motion.div variants={fadeUp}>
-              <Link to="/rosary-selection">
-                <Card className="p-6 h-full text-center flex flex-col items-center justify-between border-primary/5 soft-shadow bg-[#FAFAFA] hover:-translate-y-1 hover:shadow-xl transition-all duration-300 rounded-[2rem] border-dashed border-primary/20">
-                  <div className="w-14 h-14 bg-transparent rounded-full flex items-center justify-center mb-4 overflow-hidden">
-                    <img src="/sagrado_terco.png" alt="Sagrado Terço" className="w-full h-full object-cover rounded-full drop-shadow-md" />
-                  </div>
-                  <div>
-                    <h2 className="text-lg font-bold mb-2">Sagrado Terço</h2>
-                    <p className="text-xs text-muted-foreground leading-tight mb-4 font-medium">Reze seus mistérios com auxílio de voz</p>
-                  </div>
-                  <Button size="sm" className="w-full rounded-full text-xs py-5 font-bold shadow-md bg-gradient-to-br from-[#d4a017] to-[#e8c547] text-[#3d2800] hover:opacity-90 transition-opacity border-0">
-                    <Sparkles className="w-3.5 h-3.5 mr-2" />
-                    Iniciar
-                  </Button>
-                </Card>
-              </Link>
-            </motion.div>
-
-            <motion.div variants={fadeUp}>
-              <Link to="/divine-promise">
-                <Card className="p-6 h-full text-center flex flex-col items-center justify-between border-primary/5 soft-shadow bg-[#FAFAFA] hover:-translate-y-1 hover:shadow-xl transition-all duration-300 rounded-[2rem] border-dashed">
-                  <div className="w-14 h-14 bg-transparent rounded-full flex items-center justify-center mb-4 overflow-hidden">
-                    <img src="/divinaspromessas_3d.png" alt="Divina Promessa" className="w-full h-full object-cover rounded-full drop-shadow-md" />
-                  </div>
-                  <div>
-                    <h2 className="text-lg font-bold mb-2">Divina Promessa</h2>
-                    <p className="text-[13.5px] text-slate-700 leading-snug mb-4 font-semibold [text-shadow:_0_1px_2px_rgb(255_255_255_/_80%)] px-2">Uma citação bíblica para seu coração</p>
-                  </div>
-                  <Button size="sm" className="w-full rounded-full text-xs py-5 font-bold shadow-md bg-gradient-to-br from-[#d4a017] to-[#e8c547] text-[#3d2800] hover:opacity-90 transition-opacity border-0">
-                    <Wind className="w-3.5 h-3.5 mr-2" />
-                    Sortear
-                  </Button>
-                </Card>
-              </Link>
-            </motion.div>
-          </motion.div>
-
-          {/* Secondary Actions List */}
-          <motion.div className="space-y-4 mb-10" variants={stagger} initial="initial" animate="animate">
-              <motion.div variants={fadeUp}>
-                <Link to="/terco">
-                  <Card className="p-4 flex items-center gap-4 border-primary/5 soft-shadow bg-gradient-to-r from-primary/10 to-primary/5 rounded-3xl hover:bg-white transition-colors relative overflow-hidden">
-                     <div className="absolute right-0 top-0 w-32 h-32 bg-primary/10 rounded-full blur-2xl pointer-events-none" />
-                     <div className="w-10 h-10 bg-primary/20 rounded-2xl flex items-center justify-center text-primary">
-                        <Sparkles className="w-5 h-5" />
-                     </div>
-                     <div className="flex-1 relative z-10">
-                        <h3 className="text-sm font-bold text-foreground">Terço Guiado</h3>
-                        <p className="text-[11px] text-muted-foreground font-medium w-full truncate">Reze acompanhando visualmente por voz</p>
-                     </div>
-                     <Button variant="outline" size="sm" className="rounded-full text-[10px] h-8 px-4 border-primary/20 text-primary bg-background/50 hover:bg-primary hover:text-white">Iniciar</Button>
-                  </Card>
-                </Link>
-              </motion.div>
-
-             <motion.div variants={fadeUp}>
-               <Link to="/my-prayers">
-                 <Card className="p-4 flex items-center gap-4 border-primary/5 soft-shadow bg-white/60 rounded-3xl hover:bg-white transition-colors">
-                    <div className="w-10 h-10 bg-secondary/50 rounded-2xl flex items-center justify-center text-primary/60">
-                       <BookOpen className="w-5 h-5" />
-                    </div>
-                    <div className="flex-1">
-                       <h3 className="text-sm font-bold">Minhas Preces</h3>
-                       <p className="text-[11px] text-muted-foreground font-medium">Veja quem orou por você</p>
-                    </div>
-                    <Button variant="outline" size="sm" className="rounded-full text-[10px] h-8 px-4 border-primary/20 text-primary">Ver Histórico</Button>
-                 </Card>
-               </Link>
-             </motion.div>
-
-             <motion.div variants={fadeUp}>
-               <Link to="/my-intercessions">
-                 <Card className="p-4 flex items-center gap-4 border-primary/5 soft-shadow bg-white/60 rounded-3xl hover:bg-white transition-colors">
-                    <div className="w-10 h-10 bg-secondary/50 rounded-2xl flex items-center justify-center text-primary/60">
-                       <HandHeart className="w-5 h-5" />
-                    </div>
-                    <div className="flex-1">
-                       <h3 className="text-sm font-bold">Minhas Intercessões</h3>
-                       <p className="text-[11px] text-muted-foreground font-medium">Causas que você apoiou</p>
-                    </div>
-                    <Button variant="outline" size="sm" className="rounded-full text-[10px] h-8 px-4 border-primary/20 text-primary">Ver Lista</Button>
-                 </Card>
-               </Link>
-             </motion.div>
-
-              <motion.div variants={fadeUp}>
-                <Link to='/friends'>
-                  <Card className='p-4 flex items-center gap-4 border-primary/5 soft-shadow bg-white/60 rounded-3xl hover:bg-white transition-colors'>
-                     <div className='w-10 h-10 bg-secondary/50 rounded-2xl flex items-center justify-center text-primary/60'>
-                        <Users className='w-5 h-5' />
-                     </div>
-                     <div className='flex-1'>
-                        <h3 className='text-sm font-bold'>Amigos da Fé</h3>
-                        <p className='text-[11px] text-muted-foreground font-medium'>Conecte-se com outros intercessores</p>
-                     </div>
-                     <Button variant='outline' size='sm' className='rounded-full text-[10px] h-8 px-4 border-primary/20 text-primary'>Conectar</Button>
-                  </Card>
-                </Link>
-              </motion.div>
-          </motion.div>
 
           {!user && (
             <motion.div className="text-center mt-10" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
@@ -357,12 +308,18 @@ const Index = () => {
           )}
 
           {user && (
-            <motion.div className="flex justify-center mt-12 opacity-80" initial={{ opacity: 0 }} animate={{ opacity: 0.8 }}>
-               <Button onClick={handleSignOut} variant="ghost" size="sm" className="text-xs text-glow font-bold">
+            <motion.div className="flex justify-center mt-6 opacity-80" initial={{ opacity: 0 }} animate={{ opacity: 0.8 }}>
+               <Button onClick={handleSignOut} variant="ghost" size="sm" className="text-xs font-bold">
                   Sair da Conta
                </Button>
             </motion.div>
           )}
+
+          <div className="flex justify-center mb-4">
+            <Button variant="ghost" size="sm" onClick={toggleTheme} className="text-[10px] text-foreground/60">
+              {isLegacyTheme ? "Ver novo visual" : "Ver versão anterior"}
+            </Button>
+          </div>
         </div>
       </div>
     </PageTransition>

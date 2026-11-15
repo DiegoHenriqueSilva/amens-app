@@ -1,0 +1,118 @@
+.devotee-altar{min-height:100dvh;padding:0 0 100px;background-color:#f3dfbc;color:#583317;font-family:Lora,Georgia,serif;background-image:url('/backgrounds/bg-amens-devocional.png');background-size:cover;background-position:center top;background-attachment:fixed;}
+.devotee-altar .altar-panel{max-width:520px;margin:auto;min-height:100dvh;background:linear-gradient(180deg,#fff8e8c7 0%,#f8e8cda6 48%,#f3dfbc9c 100%);box-shadow:0 0 65px #76502616;}
+.devotee-altar .altar-header{padding:calc(18px + env(safe-area-inset-top)) 18px 24px;text-align:center;}
+.devotee-altar .altar-topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
+.devotee-altar .altar-topbar>a,.devotee-altar .altar-topbar>button{display:grid;place-items:center;width:44px;height:44px;color:#89521c;background:none;border:0;cursor:pointer;}
+.devotee-altar .altar-topbar img{width:112px;height:auto;object-fit:contain;}
+.devotee-altar h1{font:700 clamp(26px,7vw,36px)/1.2 Lora,Georgia,serif;margin:0 0 6px;color:#542d17;letter-spacing:-1px;}
+.devotee-altar .altar-header p{font-style:italic;font-size:15px;margin:0;}
+.altar-profile-card{margin:0 18px 22px;padding:12px 14px 0;border:1px solid #ddc59d;border-radius:17px;background:linear-gradient(135deg,#fffaf0f5,#f8e9cfee);box-shadow:0 7px 16px #76502618;overflow:hidden;font-family:Lora,Georgia,serif;}
+.altar-profile-card__identity{display:flex;align-items:center;gap:11px;color:#583317;text-decoration:none;min-width:0;}
+.altar-profile-card__avatar{width:46px;height:46px;display:grid;place-items:center;flex:0 0 46px;border-radius:50%;overflow:hidden;background:#ead2a7;color:#94651f;border:2px solid #d0aa67;box-shadow:0 2px 5px #5d351d25;}
+.altar-profile-card__avatar img{width:100%;height:100%;object-fit:cover;}
+.altar-profile-card__copy{min-width:0;display:block;}
+.altar-profile-card__name{display:block;font:700 16px/1.25 Lora,Georgia,serif;overflow-wrap:anywhere;}
+.altar-profile-card__level{display:block;margin-top:3px;font-size:11px;color:#8a6b43;}
+.altar-profile-card__supporter{display:block;flex:0 0 min(160px,42%);width:min(160px,42%);margin-left:auto;filter:drop-shadow(0 0 5px #d9a83d66);}
+.altar-profile-card__supporter img{display:block;width:100%;height:auto;object-fit:contain;}
+.altar-profile-card__supporter{border-radius:13px;transition:transform .16s ease,filter .16s ease;}
+.altar-profile-card__supporter:hover{transform:translateY(-1px);filter:drop-shadow(0 0 8px #d9a83d88);}
+.altar-profile-card__supporter:focus-visible{outline:3px solid #b98624;outline-offset:3px;}
+.altar-profile-card__support-invite{position:relative;isolation:isolate;overflow:hidden;display:flex;flex:0 0 min(160px,42%);width:min(160px,42%);min-height:58px;margin-left:auto;padding:8px 24px 8px 10px;flex-direction:column;justify-content:center;border:1px solid #d3ac5f;border-radius:12px;background:linear-gradient(145deg,#fffef9,#fff4d9);box-shadow:0 4px 11px #76502620;color:#43270d;}
+.altar-profile-card__support-invite::after{content:"";position:absolute;z-index:-1;right:-27px;bottom:-31px;width:76px;height:76px;border:1px solid #d8b96666;border-radius:50%;box-shadow:0 0 0 12px #f1da9f2e,0 0 0 25px #f1da9f1f;}
+.altar-profile-card__support-invite small{color:#b07a19;font:800 7px/1.2 Inter,system-ui,sans-serif;letter-spacing:.13em;text-transform:uppercase;}
+.altar-profile-card__support-invite strong{margin-top:2px;color:#2f2116;font:700 13px/1.1 Lora,Georgia,serif;}
+.altar-profile-card__support-invite>span{margin-top:3px;color:#8f6530;font:500 8px/1.15 Inter,system-ui,sans-serif;}
+.altar-profile-card__support-invite::before{content:"✦";position:absolute;z-index:1;right:8px;top:20px;color:#c68d1d;font-size:15px;}
+.altar-profile-card__link{display:flex;justify-content:space-between;align-items:center;margin-top:11px;padding:9px 0 10px;border-top:1px solid #e2cda9;color:#80571d;text-decoration:none;font:600 12px/1.2 Lora,Georgia,serif;}
+.altar-profile-card__link span{font-size:20px;line-height:10px;}
+.altar-profile-card--public{margin-bottom:14px;}
+.altar-privacy-setting{display:flex;align-items:center;gap:10px;margin:0 18px 22px;padding:12px 14px;border:1px solid #ddc59d;border-radius:15px;background:#fff9edeb;box-shadow:0 4px 12px #76502612;cursor:pointer;font-family:Lora,Georgia,serif;}
+.altar-privacy-setting__icon{display:grid;place-items:center;flex:0 0 34px;width:34px;height:34px;border-radius:50%;background:#f4dfb9;color:#95621d;}
+.altar-privacy-setting__copy{display:grid;min-width:0;flex:1;color:#583317;}
+.altar-privacy-setting__copy strong{font-size:13px;line-height:1.3;}
+.altar-privacy-setting__copy small{margin-top:2px;color:#8a6b43;font:500 10px/1.35 Inter,sans-serif;}
+.altar-privacy-setting input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;}
+.altar-privacy-setting__switch{position:relative;flex:0 0 40px;width:40px;height:23px;border:1px solid #c8aa7a;border-radius:999px;background:#e9dcc5;box-shadow:inset 0 1px 3px #76502620;transition:background-color .18s,border-color .18s;}
+.altar-privacy-setting__switch::after{content:'';position:absolute;top:2px;left:2px;width:17px;height:17px;border-radius:50%;background:#fffdf8;box-shadow:0 2px 4px #5a351f35;transition:transform .18s;}
+.altar-privacy-setting input:checked+.altar-privacy-setting__switch{border-color:#af7621;background:#cf941f;}
+.altar-privacy-setting input:checked+.altar-privacy-setting__switch::after{transform:translateX(17px);}
+.altar-privacy-setting input:focus-visible+.altar-privacy-setting__switch{outline:3px solid #b98624;outline-offset:3px;}
+.altar-privacy-setting:has(input:disabled){cursor:wait;opacity:.7;}
+.altar-profile-card__location{display:flex;align-items:center;gap:3px;margin-top:4px;font-size:11px;color:#8a6b43;}
+.altar-public-note{margin:10px 0 2px;padding-top:9px;border-top:1px solid #e2cda9;color:#8a6b43;font:italic 11px/1.35 Lora,Georgia,serif;}
+.altar-friend-button{display:flex;align-items:center;justify-content:center;gap:7px;width:100%;min-height:38px;margin:10px 0 11px;padding:7px 14px;border:1px solid #c89d50;border-radius:12px;background:linear-gradient(135deg,#fae8b3,#efc65f);box-shadow:0 3px 8px #76502618;color:#56370e;font:700 12px/1.2 Lora,Georgia,serif;cursor:pointer;}
+.altar-friend-button svg{width:17px;height:17px;}
+.altar-friend-button:hover{border-color:#ac7620;box-shadow:0 4px 10px #76502625;}
+.altar-friend-button:disabled{cursor:wait;opacity:.7;}
+.altar-friend-button--pending{border-color:#d8c6a5;background:#f5ecdc;color:#826c4d;cursor:default!important;}
+.altar-public-heading{display:flex;align-items:center;justify-content:center;gap:7px;margin:6px 18px 0;color:#80571d;font:600 13px/1.3 Inter,system-ui,sans-serif;}
+.altar-public-heading svg{color:#ba8b35;}
+.altar-footer a{display:inline-block;color:#80571d;text-decoration:underline;padding:8px;}
+.altar-insignia-dropdown{margin:0 18px 22px;animation:altar-profile-dropdown .2s ease-out;}
+.altar-insignia-dropdown .insignia-settings{margin:0;border-radius:17px;box-shadow:0 7px 16px #76502618;}
+.altar-edit-profile-link{display:block;margin:10px 4px 0;text-align:center;color:#80571d;font:600 12px/1.3 Inter,system-ui,sans-serif;text-decoration:underline;}
+.altar-edit-profile-link--visible{width:max-content;margin: -12px auto 18px;padding:8px 18px;border:1px solid #cda763;border-radius:999px;background:#fff8e9b8;box-shadow:0 3px 8px #76502618;font-family:Lora,Georgia,serif;text-decoration:none;}
+@keyframes altar-profile-dropdown{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+.devotee-altar .altar-shelves{padding:0 10px;background:linear-gradient(90deg,#78502514,transparent 8%,transparent 92%,#78502514);}
+.devotee-altar .altar-shelf{position:relative;display:grid;align-items:end;gap:5px;padding:24px 8px 18px;margin-bottom:35px;isolation:isolate;}
+/* The visible top plane extends behind the feet; the fascia sits in front. */
+.devotee-altar .altar-shelf::before{content:'';position:absolute;left:-8px;right:-8px;bottom:0;height:34px;background:linear-gradient(180deg,#49270d66,#e0b77944 65%,#ffdfaa55),url('/altar/wood-v1.png') center/520px 100px,#b9854c;clip-path:polygon(3% 0,97% 0,100% 100%,0 100%);z-index:0;pointer-events:none;}
+.devotee-altar .altar-shelf::after{content:'';position:absolute;left:-8px;right:-8px;bottom:-15px;height:16px;background:linear-gradient(#ffe6ba55 0 1px,#43230a14 2px,#321c0a55),url('/altar/wood-v1.png') center/520px 140px,#966128;border-bottom:2px solid #72451e;border-radius:1px 1px 3px 3px;box-shadow:0 6px 7px #4e2d1745,0 15px 18px #71482420;z-index:2;pointer-events:none;}
+.devotee-altar .altar-shelf-light{position:absolute;left:6px;right:6px;bottom:-18px;height:3px;background:#fff3c5;border-radius:50%;box-shadow:0 3px 6px 2px #ffc65ca6,0 12px 24px 8px #ffd27955;z-index:1;pointer-events:none;}
+.devotee-altar .altar-shelf--saints{padding-top:8px;}
+.devotee-altar .altar-slot{min-width:0;position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;align-self:end;border:0;padding:0;background:transparent;color:#482c15;cursor:pointer;-webkit-tap-highlight-color:transparent;}
+.devotee-altar .altar-slot::before{content:'';position:absolute;bottom:-5px;left:14%;right:14%;height:12px;border-radius:50%;background:radial-gradient(ellipse,#3d230d70,transparent 72%);pointer-events:none;}
+.devotee-altar .altar-slot-object{display:flex;align-items:flex-end;justify-content:center;width:100%;height:110px;position:relative;}
+.devotee-altar .altar-shelf--saints .altar-slot-object{height:160px;}
+.devotee-altar .altar-slot-object::before{content:'';position:absolute;inset:8% -5% 0;border-radius:50%;background:radial-gradient(ellipse,#ffe6a1b0 0, #ffd37140 44%,transparent 72%);opacity:0;pointer-events:none;}
+.devotee-altar .altar-slot--unlocked .altar-slot-object::before,.devotee-altar .altar-slot--max_level .altar-slot-object::before{opacity:.8;animation:altar-angel-light 4s ease-in-out infinite;}
+.devotee-altar .altar-slot--max_level .altar-slot-object::before{background:radial-gradient(ellipse,#ffe7a4db, #ffcd694d 44%,transparent 72%);}
+.altar-art{display:block;width:100%;background-image:url('/altar/collectibles-v1.png');background-repeat:no-repeat;position:relative;}
+.devotee-altar .altar-slot .altar-art{width:min(100%,115px);max-height:100%;filter:drop-shadow(0 4px 2px #4d2c1833);transition:filter .4s,opacity .4s;}
+.devotee-altar .altar-shelf--saints .altar-art{width:auto;height:100%;max-width:100%;}
+/* Inline atlas coordinates take precedence over the common sizing rule. */
+.devotee-altar .altar-slot--locked .altar-art{opacity:.22;filter:grayscale(1) sepia(.35) brightness(1.6);}
+.devotee-altar .altar-lock{position:absolute;right:8%;bottom:4px;width:23px;height:23px;display:grid;place-items:center;background:#a9834c;color:#fff8e8;border:2px solid #fff4df;border-radius:50%;}
+.devotee-altar .altar-nameplate{position:absolute;bottom:-14px;z-index:4;display:flex;align-items:center;justify-content:center;min-height:27px;padding:3px 5px;background:linear-gradient(#fffaf0,#eed9b5);border:1px solid #cbb087;border-bottom:2px solid #b99a6a;border-radius:5px;box-shadow:0 3px 3px #54341640;font-size:clamp(10px,2.8vw,12px);font-weight:600;text-align:center;line-height:1.12;max-width:100%;}
+.devotee-altar .altar-slot:focus-visible{outline:2px solid #b98624;outline-offset:5px;border-radius:10px;}
+.devotee-altar .altar-footer{text-align:center;padding:15px 24px 28px;font-size:13px;font-style:italic;}
+.devotee-altar .altar-footer svg{margin:0 auto 8px;color:#ba8b35;}
+.devotee-altar .altar-footer button{border:0;border-bottom:1px solid #b58d55;background:none;color:#80571d;padding:8px;cursor:pointer;font-size:12px;}
+.devotee-altar .altar-status{font-family:Inter,sans-serif;font-size:13px;line-height:1.5;text-align:center;margin:0 20px 18px;padding:15px;border:1px solid #d5bb93;border-radius:14px;background:#fff9ee;}
+.devotee-altar .altar-status button{display:block;margin:8px auto 0;color:#946117;text-decoration:underline;}
+.altar-private-notice svg{margin:0 auto 8px;color:#a06c23;}
+.altar-private-notice h2{margin:0 0 5px;font:700 18px/1.3 Lora,Georgia,serif;color:#583317;}
+.altar-private-notice p{margin:0;}
+.altar-private-notice .altar-friend-button{max-width:260px;margin:13px auto 4px;text-decoration:none;}
+.altar-tooltip{max-width:260px;background:#fff8e9;color:#593519;border:1px solid #d4b27b;padding:12px;border-radius:13px;box-shadow:0 8px 20px #5e371b30;font:13px/1.5 Lora,Georgia,serif;z-index:90;}
+.altar-tooltip p{margin:5px 0;}.altar-tooltip small{color:#895f22;}
+.altar-dialog-overlay{position:fixed;inset:0;background:#30221470;z-index:80;animation:altar-fade .2s ease-out;}
+.altar-dialog{position:fixed;z-index:81;bottom:0;left:50%;transform:translateX(-50%);width:min(100%,480px);max-height:92dvh;overflow-y:auto;overscroll-behavior:contain;background:radial-gradient(ellipse at 50% 0,#fffdf6,#fbefd9);border-radius:28px 28px 0 0;padding:20px 24px calc(25px + env(safe-area-inset-bottom));box-shadow:0 -8px 35px #3a241f25;color:#583317;text-align:center;font-family:Lora,Georgia,serif;animation:altar-sheet-enter .25s ease-out;}
+.altar-dialog h2{font:700 25px/1.2 Lora,Georgia,serif;margin:7px 0 12px;}
+.altar-dialog p{font-size:14px;line-height:1.5;margin:10px 0;}
+.altar-sheet-handle{display:block;margin:-8px auto 8px;width:44px;height:4px;border-radius:8px;background:#d8c4a6;}
+.altar-dialog .altar-close{position:absolute;right:10px;top:10px;background:none;border:0;color:#795126;padding:12px;cursor:pointer;}
+.altar-dialog .altar-detail-art{width:145px;margin:0 auto 10px;filter:drop-shadow(0 0 15px #edbc6055);}
+.altar-dialog .altar-detail-art--locked{opacity:.4;filter:grayscale(.8);}
+.altar-tier{display:inline-flex;align-items:center;gap:6px;border-radius:20px;padding:6px 13px;background:#89552b;color:#fff8e9;font-size:13px;}
+.altar-tier--gold{background:linear-gradient(110deg,#986517,#b4852c);}
+.altar-dialog .altar-date{font-size:12px;font-style:italic;}
+.altar-dialog .altar-progress{border-top:1px solid #d9c5a5;text-align:left;padding-top:14px;margin-top:16px;}
+.altar-progress h3{font-weight:700;font-size:16px;}.altar-progress p{font-size:12px;}
+.altar-progress>div{display:flex;justify-content:space-between;font-size:13px;margin:9px 0 6px;}
+.altar-progress progress{width:100%;height:10px;appearance:none;border:0;border-radius:12px;overflow:hidden;background:#e3d2b8;}
+.altar-progress progress::-webkit-progress-bar{background:#e3d2b8;border-radius:12px;}.altar-progress progress::-webkit-progress-value{background:linear-gradient(90deg,#ba8a2d,#dfb651);border-radius:12px;}.altar-progress progress::-moz-progress-bar{background:#c39431;}
+.altar-progress small{display:block;margin-top:7px;font-size:11px;}
+.altar-evolution{display:flex;justify-content:center;gap:10px;margin:20px 0;}
+.altar-evolution>div{padding:7px;border:1px solid transparent;border-radius:12px;flex:1;max-width:115px;}
+.altar-evolution .altar-evolution-current{border-color:#c9983b;background:#faeed9;}
+.altar-evolution span:not(.altar-art){display:flex;align-items:center;justify-content:center;gap:4px;font-size:11px;margin-top:5px;}
+.altar-primary{display:flex;justify-content:center;align-items:center;gap:8px;width:100%;padding:14px 12px;margin-top:16px;border:1px solid #b9882d;border-radius:16px;background:linear-gradient(120deg,#e6bc5e,#bb851b);color:#422a0c;text-decoration:none;font:600 14px/1.3 Lora,Georgia,serif;cursor:pointer;}
+.altar-help{text-align:left;}.altar-help p{font-size:13px;}.altar-help h2{padding-right:15px;}
+@keyframes altar-angel-light{0%,100%{opacity:.45;}50%{opacity:.95;}}
+@keyframes altar-sheet-enter{from{opacity:0;translate:0 25px;}to{opacity:1;translate:0 0;}}
+@keyframes altar-fade{from{opacity:0;}to{opacity:1;}}
+@media(min-width:640px){.devotee-altar{padding-top:25px;}.devotee-altar .altar-panel{border:1px solid #d9c5a8;border-radius:24px;overflow:hidden;}.altar-dialog{bottom:4vh;border-radius:28px;max-height:90dvh;}.devotee-altar .altar-shelf--saints .altar-slot-object{height:190px;}}
+@media(max-width:360px){.devotee-altar .altar-shelf--saints .altar-slot-object{height:140px;}.devotee-altar .altar-slot-object{height:90px;}.altar-dialog{padding-left:18px;padding-right:18px;}}
+@media(prefers-reduced-motion:reduce){.devotee-altar .altar-slot-object::before,.altar-dialog,.altar-dialog-overlay{animation:none!important;}.devotee-altar .altar-slot .altar-art{transition:none;}}

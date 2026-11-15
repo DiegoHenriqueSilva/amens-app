@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { useDailyTasks, DAILY_TASKS } from "@/hooks/use-daily-tasks";
 import { cn } from "@/lib/utils";
 
-export const JornadaFe = () => {
+export const JornadaFe = ({ compact = false }: { compact?: boolean }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const { completedTasks, totalCompleted } = useDailyTasks();
   const navigate = useNavigate();
@@ -29,25 +29,29 @@ export const JornadaFe = () => {
 
   return (
     <div ref={cardRef}>
-      <Card className="mx-6 mt-4 p-1 rounded-[2rem] bg-gradient-to-br from-white/90 to-white/60 border border-primary/20 soft-shadow backdrop-blur-md overflow-hidden relative">
-      <div 
-        className="px-5 py-4 cursor-pointer flex items-center justify-between"
+      <Card className={cn("border border-primary/20 overflow-hidden relative", compact ? "rounded-[18px] bg-white/95 shadow-sm" : "mx-6 mt-4 p-1 rounded-[2rem] bg-gradient-to-br from-white/90 to-white/60 soft-shadow backdrop-blur-md")}>
+      <button
+        type="button"
+        aria-expanded={isExpanded}
+        className={cn("w-full text-left cursor-pointer flex items-center justify-between gap-2", compact ? "px-3 py-2.5 min-h-[58px]" : "px-5 py-4")}
         onClick={() => setIsExpanded(!isExpanded)}
       >
-        <div className="flex items-center gap-3">
-            <div className={cn("w-10 h-10 rounded-full flex items-center justify-center transition-all", isCrowned ? "bg-amber-100 shadow-[0_0_15px_rgba(251,191,36,0.4)]" : "bg-primary/10")}>
+        <div className={cn("flex items-center min-w-0", compact ? "gap-2" : "gap-3")}>
+            <div className={cn("shrink-0 rounded-full flex items-center justify-center", compact ? "w-6 h-6" : "w-10 h-10 bg-primary/10", isCrowned && "bg-amber-100")}>
                {isCrowned ? <Crown className="w-5 h-5 text-amber-600 animate-pulse" /> : <Sparkles className="w-5 h-5 text-primary" />}
             </div>
             <div>
-                <h3 className="font-bold text-sm text-foreground">Jornada da Fé</h3>
-                <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-widest mt-0.5">
+                <h3 className={cn("font-bold text-foreground", compact ? "text-xs min-[520px]:text-base" : "text-sm")}>Jornada diária</h3>
+                <p className={cn("text-muted-foreground mt-0.5", compact ? "text-[8px] min-[520px]:text-xs" : "text-[10px] uppercase font-bold tracking-widest")}>
                     {totalCompleted} de 5 missões concluídas
                 </p>
             </div>
         </div>
         
-        <div className="flex items-center gap-3">
-             <div className="w-16 h-2 bg-secondary/50 rounded-full overflow-hidden">
+        <div className="flex shrink-0 items-center gap-2">
+          <div className="flex flex-col items-end gap-1">
+             {compact && <span className="text-[9px] min-[520px]:text-xs text-[#8b6508]">{totalCompleted}/5</span>}
+             <div className={cn("amens-journey-progress bg-secondary/50 rounded-full overflow-hidden", compact ? "w-14 h-[5px] min-[520px]:w-16 min-[520px]:h-1.5" : "w-16 h-2")}>
                  <motion.div 
                     className="h-full bg-gradient-to-r from-primary/60 to-primary rounded-full"
                     initial={{ width: 0 }}
@@ -55,9 +59,10 @@ export const JornadaFe = () => {
                     transition={{ duration: 1, ease: "easeOut" }}
                  />
              </div>
+          </div>
              {isExpanded ? <ChevronUp className="w-4 h-4 text-primary/50" /> : <ChevronDown className="w-4 h-4 text-primary/50" />}
         </div>
-      </div>
+      </button>
 
       <AnimatePresence>
         {isExpanded && (

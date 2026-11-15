@@ -1,3 +1,5 @@
+import { PrayerEngagement, usePrayerEngagement } from "@/components/PrayerEngagement";
+import { refreshAltar } from '@/features/altar/events';
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -55,6 +57,7 @@ const Submit = () => {
   
   // History states
   const [prayers, setPrayers] = useState<any[]>([]);
+  const engagement = usePrayerEngagement(prayers.map(p => p.id));
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState<string | null>(null);
   const [sendingFeedback, setSendingFeedback] = useState(false);
@@ -137,8 +140,10 @@ const Submit = () => {
         p.status === 'active'
       );
 
-      if (oldPrayers.length > 0) {
+      const feedbackReminderKey = `amens_feedback_reminder_${session.user.id}_${new Date().toISOString().slice(0, 10)}`;
+      if (oldPrayers.length > 0 && !localStorage.getItem(feedbackReminderKey)) {
         const first = oldPrayers[0];
+        localStorage.setItem(feedbackReminderKey, "1");
         toast("Retorno sugerido 🙏", {
           description: `Pessoas intercederam por "${first.title || 'seu pedido'}". Elas ficariam muito felizes em saber como você está!`,
           action: {
@@ -164,17 +169,15 @@ const Submit = () => {
   const handleFeedback = async (prayerId: string, feedbackValue: string) => {
     setSendingFeedback(true);
     try {
-      const { error } = await supabase.from("prayer_requests").update({ feedback: feedbackValue }).eq("id", prayerId);
-      if (error) throw error;
-
       const option = FEEDBACK_OPTIONS.find(f => f.value === feedbackValue);
-      
-      // Update status if it's a closing option
-      if (option?.isClosing) {
-        await supabase.from("prayer_requests").update({ status: "completed", updated_at: new Date().toISOString() }).eq("id", prayerId);
-      } else {
-        await supabase.from("prayer_requests").update({ updated_at: new Date().toISOString() }).eq("id", prayerId);
-      }
+      const updatedAt = new Date().toISOString();
+      // Save the testimony and its closing status atomically; either both persist or neither does.
+      const { error } = await supabase.from("prayer_requests").update({
+        feedback: feedbackValue,
+        updated_at: updatedAt,
+        ...(option?.isClosing ? { status: "completed" } : {}),
+      }).eq("id", prayerId);
+      if (error) throw error;
 
       const { data: intercessions } = await supabase
         .from("prayer_intercessions").select("user_id").eq("prayer_request_id", prayerId);
@@ -190,9 +193,10 @@ const Submit = () => {
         await supabase.from("notifications").insert(notifications);
       }
 
-      setPrayers(prev => prev.map(p => p.id === prayerId ? { ...p, feedback: feedbackValue, status: option?.isClosing ? "completed" : p.status } : p));
+      setPrayers(prev => prev.map(p => p.id === prayerId ? { ...p, feedback: feedbackValue, updated_at: updatedAt, status: option?.isClosing ? "completed" : p.status } : p));
       setFeedbackOpen(null);
       toast.success("Feedback enviado! Os intercessores serão notificados.");
+      refreshAltar();
     } catch (e) {
       toast.error("Erro ao enviar feedback");
     } finally {
@@ -301,6 +305,7 @@ const Submit = () => {
       if (error) throw error;
       
       if (data) {
+        refreshAltar();
         await notifyFriends(data.id, data.title);
       }
 
@@ -333,7 +338,7 @@ const Submit = () => {
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-background relative overflow-hidden pb-28">
+      <div className="min-h-screen bg-transparent relative overflow-hidden pb-28">
         <Button variant="ghost" size="icon" onClick={() => navigate("/")} className="absolute top-4 left-4 z-20">
           <ArrowLeft className="w-5 h-5" />
         </Button>
@@ -374,6 +379,9 @@ const Submit = () => {
                   <Send className="w-4 h-4 mr-2" />
                   {isSubmitting ? "Enviando..." : "Enviar Pedido"}
                 </Button>
+                <p className="text-xs text-muted-foreground text-center">
+                  * Campos de preenchimento obrigatório
+                </p>
               </form>
             </Card>
           </motion.div>
@@ -433,10 +441,7 @@ const Submit = () => {
                                 <p className="text-sm text-muted-foreground leading-relaxed line-clamp-2">{prayer.content}</p>
                               </div>
                               
-                              <div className="flex items-center gap-4 text-[11px] text-muted-foreground mb-4">
-                                 <div className="flex items-center gap-1"><Eye className="w-3.5 h-3.5" /> <span>{prayer.prayer_count}</span></div>
-                                 <div className="flex items-center gap-1"><Heart className="w-3.5 h-3.5" /> <span>{Object.values(prayer.reactions as object).reduce((a: any, b: any) => a + b, 0)}</span></div>
-                              </div>
+                              <PrayerEngagement counts={engagement[prayer.id]} />
 
                               {/* Intercessors List */}
                               {prayer.intercessors.length > 0 && (

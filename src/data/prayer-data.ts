@@ -4,8 +4,8 @@ export interface Prayer {
   phrases: string[];
 }
 
-export const PHRASE_DURATION = 4500; // 4.5 seconds per phrase
-export const PRAYER_GAP = 4500; // 4.5 seconds between prayers
+export const PHRASE_DURATION = 4250; // 4.25 seconds per phrase
+export const PRAYER_GAP = 2250; // 2.25 seconds between prayers
 
 
 export const PRAYERS: Prayer[] = [

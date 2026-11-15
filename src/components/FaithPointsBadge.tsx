@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { getLevel, getNextLevel, getLevelProgress, CELESTIAL_LEVELS } from "@/lib/faith-points";
 import { Progress } from "@/components/ui/progress";
-import { BookOpen, Info } from "lucide-react";
+import { BookOpen, Heart, Info, Wheat } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -18,9 +18,11 @@ interface FaithPointsBadgeProps {
   totalFaithPoints: number;
   userName?: string;
   avatarUrl?: string | null;
+  compact?: boolean;
+  isSupporter?: boolean;
 }
 
-export function FaithPointsBadge({ totalFaithPoints, userName, avatarUrl }: FaithPointsBadgeProps) {
+export function FaithPointsBadge({ totalFaithPoints, userName, avatarUrl, compact = false, isSupporter = false }: FaithPointsBadgeProps) {
   const navigate = useNavigate();
   const level = getLevel(totalFaithPoints);
   const next = getNextLevel(totalFaithPoints);
@@ -42,6 +44,31 @@ export function FaithPointsBadge({ totalFaithPoints, userName, avatarUrl }: Fait
     }
     lastLevelRef.current = displayLevel;
   }, [displayLevel]);
+
+  if (compact) {
+    return (
+      <button
+        type="button"
+        onClick={() => navigate("/profile")}
+        aria-label={`Ver perfil de ${userName || "usuário"}, nível ${displayLevel}, ${totalFaithPoints} pontos de fé`}
+        className="relative w-full min-w-0 rounded-2xl border border-primary/15 bg-white/95 px-2.5 py-2 text-left shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+      >
+        {isSupporter && <span className="absolute right-2 top-2 inline-flex items-center text-[#946515] drop-shadow-[0_0_3px_rgba(216,173,77,.45)]" aria-label="Apoiador do Améns" title="Apoiador do Améns">
+          <Heart className="h-[17px] w-[17px] fill-[#e8bd5a] stroke-[#946515]" strokeWidth={1.5} aria-hidden="true" />
+          <Wheat className="-ml-0.5 h-3.5 w-3.5 -rotate-[18deg] stroke-[#946515]" strokeWidth={1.8} aria-hidden="true" />
+        </span>}
+        <div className="flex min-w-0 items-center gap-1.5">
+          <img src={avatarUrl || iconPath} alt="" className={`h-8 w-8 min-[520px]:h-9 min-[520px]:w-9 shrink-0 rounded-lg ${avatarUrl ? "object-cover" : "object-contain"}`} />
+          <div className={`min-w-0 flex-1 ${isSupporter ? "pr-7" : ""}`}>
+            <p className="truncate text-[11px] min-[520px]:text-sm font-black uppercase tracking-wider text-[#5a3e0a]">{userName?.trim().split(/\s+/)[0] || "Meu perfil"}</p>
+            <p className="text-[9px] leading-3 min-[520px]:text-xs min-[520px]:leading-4 text-muted-foreground">{totalFaithPoints.toLocaleString("pt-BR")} pontos</p>
+            <p className="truncate text-[8px] leading-3 min-[520px]:text-[11px] min-[520px]:leading-4 text-[#8b6508]" title={`Nível ${displayLevel} · ${level.name}`}>Nível {displayLevel} · {level.name}</p>
+          </div>
+        </div>
+        <Progress value={progress} aria-label="Progresso para o próximo nível" className="mt-1.5 h-[5px] bg-secondary" />
+      </button>
+    );
+  }
 
   return (
     <motion.div 

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import {NameWithInsignias,usePublicInsignias} from '@/features/insignias/Insignias';
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -10,6 +11,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useFriends } from "@/hooks/use-friends";
 import { toast } from "sonner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import "./friends.css";
 
 const Friends = () => {
   const navigate = useNavigate();
@@ -22,6 +24,7 @@ const Friends = () => {
   const totalPages = Math.ceil(friends.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const paginatedFriends = friends.slice(startIndex, startIndex + itemsPerPage);
+  const {data:insignias}=usePublicInsignias(paginatedFriends.map(friend=>friend.id));
 
   const handleCopyCode = () => {
     if (myCode) {
@@ -47,7 +50,7 @@ const Friends = () => {
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-background relative overflow-hidden pb-28">
+      <div className="friends-page min-h-screen relative overflow-hidden pb-28">
         {/* Ambient background glows */}
         <div className="absolute top-[-8rem] right-[-8rem] w-[25rem] h-[25rem] rounded-full bg-primary/10 blur-3xl opacity-50" />
         <div className="absolute bottom-[-8rem] left-[-8rem] w-[25rem] h-[25rem] rounded-full bg-accent/10 blur-3xl opacity-50" />
@@ -102,7 +105,10 @@ const Friends = () => {
             transition={{ delay: 0.2 }}
             className="mb-4"
           >
-            <form onSubmit={handleSendRequest} className="flex gap-2">
+            <p id="friend-code-instruction" className="mb-2 px-1 text-[11px] font-semibold text-[#775b31]">
+              Adicione um amigo com um código do Améns:
+            </p>
+            <form onSubmit={handleSendRequest} className="flex gap-2" aria-labelledby="friend-code-instruction">
               <Input 
                 placeholder="Código (AMEN-XXXXXX)"
                 value={friendCodeInput}
@@ -132,7 +138,7 @@ const Friends = () => {
               </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="friends" className="space-y-2">
+            <TabsContent value="friends" className="space-y-1">
               <AnimatePresence mode="popLayout">
                 {loading ? (
                   [1, 2, 3].map(i => (
@@ -146,9 +152,9 @@ const Friends = () => {
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: idx * 0.05 }}
                     >
-                      <Card className="p-2.5 flex items-center gap-4 border-primary/5 bg-white/60 rounded-2xl hover:bg-white transition-all soft-shadow group">
-                        <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-primary/70 border border-primary/10 overflow-hidden">
-                          <Avatar className="w-full h-full rounded-2xl">
+                      <Card className="p-2 flex items-center gap-3 border-primary/5 bg-white/60 rounded-2xl hover:bg-white transition-all soft-shadow group">
+                        <div className="w-10 h-10 rounded-xl flex items-center justify-center text-primary/70 border border-primary/10 overflow-hidden">
+                          <Avatar className="w-full h-full rounded-xl">
                              <AvatarImage src={friend.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${friend.id}`} className="object-cover" />
                              <AvatarFallback className="bg-secondary text-primary">
                                 <User className="w-6 h-6" />
@@ -156,11 +162,11 @@ const Friends = () => {
                           </Avatar>
                         </div>
                         <div className="flex-1">
-                          <h3 className="text-sm font-bold text-foreground">
-                            {friend.display_name || friend.full_name?.split(" ")[0] || "Um intercessor"}
+                          <h3 className="text-sm font-bold text-foreground cursor-pointer hover:text-primary transition-colors" role="link" tabIndex={0} onClick={() => navigate("/profile/" + friend.id)} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); navigate("/profile/" + friend.id); } }}>
+                            <NameWithInsignias selection={insignias?.[friend.id]}>{friend.display_name || friend.full_name?.split(" ")[0] || "Um intercessor"}</NameWithInsignias>
                           </h3>
                           <p className="text-[10px] text-muted-foreground font-medium flex items-center gap-1">
-                             {friend.city || "Lugar Sagrado"} â€¢ {friend.state || "Brasil"}
+                             {friend.city || "Lugar Sagrado"} - {friend.state || "Brasil"}
                           </p>
                         </div>
                         <Button variant="ghost" size="icon" className="text-primary/20 hover:text-primary transition-colors">

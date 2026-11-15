@@ -9,6 +9,7 @@ import { useNovenaState } from "@/hooks/use-novena-state";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import PageTransition from "@/components/PageTransition";
 import { cn } from "@/lib/utils";
+import { cancelNovenaReminder } from "@/lib/notifications";
 
 const NovenaCard = ({ novena, onSelect }: { novena: typeof NOVENAS[0], onSelect: (id: string) => void }) => {
   const { state } = useNovenaState(novena.id);
@@ -98,6 +99,7 @@ const Novenas = () => {
   };
 
   const handleRestart = () => {
+    if (selectedId) void cancelNovenaReminder(selectedId);
     restartNovena();
     navigate(`/novena/${selectedId}`);
     setShowProgressDialog(false);
@@ -105,7 +107,7 @@ const Novenas = () => {
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-background/70 backdrop-blur-sm relative overflow-hidden pb-32">
+      <div className="min-h-screen bg-transparent relative overflow-hidden pb-32">
         {/* Ambient Blurs */}
         <div className="absolute top-[-6rem] left-[-4rem] w-80 h-80 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute bottom-[-6rem] right-[-4rem] w-80 h-80 bg-accent/5 rounded-full blur-3xl pointer-events-none" />

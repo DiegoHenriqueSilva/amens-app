@@ -1,1 +1,9 @@
-project_id = "jsiolxakgysphdlzkqcl"
+project_id = "fszltwvhbdasqoznnors"
+
+[functions.send-native-push]
+# A database webhook authenticates through the shared secret validated by the function.
+verify_jwt = false
+
+[functions.mercadopago-webhook]
+# Mercado Pago authenticates this public endpoint with its signed webhook header.
+verify_jwt = false

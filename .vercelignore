@@ -1,0 +1,9 @@
+.private/
+tmp/
+.env
+.env.*
+android/
+ios/
+supabase/
+node_modules/
+.git/

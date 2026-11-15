@@ -13,7 +13,7 @@ const RosarySelection = () => {
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-background/70 backdrop-blur-sm relative overflow-hidden pb-28">
+      <div className="min-h-screen bg-transparent relative overflow-hidden pb-28">
         {/* Ambient Blurs */}
         <div className="absolute top-[-6rem] left-[-4rem] w-80 h-80 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute bottom-[-6rem] right-[-4rem] w-80 h-80 bg-accent/5 rounded-full blur-3xl pointer-events-none" />

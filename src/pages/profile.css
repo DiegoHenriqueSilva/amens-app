@@ -1,0 +1,41 @@
+.amens-profile-wallpaper{
+  background:
+    radial-gradient(ellipse at 50% 0,rgba(255,250,240,.96),transparent 66%),
+    repeating-linear-gradient(17deg,rgba(183,155,109,.035) 0 1px,transparent 1px 4px),
+    url('/backgrounds/bg-amens-santa-capela-mobile.png') center top / cover no-repeat fixed,
+    #f7ead4;
+}
+.amens-profile-wallpaper::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  background:rgba(255,248,232,.18);
+}
+@media (min-width:700px){
+  .amens-profile-wallpaper{
+    background-image:
+      radial-gradient(ellipse at 50% 0,rgba(255,250,240,.96),transparent 66%),
+      repeating-linear-gradient(17deg,rgba(183,155,109,.035) 0 1px,transparent 1px 4px),
+      url('/backgrounds/bg-amens-santa-capela-desktop-v2.png');
+    background-position:center top;
+    background-size:cover;
+    background-repeat:no-repeat;
+  }
+}
+.amens-profile-wallpaper::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  opacity:.34;
+  background:
+    radial-gradient(ellipse at 8% 12%,rgba(211,180,122,.18),transparent 24%),
+    radial-gradient(ellipse at 94% 82%,rgba(211,180,122,.15),transparent 28%);
+}
+.amens-profile-wallpaper .container{max-width:520px;}
+.amens-profile-wallpaper .bg-white\/50,
+.amens-profile-wallpaper .bg-white\/70,
+.amens-profile-wallpaper .bg-white{
+  box-shadow:0 7px 20px rgba(118,80,38,.08);
+}

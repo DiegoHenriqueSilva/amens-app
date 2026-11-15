@@ -17,6 +17,10 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Check, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { signInWithGoogle } from "@/lib/google-auth";
+import { Capacitor } from "@capacitor/core";
+import { NATIVE_AUTH_REDIRECT } from "@/lib/native-auth-callback";
+import { CityCombobox } from "@/components/CityCombobox";
 
 const Auth = () => {
   // Common Form
@@ -54,40 +58,31 @@ const Auth = () => {
 
   useEffect(() => {
     fetchStates().then(setStates);
-    
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (session && session.user) {
-        // Checar se o perfil está completo em caso de OAuth (ex: Google)
-        const { data: profile } = await supabase.from('profiles' as any).select('*').eq('id', session.user.id).single() as any;
-        if (!profile || !profile.state || !profile.city || !profile.parish) {
-          setSessionUser(session.user);
-          if (profile?.full_name) setFullName(profile.full_name);
-          else if (session.user.user_metadata?.full_name) setFullName(session.user.user_metadata.full_name);
-          setShowIncompleteProfile(true);
-        } else {
-          const redirect = searchParams.get("redirect");
-          navigate(redirect || "/");
-        }
-      }
+    let disposed = false;
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!session?.user) return;
+      // Defer database queries until the auth callback releases its session lock.
+      window.setTimeout(() => {
+        if (disposed) return;
+        void supabase.from('profiles').select('*').eq('id', session.user.id).single().then(({ data: profile }) => {
+          if (disposed) return;
+          if (!profile || !profile.state || !profile.city || !profile.parish) {
+            setSessionUser(session.user);
+            setFullName(profile?.full_name || session.user.user_metadata?.full_name || '');
+            setShowIncompleteProfile(true);
+          } else {
+            const redirect = searchParams.get('redirect');
+            navigate(redirect?.startsWith('/') && !redirect.startsWith('//') ? redirect : '/');
+          }
+        });
+      }, 0);
     });
 
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      if (session && session.user) {
-        const { data: profile } = await supabase.from('profiles' as any).select('*').eq('id', session.user.id).single() as any;
-        if (!profile || !profile.state || !profile.city || !profile.parish) {
-          setSessionUser(session.user);
-          if (profile?.full_name) setFullName(profile.full_name);
-          else if (session.user.user_metadata?.full_name) setFullName(session.user.user_metadata.full_name);
-          setShowIncompleteProfile(true);
-        } else {
-          const redirect = searchParams.get("redirect");
-          navigate(redirect || "/");
-        }
-      }
-    });
-    
-    return () => subscription.unsubscribe();
-  }, [navigate]);
+    return () => {
+      disposed = true;
+      subscription.unsubscribe();
+    };
+  }, [navigate, searchParams]);
 
   useEffect(() => {
     if (referrerId) {
@@ -126,15 +121,7 @@ const Auth = () => {
   const handleGoogleSignIn = async () => {
     setGoogleLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: window.location.origin,
-        },
-      });
-      if (error) {
-        toast({ title: "Erro ao entrar com Google", description: error.message, variant: "destructive" });
-      }
+      await signInWithGoogle();
     } catch (err) {
       toast({ title: "Erro ao entrar com Google", description: "Tente novamente mais tarde", variant: "destructive" });
     } finally {
@@ -144,25 +131,38 @@ const Auth = () => {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !password || !fullName || !selectedState || !selectedCity || !parish) {
-      toast({ title: "Erro", description: "Preencha todos os campos do seu perfil", variant: "destructive" });
+    const signupFields = [
+      ["nome completo", fullName],
+      ["estado", selectedState],
+      ["cidade", selectedCity],
+      ["paróquia / igreja", parish],
+      ["email", email],
+      ["senha", password],
+    ] as const;
+    const missingFields = signupFields.filter(([, value]) => !String(value ?? "").trim()).map(([label]) => label);
+    if (missingFields.length > 0) {
+      toast({ title: "Erro", description: "Falta preencher: " + missingFields.join(", ") + ".", variant: "destructive" });
       return;
     }
-    if (password.length < 6) {
+    const cleanEmail = email.trim();
+    const cleanPassword = password.trim();
+    const cleanFullName = fullName.trim();
+    const cleanParish = parish.trim();
+    if (cleanPassword.length < 6) {
       toast({ title: "Erro", description: "A senha deve ter pelo menos 6 caracteres", variant: "destructive" });
       return;
     }
     setLoading(true);
     const { error } = await supabase.auth.signUp({ 
-      email, 
-      password, 
+      email: cleanEmail,
+      password: cleanPassword,
       options: { 
-        emailRedirectTo: `${window.location.origin}/`,
+        emailRedirectTo: Capacitor.getPlatform() === "android" ? NATIVE_AUTH_REDIRECT : `${window.location.origin}/`,
         data: {
-          full_name: fullName,
+          full_name: cleanFullName,
           state: selectedState,
           city: selectedCity,
-          parish: parish,
+          parish: cleanParish,
           show_real_name: showRealName,
           display_name: showRealName ? displayName : null,
           is_public_in_parish: isPublicInParish
@@ -280,14 +280,7 @@ const Auth = () => {
                 </div>
                 <div className="space-y-2">
                   <Label>Cidade</Label>
-                  <Select value={selectedCity} onValueChange={setSelectedCity} disabled={!selectedState} required>
-                    <SelectTrigger className="truncate"><SelectValue placeholder="Cidade" /></SelectTrigger>
-                    <SelectContent>
-                      {cities.map(ct => (
-                        <SelectItem key={ct.id} value={ct.nome}>{ct.nome}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <CityCombobox cities={cities} value={selectedCity} onChange={setSelectedCity} disabled={!selectedState} />
                 </div>
               </div>
               
@@ -472,14 +465,7 @@ const Auth = () => {
                       </div>
                       <div className="space-y-2">
                         <Label>Cidade</Label>
-                        <Select value={selectedCity} onValueChange={setSelectedCity} disabled={!selectedState} required>
-                          <SelectTrigger className="text-left bg-transparent border-input truncate"><SelectValue placeholder="Selecione" /></SelectTrigger>
-                          <SelectContent>
-                            {cities.map(ct => (
-                              <SelectItem key={ct.id} value={ct.nome}>{ct.nome}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <CityCombobox cities={cities} value={selectedCity} onChange={setSelectedCity} disabled={!selectedState} />
                       </div>
                     </div>
 
@@ -515,8 +501,8 @@ const Auth = () => {
                                    <CommandItem
                                      key={p}
                                      value={p}
-                                     onSelect={(currentValue) => {
-                                       setParish(currentValue);
+                                     onSelect={() => {
+                                       setParish(p);
                                        setPopoverOpen(false);
                                      }}
                                    >

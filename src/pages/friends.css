@@ -1,0 +1,23 @@
+.friends-page {
+  min-height: 100dvh;
+  background-color: #fff9e9;
+  background-image: url('/backgrounds/bg-amens-amigos-mobile.png');
+  background-position: center top;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-attachment: scroll;
+}
+
+@media (min-width: 768px) {
+  .friends-page {
+    background-image: url('/backgrounds/bg-amens-amigos-desktop.png');
+    background-position: center top;
+    background-attachment: fixed;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .friends-page {
+    background-attachment: scroll;
+  }
+}

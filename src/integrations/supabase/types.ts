@@ -402,6 +402,8 @@ export type Database = {
           friend_code: string | null
           avatar_url: string | null
           is_public_in_parish: boolean
+          devotional_saint: string | null
+          altar_private: boolean
           created_at: string
           updated_at: string
         }
@@ -416,6 +418,8 @@ export type Database = {
           friend_code?: string | null
           avatar_url?: string | null
           is_public_in_parish?: boolean
+          devotional_saint?: string | null
+          altar_private?: boolean
           created_at?: string
           updated_at?: string
         }
@@ -430,6 +434,8 @@ export type Database = {
           friend_code?: string | null
           avatar_url?: string | null
           is_public_in_parish?: boolean
+          devotional_saint?: string | null
+          altar_private?: boolean
           created_at?: string
           updated_at?: string
         }
@@ -448,6 +454,29 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_prayer_engagement_counts: {
+        Args: { prayer_ids: string[] }
+        Returns: { prayer_request_id: string; intercessor_count: number; reactions: Json }[]
+      }
+      get_prayer_intercessors: {
+        Args: { p_prayer_id: string }
+        Returns: {
+          intercessor_id: string
+          display_name: string
+          avatar_url: string | null
+          city: string | null
+          state: string | null
+          interceded_at: string
+        }[]
+      }
+      save_altar_privacy: {
+        Args: { p_private: boolean }
+        Returns: undefined
+      }
+      public_altar_profile: {
+        Args: { p_user_id: string }
+        Returns: Json
+      }
       add_xp: {
         Args: { p_action: string; p_user_id: string; p_xp_amount: number }
         Returns: number

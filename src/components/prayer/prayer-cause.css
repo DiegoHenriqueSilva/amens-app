@@ -1,0 +1,362 @@
+/* Option B is rendered as a single devotional letter, with its own scoped skin. */
+.cause-page {
+  background: rgba(253, 251, 245, 0.82);
+}
+
+.devotional-cause {
+  --cause-ink: #32271e;
+  --cause-gold: #a56b15;
+  position: relative;
+  border: 1px solid #e7dac5;
+  border-radius: 27px;
+  background: linear-gradient(110deg, #fffcf6, #fffdfa 68%, #fcf8ef);
+  color: var(--cause-ink);
+  box-shadow: 0 9px 25px rgba(85, 63, 30, 0.12), inset 0 1px 0 #fff;
+  font-family: "Inter", sans-serif;
+}
+
+.devotional-cause__ribbon {
+  position: relative;
+  z-index: 1;
+  margin: -1px -1px 0;
+  padding: 18px 20px 16px;
+  text-align: center;
+  filter: drop-shadow(0 4px 3px rgba(126, 88, 28, 0.12));
+}
+
+.devotional-cause__ribbon::before,
+.devotional-cause__ribbon::after {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  border-radius: 27px 27px 0 0;
+  clip-path: polygon(0 0, 100% 0, 100% 84%, 50% 100%, 0 84%);
+  content: "";
+}
+
+.devotional-cause__ribbon::before {
+  background: #dfbf83;
+}
+
+.devotional-cause__ribbon::after {
+  inset: 1px 1px 2px;
+  background: radial-gradient(ellipse at 50% 0, #fff8e5, transparent 75%), linear-gradient(110deg, #f5dfad, #fff3d7 50%, #f3dbab);
+  box-shadow: inset 0 1px 0 #fff;
+}
+
+.devotional-cause__ribbon h1 {
+  margin: 0;
+  font-family: "Lora", Georgia, serif;
+  font-size: clamp(1.45rem, 4.6vw, 2.25rem);
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -0.04em;
+  color: #2d2014;
+}
+
+.devotional-cause__ribbon > p {
+  margin: 5px 0 0;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.devotional-cause__ornament {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 15px;
+  margin: 10px auto 0;
+  color: #b97c18;
+}
+
+.devotional-cause__ornament span {
+  width: 80px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #c99737);
+}
+
+.devotional-cause__ornament span:last-child {
+  transform: rotate(180deg);
+}
+
+.devotional-cause__ornament svg {
+  width: 34px;
+  height: 34px;
+}
+
+.devotional-cause__body {
+  padding: 24px 24px 25px;
+}
+
+.devotional-cause__author {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.devotional-cause__avatar {
+  width: 64px;
+  height: 64px;
+  border: 3px solid #ebdec5;
+  border-radius: 50%;
+  object-fit: cover;
+  background: #f5efe2;
+}
+
+.devotional-cause__avatar--placeholder {
+  display: grid;
+  place-items: center;
+  color: #b47b27;
+}
+
+.devotional-cause__avatar svg {
+  width: 27px;
+  height: 27px;
+  stroke-width: 1.5;
+}
+
+.devotional-cause__author h2 {
+  margin: 1px 0 9px;
+  font-family: "Lora", Georgia, serif;
+  font-size: clamp(1.25rem, 3.8vw, 1.65rem);
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -0.035em;
+  overflow-wrap: anywhere;
+}
+
+.devotional-cause__byline {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px 8px;
+}
+
+.devotional-cause__byline p {
+  margin: 0;
+  color: #b37a29;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.5;
+  letter-spacing: 0.045em;
+  text-transform: uppercase;
+  overflow-wrap: anywhere;
+}
+
+.devotional-cause__friend {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 8px;
+  border-radius: 20px;
+  background: #fff0d4;
+  color: #906019;
+  font-size: 10px;
+  line-height: 1.3;
+  white-space: nowrap;
+  text-transform: uppercase;
+}
+
+.devotional-cause__friend svg { width: 10px; height: 10px; }
+
+.devotional-cause__writing {
+  --writing-line: 2rem;
+  margin: 13px 0 0 82px;
+  padding: 0 3px;
+  color: #40362e;
+  font-size: 17px;
+  line-height: var(--writing-line);
+  background-image: repeating-linear-gradient(to bottom, transparent 0, transparent calc(var(--writing-line) - 1px), rgba(185, 144, 71, 0.2) calc(var(--writing-line) - 1px), rgba(185, 144, 71, 0.2) var(--writing-line));
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.devotional-cause__metadata {
+  display: grid;
+  gap: 7px;
+  margin-top: 64px;
+  padding-top: 14px;
+  border-top: 1px solid #eee4d5;
+  color: #665b50;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.devotional-cause__dates { display: flex; flex-wrap: wrap; gap: 8px 18px; }
+.devotional-cause__dates p, .devotional-cause__location { display: flex; align-items: center; flex-wrap: wrap; gap: 5px; margin: 0; }
+.devotional-cause__dates p > span { text-transform: uppercase; font-size: 10px; }
+.devotional-cause__dates svg, .devotional-cause__location svg { width: 14px; height: 14px; flex-shrink: 0; color: #b5a083; }
+.devotional-cause__dates .devotional-cause__returned { color: #a57025; }
+.devotional-cause__location svg { color: #b96e7b; }
+
+.devotional-cause__engagement { margin: 18px 0 20px; }
+.devotional-cause__engagement > div { margin: 0; }
+.devotional-cause__engagement p { color: #51473c; font-size: 14px; }
+.devotional-cause__engagement > div > div { gap: 7px; }
+.devotional-cause__engagement > div > div > span { border-radius: 16px; padding: 4px 10px; background: #faf3e7; }
+
+.prayer-engagement__summary { display: flex; align-items: center; flex-wrap: wrap; gap: 7px 10px; }
+.prayer-engagement__summary p { margin: 0; }
+.prayer-engagement__list-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  min-height: 28px;
+  padding: 3px 9px;
+  border: 1px solid #d8b875;
+  border-radius: 999px;
+  background: #fff8e8;
+  color: #805315;
+  font: 600 11px/1.2 "Inter", sans-serif;
+  cursor: pointer;
+}
+.prayer-engagement__list-button svg { width: 14px; height: 14px; }
+.prayer-engagement__list-button:hover { background: #fff1cd; border-color: #be8b35; }
+.prayer-engagement__people {
+  margin: 9px 0 12px;
+  padding: 6px;
+  border: 1px solid #eadcc5;
+  border-radius: 14px;
+  background: rgba(255, 252, 246, 0.92);
+  box-shadow: inset 0 1px 0 #fff;
+}
+.prayer-engagement__people ul { display: grid; gap: 3px; max-height: 260px; margin: 0; padding: 0; overflow-y: auto; list-style: none; }
+.prayer-engagement__people li a {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 48px;
+  padding: 6px 8px;
+  border-radius: 10px;
+  color: #44382d;
+  text-decoration: none;
+}
+.prayer-engagement__people li a:hover { background: #faf0dc; }
+.prayer-engagement__avatar { display: grid; flex: 0 0 36px; width: 36px; height: 36px; place-items: center; overflow: hidden; border: 1px solid #dfc796; border-radius: 50%; background: #f5ead7; color: #a16c20; }
+.prayer-engagement__avatar img { width: 100%; height: 100%; object-fit: cover; }
+.prayer-engagement__avatar svg { width: 18px; height: 18px; }
+.prayer-engagement__person-copy { display: grid; min-width: 0; flex: 1; }
+.prayer-engagement__person-copy strong { overflow: hidden; font: 600 13px/1.35 "Inter", sans-serif; text-overflow: ellipsis; white-space: nowrap; }
+.prayer-engagement__person-copy small { color: #86796b; font-size: 10px; }
+.prayer-engagement__profile-label { flex: 0 0 auto; color: #9b691e; font-size: 10px; font-weight: 600; }
+.prayer-engagement__status { display: flex; align-items: center; justify-content: center; gap: 7px; margin: 0; padding: 12px; color: #75685a; font-size: 12px; text-align: center; }
+.prayer-engagement__status svg { width: 16px; height: 16px; }
+.prayer-engagement__status--error { color: #9e3f35; }
+
+.devotional-cause__solidarity {
+  margin-top: 18px;
+  padding: 14px 13px 12px;
+  border: 1px solid #eddcc0;
+  border-radius: 18px;
+  background: linear-gradient(120deg, #fdf9f1, #fbf4e7);
+}
+
+.devotional-cause__solidarity h3 {
+  margin: 0 0 12px;
+  color: #8c5b18;
+  font-family: "Lora", Georgia, serif;
+  font-size: 17px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.devotional-cause__reactions { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 4px; }
+.devotional-cause__reaction { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; min-width: 0; min-height: 60px; padding: 6px 2px; border: 1px solid transparent; border-radius: 12px; background: transparent; color: #514538; font: inherit; cursor: pointer; transition: background-color 150ms, border-color 150ms; }
+.devotional-cause__reaction > span:first-child { font-size: 27px; line-height: 1.15; }
+.devotional-cause__reaction > span:last-child { font-size: 12px; }
+.devotional-cause__reaction:hover, .devotional-cause__reaction[aria-pressed="true"] { border-color: #d6ba86; background: #fffcf5; }
+.devotional-cause__feedback { display: grid; justify-items: center; gap: 5px; padding: 10px; text-align: center; }
+.devotional-cause__feedback > span { font-size: 26px; }
+.devotional-cause__feedback p { margin: 0; color: #387047; font-size: 14px; line-height: 1.5; }
+.devotional-cause__feedback small { color: #7e7262; font-size: 11px; }
+
+.devotional-cause__actions {
+  display: grid;
+  gap: 11px;
+  margin-top: 17px;
+}
+
+.devotional-cause__primary-actions, .devotional-cause__sharing-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: inherit; }
+.devotional-cause__primary-actions--single { grid-template-columns: minmax(0, 1fr); }
+
+.devotional-cause__action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 13px;
+  min-width: 0;
+  min-height: 68px;
+  padding: 12px 17px;
+  border: 1px solid var(--action-border);
+  border-radius: 13px;
+  background: var(--action-background);
+  color: #322820;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.75);
+  font: 600 15px/1.35 "Inter", sans-serif;
+  text-align: left;
+  cursor: pointer;
+  transition: box-shadow 150ms, border-color 150ms;
+}
+
+.devotional-cause__action svg { flex-shrink: 0; width: 27px; height: 27px; color: var(--action-icon); stroke-width: 1.9; }
+.devotional-cause__action span { max-width: 170px; }
+.devotional-cause__action:hover { border-color: var(--action-icon); box-shadow: 0 3px 9px rgba(77, 57, 29, 0.1); }
+.devotional-cause__action:disabled { opacity: 0.6; cursor: wait; }
+.devotional-cause__action--suggestion { --action-background: linear-gradient(135deg, #f7effa, #ebdff2); --action-border: #d9bde8; --action-icon: #913acf; }
+.devotional-cause__action--next { --action-background: linear-gradient(135deg, #f1f5fa, #dfe8f2); --action-border: #bfd0e2; --action-icon: #2a69aa; }
+.devotional-cause__action--friend { --action-background: linear-gradient(135deg, #f4f6e9, #e9edd7); --action-border: #d6ddbb; --action-icon: #238344; }
+.devotional-cause__action--share { --action-background: linear-gradient(135deg, #fff8e9, #ffebc9); --action-border: #f0cd8b; --action-icon: #c46a00; }
+
+.devotional-cause__report {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 44px;
+  margin: 16px auto -6px;
+  padding: 7px 0;
+  border: 0;
+  background: transparent;
+  color: #776b5e;
+  font: 400 10px/1.5 "Inter", sans-serif;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.devotional-cause__report svg { width: 14px; height: 14px; flex-shrink: 0; }
+.devotional-cause__report:hover { color: #ad443a; }
+.devotional-cause button:focus-visible { outline: 3px solid #b07a30; outline-offset: 3px; }
+
+.devotional-cause-suggestion { padding: 24px; border: 1px solid #ddc4e7; border-radius: 20px; background: #fcf8fe; }
+.devotional-cause-suggestion h3 { margin: 0 0 12px; font: 600 20px/1.4 "Lora", Georgia, serif; color: #74418a; }
+.devotional-cause-suggestion p { margin: 0; color: #44364b; font-size: 16px; line-height: 1.8; white-space: pre-wrap; }
+
+@media (max-width: 479px) {
+  .devotional-cause__ribbon { padding: 17px 10px 16px; }
+  .devotional-cause__ribbon > p { font-size: 12px; }
+  .devotional-cause__ornament { margin-top: 7px; gap: 10px; }
+  .devotional-cause__ornament span { width: 54px; }
+  .devotional-cause__ornament svg { width: 28px; height: 28px; }
+  .devotional-cause__body { padding: 20px 15px 18px; }
+  .devotional-cause__author { grid-template-columns: 47px minmax(0, 1fr); gap: 11px; }
+  .devotional-cause__avatar { width: 47px; height: 47px; border-width: 2px; }
+  .devotional-cause__author h2 { font-size: 20px; margin-bottom: 7px; }
+  .devotional-cause__byline p { font-size: 10px; letter-spacing: 0.035em; }
+  .devotional-cause__writing { margin: 18px 0 0; font-size: 16px; }
+  .devotional-cause__metadata { font-size: 11px; }
+  .devotional-cause__solidarity { padding: 13px 6px 10px; }
+  .devotional-cause__solidarity h3 { font-size: 14px; }
+  .devotional-cause__reactions { gap: 1px; }
+  .devotional-cause__reaction { gap: 5px; }
+  .devotional-cause__reaction > span:first-child { font-size: 24px; }
+  .devotional-cause__reaction > span:last-child { font-size: 9px; }
+  .devotional-cause__actions { gap: 9px; }
+  .devotional-cause__action { min-height: 70px; gap: 7px; padding: 10px 8px; font-size: 12px; border-radius: 12px; }
+  .devotional-cause__action svg { width: 20px; height: 20px; }
+  .devotional-cause__report { font-size: 9px; text-align: center; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .devotional-cause__action, .devotional-cause__reaction { transition: none; }
+}

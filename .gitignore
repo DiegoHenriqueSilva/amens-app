@@ -26,3 +26,9 @@ dist-ssr
 .env.*
 !.env.example
 tmp/
+.vercel
+android/app/google-services.json
+*service-account*.json
+.private/
+releases/
+visualizations/

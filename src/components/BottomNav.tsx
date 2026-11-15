@@ -1,75 +1,46 @@
-import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Home, Users, Link as LinkIcon, User, Mail, Globe } from "lucide-react";
+import { Home, Users, Link as LinkIcon, User, Mail, Globe, ShieldCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useFriends } from "@/hooks/use-friends";
-import { supabase } from "@/integrations/supabase/client";
+import { useUnreadNotifications } from "@/hooks/use-unread-notifications";
+import { useUserRole } from "@/hooks/use-user-role";
 
 const BottomNav = () => {
   const location = useLocation();
   const { requests, friends, loading } = useFriends();
-  const [unreadCount, setUnreadCount] = useState(0);
-  
-  const fetchUnreadCount = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) return;
+  const unreadCount = useUnreadNotifications(location.pathname);
+  const { isModeratorOrAdmin } = useUserRole();
 
-    const { count, error } = await supabase
-      .from("notifications")
-      .select("*", { count: "exact", head: true })
-      .eq("user_id", session.user.id)
-      .eq("is_read", false);
-
-    if (!error && count !== null) {
-      setUnreadCount(count);
-    }
-  };
-
-  useEffect(() => {
-    fetchUnreadCount();
-    
-    // Subscribe to real-time notifications
-    const channel = supabase
-      .channel('schema-db-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'notifications'
-        },
-        () => fetchUnreadCount()
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, []);
-
-  // Don't show bottom nav on auth page
-  if (location.pathname === "/auth") return null;
+  // Guided rosaries have their own previous/next controls at the bottom.
+  // Keeping the global navigation there covers the bead controls on phones.
+  const isGuidedRosary = /^\/rosary\/[^/]+/.test(location.pathname);
+  if (location.pathname === "/auth" || location.pathname.startsWith("/admin") || isGuidedRosary) return null;
   
   const navItems = [
     { path: "/", icon: Home, label: "Início" },
     { path: "/messages", icon: Mail, label: "Mensagens", badge: unreadCount },
-    { path: "/prayer-chain", icon: LinkIcon, label: "Oração ao vivo" },
+    { path: "/prayer-chain", icon: LinkIcon, label: "Orar ao vivo" },
     { path: "/friends", icon: Users, label: "Amigos", badge: requests?.length || 0 },
     { path: "/community", icon: Globe, label: "Comunidade" },
     { path: "/profile", icon: User, label: "Perfil" },
+    ...(isModeratorOrAdmin ? [{ path: "/admin", icon: ShieldCheck, label: "Admin" }] : []),
   ];
 
   return (
-    <nav className="nav-blur fixed bottom-0 left-0 right-0 h-20 flex items-center justify-around px-2 pb-2 z-50">
+    <nav className="nav-blur bottom-nav-devotional fixed bottom-0 left-0 right-0 h-20 flex items-center justify-around px-2 pb-2 z-50">
       {navItems.map((item) => {
-        const isActive = location.pathname === item.path;
+        const isActive = location.pathname === item.path || (item.path === "/admin" && location.pathname.startsWith("/admin"));
         const Icon = item.icon;
         
         return (
           <Link 
             key={item.path} 
             to={item.path} 
-            className="flex flex-col items-center gap-1 group relative"
+            aria-label={item.badge > 0 ? `${item.label}, ${item.badge} novos avisos` : item.label}
+            className={cn(
+              "bottom-nav-devotional__item flex flex-col items-center gap-1 group relative",
+              isActive && "bottom-nav-devotional__item--active"
+            )}
           >
             <div className={cn(
               "w-12 h-1 bg-primary rounded-full mb-1 transition-opacity",
@@ -82,8 +53,8 @@ const BottomNav = () => {
               )} />
               {/* Badge (Notifications or Requests) */}
               {item.badge > 0 && (
-                <span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-red-500 text-white text-[9px] rounded-full flex items-center justify-center border border-background font-bold animate-pulse">
-                  {item.badge}
+                <span className="absolute -top-1.5 -right-1.5 min-w-4 h-4 px-0.5 bg-red-500 text-white text-[9px] rounded-full flex items-center justify-center border border-background font-bold animate-pulse">
+                  {item.badge > 99 ? "99+" : item.badge}
                 </span>
               )}
             </div>

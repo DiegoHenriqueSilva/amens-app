@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { ArrowLeft, Mic, MicOff, Play, Pause, FastForward } from "lucide-react";
+import { ArrowLeft, ChevronLeft, Mic, MicOff, Play, Pause, FastForward } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useSpeechRecognition } from "@/hooks/use-speech-recognition";
@@ -9,6 +9,7 @@ import { PRAYERS, ROSARY_SEQUENCE, RosaryBead } from "@/data/rosary";
 import PageTransition from "@/components/PageTransition";
 import { motion, AnimatePresence } from "framer-motion";
 import { useFaithPoints } from "@/hooks/use-faith-points";
+import { recordAltarEvent } from '@/features/altar/events';
 
 // Geometric Generation for the visual beads
 const generateBeadCoordinates = () => {
@@ -86,6 +87,7 @@ function zoomOutList<T>(list: T[]): T[] { return list;} // Utility to satisfy TS
 const Terco = () => {
   const navigate = useNavigate();
   const { addFaithPoints } = useFaithPoints();
+  const altarSessionId = useRef(crypto.randomUUID());
   
   const [currentBeadIndex, setCurrentBeadIndex] = useState(0);
   const [completedBeads, setCompletedBeads] = useState<Set<number>>(new Set());
@@ -185,6 +187,7 @@ const Terco = () => {
   };
 
   const handleFinishRosary = async () => {
+    void recordAltarEvent('rosary_marian', altarSessionId.current);
     toggleListening();
     setSessionActive(false);
     await addFaithPoints("pray");
@@ -196,11 +199,19 @@ const Terco = () => {
     handleCompleteCurrentBead();
   };
 
+  const handlePrevious = () => {
+    if (currentBeadIndex > 0) {
+      clearTranscript();
+      setCurrentBeadIndex(previous => previous - 1);
+    }
+  };
+
   const startSession = () => {
     if (!supported) {
       toast.error("O navegador não suporta reconhecimento de fala. Você pode usar o botão 'Avançar'.");
     }
     setSessionActive(true);
+    altarSessionId.current = crypto.randomUUID();
     setCurrentBeadIndex(0);
     setCompletedBeads(new Set());
     if (!isListening) {
@@ -355,6 +366,16 @@ const Terco = () => {
 
                     <div className="flex gap-4 items-center justify-between mt-4">
                        <div className="flex items-center gap-3">
+                          <Button
+                             onClick={handlePrevious}
+                             variant="outline"
+                             size="icon"
+                             disabled={currentBeadIndex === 0}
+                             className="rounded-full shadow-md w-14 h-14 border-primary/30 text-primary hover:bg-primary/10 disabled:opacity-30"
+                             title="Voltar conta"
+                          >
+                             <ChevronLeft className="w-6 h-6" />
+                          </Button>
                           <Button 
                              onClick={toggleListening} 
                              variant={isListening ? "default" : "outline"}

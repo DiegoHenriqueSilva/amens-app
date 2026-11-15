@@ -104,6 +104,58 @@
     border-top: 1px solid rgba(200, 180, 150, 0.2);
   }
 
+  .bottom-nav-devotional {
+    isolation: isolate;
+    overflow: hidden;
+    height: calc(5rem + env(safe-area-inset-bottom));
+    padding-bottom: calc(0.5rem + env(safe-area-inset-bottom));
+    border-top: 1px solid rgba(196, 151, 72, 0.48);
+    border-radius: 20px 20px 0 0;
+    background:
+      radial-gradient(circle at 15% 40%, rgba(241, 216, 152, 0.22), transparent 25%),
+      linear-gradient(180deg, rgba(255, 253, 247, 0.97), rgba(248, 239, 222, 0.97));
+    box-shadow: 0 -8px 24px rgba(89, 57, 22, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(14px);
+  }
+
+  .bottom-nav-devotional::after {
+    position: absolute;
+    z-index: -1;
+    inset: 0;
+    background: repeating-linear-gradient(0deg, transparent 0 7px, rgba(156, 108, 38, 0.025) 8px);
+    content: "";
+    pointer-events: none;
+  }
+
+  .bottom-nav-devotional__item {
+    width: min(12vw, 130px);
+    min-width: 46px;
+    min-height: 66px;
+    justify-content: center;
+    padding: 4px 4px 5px;
+    border: 1px solid transparent;
+    border-radius: 16px;
+    filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.98)) drop-shadow(0 0 3px rgba(255, 255, 255, 0.95));
+    transition: background-color 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+  }
+
+  .bottom-nav-devotional__item--active {
+    border-color: rgba(217, 187, 123, 0.34);
+    background: rgba(255, 249, 237, 0.72);
+    box-shadow: 0 5px 15px rgba(128, 84, 20, 0.09), inset 0 0 0 1px rgba(255, 255, 255, 0.64);
+  }
+
+  .bottom-nav-devotional__item:hover {
+    background: rgba(255, 250, 240, 0.55);
+  }
+
+  @media (max-width: 420px) {
+    .bottom-nav-devotional__item {
+      min-width: 43px;
+      padding-inline: 2px;
+    }
+  }
+
   .gradient-divine {
     @apply bg-gradient-to-r from-primary via-[#F9E27A] to-primary text-white font-bold shadow-[0_0_20px_rgba(212,175,55,0.3)];
   }
@@ -232,4 +284,393 @@
   0%, 100% { transform: scale(1); opacity: 0.5; }
   50% { transform: scale(1.1); opacity: 0.8; }
 }
+
+.home-brand-outline {
+  -webkit-text-stroke: 3px rgba(255, 255, 255, 0.98);
+  paint-order: stroke fill;
+  text-shadow: 0 0 4px white, 0 1px 7px white;
+}
+
+.home-tagline-outline {
+  -webkit-text-stroke: 1.5px rgba(255, 255, 255, 0.98);
+  paint-order: stroke fill;
+  text-shadow: 0 0 4px white, 0 0 7px white;
+}
+
+/* Visual devocional renovado — a classe permite retornar à aparência anterior no menu inicial. */
+.amens-refresh body::before {
+  opacity: 0.62;
+    background-position: center top;
+  background-size: auto 100%;
+}
+
+.amens-refresh .amens-card {
+  border: 1px solid rgba(43, 35, 23, 0.18) !important;
+  background: rgba(255, 253, 248, 0.88) !important;
+  box-shadow: 0 7px 18px rgba(72, 54, 25, 0.10), inset 0 1px 0 rgba(255, 255, 255, 0.88) !important;
+}
+
+.amens-refresh .amens-button:not([data-radix-collection-item]) {
+  border: 1px solid rgba(71, 50, 12, 0.28);
+  background: linear-gradient(135deg, #f8e7b1, #e9bd58) !important;
+  color: #3d2800 !important;
+  box-shadow: 0 3px 8px rgba(96, 68, 14, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.62);
+  font-weight: 700;
+}
+
+.amens-refresh .amens-button:hover {
+  filter: brightness(1.035);
+}
+
+.amens-refresh .amens-wordmark {
+  font-family: "Cormorant Garamond", "Lora", serif;
+  color: #b87811;
+  font-size: clamp(3.15rem, 13vw, 4.1rem);
+  font-weight: 700;
+  font-style: normal;
+  letter-spacing: -0.055em;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.92), 0 3px 10px rgba(184, 120, 17, 0.12);
+  -webkit-text-stroke: 0;
+  position: relative;
+  display: inline-block;
+  padding-bottom: 0.14em;
+}
+
+.amens-refresh .amens-wordmark::after {
+  content: none;
+  position: absolute;
+  width: 3.55rem;
+  height: 0.72rem;
+  left: 50%;
+  bottom: -0.02rem;
+  transform: translateX(-50%);
+  background: center / contain no-repeat url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 24'%3E%3Cpath d='M5 12c26 7 47 3 63-4 15-7 30-7 47 1' fill='none' stroke='%23b87811' stroke-width='4' stroke-linecap='round'/%3E%3Cpath d='M37 18c20 4 38 1 56-5' fill='none' stroke='%23d39a29' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
+}
+
+.amens-refresh .amens-wordmark-image {
+  display: block;
+  width: clamp(11.5rem, 54vw, 16rem);
+  height: auto;
+  margin: 0 auto;
+  mix-blend-mode: multiply;
+    filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.98)) drop-shadow(0 0 8px rgba(255, 255, 255, 0.9));
+}
+
+.amens-refresh .home-tagline-outline {
+  -webkit-text-stroke: 0;
+  text-shadow: none;
+  color: #9d6411;
+}
+
+@media (max-width: 639px) {
+  .amens-refresh body::before {
+      background-image: url('/backgrounds/bg-amens-santa-capela-mobile.png');
+      background-size: cover;
+      background-position: center top;
+  }
+
+    /* Na tela estreita, a imagem de Nossa Senhora ocupa a lateral e as ações ficam em uma coluna legível. */
+    .amens-refresh .amens-home-header {
+      grid-template-columns: minmax(0, 1fr) 8.3rem;
+      gap: 0.35rem;
+      min-height: 4.5rem;
+      position: sticky;
+      top: env(safe-area-inset-top);
+      z-index: 40;
+      margin-left: -1rem;
+      margin-right: -1rem;
+      padding: 0.4rem 1rem 0.5rem;
+      background: transparent;
+      backdrop-filter: none;
+      box-shadow: none;
+    }
+
+    .amens-refresh .amens-wordmark-image {
+      width: min(10rem, 45vw);
+    }
+
+    .amens-refresh .amens-home-journey,
+    .amens-refresh .amens-home-actions {
+      width: 61%;
+      margin-left: auto;
+    }
+
+    .amens-refresh .amens-home-journey button {
+      min-height: 3.1rem;
+      padding: 0.42rem 0.55rem;
+      gap: 0.25rem;
+    }
+
+    .amens-refresh .amens-home-journey .amens-journey-progress {
+      display: none;
+    }
+
+    .amens-refresh .amens-home-journey {
+      margin-bottom: 1.35rem !important;
+    }
+
+    .amens-refresh .amens-home-actions {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 0.22rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .amens-refresh .amens-home-art-image {
+      border-radius: 1.15rem;
+    }
+}
+
+.amens-refresh .amens-home-action {
+  min-height: 9.2rem;
+  padding: 1.1rem 0.8rem 1rem !important;
+  gap: 0.72rem !important;
+  flex-direction: column;
+  justify-content: center;
+  text-align: center;
+  border: 1px solid #e0d9ca !important;
+  border-radius: 1.8rem !important;
+  background: #fffdf9 !important;
+  box-shadow: 0 7px 16px rgba(74, 57, 31, 0.15), inset 0 1px 0 #ffffff !important;
+}
+
+.amens-refresh .amens-home-action h2 {
+  font-family: "Lora", Georgia, serif;
+  color: #51370f;
+  font-size: clamp(1rem, 4vw, 1.22rem);
+  font-weight: 600;
+  line-height: 1.05;
+  letter-spacing: -0.025em;
+  text-align: center !important;
+}
+
+.amens-refresh .amens-home-actions {
+  gap: 0.85rem;
+}
+
+.amens-refresh .amens-home-icon {
+  width: 3.35rem;
+  height: 3.35rem;
+  color: #c78d10;
+  filter: drop-shadow(0 1px 0 rgba(104, 70, 7, 0.16));
+}
+
+.amens-refresh .amens-home-action > div:first-child {
+  width: 3.6rem;
+  height: 3.6rem;
+}
+
+.amens-refresh .amens-home-action {
+  min-height: 0;
+  height: auto !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+    background: transparent !important;
+  box-shadow: none !important;
+    overflow: visible;
+}
+
+  .amens-refresh .amens-home-art-image {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: 1.45rem;
+    overflow: hidden;
+  }
+
+.amens-refresh .amens-home-actions > div > a { height: auto !important; }
+
+.amens-refresh .amens-donation-banner {
+  display: block;
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  width: 100%;
+  min-height: 9.4rem;
+  margin: 3rem 0 1.5rem;
+  padding: 1.15rem 5.4rem 1.1rem 1.3rem;
+  border: 1px solid #cba65b;
+  border-radius: 1.3rem;
+  background: linear-gradient(145deg, rgba(255, 254, 249, 0.98), rgba(255, 249, 233, 0.96));
+  box-shadow: 0 7px 16px rgba(107, 72, 21, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.95);
+  color: #43270d;
+  text-decoration: none;
+}
+
+.amens-refresh .amens-donation-banner::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  right: -2.4rem;
+  bottom: -3.1rem;
+  width: 9.3rem;
+  height: 9.3rem;
+  border: 1px solid rgba(203, 166, 91, 0.35);
+  border-radius: 50%;
+  box-shadow: 0 0 0 1.25rem rgba(241, 218, 159, 0.13), 0 0 0 2.65rem rgba(241, 218, 159, 0.08);
+}
+
+.amens-refresh .amens-donation-banner__eyebrow {
+  display: block;
+  margin-bottom: 0.3rem;
+  color: #b07a19;
+  font-size: 0.62rem;
+  font-weight: 900;
+  letter-spacing: 0.17em;
+  line-height: 1.25;
+  text-transform: uppercase;
+}
+
+.amens-refresh .amens-donation-banner h2 {
+  margin: 0;
+  color: #211a13;
+  font-family: "Lora", Georgia, serif;
+  font-size: 1.35rem;
+  font-weight: 700;
+  line-height: 1.15;
+}
+
+.amens-refresh .amens-donation-banner > p:not(.amens-donation-banner__callout) {
+  max-width: 24rem;
+  margin: 0.42rem 0 0;
+  color: #74614d;
+  font-size: 0.78rem;
+  line-height: 1.4;
+}
+
+.amens-refresh .amens-donation-banner__callout {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.4rem;
+  max-width: 25rem;
+  margin: 0.72rem 0 0;
+  color: #8f5b08;
+  font-size: 0.72rem;
+  line-height: 1.35;
+}
+
+.amens-refresh .amens-donation-banner__callout svg {
+  flex: 0 0 auto;
+  width: 1rem;
+  height: 1rem;
+  margin-top: 0.05rem;
+}
+
+.amens-refresh .amens-donation-banner__ornament {
+  position: absolute;
+  z-index: 1;
+  top: 2.55rem;
+  right: 2rem;
+  width: 2rem;
+  height: 2rem;
+  color: #c68d1d;
+  filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.85));
+}
+
+@media (max-width: 639px) {
+  .amens-refresh .amens-donation-banner {
+    width: 61%;
+    min-height: 0;
+    margin-top: 0;
+    margin-left: auto;
+    padding: 0.85rem 2.2rem 0.85rem 0.85rem;
+    border-radius: 1rem;
+  }
+
+  .amens-refresh .amens-donation-banner__eyebrow {
+    font-size: 0.52rem;
+    letter-spacing: 0.1em;
+  }
+
+  .amens-refresh .amens-donation-banner h2 {
+    font-size: 1.02rem;
+  }
+
+  .amens-refresh .amens-donation-banner > p:not(.amens-donation-banner__callout),
+  .amens-refresh .amens-donation-banner__callout {
+    font-size: 0.65rem;
+  }
+
+  .amens-refresh .amens-donation-banner__ornament {
+    top: 2.25rem;
+    right: 0.75rem;
+    width: 1.2rem;
+    height: 1.2rem;
+  }
+}
+
+/* Destaque delicado para o convite principal à intercessão. */
+.amens-refresh .amens-art-orar {
+  position: relative;
+  border-radius: 1.55rem !important;
+  animation: amens-pray-golden-glow 2.8s ease-in-out infinite;
+}
+
+@keyframes amens-pray-golden-glow {
+  0%, 100% {
+    box-shadow: 0 0 5px 1px rgba(214, 151, 16, 0.24), 0 0 13px 3px rgba(239, 190, 62, 0.12) !important;
+  }
+  50% {
+    box-shadow: 0 0 10px 2px rgba(214, 151, 16, 0.5), 0 0 23px 6px rgba(239, 190, 62, 0.28) !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .amens-refresh .amens-art-orar {
+    animation: none;
+    box-shadow: 0 0 8px 2px rgba(214, 151, 16, 0.34) !important;
+  }
+}
+
+.app-welcome-splash {
+  position: fixed;
+  z-index: 1000;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: max(2rem, env(safe-area-inset-top)) 1.75rem max(2rem, env(safe-area-inset-bottom));
+  background: #fff;
+  color: #3d2800;
+  text-align: center;
+}
+
+.app-welcome-content {
+  display: flex;
+  width: min(100%, 25rem);
+  flex-direction: column;
+  align-items: center;
+}
+
+.app-welcome-content h1 {
+  margin: 0 0 1.1rem;
+  font-size: clamp(2.5rem, 11vw, 3.4rem);
+  line-height: 1;
+  letter-spacing: -0.05em;
+}
+
+.app-welcome-content img {
+  width: min(12rem, 52vw);
+  height: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 8px 11px rgba(61, 40, 0, 0.15));
+}
+
+.app-welcome-content figure {
+  margin: 1.5rem 0 0;
+}
+
+.app-welcome-content blockquote {
+  margin: 0;
+  font-family: "Lora", serif;
+  font-size: clamp(1rem, 4.5vw, 1.2rem);
+  font-style: italic;
+  line-height: 1.55;
+}
+
+.app-welcome-content figcaption {
+  margin-top: 0.75rem;
+  font-size: 0.9rem;
+  font-weight: 800;
+}
+
 

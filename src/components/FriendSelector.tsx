@@ -12,17 +12,19 @@ interface FriendSelectorProps {
   onOpenChange: (open: boolean) => void;
   onSelect: (friendIds: string[]) => void;
   title?: string;
+  excludedIds?: string[];
 }
 
-export const FriendSelector = ({ open, onOpenChange, onSelect, title = "Convidar Amigos" }: FriendSelectorProps) => {
+export const FriendSelector = ({ open, onOpenChange, onSelect, title = "Convidar Amigos", excludedIds = [] }: FriendSelectorProps) => {
   const { friends, loading } = useFriends();
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
 
-  const filteredFriends = friends.filter(friend => 
+  const excluded = new Set(excludedIds.filter(Boolean));
+  const filteredFriends = friends.filter(friend => !excluded.has(friend.id) && (
     friend.display_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     friend.full_name?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  ));
 
   const toggleFriend = (id: string) => {
     setSelectedIds(prev => 

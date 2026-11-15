@@ -12,6 +12,8 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Check, ChevronsUpDown, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
+import { NO_DEVOTIONAL_SAINT, SAINTS } from "@/data/saints";
+import { CityCombobox } from "@/components/CityCombobox";
 
 export function CompleteProfileDialog() {
   const [isOpen, setIsOpen] = useState(false);
@@ -31,6 +33,8 @@ export function CompleteProfileDialog() {
   const [showRealName, setShowRealName] = useState(false);
   const [displayName, setDisplayName] = useState("");
   const [popoverOpen, setPopoverOpen] = useState(false);
+  const [devotionalSaint, setDevotionalSaint] = useState("");
+  const [isPublicInParish, setIsPublicInParish] = useState(false);
 
   useEffect(() => {
     const checkProfile = async () => {
@@ -59,6 +63,8 @@ export function CompleteProfileDialog() {
         // Pre-fill if some data already exists
         if (profile?.state) setSelectedState(profile.state);
         if (profile?.city) setSelectedCity(profile.city);
+        if (profile?.devotional_saint) setDevotionalSaint(profile.devotional_saint);
+        if (profile?.is_public_in_parish) setIsPublicInParish(profile.is_public_in_parish);
       }
     };
 
@@ -96,7 +102,7 @@ export function CompleteProfileDialog() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!userId) return;
-    if (!fullName || !selectedState || !selectedCity || !parish) {
+    if (!fullName || !selectedState || !selectedCity || !parish || !devotionalSaint) {
       toast.error("Por favor, preencha todos os campos.");
       return;
     }
@@ -108,6 +114,8 @@ export function CompleteProfileDialog() {
       state: selectedState,
       city: selectedCity,
       parish: parish,
+      devotional_saint: devotionalSaint === NO_DEVOTIONAL_SAINT ? null : devotionalSaint,
+      is_public_in_parish: isPublicInParish,
       show_real_name: showRealName,
       display_name: showRealName ? displayName : null
     });
@@ -120,6 +128,8 @@ export function CompleteProfileDialog() {
           state: selectedState,
           city: selectedCity,
           parish: parish,
+          devotional_saint: devotionalSaint === NO_DEVOTIONAL_SAINT ? null : devotionalSaint,
+          is_public_in_parish: isPublicInParish,
           show_real_name: showRealName,
           display_name: showRealName ? displayName : null
         }
@@ -181,24 +191,16 @@ export function CompleteProfileDialog() {
             </div>
             <div className="space-y-2">
               <Label>Cidade</Label>
-              <Select 
-                value={selectedCity} 
-                onValueChange={(val) => {
-                  setSelectedCity(val);
+              <CityCombobox
+                cities={cities}
+                value={selectedCity}
+                onChange={(city) => {
+                  setSelectedCity(city);
                   setParish("");
-                }} 
-                disabled={!selectedState} 
-                required
-              >
-                <SelectTrigger className="rounded-xl border-primary/10 truncate">
-                  <SelectValue placeholder="Selecione" />
-                </SelectTrigger>
-                <SelectContent className="max-h-60">
-                  {cities.map(ct => (
-                    <SelectItem key={ct.id} value={ct.nome}>{ct.nome}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                }}
+                disabled={!selectedState}
+                className="rounded-xl border-primary/10"
+              />
             </div>
           </div>
 
@@ -261,6 +263,31 @@ export function CompleteProfileDialog() {
           </div>
 
           <div className="space-y-4 pt-2 border-t border-primary/5">
+            <div className="space-y-2">
+              <Label>Santo(a) de devoção</Label>
+              <Select value={devotionalSaint} onValueChange={setDevotionalSaint} required>
+                <SelectTrigger className="rounded-xl border-primary/10"><SelectValue placeholder="Selecione uma opção" /></SelectTrigger>
+                <SelectContent className="max-h-60">
+                  <SelectItem value={NO_DEVOTIONAL_SAINT}>{NO_DEVOTIONAL_SAINT}</SelectItem>
+                  {SAINTS.map((saint) => <SelectItem key={saint} value={saint}>{saint}</SelectItem>)}
+                </SelectContent>
+              </Select>
+              <p className="text-[10px] text-muted-foreground px-1">Usaremos essa devoção com delicadeza nas sugestões de oração.</p>
+            </div>
+
+            <div className="flex items-start space-x-2">
+              <input
+                type="checkbox"
+                id="is-public-parish-dialog"
+                className="mt-0.5 w-4 h-4 rounded border-primary/20 text-primary focus:ring-primary"
+                checked={isPublicInParish}
+                onChange={(e) => setIsPublicInParish(e.target.checked)}
+              />
+              <Label htmlFor="is-public-parish-dialog" className="text-xs font-medium leading-relaxed cursor-pointer">
+                Quero ficar visível na lista da minha comunidade, com foto e nome de usuário.
+              </Label>
+            </div>
+
             <div className="flex items-center space-x-2">
               <input 
                 type="checkbox" 

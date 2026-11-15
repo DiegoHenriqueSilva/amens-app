@@ -4,16 +4,18 @@ import { Button } from "@/components/ui/button";
 import { Clock, Bell } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { scheduleDailyPromiseNotification } from "@/lib/notifications";
+import { scheduleNovenaReminder } from "@/lib/notifications";
 
 interface ReminderModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   currentDay: number;
+  novenaId: string;
+  novenaName: string;
   onConfirm: (time: string) => void;
 }
 
-export const ReminderModal = ({ open, onOpenChange, currentDay, onConfirm }: ReminderModalProps) => {
+export const ReminderModal = ({ open, onOpenChange, currentDay, novenaId, novenaName, onConfirm }: ReminderModalProps) => {
   const [selectedTime, setSelectedTime] = useState("08:00");
 
   const hours = Array.from({ length: 24 }, (_, i) => i.toString().padStart(2, "0"));
@@ -21,11 +23,15 @@ export const ReminderModal = ({ open, onOpenChange, currentDay, onConfirm }: Rem
 
   const handleConfirm = async () => {
     onConfirm(selectedTime);
-    toast.success(`Lembrete agendado para amanhã às ${selectedTime}! 🙏`);
-    
-    // Na prática integraríamos com o agendamento específico da novena
-    // Por enquanto usamos a base que já existe no app
-    await scheduleDailyPromiseNotification(); 
+    const scheduled = await scheduleNovenaReminder({
+      novenaId,
+      novenaName,
+      time: selectedTime,
+      nextDay: Math.min(9, currentDay + 1),
+    });
+    toast.success(scheduled
+      ? `Lembrete diário da novena agendado para ${selectedTime}. 🙏`
+      : `Horário salvo para ${selectedTime}. Ative as notificações para receber o lembrete.`);
     
     onOpenChange(false);
   };
