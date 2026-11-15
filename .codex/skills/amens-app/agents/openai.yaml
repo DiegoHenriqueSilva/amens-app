@@ -1,0 +1,4 @@
+interface:
+  display_name: "Amens App"
+  short_description: "Amens app project context"
+  default_prompt: "Use the Amens App skill for amens-app tasks that need project rules, workflows, design system, feature context, moderation guidance, or technical context."

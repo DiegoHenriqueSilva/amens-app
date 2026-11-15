@@ -12,7 +12,8 @@ export type DailyTaskType =
   | "send_invite" 
   | "pray_rosary" 
   | "live_prayer" 
-  | "share_cause";
+  | "share_cause"
+  | "pray_novena";
 
 export interface DailyTask {
   id: DailyTaskType;
@@ -31,6 +32,7 @@ export const DAILY_TASKS: DailyTask[] = [
   { id: "pray_rosary", title: "Rezar um Terço", xpReward: 50, route: "/rosary-selection" },
   { id: "live_prayer", title: "Entrar na oração ao vivo", xpReward: 25, route: "/prayer-chain" },
   { id: "share_cause", title: "Compartilhar uma causa", xpReward: 15, route: "/pray" },
+  { id: "pray_novena", title: "Rezar dia de Novena", xpReward: 30, route: "/novenas" },
 ];
 
 export function useDailyTasks() {
