@@ -12,7 +12,7 @@ Estado: **Em andamento**. Os testes manuais de interface T01–T05 ainda não fo
 | `/admin/donations` | → login | → `/` | → `/admin/prayers` | ✅ |
 | `/admin/prayers` | → login | → `/` | ✅ | ✅ |
 | `/admin/reports` | → login | → `/` | ✅ | ✅ |
-| `/admin/churches` | → login | → `/` | → `/admin/prayers` | ✅ |
+| `/admin/churches` | → login | → `/` | ✅ (S3) | ✅ |
 | `/admin/feedback` | → login | → `/` | ✅ | ✅ |
 | `/admin/settings` | → login | → `/` | → `/admin/prayers` | ✅ |
 | `/admin/logs` | → login | → `/` | → `/admin/prayers` | ✅ |
@@ -28,7 +28,7 @@ Componente sem rota: `AdminPrayerChain.tsx` existe, mas não aparece no menu nem
 
 | Recurso usado pelo painel | Leitura | Escrita | Coerente com a UI? |
 |---|---|---|---|
-| `get_users_admin()` | admin (RAISE caso contrário) | — | ⚠️ ver S6 |
+| `get_users_admin()` | mod/admin (42501 caso contrário) | — | ✅ S6 |
 | `admin_supporter()` (Doações) | admin | admin | ✅ |
 | `user_roles` | próprio ou mod/admin | INSERT/DELETE admin | ✅ |
 | `moderation_logs` | mod/admin | INSERT mod/admin (próprio id) | ✅ |
@@ -36,11 +36,11 @@ Componente sem rota: `AdminPrayerChain.tsx` existe, mas não aparece no menu nem
 | `prayer_reports` | autor ou mod/admin | UPDATE/DELETE mod/admin | ✅ |
 | `prayer_contributions` | público (removidas só mod/admin) | UPDATE mod/admin | ✅ |
 | `app_settings` | mod/admin | UPDATE admin | ⚠️ S5 |
-| `churches` | ativas: público; todas: mod/admin | UPDATE **mod/admin** | ⚠️ S3 |
-| `profiles` | público (removidos só admin) | UPDATE **mod/admin em qualquer perfil**; dono não altera mais suspensão/remoção | ⚠️ S4 · ✅ S8 |
+| `churches` | ativas: público; todas: mod/admin | INSERT/UPDATE mod/admin; comum só sugere (`pending_review`) | ✅ S3 |
+| `profiles` | público (removidos só admin) | dono: próprio perfil, sem suspensão/remoção; moderador: só `suspended_until` de outros; admin: tudo | ✅ S4 · ✅ S8 |
 | `notifications` | próprias | INSERT comum só com `type` nulo; tipos oficiais só mod/admin | ✅ S2 |
-| `prayer_requests` | regras de status | UPDATE pelo dono ou mod/admin | ✅ S1 · ⚠️ S7 |
-| `user_xp_overrides` | admin e **moderador** (ALL) | admin e **moderador** (ALL) | ⚠️ S9 |
+| `prayer_requests` | regras de status | UPDATE pelo dono ou mod/admin; dono não reativa pedido em moderação nem restaura removido | ✅ S1 · ✅ S7 |
+| `user_xp_overrides` | admin | admin | ✅ S9 |
 
 ### 2.1 Achados do servidor
 
@@ -49,16 +49,16 @@ Componente sem rota: `AdminPrayerChain.tsx` existe, mas não aparece no menu nem
 - **S2 — Alto — ✅ CORRIGIDO em 2026-11-16.** `"Authenticated can insert notifications"` usava `WITH CHECK (true)`. Qualquer usuário podia criar uma notificação para qualquer pessoa, inclusive imitando avisos da moderação; o trigger `amens_native_push_on_insert` ainda transformava isso em **push no celular**. O app cria notificações legítimas para outras pessoas em convite, reação, testemunho e agradecimento ao intercessor, sempre sem `type`. Correção aplicada: usuário comum só insere com `type` nulo; mod/admin inserem qualquer tipo; os tipos oficiais (`system`, `prayer_moderated`, `prayer_policy_violation`, `donation_confirmed`, `daily_gospel`) vêm de funções `SECURITY DEFINER`, que não passam pela policy. Risco que continua: o texto e o destinatário são livres. A solução definitiva é criar as notificações por RPC.
 - **S8 — Alto — ✅ CORRIGIDO em 2026-11-16.** A policy `"Users can update own profile."` não restringia colunas, então um usuário suspenso conseguia limpar o próprio `suspended_until`. Isso foi comprovado em produção (com rollback). Correção: trigger `protect_profile_moderation_columns`, que só deixa mod/admin alterarem `suspended_until`, `deleted_at` e `deleted_by`.
 - **S10 — Funcional.** Inconsistências entre código e banco: (a) o RPC `increment_prayer_count`, chamado em `Pray.tsx`, **não existe** em produção, então a chamada falha em silêncio; (b) a coluna `notifications.sender_id` **não existe**, embora conste em `types.ts`, e por isso `AngelicalNotificationOverlay` não encontra o intercessor. Os dois casos ficam fora do escopo da ADM00; abrir uma tarefa própria.
-- **S7 — Médio.** A policy `"Owners can update feedback"` não restringe colunas. O dono de um pedido banido ou em revisão consegue voltá-lo para `active` pela API; o próprio `Submit.tsx` faz isso ao "reabrir" um pedido. Correção sugerida: um trigger que impeça quem não é mod/admin de alterar o `status` quando o status anterior for `banned`, `policy_violation` ou `pending_review`.
-- **S3 — Médio.** No banco, o moderador pode fazer UPDATE em `churches`, mas a interface considera Igrejas uma tela só de admin. É preciso decidir qual matriz vale e alinhar os dois lados.
-- **S4 — Médio.** O moderador pode fazer UPDATE em qualquer coluna de qualquer `profiles`. Isso é necessário para suspender um usuário a partir de Reports, mas é amplo demais. Sugestão: um RPC `suspend_user` com checagem de papel.
-- **S5 — Baixo.** O moderador consegue ler `app_settings`, enquanto a interface é só de admin. É apenas leitura; decidir se é aceitável.
-- **S6 — Funcional.** Feedback é uma tela de moderador, mas chama `get_users_admin()`, que exige admin. O erro é ignorado e o moderador vê a tela sem e-mails. É preciso decidir se o moderador deve ver os e-mails.
-- **S9 — Baixo.** `user_xp_overrides` (sem migration no repo) dá acesso total também ao moderador, mas a tela que a usa (Usuários) é só de admin. Decidir.
+- **S7 — Médio — ✅ CORRIGIDO (decisão: dono NÃO reativa).** Trigger `protect_prayer_moderation_state`. Texto original: A policy `"Owners can update feedback"` não restringe colunas. O dono de um pedido banido ou em revisão consegue voltá-lo para `active` pela API; o próprio `Submit.tsx` faz isso ao "reabrir" um pedido. Correção sugerida: um trigger que impeça quem não é mod/admin de alterar o `status` quando o status anterior for `banned`, `policy_violation` ou `pending_review`.
+- **S3 — Médio — ✅ RESOLVIDO (decisão: moderador gerencia Igrejas).** Tela liberada ao moderador e policy `churches_insert_mod`. Texto original: No banco, o moderador pode fazer UPDATE em `churches`, mas a interface considera Igrejas uma tela só de admin. É preciso decidir qual matriz vale e alinhar os dois lados.
+- **S4 — Médio — ✅ CORRIGIDO (decisão: moderador só suspende).** Trigger `protect_profile_moderation_columns` ampliado. Texto original: O moderador pode fazer UPDATE em qualquer coluna de qualquer `profiles`. Isso é necessário para suspender um usuário a partir de Reports, mas é amplo demais. Sugestão: um RPC `suspend_user` com checagem de papel.
+- **S5 — Baixo — mantido.** O moderador consegue ler `app_settings`, enquanto a interface é só de admin. É apenas leitura; decidir se é aceitável.
+- **S6 — Funcional — ✅ RESOLVIDO (decisão: moderador vê e-mails).** `get_users_admin` aceita mod/admin. Texto original: Feedback é uma tela de moderador, mas chama `get_users_admin()`, que exige admin. O erro é ignorado e o moderador vê a tela sem e-mails. É preciso decidir se o moderador deve ver os e-mails.
+- **S9 — Baixo — ✅ CORRIGIDO (decisão: moderador NÃO mexe em XP).** Policy `user_xp_overrides_admin` (só admin).
 
 ### 2.2 Scripts
 
-`docs/admin/sql/`: `01_verificacao.sql` (somente leitura) → `02_teste_falha.sql` (prova a falha, com rollback) → `03_correcao.sql` → `04_rollback.sql` (só em emergência). As correções aplicadas estão registradas em `supabase/migrations/20261116000000_*` e `20261116010000_*`.
+`docs/admin/sql/`: `01_verificacao.sql` (somente leitura) → `02_teste_falha.sql` (prova a falha, com rollback) → `03_correcao.sql` → `04_rollback.sql` (só em emergência). As correções aplicadas estão registradas em `supabase/migrations/20261116000000_*`, `20261116010000_*` e `20261116020000_*` (rollback desta última: `sql/05_rollback_moderador.sql`).
 
 ### 2.3 Evidência em produção (2026-11-16, usuário simulado via `request.jwt.claims`, cada teste em transação desfeita)
 
@@ -73,7 +73,49 @@ Componente sem rota: `AdminPrayerChain.tsx` existe, mas não aparece no menu nem
 | Admin suspende usuário | — | permitido |
 | Comum edita o próprio nome | — | permitido |
 
-Não existe nenhuma conta de moderador em produção (só 5 admins), então o perfil moderador só pode ser testado depois que alguém receber esse papel.
+### 2.4 Bateria de permissões por papel (2026-11-16) — 33/33
+
+Gerada por `docs/admin/testes/bateria_permissoes.mjs`. Roda tudo numa única transação desfeita. Como não há moderador em produção, uma conta comum recebe o papel `moderator` **só dentro da transação**. Depois da execução foi conferido que nada ficou gravado: 0 moderadores, nenhuma igreja ou notificação de teste e o pedido com o status original.
+
+`ok:N` = linhas afetadas; `bloq:42501` = negado pelo banco; `linhas:N` = linhas visíveis.
+
+| ID | Teste | Esperado | Obtido | |
+|---|---|---|---|---|
+| M01 | le feedback | linhas | linhas:3 | ✅ |
+| M02 | e-mails get_users_admin (S6) | linhas | linhas:16 | ✅ |
+| M03 | modera pedido alheio | ok:1 | ok:1 | ✅ |
+| M04 | notificacao system | ok:1 | ok:1 | ✅ |
+| M05 | cria igreja ativa (S3) | ok:1 | ok:1 | ✅ |
+| M06 | edita igreja (S3) | ok:1 | ok:1 | ✅ |
+| M07 | suspende outro perfil (S4) | ok:1 | ok:1 | ✅ |
+| M08 | edita nome de outro perfil (S4) | bloq | bloq:42501 | ✅ |
+| M09 | edita o proprio nome | ok:1 | ok:1 | ✅ |
+| M10 | ajuste de XP (S9) | bloq | bloq:42501 | ✅ |
+| M11 | altera configuracoes | ok:0 | ok:0 | ✅ |
+| M12 | se promove a admin | bloq | bloq:42501 | ✅ |
+| M13 | reconhecimento de apoiador | bloq | bloq:42501 | ✅ |
+| M14 | registra log de moderacao | ok:1 | ok:1 | ✅ |
+| C01 | le feedback | linhas:0 | linhas:0 | ✅ |
+| C02 | e-mails get_users_admin | bloq | bloq:42501 | ✅ |
+| C03 | altera pedido alheio (S1) | ok:0 | ok:0 | ✅ |
+| C04 | notificacao system (S2) | bloq | bloq:42501 | ✅ |
+| C05 | notificacao comum | ok:1 | ok:1 | ✅ |
+| C06 | cria igreja ativa | bloq | bloq:42501 | ✅ |
+| C07 | sugere igreja | ok:1 | ok:1 | ✅ |
+| C08 | tira a propria suspensao (S8) | bloq | bloq:42501 | ✅ |
+| C09 | edita o proprio nome | ok:1 | ok:1 | ✅ |
+| C10 | ajuste de XP | bloq | bloq:42501 | ✅ |
+| C11 | se promove a moderador | bloq | bloq:42501 | ✅ |
+| D01 | reativa pedido banido (S7) | bloq | bloq:42501 | ✅ |
+| D02 | restaura pedido removido (S7) | ok:0 | ok:0 | ✅ |
+| D03 | conclui o proprio pedido | ok:1 | ok:1 | ✅ |
+| D04 | reabre o proprio pedido | ok:1 | ok:1 | ✅ |
+| A01 | e-mails get_users_admin | linhas | linhas:16 | ✅ |
+| A02 | ajuste de XP (S9) | ok:1 | ok:1 | ✅ |
+| A03 | edita nome de outro perfil | ok:1 | ok:1 | ✅ |
+| A04 | altera configuracoes | ok:2+ | ok:3 | ✅ |
+
+D02: o pedido removido nem aparece para o dono (policy de leitura), então o UPDATE afeta 0 linhas. O trigger S7 é uma segunda barreira.
 
 Consulta resumida:
 

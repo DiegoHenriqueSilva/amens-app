@@ -24,7 +24,7 @@ const Admin = () => {
           <Route path="donations" element={<AdminGuard requireAdmin><AdminDonations /></AdminGuard>} />
           <Route path="prayers" element={<AdminGuard><AdminPrayers /></AdminGuard>} />
           <Route path="reports" element={<AdminGuard><AdminReports /></AdminGuard>} />
-          <Route path="churches" element={<AdminGuard requireAdmin><AdminChurches /></AdminGuard>} />
+          <Route path="churches" element={<AdminGuard><AdminChurches /></AdminGuard>} />
           <Route path="feedback" element={<AdminGuard><AdminFeedback /></AdminGuard>} />
           <Route path="settings" element={<AdminGuard requireAdmin><AdminSettings /></AdminGuard>} />
           <Route path="logs" element={<AdminGuard requireAdmin><AdminLogs /></AdminGuard>} />

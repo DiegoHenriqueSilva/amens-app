@@ -22,7 +22,7 @@ export const ADMIN_NAV_ITEMS = [
   { path: "/admin/donations", icon: Heart, label: "Doações", adminOnly: true },
   { path: "/admin/prayers", icon: BookOpen, label: "Pedidos de Oração", adminOnly: false },
   { path: "/admin/reports", icon: Flag, label: "Reports", adminOnly: false },
-  { path: "/admin/churches", icon: Church, label: "Igrejas", adminOnly: true },
+  { path: "/admin/churches", icon: Church, label: "Igrejas", adminOnly: false },
   { path: "/admin/feedback", icon: MessageSquare, label: "Feedback", adminOnly: false },
   { path: "/admin/settings", icon: Settings, label: "Configurações", adminOnly: true },
   { path: "/admin/logs", icon: ScrollText, label: "Logs de Moderação", adminOnly: true },
