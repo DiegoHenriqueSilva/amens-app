@@ -1,7 +1,7 @@
 # ADM01 — Dashboard e métricas
 
 Branch: `fix/adm01-dashboard` (a partir de `origin/main` @ `0063610`).
-Estado: **Em andamento**. A RPC está escrita mas ainda **não foi aplicada em produção** (a CLI perdeu a conexão com o banco em 16/11/2026). Os testes T01–T03 estão prontos para rodar.
+Estado: **Em andamento**. A RPC foi aplicada em produção em 16/11/2026 e os testes T01–T03 passaram. Faltam T04 e os testes visuais, que são manuais e exigem login.
 
 ## 1. Decisões aprovadas (2026-11-16)
 
@@ -46,7 +46,7 @@ O item "Dashboard recebeu signOut com limpeza de push", citado no pacote, **não
 
 ## 4. Artefatos
 
-- `supabase/migrations/20261116030000_adm01_admin_dashboard_period.sql`: RPC `admin_dashboard_period(p_period)`, `SECURITY DEFINER`, só admin (42501). **Status: não aplicada.**
+- `supabase/migrations/20261116030000_adm01_admin_dashboard_period.sql`: RPC `admin_dashboard_period(p_period)`, `SECURITY DEFINER`, só admin (42501). **Aplicada em produção (`fszltwvhbdasqoznnors`) em 2026-11-16.**
 - `docs/admin/sql/adm01_testes_dashboard.sql`: T01 (referência), T02 (acima dos limites), T03 (bordas de fuso) e negação para não-admin, tudo em transação desfeita.
 - `src/components/admin/AdminDashboard.tsx`.
 
@@ -54,8 +54,15 @@ O item "Dashboard recebeu signOut com limpeza de push", citado no pacote, **não
 
 | Caso | Como | Estado |
 |---|---|---|
-| T01 Contagens conhecidas | Script: RPC × consulta de referência independente em produção | Não executado (sem conexão) |
-| T02 Acima dos limites | Script: +1200 logs e +1100 pedidos sintéticos (rollback). Usuários ativos > 500 é garantido pela construção (`count(distinct)` no servidor); produção tem só ~16 contas, então não dá para sintetizar 500 pessoas sem criar contas | Não executado |
-| T03 Períodos | Script: eventos às 00:00:00 do 1º dia (entra) e às 23:59:59 da véspera (não entra), para Semana e Hoje | Não executado |
+| T01 Contagens conhecidas | Script: RPC × consulta de referência independente em produção (Semana e Mês) | ✅ Passou: Mês 18/10→16/11: moderação 48=48=48 (RPC/ref/gráfico), novos usuários 3=3, ativos 4=4, pedidos 1=1, taxa 100% (1 de 1); Semana: 8/8 itens iguais |
+| T02 Acima dos limites | Script: +1200 logs e +1100 pedidos sintéticos (rollback). Usuários ativos > 500 é garantido pela construção (`count(distinct)` no servidor); produção tem só ~16 contas, então não dá para sintetizar 500 pessoas sem criar contas | ✅ Passou: +1200 logs → +1200; +1100 pedidos → +1100; gráfico de hoje = 1100 |
+| T03 Períodos | Script: eventos às 00:00:00 do 1º dia (entra) e às 23:59:59 da véspera (não entra), para Semana e Hoje | ✅ Passou: Semana delta 1 e 1º dia do gráfico +1; Hoje delta 1 |
+| Acesso | Não-admin chama a RPC | ✅ Negado com 42501 |
 | T04 Falha parcial | Manual: com DevTools, bloquear `rpc/admin_dashboard_period` → os totais continuam; o período mostra o aviso e "Indisponível" (nunca 0). Bloquear `profiles` → só o card de usuários fica indisponível | Não executado |
 | Visual (U01/U02) | Manual em 390 px, paisagem e desktop, nos dois temas; ⓘ com Tab/Enter e toque | Não executado |
+
+## 6. Observações de produção (16/11/2026)
+
+- Volumes em 30 dias: 48 ações de moderação, 1 pedido, 9 contribuições. O truncamento (limites de 500/1000) **ainda não acontecia na prática**; era um defeito latente que apareceria com o crescimento. O T02 comprova que agora não há limite.
+- 16 contas de login, 16 perfis, nenhuma conta sem perfil; nenhuma contribuição anônima.
+- Os testes de escrita (T02/T03) rodaram numa transação desfeita. Depois foi conferido que não ficou nenhum pedido nem log de teste.
