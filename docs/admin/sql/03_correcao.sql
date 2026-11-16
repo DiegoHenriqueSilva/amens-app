@@ -28,16 +28,16 @@ create policy "prayer_requests_update_mod"
 drop policy if exists "Authenticated can insert notifications" on public.notifications;
 
 -- Usuário comum: pode notificar outra pessoa (convite, reação, testemunho),
--- mas não pode usar tipos oficiais nem se passar por outro remetente.
--- Ajuste a lista de tipos oficiais conforme o resultado do passo 1D.
+-- mas só com type NULL: os tipos oficiais ficam para mod/admin e para as
+-- funções SECURITY DEFINER (moderação, doação, evangelho do dia).
+-- Obs.: a coluna sender_id NÃO existe em produção (types.ts está desatualizado).
+-- Tipos oficiais vistos em produção (16/11/2026): system, prayer_moderated,
+-- prayer_policy_violation, donation_confirmed, daily_gospel; e prayer_edit_mod no código.
 drop policy if exists "notifications_insert_user" on public.notifications;
 create policy "notifications_insert_user"
   on public.notifications for insert
   to authenticated
-  with check (
-    coalesce(type, '') not in ('system', 'prayer_edit_mod', 'donation_confirmed')
-    and (sender_id is null or sender_id = auth.uid())
-  );
+  with check (type is null);
 
 -- Moderador/admin: qualquer tipo (avisos de moderação e respostas de feedback).
 drop policy if exists "notifications_insert_mod" on public.notifications;

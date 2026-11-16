@@ -1,7 +1,7 @@
 # ADM00 — Portal administrativo: acesso, sessão e navegação
 
 Branch: `fix/adm00-portal-access` (a partir de `origin/main` @ `0063610`).
-Estado: **Em andamento**. Os testes manuais T01–T05 ainda não foram executados e o servidor de produção não foi verificado.
+Estado: **Em andamento**. Os testes manuais de interface T01–T05 ainda não foram executados. As policies de produção foram verificadas e S1, S2 e S8 foram corrigidos em 2026-11-16 (ver 2.3).
 
 ## 1. Matriz de acesso (interface)
 
@@ -22,9 +22,9 @@ Fonte: `src/pages/Admin.tsx` (`requireAdmin`) e `ADMIN_NAV_ITEMS` em `src/compon
 
 Componente sem rota: `AdminPrayerChain.tsx` existe, mas não aparece no menu nem tem rota. Ele foi mantido como está até que alguém decida explicitamente o que fazer com ele.
 
-## 2. Matriz de acesso (servidor) — conforme as migrations do repositório
+## 2. Matriz de acesso (servidor) — conferida em produção em 2026-11-16
 
-> ⚠️ O repositório **não contém** todos os objetos do banco. Faltam, por exemplo, a criação de `profiles` e de `prayer_reports`, a tabela `user_xp_overrides` e o RPC `increment_prayer_count`. Por isso, esta tabela precisa ser confirmada em produção com a consulta da seção 2.2.
+> ⚠️ O repositório **não contém** todos os objetos do banco: faltam, por exemplo, a criação de `profiles`, de `prayer_reports` e de `user_xp_overrides`. O histórico de migrations em produção está quase vazio, porque o SQL é aplicado direto no editor. **Não rode `supabase db push`**: ele tentaria reaplicar cerca de 30 migrations.
 
 | Recurso usado pelo painel | Leitura | Escrita | Coerente com a UI? |
 |---|---|---|---|
@@ -37,26 +37,43 @@ Componente sem rota: `AdminPrayerChain.tsx` existe, mas não aparece no menu nem
 | `prayer_contributions` | público (removidas só mod/admin) | UPDATE mod/admin | ✅ |
 | `app_settings` | mod/admin | UPDATE admin | ⚠️ S5 |
 | `churches` | ativas: público; todas: mod/admin | UPDATE **mod/admin** | ⚠️ S3 |
-| `profiles` | público (removidos só admin) | UPDATE **mod/admin em qualquer perfil** | ⚠️ S4 |
-| `notifications` | próprias | INSERT **qualquer autenticado, para qualquer usuário** | ❌ S2 |
-| `prayer_requests` | regras de status | UPDATE **qualquer autenticado, qualquer linha** | ❌ S1 |
-| `user_xp_overrides` | sem migration no repo | sem migration no repo | ❓ S9 |
+| `profiles` | público (removidos só admin) | UPDATE **mod/admin em qualquer perfil**; dono não altera mais suspensão/remoção | ⚠️ S4 · ✅ S8 |
+| `notifications` | próprias | INSERT comum só com `type` nulo; tipos oficiais só mod/admin | ✅ S2 |
+| `prayer_requests` | regras de status | UPDATE pelo dono ou mod/admin | ✅ S1 · ⚠️ S7 |
+| `user_xp_overrides` | admin e **moderador** (ALL) | admin e **moderador** (ALL) | ⚠️ S9 |
 
-### 2.1 Achados do servidor (não corrigidos nesta branch: precisam de decisão e verificação em produção)
+### 2.1 Achados do servidor
 
-- **S1 — Crítico.** A policy `"Authenticated users can update prayer_count"` em `prayer_requests` usa `USING (true) WITH CHECK (true)`. Com isso, qualquer usuário logado consegue, direto pela API, alterar `status`, `deleted_at` ou o texto de qualquer pedido, passando por cima da moderação. Correção proposta: remover a policy e manter só `"Owners can update feedback"` mais as policies de mod/admin. Antes disso, é preciso confirmar que `increment_prayer_count` é `SECURITY DEFINER`, senão o botão de orar deixa de funcionar.
+- **S1 — Crítico — ✅ CORRIGIDO em 2026-11-16.** A policy `"Authenticated users can update prayer_count"` em `prayer_requests` usa `USING (true) WITH CHECK (true)`. Com isso, qualquer usuário logado consegue, direto pela API, alterar `status`, `deleted_at` ou o texto de qualquer pedido, passando por cima da moderação. Correção proposta: remover a policy e manter só `"Owners can update feedback"` mais as policies de mod/admin. Antes disso, é preciso confirmar que `increment_prayer_count` é `SECURITY DEFINER`, senão o botão de orar deixa de funcionar.
   Atenção: hoje as telas Pedidos de Oração e Reports **dependem** dessa policy aberta, porque não existe uma policy de UPDATE própria para mod/admin. A correção cria `prayer_requests_update_mod` (ver `sql/03_correcao.sql`).
-- **S2 — Alto.** `"Authenticated can insert notifications"` usa `WITH CHECK (true)`. Qualquer usuário pode criar uma notificação para qualquer pessoa, inclusive imitando avisos da moderação. O app cria notificações legítimas para outras pessoas em convite, reação, testemunho e agradecimento ao intercessor, sempre sem `type`. Correção proposta: usuário comum não pode usar os tipos oficiais (`system`, `prayer_edit_mod`, `donation_confirmed`) nem um `sender_id` alheio; mod/admin podem tudo. Risco que continua: o texto da mensagem é livre. A solução definitiva é criar as notificações por RPC.
+- **S2 — Alto — ✅ CORRIGIDO em 2026-11-16.** `"Authenticated can insert notifications"` usava `WITH CHECK (true)`. Qualquer usuário podia criar uma notificação para qualquer pessoa, inclusive imitando avisos da moderação; o trigger `amens_native_push_on_insert` ainda transformava isso em **push no celular**. O app cria notificações legítimas para outras pessoas em convite, reação, testemunho e agradecimento ao intercessor, sempre sem `type`. Correção aplicada: usuário comum só insere com `type` nulo; mod/admin inserem qualquer tipo; os tipos oficiais (`system`, `prayer_moderated`, `prayer_policy_violation`, `donation_confirmed`, `daily_gospel`) vêm de funções `SECURITY DEFINER`, que não passam pela policy. Risco que continua: o texto e o destinatário são livres. A solução definitiva é criar as notificações por RPC.
+- **S8 — Alto — ✅ CORRIGIDO em 2026-11-16.** A policy `"Users can update own profile."` não restringia colunas, então um usuário suspenso conseguia limpar o próprio `suspended_until`. Isso foi comprovado em produção (com rollback). Correção: trigger `protect_profile_moderation_columns`, que só deixa mod/admin alterarem `suspended_until`, `deleted_at` e `deleted_by`.
+- **S10 — Funcional.** Inconsistências entre código e banco: (a) o RPC `increment_prayer_count`, chamado em `Pray.tsx`, **não existe** em produção, então a chamada falha em silêncio; (b) a coluna `notifications.sender_id` **não existe**, embora conste em `types.ts`, e por isso `AngelicalNotificationOverlay` não encontra o intercessor. Os dois casos ficam fora do escopo da ADM00; abrir uma tarefa própria.
 - **S7 — Médio.** A policy `"Owners can update feedback"` não restringe colunas. O dono de um pedido banido ou em revisão consegue voltá-lo para `active` pela API; o próprio `Submit.tsx` faz isso ao "reabrir" um pedido. Correção sugerida: um trigger que impeça quem não é mod/admin de alterar o `status` quando o status anterior for `banned`, `policy_violation` ou `pending_review`.
 - **S3 — Médio.** No banco, o moderador pode fazer UPDATE em `churches`, mas a interface considera Igrejas uma tela só de admin. É preciso decidir qual matriz vale e alinhar os dois lados.
 - **S4 — Médio.** O moderador pode fazer UPDATE em qualquer coluna de qualquer `profiles`. Isso é necessário para suspender um usuário a partir de Reports, mas é amplo demais. Sugestão: um RPC `suspend_user` com checagem de papel.
 - **S5 — Baixo.** O moderador consegue ler `app_settings`, enquanto a interface é só de admin. É apenas leitura; decidir se é aceitável.
 - **S6 — Funcional.** Feedback é uma tela de moderador, mas chama `get_users_admin()`, que exige admin. O erro é ignorado e o moderador vê a tela sem e-mails. É preciso decidir se o moderador deve ver os e-mails.
-- **S9 — Indeterminado.** `user_xp_overrides` não tem migration no repositório.
+- **S9 — Baixo.** `user_xp_overrides` (sem migration no repo) dá acesso total também ao moderador, mas a tela que a usa (Usuários) é só de admin. Decidir.
 
 ### 2.2 Scripts
 
-`docs/admin/sql/`: `01_verificacao.sql` (somente leitura) → `02_teste_falha.sql` (prova a falha, com rollback) → `03_correcao.sql` → `04_rollback.sql` (só em emergência). Depois de validado em produção, o conteúdo de `03` vira uma migration em `supabase/migrations/`.
+`docs/admin/sql/`: `01_verificacao.sql` (somente leitura) → `02_teste_falha.sql` (prova a falha, com rollback) → `03_correcao.sql` → `04_rollback.sql` (só em emergência). As correções aplicadas estão registradas em `supabase/migrations/20261116000000_*` e `20261116010000_*`.
+
+### 2.3 Evidência em produção (2026-11-16, usuário simulado via `request.jwt.claims`, cada teste em transação desfeita)
+
+| Teste | Antes | Depois |
+|---|---|---|
+| Comum altera pedido de outra pessoa | 1 linha (falha) | 0 linhas |
+| Comum cria notificação `system` | permitido (falha) | bloqueado |
+| Comum cria notificação sem tipo (reação/convite) | permitido | permitido |
+| Admin altera pedido / cria `system` | permitido | permitido |
+| Dono altera o próprio pedido | — | permitido |
+| Comum limpa a própria suspensão | 1 linha (falha) | bloqueado |
+| Admin suspende usuário | — | permitido |
+| Comum edita o próprio nome | — | permitido |
+
+Não existe nenhuma conta de moderador em produção (só 5 admins), então o perfil moderador só pode ser testado depois que alguém receber esse papel.
 
 Consulta resumida:
 
