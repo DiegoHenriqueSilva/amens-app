@@ -34,7 +34,7 @@ export function useUserRole() {
     });
     return () => { active=false; subscription.unsubscribe(); };
   }, []);
-  const { data: role, isLoading } = useQuery({
+  const { data: role, isLoading, isError, refetch } = useQuery({
     queryKey: ["user-role", identity.id],
     queryFn: () => fetchUserRole(identity.id!),
     enabled: !!identity.id,
@@ -44,10 +44,15 @@ export function useUserRole() {
 
   return {
     role: role ?? null,
+    userId: identity.id,
+    isAuthenticated: !!identity.id,
     isAdmin: role === "admin",
     isModerator: role === "moderator",
     isModeratorOrAdmin: role === "admin" || role === "moderator",
     isLoading: !identity.ready || (!!identity.id && isLoading),
+    // Falha ao consultar o papel (rede/servidor) sem nenhum valor conhecido.
+    isError: !!identity.id && isError && role === undefined,
+    refetch,
   };
 }
 

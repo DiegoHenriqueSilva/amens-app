@@ -237,7 +237,7 @@ const Auth = () => {
       toast({ title: "Sucesso!", description: "Informações completadas. Bem-vindo!" });
       setShowIncompleteProfile(false);
       const redirect = searchParams.get("redirect");
-      navigate(redirect || "/");
+      navigate(redirect?.startsWith('/') && !redirect.startsWith('//') ? redirect : "/");
     }
   };
 
