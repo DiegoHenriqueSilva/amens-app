@@ -28,7 +28,7 @@ import Novenas from "./pages/Novenas";
 import NovenaPrayer from "./pages/NovenaPrayer";
 import RosarySelection from "./pages/RosarySelection";
 import RosaryPrayer from "./pages/RosaryPrayer";
-import BottomNav from "./components/BottomNav";
+import { AppFrame } from "./components/AppFrame";
 import { PushPromptProvider } from "./contexts/PushPromptContext";
 import Terco from "./pages/Terco";
 import NotificationSettings from "./pages/NotificationSettings";
@@ -86,7 +86,7 @@ const App = () => {
           <DonationConfirmationToast />
           <AltarProvider>
           <NativeAuthListener />
-          <div className="min-h-screen relative">
+          <AppFrame>
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/altar" element={<Suspense fallback={<div role="status" className="p-8 text-center">Preparando seu altar…</div>}><AltarPage /></Suspense>} />
@@ -114,8 +114,7 @@ const App = () => {
             <Route path="/admin/*" element={<AdminGuard><Admin /></AdminGuard>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
-          <BottomNav />
-        </div>
+        </AppFrame>
           </AltarProvider>
       </BrowserRouter>
     </TooltipProvider>

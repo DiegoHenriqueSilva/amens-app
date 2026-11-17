@@ -1,5 +1,9 @@
 project_id = "fszltwvhbdasqoznnors"
 
+[functions.generate-prayer]
+# Prayer requests validate the user's token in the handler; Gospel uses a public daily cache.
+verify_jwt = false
+
 [functions.send-native-push]
 # A database webhook authenticates through the shared secret validated by the function.
 verify_jwt = false

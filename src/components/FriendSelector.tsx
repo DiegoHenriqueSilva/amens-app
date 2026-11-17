@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -10,15 +11,21 @@ import { useFriends } from "@/hooks/use-friends";
 interface FriendSelectorProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSelect: (friendIds: string[]) => void;
+  onSelect: (friendIds: string[]) => void | boolean | Promise<void | boolean>;
+  isSubmitting?: boolean;
+  maxSelected?: number;
   title?: string;
   excludedIds?: string[];
 }
 
-export const FriendSelector = ({ open, onOpenChange, onSelect, title = "Convidar Amigos", excludedIds = [] }: FriendSelectorProps) => {
+export const FriendSelector = ({ open, onOpenChange, onSelect, title = "Convidar Amigos", excludedIds = [], isSubmitting = false, maxSelected = Infinity }: FriendSelectorProps) => {
   const { friends, loading } = useFriends();
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [confirming, setConfirming] = useState(false);
+  const confirmLock = useRef(false);
+  const opener = useRef<HTMLElement | null>(null);
+  const pending = isSubmitting || confirming;
 
   const excluded = new Set(excludedIds.filter(Boolean));
   const filteredFriends = friends.filter(friend => !excluded.has(friend.id) && (
@@ -28,19 +35,25 @@ export const FriendSelector = ({ open, onOpenChange, onSelect, title = "Convidar
 
   const toggleFriend = (id: string) => {
     setSelectedIds(prev => 
-      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+      prev.includes(id) ? prev.filter(i => i !== id) : prev.length < maxSelected ? [...prev, id] : prev
     );
   };
 
-  const handleConfirm = () => {
-    onSelect(selectedIds);
-    setSearchTerm("");
-    setSelectedIds([]);
+  const handleConfirm = async () => {
+    if (confirmLock.current || pending) return;
+    confirmLock.current = true; setConfirming(true);
+    try {
+      const result = await onSelect(selectedIds);
+      if (result !== false) { setSearchTerm(''); setSelectedIds([]); }
+    } catch { toast.error('Não foi possível enviar o convite. Sua seleção foi mantida.'); }
+    finally { confirmLock.current = false; setConfirming(false); }
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md bg-card/95 backdrop-blur-md border-primary/20 soft-shadow rounded-[2rem]">
+    <Dialog open={open} onOpenChange={value => { if (!pending) onOpenChange(value); }}>
+      <DialogContent className="sm:max-w-md bg-card/95 backdrop-blur-md border-primary/20 soft-shadow rounded-[2rem]"
+        onOpenAutoFocus={() => { opener.current = document.activeElement as HTMLElement; }}
+        onCloseAutoFocus={event => { event.preventDefault(); opener.current?.focus(); }}>
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold flex items-center gap-2">
             <Users className="w-6 h-6 text-primary" />
@@ -54,6 +67,7 @@ export const FriendSelector = ({ open, onOpenChange, onSelect, title = "Convidar
         <div className="relative my-4">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input 
+            aria-label="Buscar amigo"
             placeholder="Buscar amigo..." 
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -70,6 +84,9 @@ export const FriendSelector = ({ open, onOpenChange, onSelect, title = "Convidar
                 const isSelected = selectedIds.includes(friend.id);
                 return (
                   <button
+                    type="button"
+                    aria-pressed={isSelected}
+                    disabled={pending || (!isSelected && selectedIds.length >= maxSelected)}
                     key={friend.id}
                     onClick={() => toggleFriend(friend.id)}
                     className={`w-full flex items-center gap-3 p-3 rounded-2xl transition-all border ${
@@ -104,12 +121,12 @@ export const FriendSelector = ({ open, onOpenChange, onSelect, title = "Convidar
         </ScrollArea>
 
         <DialogFooter className="mt-4 gap-2 sm:gap-0">
-          <Button variant="ghost" onClick={() => onOpenChange(false)} className="rounded-xl">
+          <Button variant="ghost" disabled={pending} onClick={() => onOpenChange(false)} className="rounded-xl">
             Cancelar
           </Button>
           <Button 
             onClick={handleConfirm} 
-            disabled={selectedIds.length === 0}
+            disabled={selectedIds.length === 0 || pending}
             className="rounded-xl gradient-divine flex-1"
           >
             Convidar {selectedIds.length > 0 && `(${selectedIds.length})`}

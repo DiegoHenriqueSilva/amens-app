@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 
 export interface PrayerDailyLimit {
   used: number;
@@ -8,44 +8,74 @@ export interface PrayerDailyLimit {
   level: number;
   nextBonusLevel: number | null;
   isAdmin: boolean;
+  resetsAt: string;
+  timeZone: 'America/Sao_Paulo';
 }
 
-const INITIAL_STATUS: PrayerDailyLimit = {
-  used: 0,
-  limit: 2,
-  remaining: 2,
-  level: 1,
-  nextBonusLevel: 5,
-  isAdmin: false,
-};
-
 export function usePrayerDailyLimit(userId: string | null) {
-  const [status, setStatus] = useState<PrayerDailyLimit>(INITIAL_STATUS);
+  const [status, setStatus] = useState<PrayerDailyLimit | null>(null);
   const [loading, setLoading] = useState(Boolean(userId));
+  const [error, setError] = useState(false);
+  const revision = useRef(0);
+  const invalidate = useCallback(() => {
+    revision.current++;
+  }, []);
 
   const refresh = useCallback(async () => {
+    const request = ++revision.current;
     if (!userId) {
-      setStatus(INITIAL_STATUS);
+      setStatus(null);
       setLoading(false);
-      return INITIAL_STATUS;
+      return null;
     }
     setLoading(true);
-    const { data, error } = await supabase.rpc("prayer_daily_status" as never);
-    setLoading(false);
-    if (error) throw error;
-    const next = { ...INITIAL_STATUS, ...(data as unknown as PrayerDailyLimit) };
-    setStatus(next);
-    return next;
+    try {
+      const { data, error: failure } = await supabase.rpc('prayer_daily_status');
+      if (failure || !data) throw failure || new Error('Missing allowance');
+      if (request === revision.current) {
+        setStatus(data as PrayerDailyLimit);
+        setError(false);
+      }
+      return data as PrayerDailyLimit;
+    } catch (failure) {
+      if (request === revision.current) {
+        setError(true);
+        setStatus(null);
+      }
+      throw failure;
+    } finally {
+      if (request === revision.current) setLoading(false);
+    }
   }, [userId]);
 
   useEffect(() => {
-    void refresh().catch(error => console.warn("Could not load daily prayer allowance.", error));
-  }, [refresh]);
+    setStatus(null);
+    void refresh().catch(() => undefined);
+    const onFocus = () => {
+      void refresh().catch(() => undefined);
+    };
+    window.addEventListener('focus', onFocus);
+    return () => {
+      invalidate();
+      window.removeEventListener('focus', onFocus);
+    };
+  }, [refresh, invalidate]);
+  useEffect(() => {
+    if (!status?.resetsAt) return;
+    const timer = window.setTimeout(
+      () => {
+        void refresh().catch(() => undefined);
+      },
+      Math.min(Math.max(1000, Date.parse(status.resetsAt) - Date.now() + 1000), 86401000),
+    );
+    return () => clearTimeout(timer);
+  }, [status?.resetsAt, refresh]);
 
   return {
     ...status,
     loading,
-    isLimitReached: !status.isAdmin && status.remaining === 0,
+    error,
+    isLimitReached: status?.remaining === 0,
     refresh,
   };
 }
