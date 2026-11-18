@@ -32,3 +32,6 @@ android/app/google-services.json
 .private/
 releases/
 visualizations/
+
+# Supabase CLI: estado local (projeto vinculado, versões); não versionar
+supabase/.temp/

@@ -38,6 +38,7 @@ import { AppWelcomeSplash } from "./components/AppWelcomeSplash";
 import { RouteScrollReset } from "./components/RouteScrollReset";
 import Admin from "./pages/Admin";
 import { AdminGuard } from "./components/AdminGuard";
+import { AuthCacheReset } from "./components/AuthCacheReset";
 import { DonationConfirmationToast } from "./components/DonationConfirmationToast";
 
 const queryClient = new QueryClient();
@@ -75,6 +76,7 @@ const App = () => {
 
   return (
   <QueryClientProvider client={queryClient}>
+    <AuthCacheReset />
     <PushPromptProvider>
       <TooltipProvider>
         <Toaster />
