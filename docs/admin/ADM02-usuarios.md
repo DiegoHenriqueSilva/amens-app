@@ -126,3 +126,18 @@ Mapeamento para o pacote: T01 → T01a/b; T02 → T02a–p; T03 → T03a–t; T0
 - **ADM04 (Reports):** a suspensão de 7 dias feita a partir de um report ainda usa `update` direto em `profiles`. Funciona, porque o trigger valida moderador e "não em si", mas não exige motivo nem passa pelo comando. Migrar para `admin_suspend_user`.
 - **ADM08 (Logs):** os novos logs têm `metadata` (de/para, dias, até quando).
 - **APP02/APP13:** as telas do app podem tratar o `hint` `account_suspended`/`account_removed` com uma mensagem própria.
+
+## Revisão de conteúdo (regra content-review-enforcement)
+
+Textos vistos por usuários comuns, revisados com `agent-content-review` e `context-content-guidelines`:
+
+| Onde | Texto anterior | Veredito | Texto final |
+|---|---|---|---|
+| Aviso no app (removida) | "Sua conta foi removida pela moderação. Você pode ler o conteúdo, mas não pode publicar, orar, reagir ou convidar amigos." | Ajustado: tom punitivo e "não pode orar" soa como proibição de fé | "Sua conta foi desativada pela moderação. Você ainda pode ler os pedidos e acompanhar a comunidade, mas não é possível publicar, registrar orações, reagir ou convidar amigos." |
+| Aviso no app (suspensa) | "Sua conta está suspensa até … Até lá você pode ler o conteúdo, mas não pode …" | Ajustado: frio, foco na proibição | "Sua conta está com as interações pausadas até … Até lá, você ainda pode ler os pedidos e acompanhar a comunidade." |
+| Erro do banco (removida) | "Sua conta foi removida pela moderação e não pode realizar esta ação." | Ajustado | "Sua conta foi desativada pela moderação. Você ainda pode ler o conteúdo, mas esta ação não está disponível." |
+| Erro do banco (suspensa) | "Sua conta está suspensa até % (horário de Brasília)." | Ajustado | "Sua conta está com as interações pausadas até % (horário de Brasília). Até lá, você ainda pode ler o conteúdo." |
+
+As mensagens do banco foram trocadas pela migration `20261116050000_adm02_account_messages_tone.sql` (só texto; lógica idêntica, conferida por hash com a função em produção). Aplicada em produção em 17/11/2026 e testada em transação desfeita: conta livre convida normalmente; suspensa e removida recebem `42501` com o texto novo.
+
+Textos do painel admin (diálogos, erros de comando) são de uso interno da equipe e foram considerados **Aprovados** (claros, sem promessa espiritual nem gamificação).

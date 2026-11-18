@@ -39,8 +39,8 @@ export function AccountStatusBanner() {
       <ShieldAlert className="w-4 h-4 shrink-0 mt-0.5" aria-hidden="true" />
       <p>
         {data.removed
-          ? "Sua conta foi removida pela moderação. Você pode ler o conteúdo, mas não pode publicar, orar, reagir ou convidar amigos."
-          : `Sua conta está suspensa até ${format(new Date(data.suspended_until!), "dd/MM/yyyy 'às' HH:mm")}. Até lá você pode ler o conteúdo, mas não pode publicar, orar, reagir ou convidar amigos.`}
+          ? "Sua conta foi desativada pela moderação. Você ainda pode ler os pedidos e acompanhar a comunidade, mas não é possível publicar, registrar orações, reagir ou convidar amigos."
+          : `Sua conta está com as interações pausadas até ${format(new Date(data.suspended_until!), "dd/MM/yyyy 'às' HH:mm")}. Até lá, você ainda pode ler os pedidos e acompanhar a comunidade.`}
       </p>
     </div>
   );
