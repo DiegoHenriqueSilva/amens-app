@@ -1,28 +1,72 @@
-import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { useUserRole } from "@/hooks/use-user-role";
+import { useEffect, useMemo, useState } from "react";
+import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
+import { formatDistanceToNow } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
-} from "@/components/ui/table";
+  AlertTriangle, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Clock, EyeOff, Flag,
+  MoreHorizontal, Pencil, RefreshCw, Search, ShieldAlert, Trash2, Undo2, UserX, X,
+} from "lucide-react";
+import { toast } from "sonner";
+import { adminRpc } from "@/lib/admin-rpc";
+import { AdminActionDialog } from "@/components/admin/AdminActionDialog";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { MoreHorizontal, Search, Undo2, Check, X, ChevronDown, ChevronUp } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { toast } from "sonner";
-import { formatDistanceToNow } from "date-fns";
-import { ptBR } from "date-fns/locale";
+
+// ─── Tipos e contrato com o servidor (admin_list_prayers / admin_moderate_prayers) ───
 
 type Tab = "all" | "pending" | "active" | "completed" | "banned_users";
+type Action = "approve" | "review" | "violation" | "remove" | "restore";
+
+interface PrayerRow {
+  id: string;
+  title: string | null;
+  content: string | null;
+  author_name: string | null;
+  is_anonymous: boolean | null;
+  status: string;
+  created_at: string;
+  updated_at: string | null;
+  deleted_at: string | null;
+  user_id: string | null;
+  prayer_count: number | null;
+  author_removed: boolean;
+  open_reports: number;
+}
+
+interface ListResult {
+  total: number;
+  rows: PrayerRow[];
+  counts: Record<Tab, number>;
+}
+
+interface ItemResult {
+  id: string;
+  ok: boolean;
+  code?: string;
+  hint?: string | null;
+  message?: string;
+}
+
+const PAGE_SIZE = 50;
+
+const TABS: { value: Tab; label: string; help: string }[] = [
+  { value: "all", label: "Todos", help: "Todos os pedidos, inclusive os removidos." },
+  { value: "pending", label: "Pendentes", help: "Aguardam decisão da moderação, do mais antigo para o mais novo. Inclui os enviados para revisão por denúncias." },
+  { value: "active", label: "Ativos", help: "Aprovados e visíveis para a comunidade." },
+  { value: "completed", label: "Concluídos", help: "Marcados como concluídos pelo autor." },
+  { value: "banned_users", label: "Banidos", help: "Pedidos marcados como violação ou banidos, e todos os pedidos de contas desativadas." },
+];
 
 const STATUS_LABELS: Record<string, string> = {
   active: "Ativo",
@@ -33,7 +77,7 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 function statusStyle(status: string, deleted: boolean): string {
-  if (deleted) return "line-through text-muted-foreground/50";
+  if (deleted) return "line-through text-muted-foreground";
   if (status === "active") return "text-green-600 font-medium";
   if (status === "pending_review") return "text-yellow-600 font-medium";
   if (status === "policy_violation") return "text-orange-600 font-medium";
@@ -42,355 +86,529 @@ function statusStyle(status: string, deleted: boolean): string {
   return "text-muted-foreground";
 }
 
-const TAB_TOOLTIPS: Record<Tab, string> = {
-  all: "Todos os pedidos, incluindo deletados",
-  pending: "Pedidos com status pending_review — aguardam aprovação do moderador. Inclui auto-escalados por reports.",
-  active: "Pedidos aprovados e visíveis publicamente",
-  completed: "Pedidos marcados como concluídos",
-  banned_users: "Pedidos com status policy_violation (ação de moderação tomada) + todos os pedidos de usuários banidos.",
+const ACTIONS: Record<Action, {
+  label: string; title: string; confirm: string; destructive?: boolean; reasonOptional?: boolean; consequence: string;
+}> = {
+  approve: {
+    label: "Aprovar", title: "Aprovar pedido", confirm: "Aprovar", reasonOptional: true,
+    consequence: "O pedido fica visível para a comunidade e o autor recebe um aviso.",
+  },
+  review: {
+    label: "Colocar em revisão", title: "Colocar em revisão", confirm: "Colocar em revisão",
+    consequence: "O pedido sai da fila pública até uma nova decisão e o autor recebe um aviso.",
+  },
+  violation: {
+    label: "Marcar violação", title: "Marcar violação das políticas", confirm: "Marcar violação", destructive: true,
+    consequence: "O pedido deixa de ser público e o autor é avisado de que ele não está de acordo com as políticas do Améns.",
+  },
+  remove: {
+    label: "Remover", title: "Remover pedido", confirm: "Remover", destructive: true,
+    consequence: "O pedido sai do app (pode ser restaurado depois), os avisos ligados a ele são apagados e o autor recebe um aviso de remoção.",
+  },
+  restore: {
+    label: "Restaurar", title: "Restaurar pedido", confirm: "Restaurar",
+    consequence: "O pedido volta com o status que tinha antes da remoção e o autor recebe um aviso.",
+  },
 };
 
-const PRAYER_BASE_SELECT = "id, title, content, author_name, status, created_at, deleted_at, user_id, prayer_count";
-
-async function fetchPrayers(tab: Tab, bannedUserIds?: string[]) {
-  if (tab === "banned_users") {
-    const queries: Promise<any>[] = [
-      supabase.from("prayer_requests")
-        .select(PRAYER_BASE_SELECT)
-        .eq("status", "policy_violation")
-        .order("created_at", { ascending: false })
-        .limit(300),
-    ];
-    if (bannedUserIds && bannedUserIds.length > 0) {
-      queries.push(
-        supabase.from("prayer_requests")
-          .select(PRAYER_BASE_SELECT)
-          .in("user_id", bannedUserIds)
-          .order("created_at", { ascending: false })
-          .limit(300)
-      );
-    }
-    const results = await Promise.all(queries);
-    const seen = new Set<string>();
-    const merged: any[] = [];
-    results.forEach((res) => {
-      (res.data || []).forEach((r: any) => {
-        if (!seen.has(r.id)) { seen.add(r.id); merged.push(r); }
-      });
-    });
-    return merged.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-  }
-
-  let q = supabase
-    .from("prayer_requests")
-    .select(PRAYER_BASE_SELECT)
-    .order("created_at", { ascending: false })
-    .limit(300);
-
-  if (tab === "pending") q = q.eq("status", "pending_review").is("deleted_at", null);
-  else if (tab === "active") q = q.eq("status", "active").is("deleted_at", null);
-  else if (tab === "completed") q = q.eq("status", "completed").is("deleted_at", null);
-
-  const { data, error } = await q;
-  if (error) throw error;
-  return data || [];
+/** Ações possíveis para um pedido no estado atual (as mesmas regras do servidor). */
+function allowedActions(p: PrayerRow): Action[] {
+  if (p.deleted_at) return ["restore"];
+  const a: Action[] = [];
+  if (p.status !== "active") a.push("approve");
+  if (p.status !== "pending_review") a.push("review");
+  if (p.status !== "policy_violation") a.push("violation");
+  a.push("remove");
+  return a;
 }
 
-function ExpandableContent({ title, content }: { title?: string | null; content?: string | null }) {
+function prayerLabel(p: PrayerRow) {
+  return p.title?.trim() || (p.content ? `${p.content.slice(0, 60)}${p.content.length > 60 ? "…" : ""}` : "Pedido sem título");
+}
+
+// ─── Conteúdo expansível (teclado: botão nativo com aria-expanded) ───
+
+function ExpandableContent({ id, title, content }: { id: string; title?: string | null; content?: string | null }) {
   const [expanded, setExpanded] = useState(false);
   const isLong = (content?.length ?? 0) > 120;
-
+  const contentId = `prayer-content-${id}`;
   return (
-    <div style={{ width: "280px", wordBreak: "break-word" }}>
+    <div className="min-w-0 max-w-[22rem] break-words">
       {title && <p className="font-medium text-sm mb-0.5">{title}</p>}
-      <p className={`text-muted-foreground text-xs whitespace-pre-wrap ${!expanded && isLong ? "line-clamp-2" : ""}`}>
+      <p id={contentId} className={`text-muted-foreground text-xs whitespace-pre-wrap ${!expanded && isLong ? "line-clamp-2" : ""}`}>
         {content}
       </p>
       {isLong && (
         <button
-          className="text-[10px] text-primary flex items-center gap-0.5 mt-1 hover:underline"
+          type="button"
+          className="text-xs text-primary inline-flex items-center gap-0.5 mt-1 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
+          aria-expanded={expanded}
+          aria-controls={contentId}
           onClick={(e) => { e.stopPropagation(); setExpanded((v) => !v); }}
         >
-          {expanded ? <><ChevronUp className="w-3 h-3" /> Ver menos</> : <><ChevronDown className="w-3 h-3" /> Ver mais</>}
+          {expanded ? <><ChevronUp className="w-3 h-3" aria-hidden="true" /> Ver menos</> : <><ChevronDown className="w-3 h-3" aria-hidden="true" /> Ver mais</>}
         </button>
       )}
     </div>
   );
 }
 
-export default function AdminPrayers() {
-  const { isAdmin } = useUserRole();
-  const qc = useQueryClient();
-  const [tab, setTab] = useState<Tab>("all");
-  const [search, setSearch] = useState("");
-  const [editDialog, setEditDialog] = useState<any>(null);
-  const [editTitle, setEditTitle] = useState("");
-  const [editContent, setEditContent] = useState("");
-  const [editReason, setEditReason] = useState("");
-
-  const { data: bannedProfiles = [] } = useQuery({
-    queryKey: ["banned-profiles-ids"],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("profiles")
-        .select("id")
-        .not("deleted_at", "is", null)
-        .limit(500);
-      return (data || []).map((p: any) => p.id);
-    },
-    staleTime: 2 * 60 * 1000,
-  });
-
-  const { data: prayers = [], isLoading } = useQuery({
-    queryKey: ["admin-prayers", tab, bannedProfiles],
-    queryFn: () => fetchPrayers(tab, bannedProfiles as string[]),
-  });
-
-  const filtered = prayers.filter((p: any) => {
-    const q = search.toLowerCase();
-    return !q || p.content?.toLowerCase().includes(q) || p.title?.toLowerCase().includes(q) || p.author_name?.toLowerCase().includes(q);
-  });
-
-  const { data: sessionData } = useQuery({
-    queryKey: ["session"],
-    queryFn: () => supabase.auth.getSession().then((r) => r.data),
-    staleTime: Infinity,
-  });
-  const currentUserId = sessionData?.session?.user?.id;
-
-  async function log(targetId: string, action: string, r?: string) {
-    const { error } = await supabase.from("moderation_logs").insert({
-      moderator_id: currentUserId,
-      target_type: "prayer_request",
-      target_id: targetId,
-      action,
-      reason: r || null,
-    });
-    if (error) console.warn("log insert failed:", error.message);
-  }
-
-  const updateStatus = useMutation({
-    mutationFn: async ({ id, status, r }: { id: string; status: string; r?: string }) => {
-      const { error } = await supabase.from("prayer_requests").update({ status, updated_at: new Date().toISOString() }).eq("id", id);
-      if (error) throw error;
-      await log(id, status === "active" ? "approve" : "reject", r);
-      if (status === "active") {
-        await supabase.from("prayer_reports")
-          .update({ status: "open", resolved_by: null, resolved_at: null, resolution_notes: null, moderator_id: null })
-          .eq("prayer_request_id", id)
-          .eq("status", "resolved")
-          .or("resolution_notes.ilike.%editado%,resolution_notes.ilike.%banido%,resolution_notes.ilike.%violação%");
-        await supabase.from("notifications").delete()
-          .eq("prayer_request_id", id)
-          .eq("type", "prayer_edit_mod");
-      }
-    },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["admin-prayers"] }); qc.invalidateQueries({ queryKey: ["admin-reports"] }); toast.success("Status atualizado."); },
-    onError: (e: any) => toast.error("Erro: " + e.message),
-  });
-
-  const softDelete = useMutation({
-    mutationFn: async ({ id, r }: { id: string; r?: string }) => {
-      const { error } = await supabase.from("prayer_requests").update({ deleted_at: new Date().toISOString(), deleted_by: currentUserId }).eq("id", id);
-      if (error) throw error;
-      await log(id, "soft_delete", r);
-    },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["admin-prayers"] }); qc.invalidateQueries({ queryKey: ["admin-reports"] }); toast.success("Pedido removido."); },
-    onError: (e: any) => toast.error("Erro: " + e.message),
-  });
-
-  const restore = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.from("prayer_requests").update({ deleted_at: null, deleted_by: null }).eq("id", id);
-      if (error) throw error;
-      await log(id, "restore");
-    },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["admin-prayers"] }); qc.invalidateQueries({ queryKey: ["admin-reports"] }); toast.success("Pedido restaurado."); },
-    onError: (e: any) => toast.error("Erro: " + e.message),
-  });
-
-  const saveEdit = useMutation({
-    mutationFn: async () => {
-      const { error } = await supabase
-        .from("prayer_requests")
-        .update({
-          title: editTitle || null,
-          content: editContent,
-          status: "pending_review",
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", editDialog.id);
-      if (error) throw error;
-      await log(editDialog.id, "edit_content", editReason || undefined);
-      if (editDialog.user_id) {
-        await supabase.from("notifications").insert({
-          user_id: editDialog.user_id,
-          message: "Seu pedido de oração foi editado pelo moderador e aguarda nova aprovação.",
-          prayer_request_id: editDialog.id,
-          type: "prayer_edit_mod",
-          is_read: false,
-        });
-      }
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["admin-prayers"] });
-      qc.invalidateQueries({ queryKey: ["admin-reports"] });
-      setEditDialog(null);
-      toast.success("Conteúdo atualizado. Pedido enviado para revisão.");
-    },
-    onError: (e: any) => toast.error("Erro: " + e.message),
-  });
-
+function StatusCell({ p }: { p: PrayerRow }) {
   return (
-    <div className="p-6 space-y-4">
-      <div>
-        <h1 className="text-2xl font-bold">Pedidos de Oração</h1>
-        <p className="text-muted-foreground text-sm">Modere, aprove ou remova pedidos</p>
-      </div>
-
-      <Tabs value={tab} onValueChange={(v) => setTab(v as Tab)}>
-        <TabsList>
-          {(["all", "pending", "active", "completed", "banned_users"] as Tab[]).map((t) => (
-            <Tooltip key={t}>
-              <TooltipTrigger asChild>
-                <span>
-                  <TabsTrigger value={t}>
-                    {{ all: "Todos", pending: "Pendentes", active: "Ativos", completed: "Concluídos", banned_users: "Banidos" }[t]}
-                  </TabsTrigger>
-                </span>
-              </TooltipTrigger>
-              <TooltipContent side="bottom"><p className="text-xs">{TAB_TOOLTIPS[t]}</p></TooltipContent>
-            </Tooltip>
-          ))}
-        </TabsList>
-      </Tabs>
-
-      <div className="relative max-w-sm">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-        <Input className="pl-9" placeholder="Buscar conteúdo, título ou autor..." value={search} onChange={(e) => setSearch(e.target.value)} />
-      </div>
-
-      <div className="rounded-lg border border-border overflow-hidden">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Conteúdo</TableHead>
-              <TableHead>Autor</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Orações</TableHead>
-              <TableHead>Data</TableHead>
-              <TableHead className="w-10" />
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {isLoading ? (
-              <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">Carregando...</TableCell></TableRow>
-            ) : filtered.length === 0 ? (
-              <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">Nenhum pedido encontrado.</TableCell></TableRow>
-            ) : filtered.map((p: any) => (
-              <TableRow key={p.id} className={p.deleted_at ? "bg-muted/20" : ""}>
-                <TableCell className="align-top">
-                  <ExpandableContent title={p.title} content={p.content} />
-                </TableCell>
-                <TableCell className="text-sm">{p.author_name || "Anônimo"}</TableCell>
-                <TableCell>
-                  <span className={`text-sm ${statusStyle(p.status, !!p.deleted_at)}`}>
-                    {p.deleted_at ? "Deletado" : (STATUS_LABELS[p.status] || p.status)}
-                  </span>
-                </TableCell>
-                <TableCell className="text-sm text-muted-foreground">{p.prayer_count}</TableCell>
-                <TableCell className="text-muted-foreground text-xs">
-                  {formatDistanceToNow(new Date(p.created_at), { locale: ptBR, addSuffix: true })}
-                </TableCell>
-                <TableCell>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-8 w-8">
-                        <MoreHorizontal className="w-4 h-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      {!p.deleted_at && (
-                        <>
-                          {p.status !== "active" && (
-                            <DropdownMenuItem onClick={() => updateStatus.mutate({ id: p.id, status: "active" })}>
-                              <Check className="w-4 h-4 mr-2 text-green-500" /> Aprovar
-                            </DropdownMenuItem>
-                          )}
-                          {p.status !== "policy_violation" && (
-                            <DropdownMenuItem onClick={() => updateStatus.mutate({ id: p.id, status: "policy_violation" })}>
-                              <X className="w-4 h-4 mr-2 text-orange-500" /> Marcar violação
-                            </DropdownMenuItem>
-                          )}
-                          {p.status !== "pending_review" && (
-                            <DropdownMenuItem onClick={() => updateStatus.mutate({ id: p.id, status: "pending_review" })}>
-                              Colocar em revisão
-                            </DropdownMenuItem>
-                          )}
-                          <DropdownMenuItem onClick={() => { setEditDialog(p); setEditTitle(p.title || ""); setEditContent(p.content || ""); setEditReason(""); }}>
-                            Editar conteúdo
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem className="text-destructive" onClick={() => softDelete.mutate({ id: p.id })}>
-                            Remover (soft delete)
-                          </DropdownMenuItem>
-                        </>
-                      )}
-                      {p.deleted_at && (
-                        <DropdownMenuItem onClick={() => restore.mutate(p.id)}>
-                          <Undo2 className="w-4 h-4 mr-2" /> Restaurar
-                        </DropdownMenuItem>
-                      )}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
-
-      <Dialog open={!!editDialog} onOpenChange={() => setEditDialog(null)}>
-        <DialogContent>
-          <DialogHeader><DialogTitle>Editar pedido de oração</DialogTitle></DialogHeader>
-          <p className="text-xs text-muted-foreground -mt-2">
-            Após salvar, o pedido voltará para revisão e o autor será notificado.
-          </p>
-          <div className="space-y-3">
-            <div>
-              <Label>Título (opcional)</Label>
-              <Input
-                className="mt-1"
-                value={editTitle}
-                onChange={(e) => setEditTitle(e.target.value)}
-                placeholder="Título do pedido..."
-              />
-            </div>
-            <div>
-              <Label>Conteúdo</Label>
-              <Textarea
-                className="mt-1 min-h-[120px]"
-                value={editContent}
-                onChange={(e) => setEditContent(e.target.value)}
-              />
-            </div>
-            <div>
-              <Label>Motivo da edição *</Label>
-              <Textarea
-                className="mt-1 min-h-[70px]"
-                value={editReason}
-                onChange={(e) => setEditReason(e.target.value)}
-                placeholder="Descreva o motivo da edição para os logs de moderação..."
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setEditDialog(null)}>Cancelar</Button>
-            <Button onClick={() => saveEdit.mutate()} disabled={!editContent || !editReason.trim() || saveEdit.isPending}>Salvar</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+    <div className="space-y-1">
+      <span className={`text-sm ${statusStyle(p.status, !!p.deleted_at)}`}>
+        {p.deleted_at ? `Removido (era ${STATUS_LABELS[p.status] ?? p.status})` : (STATUS_LABELS[p.status] ?? p.status)}
+      </span>
+      {p.status === "pending_review" && !p.deleted_at && (
+        <p className="text-xs text-muted-foreground inline-flex items-center gap-1">
+          <Clock className="w-3 h-3" aria-hidden="true" />
+          Na fila {formatDistanceToNow(new Date(p.updated_at ?? p.created_at), { locale: ptBR, addSuffix: false })}
+        </p>
+      )}
+      {p.open_reports > 0 && (
+        <p className="text-xs text-destructive inline-flex items-center gap-1">
+          <Flag className="w-3 h-3" aria-hidden="true" />
+          {p.open_reports === 1 ? "1 denúncia em aberto" : `${p.open_reports} denúncias em aberto`}
+        </p>
+      )}
     </div>
   );
 }
 
+function AuthorCell({ p }: { p: PrayerRow }) {
+  return (
+    <div className="text-sm space-y-0.5">
+      <p>{p.author_name || "Sem nome"}</p>
+      {p.is_anonymous && (
+        <p className="text-xs text-muted-foreground inline-flex items-center gap-1">
+          <EyeOff className="w-3 h-3" aria-hidden="true" /> Anônimo para a comunidade
+        </p>
+      )}
+      {p.author_removed && (
+        <p className="text-xs text-destructive inline-flex items-center gap-1">
+          <UserX className="w-3 h-3" aria-hidden="true" /> Conta desativada
+        </p>
+      )}
+    </div>
+  );
+}
+
+// ─── Página ───
+
+export default function AdminPrayers() {
+  const qc = useQueryClient();
+  const [tab, setTab] = useState<Tab>("all");
+  const [searchInput, setSearchInput] = useState("");
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(0);
+  const [selected, setSelected] = useState<Map<string, PrayerRow>>(new Map());
+  const [pending, setPending] = useState<{ action: Action; items: PrayerRow[] } | null>(null);
+  const [results, setResults] = useState<{ action: Action; items: PrayerRow[]; res: ItemResult[] } | null>(null);
+  const [edit, setEdit] = useState<PrayerRow | null>(null);
+
+  // Busca no servidor, com pequena espera enquanto digita
+  useEffect(() => {
+    const t = setTimeout(() => setSearch(searchInput.trim()), 350);
+    return () => clearTimeout(t);
+  }, [searchInput]);
+
+  // Filtros mudaram: volta para a 1ª página e limpa a seleção
+  useEffect(() => { setPage(0); setSelected(new Map()); }, [tab, search]);
+
+  const { data, isLoading, isFetching, isError, error, refetch } = useQuery({
+    queryKey: ["admin-prayers", tab, search, page],
+    queryFn: () => adminRpc<ListResult>("admin_list_prayers", {
+      p_tab: tab, p_search: search || null, p_offset: page * PAGE_SIZE, p_limit: PAGE_SIZE,
+    }),
+    placeholderData: keepPreviousData,
+  });
+
+  const rows = data?.rows ?? [];
+  const total = data?.total ?? 0;
+  const pageCount = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const from = total === 0 ? 0 : page * PAGE_SIZE + 1;
+  const to = Math.min(total, (page + 1) * PAGE_SIZE);
+  const activeTab = TABS.find((t) => t.value === tab)!;
+
+  const selectedRows = useMemo(() => Array.from(selected.values()), [selected]);
+  const allOnPageSelected = rows.length > 0 && rows.every((r) => selected.has(r.id));
+  const someOnPageSelected = rows.some((r) => selected.has(r.id));
+
+  // Ações que valem para TODOS os selecionados
+  const bulkActions = useMemo(() => {
+    if (selectedRows.length === 0) return [] as Action[];
+    return (["approve", "review", "violation", "remove", "restore"] as Action[])
+      .filter((a) => selectedRows.every((p) => allowedActions(p).includes(a)));
+  }, [selectedRows]);
+
+  function toggle(p: PrayerRow, on: boolean) {
+    setSelected((prev) => {
+      const next = new Map(prev);
+      if (on) next.set(p.id, p); else next.delete(p.id);
+      return next;
+    });
+  }
+  function togglePage(on: boolean) {
+    setSelected((prev) => {
+      const next = new Map(prev);
+      rows.forEach((r) => (on ? next.set(r.id, r) : next.delete(r.id)));
+      return next;
+    });
+  }
+
+  function refresh() {
+    qc.invalidateQueries({ queryKey: ["admin-prayers"] });
+    qc.invalidateQueries({ queryKey: ["admin-reports"] });
+  }
+
+  async function runAction(action: Action, items: PrayerRow[], reason: string) {
+    const res = await adminRpc<ItemResult[]>("admin_moderate_prayers", {
+      p_items: items.map((p) => ({ id: p.id, status: p.status, deleted: !!p.deleted_at })),
+      p_action: action,
+      p_reason: reason || null,
+    });
+    refresh();
+    const failed = res.filter((r) => !r.ok);
+    const okCount = res.length - failed.length;
+    // Mantém selecionados só os que falharam, para nova tentativa
+    setSelected(new Map(items.filter((p) => failed.some((f) => f.id === p.id)).map((p) => [p.id, p])));
+    if (failed.length === 0) {
+      toast.success(okCount === 1 ? "Decisão registrada." : `${okCount} pedidos atualizados.`);
+    } else if (items.length === 1) {
+      // Pedido único: mostra o erro no próprio diálogo, sem fechar
+      throw new Error(failed[0].message ?? "Não foi possível concluir a ação.");
+    } else {
+      setResults({ action, items, res });
+    }
+  }
+
+  return (
+    <div className="p-4 md:p-6 space-y-4">
+      <div>
+        <h1 className="text-2xl font-bold">Pedidos de Oração</h1>
+        <p className="text-muted-foreground text-sm">Revise, aprove, restrinja ou remova pedidos. Toda decisão fica no log e o autor é avisado.</p>
+      </div>
+
+      <Tabs value={tab} onValueChange={(v) => setTab(v as Tab)}>
+        <div className="overflow-x-auto -mx-1 px-1">
+          <TabsList aria-label="Filtrar pedidos por situação">
+            {TABS.map((t) => {
+              const n = data?.counts?.[t.value];
+              return (
+                <TabsTrigger key={t.value} value={t.value} className="whitespace-nowrap">
+                  {t.label}
+                  {typeof n === "number" && (
+                    <span className={`ml-1.5 text-xs ${t.value === "pending" && n > 0 ? "font-bold text-yellow-700 dark:text-yellow-500" : "text-muted-foreground"}`}>
+                      {n}
+                    </span>
+                  )}
+                </TabsTrigger>
+              );
+            })}
+          </TabsList>
+        </div>
+      </Tabs>
+      <p className="text-xs text-muted-foreground -mt-2">{activeTab.help}</p>
+
+      <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:justify-between">
+        <div className="relative w-full sm:max-w-sm">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
+          <Input
+            className="pl-9"
+            aria-label="Buscar pedidos por conteúdo, título ou autor"
+            placeholder="Buscar conteúdo, título ou autor..."
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+          />
+        </div>
+        <p className="text-xs text-muted-foreground" aria-live="polite">
+          {isLoading ? "Carregando…" : `Mostrando ${from}–${to} de ${total}`}
+          {isFetching && !isLoading ? " · atualizando…" : ""}
+        </p>
+      </div>
+
+      {/* Barra de seleção em lote */}
+      {selectedRows.length > 0 && (
+        <div role="region" aria-label="Ações em lote" className="sticky top-14 md:top-2 z-10 flex flex-wrap items-center gap-2 rounded-lg border border-primary/30 bg-background/95 backdrop-blur px-3 py-2 shadow-sm">
+          <span className="text-sm font-medium">
+            {selectedRows.length === 1 ? "1 selecionado" : `${selectedRows.length} selecionados`}
+          </span>
+          {bulkActions.length === 0 ? (
+            <span className="text-xs text-muted-foreground">Os itens selecionados estão em situações diferentes: nenhuma ação vale para todos.</span>
+          ) : bulkActions.map((a) => (
+            <Button key={a} size="sm" variant={ACTIONS[a].destructive ? "destructive" : "outline"} onClick={() => setPending({ action: a, items: selectedRows })}>
+              {ACTIONS[a].label}
+            </Button>
+          ))}
+          <Button size="sm" variant="ghost" onClick={() => setSelected(new Map())}>Limpar seleção</Button>
+        </div>
+      )}
+
+      {isError ? (
+        <div role="alert" className="flex flex-col sm:flex-row sm:items-center gap-3 rounded-lg border border-destructive/40 bg-destructive/5 p-4 text-sm">
+          <AlertTriangle className="w-5 h-5 text-destructive shrink-0" aria-hidden="true" />
+          <p className="flex-1">Não foi possível carregar os pedidos. {(error as Error)?.message}</p>
+          <Button size="sm" variant="outline" onClick={() => void refetch()}><RefreshCw className="w-4 h-4 mr-1" aria-hidden="true" /> Tentar novamente</Button>
+        </div>
+      ) : (
+        <>
+          {/* Desktop: tabela */}
+          <div className="hidden md:block rounded-lg border border-border overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-10">
+                    <Checkbox
+                      aria-label="Selecionar todos os pedidos desta página"
+                      checked={allOnPageSelected ? true : someOnPageSelected ? "indeterminate" : false}
+                      onCheckedChange={(v) => togglePage(v === true)}
+                      disabled={rows.length === 0}
+                    />
+                  </TableHead>
+                  <TableHead>Conteúdo</TableHead>
+                  <TableHead>Autor</TableHead>
+                  <TableHead>Situação</TableHead>
+                  <TableHead>Orações</TableHead>
+                  <TableHead>Enviado</TableHead>
+                  <TableHead className="w-10"><span className="sr-only">Ações</span></TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {isLoading ? (
+                  <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">Carregando…</TableCell></TableRow>
+                ) : rows.length === 0 ? (
+                  <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">{search ? "Nenhum pedido encontrado para essa busca." : "Nenhum pedido nesta aba."}</TableCell></TableRow>
+                ) : rows.map((p) => (
+                  <TableRow key={p.id} className={p.deleted_at ? "bg-muted/20" : ""} data-state={selected.has(p.id) ? "selected" : undefined}>
+                    <TableCell className="align-top">
+                      <Checkbox aria-label={`Selecionar o pedido "${prayerLabel(p)}"`} checked={selected.has(p.id)} onCheckedChange={(v) => toggle(p, v === true)} />
+                    </TableCell>
+                    <TableCell className="align-top"><ExpandableContent id={p.id} title={p.title} content={p.content} /></TableCell>
+                    <TableCell className="align-top"><AuthorCell p={p} /></TableCell>
+                    <TableCell className="align-top"><StatusCell p={p} /></TableCell>
+                    <TableCell className="align-top text-sm text-muted-foreground">{p.prayer_count ?? 0}</TableCell>
+                    <TableCell className="align-top text-muted-foreground text-xs">
+                      {formatDistanceToNow(new Date(p.created_at), { locale: ptBR, addSuffix: true })}
+                    </TableCell>
+                    <TableCell className="align-top">
+                      <RowMenu p={p} onAction={(a) => setPending({ action: a, items: [p] })} onEdit={() => setEdit(p)} />
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+
+          {/* Celular: cartões empilhados */}
+          <div className="md:hidden space-y-2">
+            {rows.length > 0 && (
+              <label className="flex items-center gap-2 text-sm px-1">
+                <Checkbox
+                  checked={allOnPageSelected ? true : someOnPageSelected ? "indeterminate" : false}
+                  onCheckedChange={(v) => togglePage(v === true)}
+                />
+                Selecionar todos desta página
+              </label>
+            )}
+            {isLoading ? (
+              <p className="text-center py-8 text-muted-foreground text-sm">Carregando…</p>
+            ) : rows.length === 0 ? (
+              <p className="text-center py-8 text-muted-foreground text-sm">{search ? "Nenhum pedido encontrado para essa busca." : "Nenhum pedido nesta aba."}</p>
+            ) : rows.map((p) => (
+              <article key={p.id} className={`rounded-lg border p-3 space-y-2 ${selected.has(p.id) ? "border-primary/60 bg-primary/5" : "border-border"} ${p.deleted_at ? "bg-muted/20" : ""}`}>
+                <div className="flex items-start gap-2">
+                  <Checkbox className="mt-1" aria-label={`Selecionar o pedido "${prayerLabel(p)}"`} checked={selected.has(p.id)} onCheckedChange={(v) => toggle(p, v === true)} />
+                  <div className="flex-1 min-w-0"><ExpandableContent id={`m-${p.id}`} title={p.title} content={p.content} /></div>
+                  <RowMenu p={p} onAction={(a) => setPending({ action: a, items: [p] })} onEdit={() => setEdit(p)} />
+                </div>
+                <div className="grid grid-cols-2 gap-2 pl-7">
+                  <AuthorCell p={p} />
+                  <StatusCell p={p} />
+                </div>
+                <p className="pl-7 text-xs text-muted-foreground">
+                  {p.prayer_count ?? 0} orações · enviado {formatDistanceToNow(new Date(p.created_at), { locale: ptBR, addSuffix: true })}
+                </p>
+              </article>
+            ))}
+          </div>
+
+          {total > PAGE_SIZE && (
+            <nav aria-label="Paginação" className="flex items-center justify-between gap-2">
+              <Button variant="outline" size="sm" disabled={page === 0} onClick={() => setPage((n) => n - 1)}>
+                <ChevronLeft className="w-4 h-4 mr-1" aria-hidden="true" /> Anterior
+              </Button>
+              <span className="text-xs text-muted-foreground">Página {page + 1} de {pageCount}</span>
+              <Button variant="outline" size="sm" disabled={page + 1 >= pageCount} onClick={() => setPage((n) => n + 1)}>
+                Próxima <ChevronRight className="w-4 h-4 ml-1" aria-hidden="true" />
+              </Button>
+            </nav>
+          )}
+        </>
+      )}
+
+      {/* Confirmação (um pedido ou lote) */}
+      <AdminActionDialog
+        open={!!pending}
+        onOpenChange={(o) => { if (!o) setPending(null); }}
+        title={pending ? (pending.items.length > 1 ? `${ACTIONS[pending.action].label}: ${pending.items.length} pedidos` : ACTIONS[pending.action].title) : ""}
+        target={pending && pending.items.length === 1
+          ? { id: pending.items[0].id, name: prayerLabel(pending.items[0]), email: pending.items[0].author_name ? `Autor: ${pending.items[0].author_name}` : null }
+          : null}
+        description={pending && (
+          <div className="space-y-2">
+            <p>{ACTIONS[pending.action].consequence}</p>
+            {pending.items.length > 1 && (
+              <>
+                <p className="font-medium text-foreground">Isso vale para cada um dos {pending.items.length} pedidos selecionados:</p>
+                <ul className="list-disc pl-5 text-xs max-h-32 overflow-y-auto">
+                  {pending.items.map((p) => <li key={p.id} className="break-words">{prayerLabel(p)}</li>)}
+                </ul>
+              </>
+            )}
+          </div>
+        )}
+        confirmLabel={pending ? (pending.items.length > 1 ? `${ACTIONS[pending.action].confirm} ${pending.items.length}` : ACTIONS[pending.action].confirm) : ""}
+        destructive={pending ? ACTIONS[pending.action].destructive : false}
+        reasonOptional={pending ? ACTIONS[pending.action].reasonOptional : false}
+        onConfirm={(reason) => runAction(pending!.action, pending!.items, reason)}
+      />
+
+      {/* Resultado parcial do lote */}
+      <Dialog open={!!results} onOpenChange={(o) => { if (!o) setResults(null); }}>
+        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2"><ShieldAlert className="w-5 h-5 text-yellow-600" aria-hidden="true" /> Lote concluído em parte</DialogTitle>
+            <DialogDescription>
+              {results && `${results.res.filter((r) => r.ok).length} de ${results.res.length} pedidos foram atualizados. Os que falharam continuam selecionados para você tentar de novo.`}
+            </DialogDescription>
+          </DialogHeader>
+          <ul className="space-y-2 text-sm">
+            {results?.res.map((r) => {
+              const p = results.items.find((i) => i.id === r.id);
+              return (
+                <li key={r.id} className="flex gap-2">
+                  {r.ok
+                    ? <Check className="w-4 h-4 text-green-600 shrink-0 mt-0.5" aria-label="Concluído" />
+                    : <X className="w-4 h-4 text-destructive shrink-0 mt-0.5" aria-label="Falhou" />}
+                  <div className="min-w-0">
+                    <p className="break-words">{p ? prayerLabel(p) : r.id}</p>
+                    {!r.ok && <p className="text-xs text-destructive">{r.message}</p>}
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+          <DialogFooter><Button onClick={() => setResults(null)}>Entendi</Button></DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <EditPrayerDialog prayer={edit} onClose={() => setEdit(null)} onSaved={refresh} />
+    </div>
+  );
+}
+
+function RowMenu({ p, onAction, onEdit }: { p: PrayerRow; onAction: (a: Action) => void; onEdit: () => void }) {
+  const acts = allowedActions(p);
+  const icon: Record<Action, JSX.Element> = {
+    approve: <Check className="w-4 h-4 mr-2 text-green-600" aria-hidden="true" />,
+    review: <Clock className="w-4 h-4 mr-2" aria-hidden="true" />,
+    violation: <X className="w-4 h-4 mr-2 text-orange-600" aria-hidden="true" />,
+    remove: <Trash2 className="w-4 h-4 mr-2" aria-hidden="true" />,
+    restore: <Undo2 className="w-4 h-4 mr-2" aria-hidden="true" />,
+  };
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" aria-label={`Ações para o pedido "${prayerLabel(p)}"`}>
+          <MoreHorizontal className="w-4 h-4" aria-hidden="true" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        {acts.filter((a) => a !== "remove").map((a) => (
+          <DropdownMenuItem key={a} onClick={() => onAction(a)}>{icon[a]} {ACTIONS[a].label}</DropdownMenuItem>
+        ))}
+        {!p.deleted_at && (
+          <DropdownMenuItem onClick={onEdit}><Pencil className="w-4 h-4 mr-2" aria-hidden="true" /> Editar conteúdo</DropdownMenuItem>
+        )}
+        {acts.includes("remove") && (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem className="text-destructive" onClick={() => onAction("remove")}>{icon.remove} Remover</DropdownMenuItem>
+          </>
+        )}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+// ─── Edição de conteúdo ───
+
+function EditPrayerDialog({ prayer, onClose, onSaved }: { prayer: PrayerRow | null; onClose: () => void; onSaved: () => void }) {
+  const [title, setTitle] = useState("");
+  const [content, setContent] = useState("");
+  const [reason, setReason] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [serverError, setServerError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (prayer) {
+      setTitle(prayer.title ?? ""); setContent(prayer.content ?? ""); setReason(""); setServerError(null); setSaving(false);
+    }
+  }, [prayer]);
+
+  const contentOk = content.trim().length > 0 && content.trim().length <= 1000;
+  const reasonOk = reason.trim().length >= 3;
+  const changed = !!prayer && (title.trim() !== (prayer.title ?? "").trim() || content.trim() !== (prayer.content ?? "").trim());
+
+  async function save() {
+    if (!prayer || !contentOk || !reasonOk || !changed || saving) return;
+    setSaving(true); setServerError(null);
+    try {
+      await adminRpc("admin_edit_prayer", {
+        p_id: prayer.id, p_title: title, p_content: content, p_reason: reason.trim(), p_expected_content: prayer.content,
+      });
+      onSaved();
+      toast.success("Conteúdo atualizado. O pedido voltou para revisão e o autor foi avisado.");
+      onClose();
+    } catch (e) {
+      setServerError(e instanceof Error ? e.message : "Não foi possível salvar.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <Dialog open={!!prayer} onOpenChange={(o) => { if (!o && !saving) onClose(); }}>
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Editar pedido de oração</DialogTitle>
+          <DialogDescription>Depois de salvar, o pedido volta para revisão e o autor recebe um aviso.</DialogDescription>
+        </DialogHeader>
+        <form className="space-y-3" onSubmit={(e) => { e.preventDefault(); void save(); }}>
+          <div className="space-y-1">
+            <Label htmlFor="edit-title">Título (opcional)</Label>
+            <Input id="edit-title" value={title} maxLength={150} onChange={(e) => setTitle(e.target.value)} placeholder="Título do pedido..." />
+          </div>
+          <div className="space-y-1">
+            <Label htmlFor="edit-content">Conteúdo</Label>
+            <Textarea id="edit-content" className="min-h-[120px]" value={content} maxLength={1000} onChange={(e) => setContent(e.target.value)} aria-describedby="edit-content-count" />
+            <p id="edit-content-count" className={`text-xs ${contentOk ? "text-muted-foreground" : "text-destructive"}`}>{content.trim().length}/1000 caracteres</p>
+          </div>
+          <div className="space-y-1">
+            <Label htmlFor="edit-reason">Motivo da edição (obrigatório)</Label>
+            <Textarea id="edit-reason" className="min-h-[70px]" value={reason} maxLength={500} onChange={(e) => setReason(e.target.value)} placeholder="Descreva o motivo da edição para os logs de moderação..." />
+          </div>
+          {serverError && (
+            <div role="alert" className="flex gap-2 rounded-md border border-destructive/40 bg-destructive/5 px-3 py-2 text-sm text-destructive">
+              <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" aria-hidden="true" /><span>{serverError}</span>
+            </div>
+          )}
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button type="button" variant="outline" onClick={onClose} disabled={saving}>Cancelar</Button>
+            <Button type="submit" disabled={!contentOk || !reasonOk || !changed || saving}>{saving ? "Salvando…" : "Salvar"}</Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}

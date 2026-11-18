@@ -22,6 +22,7 @@ const ACTION_LABELS: Record<string, string> = {
   ban: "Banido",
   approve: "Aprovado",
   reject: "Rejeitado",
+  send_to_review: "Enviado para revisão",
   resolve_report: "Report resolvido",
   dismiss_report: "Report descartado",
   role_assign: "Role atribuída",
