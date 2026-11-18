@@ -101,5 +101,44 @@ Apresenta a liturgia diária, reflexão e curiosidade contextual usando IA.
 
 ---
 
+## 🛡️ Portal Administrativo
+
+### Rota
+- **Produção**: `https://www.amens.com.br/admin`
+- **Código**: `src/pages/Admin.tsx`, `src/components/AdminGuard.tsx`, `src/components/admin/*`
+- **Rota interna**: `/admin/*`
+
+### Descrição
+Área interna da equipe para acompanhar métricas, moderar conteúdo e gerenciar contas. Acesso por papel (`user_roles` + `roles`): **admin** e **moderador**. Usuário comum e visitante não acessam.
+
+### Acesso por tela
+| Tela | Rota | Moderador | Admin |
+|---|---|---|---|
+| Dashboard | `/admin` | ❌ (vai para Pedidos) | ✅ |
+| Usuários | `/admin/users` | ❌ | ✅ |
+| Doações | `/admin/donations` | ❌ | ✅ |
+| Pedidos de Oração | `/admin/prayers` | ✅ | ✅ |
+| Reports | `/admin/reports` | ✅ | ✅ |
+| Igrejas | `/admin/churches` | ✅ | ✅ |
+| Feedback | `/admin/feedback` | ✅ (vê e-mails) | ✅ |
+| Configurações | `/admin/settings` | ❌ | ✅ |
+| Logs de Moderação | `/admin/logs` | ❌ | ✅ |
+
+### Regras de Negócio
+- **Acesso e sessão (ADM00):** visitante ou sessão expirada vai para `/auth?redirect=<rota>` e volta para a mesma tela. Falha ao consultar o papel mostra erro com "Tentar novamente" (não expulsa). Ao trocar de conta, todo o cache é limpo. Rota inexistente volta para `/admin`. No celular (< 768 px) o menu vira gaveta.
+- **A autorização vale no banco, não só na tela:** RLS e RPCs `SECURITY DEFINER` validam o papel. Esconder um botão não é proteção.
+- **Moderador (decisões ADM00):** gerencia igrejas; em perfis de outras pessoas **só altera a suspensão**; vê e-mails no Feedback; **não** mexe em XP nem em configurações.
+- **Dono de pedido:** não reativa pedido barrado pela moderação (`banned`, `policy_violation`, `pending_review`) nem restaura pedido removido.
+- **Dashboard (ADM01):** só admin. Totais = estado atual; métricas de período = eventos, agregadas no servidor (`admin_dashboard_period`), em dias corridos no fuso America/Sao_Paulo (Hoje, 7 e 30 dias, incluindo hoje). Taxa de aprovação = (`active` + `completed`) ÷ todos os pedidos criados no período. Falha mostra "Indisponível", nunca zero.
+- **Usuários (ADM02):** toda ação passa por comando no servidor, com motivo obrigatório (≥ 3 caracteres) e log na mesma transação: `admin_suspend_user` (mod/admin, 1–365 dias), `admin_unsuspend_user`, `admin_set_user_removed`, `admin_set_user_role`, `admin_set_user_xp`, `admin_set_xp_multiplier` (admin). Ninguém age sobre a **própria** conta ou papel, e o sistema **nunca fica sem admin**.
+- **Conta suspensa ou desativada:** continua lendo, mas o banco recusa publicar, editar o próprio pedido, interceder, reagir, contribuir na corrente, registrar intenção, convidar amigos e enviar notificação. O app mostra um aviso com o prazo (`AccountStatusBanner`).
+- **Auditoria:** ações administrativas gravam em `moderation_logs` (com `metadata` de/para). Exceção conhecida: o reconhecimento de apoiador grava em `supporter_recognition_audit`.
+
+### Dependências
+- Tabelas: `user_roles`, `roles`, `profiles`, `prayer_requests`, `prayer_reports`, `moderation_logs`, `churches`, `app_settings`, `user_xp`, `user_xp_overrides`.
+- Pacotes de revisão: ADM00–ADM10 (repositório de planejamento do time).
+
+---
+
 ## 🔁 Regras do Agente para Atualização de Features
 Sempre que o Antigravity implementar algo novo, atualize esta skill com os campos: Nome, Rota, Arquivo, Descrição, Regras de Negócio e Dependências. Mantenha os dados fáceis de ler para que a IA consuma rapidamente em sessões futuras.
