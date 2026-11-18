@@ -1,8 +1,4 @@
 /* Option B is rendered as a single devotional letter, with its own scoped skin. */
-.cause-page {
-  background: rgba(253, 251, 245, 0.82);
-}
-
 .devotional-cause {
   --cause-ink: #32271e;
   --cause-gold: #a56b15;

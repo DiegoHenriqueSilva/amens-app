@@ -18,6 +18,8 @@ The 2026-11-17 copy/design revision uses **Intercessões diárias** throughout t
 
 `AppFrame` reserves a separate navigation row on `/pray`, and the prayer content scrolls in the area above it. It includes the navigation safe area, prevents the menu from drawing over long requests, and resets the reading area when the shared-link query changes. Other routes retain their existing wrapper and fixed navigation.
 
+The light wallpaper overlay belongs to the reading viewport, so it reaches the menu even when the request page is shorter than the screen. The inner prayer page stays transparent to avoid applying the overlay twice.
+
 ## Verification and release
 
 Use synthetic fixtures for SQL authorization, quota, restricted causes, retry behavior, reaction and invite atomicity, and AI limits. Browser fixtures must be labelled as simulated and must not contact production. Unit tests, build and local database results do not prove a hosted migration or provider configuration. The delivery report records checks actually executed and outstanding cross-feature validation. Apply the migration before releasing the frontend, then deploy `generate-prayer` and configure server-only `GEMINI_API_KEY` and `GEMINI_MODEL`. Remove and rotate any key previously shipped through `VITE_GEMINI_API_KEY`.
