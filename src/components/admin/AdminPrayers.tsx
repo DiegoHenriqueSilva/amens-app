@@ -160,13 +160,13 @@ function StatusCell({ p }: { p: PrayerRow }) {
         {p.deleted_at ? `Removido (era ${STATUS_LABELS[p.status] ?? p.status})` : (STATUS_LABELS[p.status] ?? p.status)}
       </span>
       {p.status === "pending_review" && !p.deleted_at && (
-        <p className="text-xs text-muted-foreground inline-flex items-center gap-1">
+        <p className="text-xs text-muted-foreground flex items-center gap-1">
           <Clock className="w-3 h-3" aria-hidden="true" />
           Na fila {formatDistanceToNow(new Date(p.updated_at ?? p.created_at), { locale: ptBR, addSuffix: false })}
         </p>
       )}
       {p.open_reports > 0 && (
-        <p className="text-xs text-destructive inline-flex items-center gap-1">
+        <p className="text-xs text-destructive flex items-center gap-1">
           <Flag className="w-3 h-3" aria-hidden="true" />
           {p.open_reports === 1 ? "1 denúncia em aberto" : `${p.open_reports} denúncias em aberto`}
         </p>
@@ -180,12 +180,12 @@ function AuthorCell({ p }: { p: PrayerRow }) {
     <div className="text-sm space-y-0.5">
       <p>{p.author_name || "Sem nome"}</p>
       {p.is_anonymous && (
-        <p className="text-xs text-muted-foreground inline-flex items-center gap-1">
+        <p className="text-xs text-muted-foreground flex items-center gap-1">
           <EyeOff className="w-3 h-3" aria-hidden="true" /> Anônimo para a comunidade
         </p>
       )}
       {p.author_removed && (
-        <p className="text-xs text-destructive inline-flex items-center gap-1">
+        <p className="text-xs text-destructive flex items-center gap-1">
           <UserX className="w-3 h-3" aria-hidden="true" /> Conta desativada
         </p>
       )}
