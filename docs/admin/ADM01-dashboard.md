@@ -1,6 +1,6 @@
 # ADM01 — Dashboard e métricas
 
-Branch: `fix/adm01-dashboard` (a partir de `origin/main` @ `0063610`).
+Branch: `erickyamanaka/fix/adm01-painel-metricas` (a partir de `origin/main` @ `0063610`).
 Estado: **Em andamento**. A RPC foi aplicada em produção em 16/11/2026 e os testes T01–T03 passaram. Faltam T04 e os testes visuais, que são manuais e exigem login.
 
 ## 1. Decisões aprovadas (2026-11-16)
