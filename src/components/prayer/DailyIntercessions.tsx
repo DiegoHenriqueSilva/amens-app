@@ -1,4 +1,4 @@
-import { Clock3, Heart, Infinity as InfinityIcon, Info, Sparkles } from 'lucide-react';
+import { Clock3, Heart, Info, Sparkles } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import type { PrayerDailyLimit } from '@/hooks/use-prayer-daily-limit';
 import './daily-intercessions.css';
@@ -20,7 +20,6 @@ export function DailyIntercessions({
   onRetry,
 }: Props) {
   const available = Math.max(0, remaining ?? 0);
-  const total = Math.max(1, limit ?? 1);
   const resetLabel = resetsAt
     ? new Intl.DateTimeFormat('pt-BR', {
         timeZone: 'America/Sao_Paulo',
@@ -55,27 +54,6 @@ export function DailyIntercessions({
       ) : (
         <>
           <div className="daily-intercessions__summary">
-            <div className="daily-intercessions__ring" aria-hidden="true">
-              {isAdmin ? (
-                <InfinityIcon />
-              ) : (
-                <>
-                  <svg viewBox="0 0 64 64" fill="none">
-                    <circle className="daily-intercessions__track" cx="32" cy="32" r="27" />
-                    <circle
-                      className="daily-intercessions__available"
-                      cx="32"
-                      cy="32"
-                      r="27"
-                      pathLength="100"
-                      strokeDasharray={`${Math.min(100, (available / total) * 100)} 100`}
-                      transform="rotate(-90 32 32)"
-                    />
-                  </svg>
-                  <strong>{available}</strong>
-                </>
-              )}
-            </div>
             <div className="daily-intercessions__count">
               <strong>
                 {isAdmin ? 'Sem limite diário' : `${available} de ${limit} disponíveis`}

@@ -44,7 +44,7 @@ A página inicial é o hub principal do Améns, apresentando as funções centra
 - Entry points: `/pray`, `/pray?id=<uuid>` and `/pray?intention=default-001` through `default-008`.
 - `src/pages/Pray.tsx` observes authentication; `PraySession.tsx` resets account-scoped state. `PrayerCauseCard` retains the devotional presentation.
 
-- UI copy uses **Intercessões diárias**. The compact indicator shows available intercessions, a next-level line and a midnight/Sao Paulo clock at the lower right; consumption details are in **Como funciona**. Loading uses a skeleton and a short accessible announcement.
+- UI copy uses **Intercessões diárias**. The compact summary shows available intercessions once, without a separate circled number, a next-level line and a midnight/Sao Paulo clock at the lower right; consumption details are in **Como funciona**. Loading uses a skeleton and a short accessible announcement.
 - On `/pray`, `AppFrame` reserves a separate menu row and scrolls the reading area above it, including safe areas. Other routes retain their existing layout.
 
 ### Approved consumption rule (2026-11-16)
