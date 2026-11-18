@@ -99,7 +99,7 @@ begin
   got := pg_temp.run(format($q$select admin_edit_prayer('%s','Novo título','Novo conteúdo','')::text$q$, p3), md);
   out := out || 'E1=' || got || '(bloq:22023:reason_required) ';
   got := pg_temp.run(format($q$select admin_edit_prayer('%s','Novo título','Novo conteúdo','telefone exposto','texto antigo diferente')::text$q$, p3), md);
-  out := out || 'E2=' || got || '(bloq:40001:stale) ';
+  out := out || 'E2=' || got || '(bloq:PT409:stale) ';
   got := pg_temp.run(format($q$select admin_edit_prayer('%s','Novo título','Novo conteúdo','telefone exposto', (select content from prayer_requests where id='%s'))::text$q$, p3, p3), md);
   out := out || 'E3=' || got || '(ok:) ';
   out := out || 'E3b=' || (select status from prayer_requests where id = p3) || '(pending_review) ';

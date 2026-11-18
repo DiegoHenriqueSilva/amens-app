@@ -214,14 +214,30 @@ export default function AdminPrayers() {
 
   // Filtros mudaram: volta para a 1ª página e limpa a seleção
   useEffect(() => { setPage(0); setSelected(new Map()); }, [tab, search]);
+  // A seleção vale só para a página visível
+  useEffect(() => { setSelected(new Map()); }, [page]);
 
-  const { data, isLoading, isFetching, isError, error, refetch } = useQuery({
+  const { data, isLoading, isFetching, isError, error, refetch, isPlaceholderData } = useQuery({
     queryKey: ["admin-prayers", tab, search, page],
     queryFn: () => adminRpc<ListResult>("admin_list_prayers", {
       p_tab: tab, p_search: search || null, p_offset: page * PAGE_SIZE, p_limit: PAGE_SIZE,
     }),
     placeholderData: keepPreviousData,
   });
+
+  // Lista atualizada: a seleção passa a usar a situação atual de cada pedido e
+  // solta os que saíram desta aba. Sem isso, a nova tentativa enviaria a
+  // situação antiga e seria recusada como "alterado por outra pessoa" para sempre.
+  useEffect(() => {
+    if (!data || isPlaceholderData) return;
+    setSelected((prev) => {
+      if (prev.size === 0) return prev;
+      const fresh = new Map(data.rows.map((r) => [r.id, r]));
+      const next = new Map<string, PrayerRow>();
+      prev.forEach((_, id) => { const r = fresh.get(id); if (r) next.set(id, r); });
+      return next;
+    });
+  }, [data, isPlaceholderData]);
 
   const rows = data?.rows ?? [];
   const total = data?.total ?? 0;
@@ -479,7 +495,7 @@ export default function AdminPrayers() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2"><ShieldAlert className="w-5 h-5 text-yellow-600" aria-hidden="true" /> Lote concluído em parte</DialogTitle>
             <DialogDescription>
-              {results && `${results.res.filter((r) => r.ok).length} de ${results.res.length} pedidos foram atualizados. Os que falharam continuam selecionados para você tentar de novo.`}
+              {results && `${results.res.filter((r) => r.ok).length} de ${results.res.length} pedidos foram atualizados. A lista já mostra a situação atual: os que falharam e continuam nesta aba seguem selecionados para você revisar.`}
             </DialogDescription>
           </DialogHeader>
           <ul className="space-y-2 text-sm">

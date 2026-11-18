@@ -2,7 +2,7 @@
 
 Branch: `erickyamanaka/fix/adm03-pedidos-moderacao`, montada sobre a ADM02 (`erickyamanaka/fix/adm02-usuarios`) para reaproveitar `AdminActionDialog` e `adminRpc`.
 
-Estado: **Em revisão**. O banco foi aplicado e testado em produção (**34/34**). Faltam os testes de tela com login e a integração com o app (seção 6).
+Estado: **Em revisão**. O banco foi aplicado e testado em produção (**34/34**). Os testes de tela com moderador, lote, corrida e ciclo pelo app foram executados em 18/11/2026 (seção 5.1). Faltam U02–U06 e a revisão do colega (seção 6).
 
 ## 1. Decisões aprovadas (17/11/2026)
 
@@ -62,7 +62,9 @@ O `metadata` de todos os logs inclui `from_status`, `to_status`, `was_deleted` e
 - `src/components/admin/AdminPrayers.tsx` (reescrito).
 - `src/components/admin/AdminActionDialog.tsx`: novo `reasonOptional`.
 - `src/components/admin/AdminLogs.tsx`: rótulo `send_to_review`.
+- `supabase/migrations/20261118000000_adm03_edit_stale_sem_repeticao.sql`: **aplicada em produção em 18/11/2026** (correção da seção 5.1).
 - Bateria: `docs/admin/testes/bateria_adm03_pedidos.sql`.
+- Evidências dos testes de tela: `docs/admin/evidencias/ADM03/testes-de-tela/`.
 
 ## 5. Testes em produção — 34/34 (17/11/2026)
 
@@ -85,7 +87,7 @@ Tudo rodou numa transação desfeita, com 3 pedidos sintéticos. Uma conta comum
 | M10 | Aprovar pedido removido | `removed` ✅ |
 | M11 | Restaurar → aviso | 1 ✅ |
 | E1 | Edição sem motivo | `reason_required` ✅ |
-| E2 | **Edição simultânea:** texto visto ≠ atual | `40001 stale` ✅ |
+| E2 | **Edição simultânea:** texto visto ≠ atual | `PT409 stale` ✅ (era `40001`, ver 5.1) |
 | E3 | Edição válida → `pending_review` + 1 aviso | ✅ |
 | E4 | Conteúdo com 1001 caracteres | `invalid_content` ✅ |
 | A1–A2 | Só sucessos geram log, com ator e `from_status` | 6 de 6 ✅ |
@@ -98,15 +100,46 @@ Mapeamento para o pacote:
 - **T03:** M4, E2.
 - **T04:** A1–A4, M5–M11.
 - **T05:** L1, M1, E0, M12.
-- **T02 (ciclo pelo app):** pendente.
+- **T02 (ciclo pelo app):** seção 5.1.
+
+### 5.1 Testes de tela com login — 18/11/2026
+
+**Ambiente:** app local (porta 8080) com ADM00 + ADM01 + ADM03 integrados, ligado ao Supabase de produção. Chrome headless (Playwright). Os roteiros estão em `docs/admin/testes/tela/`.
+
+**Contas de teste** criadas em produção para isso, com login por e-mail e senha:
+- `adm-teste-moderador@amens.test`, papel moderador;
+- `adm-teste-autor@amens.test`, conta comum.
+
+As senhas **não estão no repositório**; peça ao responsável. A conta `teste-moderador@amens.test`, criada por outra pessoa em 16/11, não foi usada.
+
+**Dados:** 6 pedidos sintéticos "[TESTE ADM03] Lote N", criados como `pending_review` para não aparecerem na comunidade, mais 1 pedido enviado pelo app no ciclo. Ao final foram **apagados**, com avisos e logs. Produção voltou a 28 pedidos, sem resíduo.
+
+| Caso | Roteiro | Observado | Estado |
+|---|---|---|---|
+| T05 · Moderador na tela | O moderador lista, filtra, seleciona e decide; abre o menu do portal | Só Pedidos, Reports, Igrejas e Feedback no menu; todas as ações funcionam | **Aprovado** |
+| T03 · Lote parcial e corrida | A seleciona os Lotes 1–4; **B, em outra sessão,** marca violação no Lote 2; A aplica "Marcar violação" nos 4 | "3 de 4 pedidos foram atualizados"; o Lote 2 mostra "Este pedido foi alterado por outra pessoa"; 3 logs e 3 avisos novos, sem duplicar | **Aprovado** |
+| T03 · Motivo obrigatório no lote | Confirmar sem motivo | O diálogo não fecha | **Aprovado** |
+| T03 · Edição simultânea | A abre a edição do Lote 5; B edita e salva; A salva | B: 204. A: **409 em 0,36 s**, erro no diálogo e o texto de A preservado | **Aprovado** após correção 2 |
+| T02 · Ciclo pelo app | O autor envia por `/submit`; o moderador coloca em revisão → aprova → remove | Comunidade (visitante): visível → oculto → visível → oculto. O autor recebe em **Mensagens** um aviso a cada decisão, com os textos da seção 7 | **Aprovado** |
+
+**Defeitos encontrados pelos testes de tela e corrigidos:**
+
+1. **A nova tentativa do lote falhava para sempre.** A seleção guardava a cópia do pedido no momento do clique. Depois de um lote parcial, o item que falhou continuava selecionado com a situação antiga, mesmo que já tivesse saído da aba. A barra oferecia ações inválidas, e cada nova tentativa voltava como "alterado por outra pessoa". **Correção** em `AdminPrayers.tsx`:
+   - quando a lista é atualizada, a seleção passa a usar a situação atual;
+   - pedidos que saíram da aba deixam de estar selecionados;
+   - a seleção vale só para a página visível;
+   - o texto do resultado parcial foi ajustado (seção 7).
+2. **Edição com conflito travava a chamada, com uma conexão do banco presa em loop.** O conflito usava o SQLSTATE `40001` (serialization_failure), e o **PostgREST repete automaticamente** transações que falham com esse código. Como o pedido continuava alterado, a repetição nunca terminava: a tela ficava em "Salvando…" e uma conexão de produção seguia ocupada repetindo a função. A bateria SQL não pegou porque chama a função direto, sem o PostgREST.
+   - **Correção:** o código passou a ser `PT409`, que o PostgREST devolve como HTTP 409 sem repetir. A migration `20261118000000` foi aplicada em 18/11.
+   - **Conferência:** as conexões em loop sumiram de `pg_stat_activity` logo após a troca. Cada repetição era desfeita, então nada foi gravado.
+   - **`admin_moderate_prayers`:** não muda, porque captura o `40001` por item dentro da função.
+   - **Lição:** nenhum comando chamado pelo app deve deixar escapar `40001` ou `40P01`.
 
 ## 6. Pendente
 
 | Caso | O que falta | Estado |
 |---|---|---|
-| T02 · Ciclo completo | Enviar pelo app (APP04), decidir aqui e conferir a visão do autor e de um intercessor em outra conta | Não executado |
-| T03 · Corrida na tela | Dois operadores em abas diferentes: o segundo vê "alterado por outra pessoa" | Não executado (comprovado no banco: M4/E2) |
-| T05 · Moderador na tela | Agora existe uma conta moderadora em produção (criada em 16/11); falta usá-la | Não executado |
+| T02 · Visão de intercessor logado | A comunidade foi conferida como visitante (consulta pública); falta uma 2ª conta comum vendo o feed de orações | Parcial |
 | U02–U06 | Zoom 200%, teclado completo, menos movimento | Não executado |
 | F04 | Integração com ADM04 (reports) e a projeção pública APP03/APP04 | Parcial: ver backlog B13–B15 |
 
@@ -120,4 +153,6 @@ Mapeamento para o pacote:
 | Antigo: "Seu pedido de oração foi editado pelo moderador e aguarda nova aprovação." → "Seu pedido de oração recebeu um ajuste da moderação e passará por uma nova revisão antes de voltar à comunidade." | Ajustado: menos frio, explica o que acontece |
 | Avisos de violação e remoção (triggers já existentes) | Fora do escopo (B15) |
 
-Os textos do painel (consequências, confirmações, resultado do lote) são internos e descrevem o efeito real: Aprovado.
+| Resultado parcial do lote (painel). Antigo: "Os que falharam continuam selecionados para você tentar de novo." → "A lista já mostra a situação atual: os que falharam e continuam nesta aba seguem selecionados para você revisar." | Ajustado (18/11): o texto antigo prometia uma nova tentativa que, com a seleção desatualizada, sempre falhava |
+
+Os demais textos do painel (consequências, confirmações) são internos e descrevem o efeito real: Aprovado.
