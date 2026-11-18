@@ -276,7 +276,7 @@ export default function AdminUsers() {
                   <TableCell className="font-medium">
                     {name}{isSelf && <span className="ml-1.5 text-xs text-muted-foreground">(você)</span>}
                   </TableCell>
-                  <TableCell className="text-muted-foreground text-xs break-all">{authMap[user.id]?.email || "—"}</TableCell>
+                  <TableCell className="text-muted-foreground text-xs whitespace-nowrap">{authMap[user.id]?.email || "—"}</TableCell>
                   <TableCell className="text-muted-foreground text-sm">{[user.city, user.state].filter(Boolean).join(", ") || "—"}</TableCell>
                   <TableCell>
                     <Badge variant={user.role === "admin" ? "destructive" : user.role === "moderator" ? "secondary" : "outline"}>
