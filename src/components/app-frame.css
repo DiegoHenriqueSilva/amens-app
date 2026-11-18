@@ -1,0 +1,4 @@
+.prayer-app-frame { display: grid; grid-template-rows: minmax(0, 1fr) auto; height: 100vh; height: 100dvh; min-height: 0; overflow: hidden; }
+.prayer-app-frame__content { min-width: 0; min-height: 0; overflow-y: auto; overscroll-behavior-y: contain; scroll-padding: 24px; background: rgba(253, 251, 245, 0.82); }
+.prayer-app-frame__content > div { min-height: 100%; }
+.prayer-app-frame .bottom-nav-devotional--inline { position: relative; inset: auto; flex-shrink: 0; }

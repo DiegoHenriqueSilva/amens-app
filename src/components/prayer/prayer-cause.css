@@ -1,8 +1,4 @@
 /* Option B is rendered as a single devotional letter, with its own scoped skin. */
-.cause-page {
-  background: rgba(253, 251, 245, 0.82);
-}
-
 .devotional-cause {
   --cause-ink: #32271e;
   --cause-gold: #a56b15;
@@ -327,6 +323,12 @@
 .devotional-cause__report svg { width: 14px; height: 14px; flex-shrink: 0; }
 .devotional-cause__report:hover { color: #ad443a; }
 .devotional-cause button:focus-visible { outline: 3px solid #b07a30; outline-offset: 3px; }
+.devotional-cause { overflow-wrap: anywhere; }
+.devotional-cause button:disabled { cursor: wait; opacity: 0.6; }
+.devotional-cause__report { font-size: 12px; }
+.devotional-cause-suggestion small { display: block; margin-top: 12px; color: #514057; }
+.cause-page details > summary:focus-visible { outline: 3px solid #b07a30; outline-offset: 3px; }
+.cause-page .prayer-allowance { background: #fffdf8; color: #514538; border-color: #e6d2af; }
 
 .devotional-cause-suggestion { padding: 24px; border: 1px solid #ddc4e7; border-radius: 20px; background: #fcf8fe; }
 .devotional-cause-suggestion h3 { margin: 0 0 12px; font: 600 20px/1.4 "Lora", Georgia, serif; color: #74418a; }
@@ -347,14 +349,14 @@
   .devotional-cause__metadata { font-size: 11px; }
   .devotional-cause__solidarity { padding: 13px 6px 10px; }
   .devotional-cause__solidarity h3 { font-size: 14px; }
-  .devotional-cause__reactions { gap: 1px; }
-  .devotional-cause__reaction { gap: 5px; }
+  .devotional-cause__reactions { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; }
+  .devotional-cause__reaction { flex: 0 1 calc(33.333% - 4px); min-width: 70px; gap: 5px; }
   .devotional-cause__reaction > span:first-child { font-size: 24px; }
-  .devotional-cause__reaction > span:last-child { font-size: 9px; }
+  .devotional-cause__reaction > span:last-child { font-size: 12px; overflow-wrap: normal; }
   .devotional-cause__actions { gap: 9px; }
   .devotional-cause__action { min-height: 70px; gap: 7px; padding: 10px 8px; font-size: 12px; border-radius: 12px; }
   .devotional-cause__action svg { width: 20px; height: 20px; }
-  .devotional-cause__report { font-size: 9px; text-align: center; }
+  .devotional-cause__report { font-size: 11px; text-align: center; }
 }
 
 @media (prefers-reduced-motion: reduce) {
