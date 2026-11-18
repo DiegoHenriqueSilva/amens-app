@@ -6,6 +6,7 @@ Roteiros Playwright usados em 18/11/2026 (ADM00, ADM02 e ADM03) com contas de te
 |---|---|
 | `fase1_acesso.cjs` | ADM00-T01/T04/T05: matriz de acesso por papel (visitante, comum, moderador) e link direto |
 | `fase2_lote.cjs` | ADM03-T03/T05: lote parcial, corrida entre dois operadores, edição simultânea |
+| `fase4_reports.cjs` | ADM04: fila por alvo, corrida, sem fundamento com retorno automático, reabrir e reverter, violação, suspensão e participação. Preparar com `semeia_adm04.cjs` (dados pela API real) e limpar com `limpa_adm04.sql` |
 | `fase3_ciclo.cjs` | ADM03-T02 (ciclo pelo app), ADM02-T03 (conta suspensa no app), ADM00-T02 (troca de conta sem recarregar) |
 
 ## Como rodar

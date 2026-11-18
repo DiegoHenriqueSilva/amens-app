@@ -559,7 +559,18 @@ function RowMenu({ p, onAction, onEdit }: { p: PrayerRow; onAction: (a: Action) 
 
 // ─── Edição de conteúdo ───
 
-function EditPrayerDialog({ prayer, onClose, onSaved }: { prayer: PrayerRow | null; onClose: () => void; onSaved: () => void }) {
+export interface EditablePrayer { id: string; title: string | null; content: string | null }
+export interface EditValues { title: string; content: string; reason: string; expectedContent: string | null }
+
+/**
+ * Edição de pedido com motivo e proteção contra edição simultânea.
+ * Por padrão usa admin_edit_prayer; a tela de Reports passa onSubmit para
+ * editar e encerrar as denúncias na mesma transação.
+ */
+export function EditPrayerDialog({ prayer, onClose, onSaved, onSubmit, description, successMessage }: {
+  prayer: EditablePrayer | null; onClose: () => void; onSaved: () => void;
+  onSubmit?: (v: EditValues) => Promise<unknown>; description?: string; successMessage?: string;
+}) {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [reason, setReason] = useState("");
@@ -580,11 +591,13 @@ function EditPrayerDialog({ prayer, onClose, onSaved }: { prayer: PrayerRow | nu
     if (!prayer || !contentOk || !reasonOk || !changed || saving) return;
     setSaving(true); setServerError(null);
     try {
-      await adminRpc("admin_edit_prayer", {
-        p_id: prayer.id, p_title: title, p_content: content, p_reason: reason.trim(), p_expected_content: prayer.content,
+      const values = { title, content, reason: reason.trim(), expectedContent: prayer.content };
+      if (onSubmit) await onSubmit(values);
+      else await adminRpc("admin_edit_prayer", {
+        p_id: prayer.id, p_title: values.title, p_content: values.content, p_reason: values.reason, p_expected_content: values.expectedContent,
       });
       onSaved();
-      toast.success("Conteúdo atualizado. O pedido voltou para revisão e o autor foi avisado.");
+      toast.success(successMessage ?? "Conteúdo atualizado. O pedido voltou para revisão e o autor foi avisado.");
       onClose();
     } catch (e) {
       setServerError(e instanceof Error ? e.message : "Não foi possível salvar.");
@@ -598,7 +611,7 @@ function EditPrayerDialog({ prayer, onClose, onSaved }: { prayer: PrayerRow | nu
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Editar pedido de oração</DialogTitle>
-          <DialogDescription>Depois de salvar, o pedido volta para revisão e o autor recebe um aviso.</DialogDescription>
+          <DialogDescription>{description ?? "Depois de salvar, o pedido volta para revisão e o autor recebe um aviso."}</DialogDescription>
         </DialogHeader>
         <form className="space-y-3" onSubmit={(e) => { e.preventDefault(); void save(); }}>
           <div className="space-y-1">

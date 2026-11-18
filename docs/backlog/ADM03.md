@@ -10,3 +10,5 @@ Continuação de `docs/BACKLOG-fora-de-escopo.md` (B01–B07) e `docs/backlog/AD
 | B16 | A reabertura de reports ao aprovar depende do texto da nota de resolução (`ilike '%editado%'`…) | preservado de `0063610` em `admin_moderate_prayers` | ADM04 |
 | B17 | Ao enviar pedido, qualquer erro aparece com o prefixo **"Erro técnico:"**, inclusive a mensagem acolhedora de conta suspensa ("Erro técnico: Sua conta está com as interações pausadas…") | Teste de tela 18/11, `src/pages/Submit.tsx` (toast de erro do envio) | APP04 |
 | B18 | O sino de notificações (`NotificationBell`) é um botão só com ícone, **sem `aria-label`**; hoje não aparece na tela inicial atual (os avisos ficam em Mensagens) | `src/components/NotificationBell.tsx` | APP10 |
+
+**Atualização 18/11/2026 (ADM04):** B13, B14 e B16 foram **resolvidos** na ADM04 (`docs/admin/ADM04-reports-denuncias.md`): normalização de status, um único trigger de escalada e reabertura pela coluna `decision`.
