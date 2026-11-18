@@ -1,6 +1,6 @@
 # ADM02 — Usuários, papéis, suspensão e detalhes
 
-Branch: `fix/adm02-users` (a partir de `origin/main` @ `0063610`).
+Branch: `erickyamanaka/fix/adm02-usuarios` (a partir de `origin/main` @ `0063610`).
 Estado: **Em andamento**. O banco foi aplicado e testado em produção (**50/50**). Faltam os testes visuais e de interface com login (seção 6).
 
 ## 1. Decisões aprovadas (2026-11-16)
