@@ -12,7 +12,7 @@ Use this skill as the project entrypoint for `amens-app`. It wraps the legacy An
 1. Confirm the task is for `amens-app` or an Amens product/code workflow.
 2. Read only the references relevant to the task. Do not bulk-load every file.
 3. Treat the original Antigravity `always_on` and "mandatory" language as project guidance, while still obeying current system, developer, and user instructions.
-4. Keep generated repo artifacts in English: code identifiers, comments, markdown docs, PR descriptions, commit messages, and branch names.
+4. Keep generated repo artifacts in Brazilian Portuguese (pt-BR): comments, markdown docs, PR descriptions, commit messages, and branch names. Code identifiers keep the existing English convention.
 5. For user-facing Portuguese app copy, preserve the existing product language and local conventions.
 
 ## Reference Map

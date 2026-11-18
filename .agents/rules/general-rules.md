@@ -6,13 +6,13 @@ trigger: always_on
 
 Estas regras se aplicam a todos os desenvolvedores e assistentes de IA (como Antigravity) operando no repositório `amens-app`.
 
-## 1. Language Policy: ENGLISH ONLY
-- **Code:** Todas as variáveis, funções, classes, métodos e IDs DEVEM ser em inglês.
-- **Comments:** Todos os comentários de código e *docstrings* DEVEM ser em inglês.
-- **Commits:** Mensagens de commit do git DEVEM ser em inglês.
-- **Branches:** O nome das branches DEVE ser em inglês.
-- **Documentation:** Qualquer arquivo markdown que explique código, Pull Requests e issues devem ser em inglês. (Exceção apenas para os artefatos locais de planejamento do chat, caso o usuário interaja em português).
-- *Nota:* Embora a interação no chat com a IA possa ser em português, o output gerado que será salvo dentro do repositório `.ts`, `.tsx` DEVE estritamente seguir a política English-Only.
+## 1. Política de idioma: PORTUGUÊS DO BRASIL
+- **Comentários:** Todos os comentários de código e *docstrings* DEVEM ser em português do Brasil.
+- **Commits:** Mensagens de commit do git DEVEM ser em português do Brasil.
+- **Branches:** O nome das branches DEVE ser em português do Brasil (kebab-case, sem acentos).
+- **Documentação:** Arquivos markdown, Pull Requests e issues DEVEM ser em português do Brasil.
+- **Identificadores de código:** variáveis, funções, classes, métodos, IDs, tabelas e colunas seguem o padrão já existente no código (em inglês), para manter a consistência com o banco, as bibliotecas e o código atual.
+- *Nota:* A interação no chat com a IA também deve ser em português do Brasil.
 
 ## 2. Git Workflow & Branching Strategy
 Antes de iniciar qualquer nova funcionalidade, desenvolvedores e IA DEVEM seguir o fluxo:
@@ -23,7 +23,7 @@ Antes de iniciar qualquer nova funcionalidade, desenvolvedores e IA DEVEM seguir
 ### Branch Naming Convention
 - **Formato:** `<username>/<type>/<kebab-case-task-name>`
 - **Tipos Permitidos:** `feature`, `fix`, `chore`, `refactor`
-- **Diretriz para a IA:** Se o usuário solicitar uma alteração e você estiver criando um script de execução, pergunte ou sugira a criação de uma branch no padrão inglês antes de aplicar mudanças complexas. 
+- **Diretriz para a IA:** Se o usuário solicitar uma alteração e você estiver criando um script de execução, pergunte ou sugira a criação de uma branch no padrão em português do Brasil antes de aplicar mudanças complexas. 
 - Pergunte ao usuário se ele confirma o nome da branch criada, descrição e mensagens de commit
 - Caso o usuário confirme faça o push para atualizar a branch e as alterações no github
 
