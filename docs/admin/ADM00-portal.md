@@ -1,6 +1,6 @@
 # ADM00 — Portal administrativo: acesso, sessão e navegação
 
-Branch: `fix/adm00-portal-access` (a partir de `origin/main` @ `0063610`).
+Branch: `erickyamanaka/fix/adm00-acesso-portal` (a partir de `origin/main` @ `0063610`).
 Estado: **Em andamento**. Os testes manuais de interface T01–T05 ainda não foram executados. As policies de produção foram verificadas e S1, S2 e S8 foram corrigidos em 2026-11-16 (ver 2.3).
 
 ## 1. Matriz de acesso (interface)
