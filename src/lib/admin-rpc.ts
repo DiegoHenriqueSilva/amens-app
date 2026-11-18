@@ -7,7 +7,8 @@ import { supabase } from "@/integrations/supabase/client";
  * RPCs — ver backlog B06.
  */
 export async function adminRpc<T = unknown>(fn: string, args: Record<string, unknown>): Promise<T> {
-  const call = supabase.rpc as unknown as (
+  // bind: sem ele o método perde o "this" e falha com "reading 'rest'".
+  const call = supabase.rpc.bind(supabase) as unknown as (
     name: string,
     params: Record<string, unknown>,
   ) => Promise<{ data: T | null; error: { message: string } | null }>;
