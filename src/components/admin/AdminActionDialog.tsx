@@ -25,6 +25,8 @@ interface Props {
   children?: React.ReactNode;
   /** Falso quando os campos extras são inválidos. */
   canConfirm?: boolean;
+  /** Motivo opcional (ex.: aprovar). Se preenchido, ainda exige 3 caracteres. */
+  reasonOptional?: boolean;
   onConfirm: (reason: string) => Promise<unknown>;
 }
 
@@ -34,7 +36,7 @@ interface Props {
  * do servidor sem fechar o diálogo — nunca há "sucesso" sem confirmação real.
  */
 export function AdminActionDialog({
-  open, onOpenChange, title, target, description, confirmLabel, destructive, children, canConfirm = true, onConfirm,
+  open, onOpenChange, title, target, description, confirmLabel, destructive, children, canConfirm = true, reasonOptional = false, onConfirm,
 }: Props) {
   const reasonId = useId();
   const [reason, setReason] = useState("");
@@ -46,7 +48,7 @@ export function AdminActionDialog({
     if (open) { setReason(""); setTouched(false); setServerError(null); setPending(false); }
   }, [open, target?.id]);
 
-  const reasonValid = reason.trim().length >= 3;
+  const reasonValid = reason.trim().length >= 3 || (reasonOptional && reason.trim().length === 0);
 
   async function submit() {
     setTouched(true);
@@ -82,7 +84,7 @@ export function AdminActionDialog({
         <form className="space-y-3" onSubmit={(e) => { e.preventDefault(); void submit(); }}>
           {children}
           <div className="space-y-1.5">
-            <Label htmlFor={reasonId}>Motivo (obrigatório)</Label>
+            <Label htmlFor={reasonId}>{reasonOptional ? "Motivo (opcional)" : "Motivo (obrigatório)"}</Label>
             <Textarea
               id={reasonId}
               value={reason}
@@ -95,7 +97,9 @@ export function AdminActionDialog({
               aria-describedby={`${reasonId}-help`}
             />
             <p id={`${reasonId}-help`} className={`text-xs ${touched && !reasonValid ? "text-destructive" : "text-muted-foreground"}`}>
-              {touched && !reasonValid ? "Informe o motivo com pelo menos 3 caracteres." : "Fica registrado no log de moderação."}
+              {touched && !reasonValid
+                ? (reasonOptional ? "Se informar um motivo, use pelo menos 3 caracteres." : "Informe o motivo com pelo menos 3 caracteres.")
+                : "Fica registrado no log de moderação."}
             </p>
           </div>
 
