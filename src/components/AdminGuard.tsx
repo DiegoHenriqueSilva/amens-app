@@ -45,7 +45,7 @@ export function AdminGuard({ children, requireAdmin = false }: AdminGuardProps) 
     // nem libera acesso; mostra o erro com opção de tentar de novo.
     return (
       <div role="alert" className="min-h-[50vh] flex flex-col items-center justify-center gap-3 p-6 text-center">
-        <p className="text-sm text-muted-foreground">Não foi possível verificar suas permissões.</p>
+        <p className="text-sm text-muted-foreground">Não conseguimos verificar seu acesso agora. Tente novamente em alguns instantes.</p>
         <div className="flex gap-2">
           <Button size="sm" onClick={() => void refetch()}>Tentar novamente</Button>
           <Button size="sm" variant="ghost" asChild><Link to="/">Voltar ao App</Link></Button>
