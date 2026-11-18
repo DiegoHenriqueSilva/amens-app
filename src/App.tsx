@@ -38,6 +38,7 @@ import { AppWelcomeSplash } from "./components/AppWelcomeSplash";
 import { RouteScrollReset } from "./components/RouteScrollReset";
 import Admin from "./pages/Admin";
 import { AdminGuard } from "./components/AdminGuard";
+import { AccountStatusBanner } from "./components/AccountStatusBanner";
 import { DonationConfirmationToast } from "./components/DonationConfirmationToast";
 
 const queryClient = new QueryClient();
@@ -83,6 +84,7 @@ const App = () => {
         <AppWelcomeSplash />
         <BrowserRouter>
           <RouteScrollReset />
+          <AccountStatusBanner />
           <DonationConfirmationToast />
           <AltarProvider>
           <NativeAuthListener />
