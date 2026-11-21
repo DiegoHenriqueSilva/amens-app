@@ -23,6 +23,9 @@ const ACTION_LABELS: Record<string, string> = {
   approve: "Aprovado",
   reject: "Rejeitado",
   send_to_review: "Enviado para revisão",
+  auto_escalate: "Revisão automática (denúncias)",
+  reopen_report: "Report reaberto",
+  delete_report: "Report excluído",
   resolve_report: "Report resolvido",
   dismiss_report: "Report descartado",
   role_assign: "Role atribuída",
@@ -222,7 +225,7 @@ export default function AdminLogs() {
                     {format(new Date(l.created_at), "dd/MM/yy HH:mm", { locale: ptBR })}
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground">
-                    {authMap[l.moderator_id] || (l.moderator_id ? l.moderator_id.slice(0, 8) + "…" : "—")}
+                    {l.moderator_id ? (authMap[l.moderator_id] || l.moderator_id.slice(0, 8) + "…") : "Automático"}
                   </TableCell>
                   <TableCell>
                     <Badge variant={actionVariant(l.action)}>{ACTION_LABELS[l.action] || l.action}</Badge>
