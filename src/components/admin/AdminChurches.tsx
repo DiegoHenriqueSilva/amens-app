@@ -1,17 +1,15 @@
-import { useState, useEffect, useRef } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { useEffect, useId, useRef, useState } from "react";
+import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
@@ -19,755 +17,495 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import {
-  Tooltip, TooltipContent, TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { MoreHorizontal, Plus, Search, Undo2, Check, X, ChevronLeft, ChevronRight } from "lucide-react";
+import { AlertTriangle, ChevronDown, FileUp, Plus, RefreshCw, Search, X } from "lucide-react";
 import { toast } from "sonner";
+import { adminRpc } from "@/lib/admin-rpc";
+import { useUserRole } from "@/hooks/use-user-role";
+import { AdminActionDialog } from "./AdminActionDialog";
+import { ChurchImportDialog } from "./churches/ChurchImportDialog";
+import { DuplicateGroups } from "./churches/DuplicateGroups";
+import {
+  Church, ChurchSource, SOURCE_LABELS, STATES, StatusBadge, linkedText, place, plural, statusLabel,
+} from "./churches/shared";
 
-type ChurchStatus = "all" | "active" | "inactive" | "pending_review" | "archived" | "duplicates";
-
-type Church = {
-  id: string;
-  name: string;
-  city: string | null;
-  state: string | null;
-  is_active: boolean;
-  status: string;
-  source: string | null;
-  deleted_at: string | null;
-  created_at: string;
-};
+type Tab = "all" | "active" | "inactive" | "pending_review" | "archived" | "duplicates";
+type ListTab = Exclude<Tab, "duplicates">;
+type ListRes = { counts: Record<ListTab, number>; total: number; rows: Church[] };
+type Action = "approve" | "reject" | "activate" | "deactivate" | "remove" | "restore" | "unmerge";
 
 const PAGE_SIZE = 30;
 
-const STATUS_TAB_TOOLTIPS: Record<ChurchStatus, string> = {
-  all: "Todas as igrejas, incluindo removidas e rejeitadas",
-  active: "Igrejas ativas e visíveis para os usuários (is_active = true, status = active)",
-  inactive: "Igrejas desativadas (is_active = false, status = active), mas não removidas",
-  pending_review: "Igrejas submetidas por usuários aguardando aprovação",
-  archived: "Igrejas rejeitadas (status = rejected) ou removidas (deleted_at IS NOT NULL)",
-  duplicates: "Igrejas que possuem outra com mesmo nome, cidade e estado",
-};
-
-const STATE_OPTIONS = [
-  "Acre", "Alagoas", "Amapá", "Amazonas", "Bahia", "Ceará",
-  "Distrito Federal", "Espírito Santo", "Goiás", "Maranhão",
-  "Mato Grosso", "Mato Grosso do Sul", "Minas Gerais",
-  "Pará", "Paraíba", "Paraná", "Pernambuco", "Piauí",
-  "Rio de Janeiro", "Rio Grande do Norte", "Rio Grande do Sul",
-  "Rondônia", "Roraima", "Santa Catarina", "São Paulo",
-  "Sergipe", "Tocantins",
+const TABS: { value: Tab; label: string; help: string }[] = [
+  { value: "all", label: "Todas", help: "Todas as igrejas, em qualquer situação." },
+  { value: "active", label: "Ativas", help: "Visíveis para todos. São as únicas que a busca de paróquias pode mostrar." },
+  { value: "inactive", label: "Inativas", help: "Não ficam visíveis. Inclui as mescladas em outra igreja, que podem ser separadas de novo." },
+  { value: "pending_review", label: "Em revisão", help: "Sugeridas por usuários. Só ficam visíveis depois de aprovadas." },
+  { value: "archived", label: "Arquivadas", help: "Rejeitadas ou removidas. Não ficam visíveis; as removidas podem ser restauradas." },
+  { value: "duplicates", label: "Duplicadas", help: "Mesmo nome na mesma cidade e estado, sem diferenciar acentos e maiúsculas. Ao mesclar, os perfis ligados passam para a igreja que fica." },
 ];
 
-const emptyForm = { name: "", city: "", state: "" };
+const ACTION_UI: Record<Action, { menu: string; title: string; confirm: string; destructive?: boolean; reasonOptional?: boolean }> = {
+  approve: { menu: "Aprovar", title: "Aprovar igreja", confirm: "Aprovar", reasonOptional: true },
+  reject: { menu: "Rejeitar…", title: "Rejeitar sugestão", confirm: "Rejeitar", destructive: true },
+  activate: { menu: "Ativar", title: "Ativar igreja", confirm: "Ativar", reasonOptional: true },
+  deactivate: { menu: "Inativar…", title: "Inativar igreja", confirm: "Inativar", destructive: true },
+  remove: { menu: "Remover…", title: "Remover igreja", confirm: "Remover", destructive: true },
+  restore: { menu: "Restaurar", title: "Restaurar igreja", confirm: "Restaurar", reasonOptional: true },
+  unmerge: { menu: "Desfazer mesclagem…", title: "Desfazer mesclagem", confirm: "Desfazer", reasonOptional: true },
+};
 
-function normalizeChurchName(name: string): string {
-  if (!name) return name;
-  const particles = new Set(["de", "da", "do", "das", "dos", "e", "em", "a", "o", "as", "os", "na", "no", "nas", "nos", "ao", "aos"]);
-  const str = name.trim().replace(/\s+/g, " ");
-  const normalized = str.toLowerCase().split(" ").map((w, i) => {
-    if (i > 0 && particles.has(w)) return w;
-    return w.charAt(0).toUpperCase() + w.slice(1);
-  }).join(" ");
-  return normalized
-    .replace(/par[oó]quia/gi, "Paróquia")
-    .replace(/parroquia/gi, "Paróquia");
-}
-
-function applyFilters(q: any, stateFilter: string, cityFilter: string, search: string, sourceFilter: string) {
-  if (stateFilter) q = q.eq("state", stateFilter);
-  if (cityFilter) q = q.eq("city", cityFilter);
-  if (sourceFilter) q = q.eq("source", sourceFilter);
-  if (search) q = q.or(`name.ilike.%${search}%,city.ilike.%${search}%,state.ilike.%${search}%`);
-  return q;
-}
-
-async function fetchChurches(
-  statusFilter: ChurchStatus,
-  stateFilter: string,
-  cityFilter: string,
-  search: string,
-  page: number,
-  sourceFilter = ""
-): Promise<{ data: Church[]; count: number }> {
-  const offset = (page - 1) * PAGE_SIZE;
-  const baseSelect = "id, name, city, state, is_active, status, source, deleted_at, created_at";
-
-  if (statusFilter === "duplicates") {
-    const { data, error } = await (supabase as any).rpc("get_duplicate_churches");
-    if (error) throw error;
-    let rows = (data || []) as Church[];
-    if (stateFilter) rows = rows.filter((r) => r.state === stateFilter);
-    if (cityFilter) rows = rows.filter((r) => r.city === cityFilter);
-    if (sourceFilter) rows = rows.filter((r) => (r.source ?? "import") === sourceFilter);
-    if (search) {
-      const q = search.toLowerCase();
-      rows = rows.filter((r) =>
-        r.name?.toLowerCase().includes(q) ||
-        r.city?.toLowerCase().includes(q) ||
-        r.state?.toLowerCase().includes(q)
-      );
-    }
-    return { data: rows.slice(offset, offset + PAGE_SIZE), count: rows.length };
+function actionsFor(c: Church): Action[] {
+  if (c.deleted_at) return ["restore"];
+  if (c.merged_into) return ["unmerge", "remove"];
+  switch (c.status) {
+    case "pending_review": return ["approve", "reject", "remove"];
+    case "active": return ["deactivate", "remove"];
+    case "inactive": return ["activate", "remove"];
+    case "rejected": return ["approve", "remove"];
   }
-
-  if (statusFilter === "archived") {
-    const [rejRes, delRes] = await Promise.all([
-      applyFilters(
-        supabase.from("churches").select(baseSelect).eq("status", "rejected").is("deleted_at", null).order("state").order("name"),
-        stateFilter, cityFilter, search, sourceFilter
-      ).limit(500),
-      applyFilters(
-        supabase.from("churches").select(baseSelect).not("deleted_at", "is", null).order("state").order("name"),
-        stateFilter, cityFilter, search, sourceFilter
-      ).limit(500),
-    ]);
-    const seen = new Set<string>();
-    const combined: Church[] = [];
-    [...(rejRes.data || []), ...(delRes.data || [])].forEach((r) => {
-      if (!seen.has(r.id)) { seen.add(r.id); combined.push(r as Church); }
-    });
-    combined.sort((a, b) => {
-      const s = (a.state ?? "").localeCompare(b.state ?? "", "pt-BR");
-      if (s !== 0) return s;
-      return (a.name ?? "").localeCompare(b.name ?? "", "pt-BR");
-    });
-    return { data: combined.slice(offset, offset + PAGE_SIZE), count: combined.length };
-  }
-
-  let q = supabase
-    .from("churches")
-    .select(baseSelect, { count: "exact" })
-    .order("state", { ascending: true })
-    .order("city", { ascending: true })
-    .order("name", { ascending: true })
-    .range(offset, offset + PAGE_SIZE - 1);
-
-  if (statusFilter === "inactive") {
-    q = q.is("deleted_at", null).eq("is_active", false).eq("status", "active");
-  } else if (statusFilter === "active") {
-    q = q.is("deleted_at", null).eq("status", "active").eq("is_active", true);
-  } else if (statusFilter === "pending_review") {
-    q = q.is("deleted_at", null).eq("status", "pending_review");
-  }
-
-  q = applyFilters(q, stateFilter, cityFilter, search, sourceFilter);
-
-  const { data, count, error } = await q;
-  if (error) throw error;
-  return { data: (data || []) as Church[], count: count ?? 0 };
 }
 
-async function fetchCities(stateFilter: string): Promise<string[]> {
-  if (!stateFilter) return [];
-  try {
-    const { data, error } = await (supabase as any).rpc("get_church_cities", { state_name: stateFilter });
-    if (!error && data) {
-      return (data as any[]).map((r) => r.city || r).filter(Boolean) as string[];
-    }
-  } catch {}
-  const { data } = await supabase
-    .from("churches")
-    .select("city")
-    .eq("state", stateFilter)
-    .is("deleted_at", null)
-    .not("city", "is", null)
-    .order("city")
-    .limit(500);
-  const unique = [...new Set((data || []).map((r: any) => r.city).filter(Boolean))] as string[];
-  return unique.sort((a, b) => a.localeCompare(b, "pt-BR"));
+function consequence(a: Action, c: Church): string {
+  const linked = c.linked_profiles > 0 ? ` ${plural(c.linked_profiles, "perfil continua ligado", "perfis continuam ligados")} a ela.` : "";
+  switch (a) {
+    case "approve": return c.status === "rejected"
+      ? "A igreja sai de Arquivadas e passa a ficar visível para todos."
+      : "A igreja passa a ficar visível para todos.";
+    case "reject": return "A igreja não fica visível e a sugestão vai para Arquivadas.";
+    case "activate": return "A igreja volta a ficar visível para todos.";
+    case "deactivate": return `A igreja deixa de ficar visível e vai para Inativas.${linked}`;
+    case "remove": return `A igreja vai para Arquivadas e deixa de ficar visível. Dá para restaurar depois.${linked}`;
+    case "restore": return `A igreja volta à situação de antes da remoção (${statusLabel({ ...c, deleted_at: null }).toLowerCase()}).`;
+    case "unmerge": return `A igreja volta a ser separada de "${c.merged_into_name ?? "outra igreja"}", com a situação de antes, e os perfis que tinham sido movidos voltam para ela.`;
+  }
 }
 
-function CitySearchInput({
-  cities,
-  value,
-  onChange,
-  disabled,
-  placeholder,
-}: {
-  cities: string[];
-  value: string;
-  onChange: (v: string) => void;
-  disabled?: boolean;
-  placeholder?: string;
+function useDebounced(value: string, ms = 350) {
+  const [v, setV] = useState(value);
+  useEffect(() => { const t = setTimeout(() => setV(value.trim()), ms); return () => clearTimeout(t); }, [value, ms]);
+  return v;
+}
+
+/** Cidade com sugestões. `free`: aceita cidade fora da lista (formulário); sem `free`, só da lista (filtro). */
+function CityInput({ id, cities, value, onChange, disabled, free, label }: {
+  id: string; cities: string[]; value: string; onChange: (v: string) => void; disabled?: boolean; free?: boolean; label: string;
 }) {
   const [text, setText] = useState(value);
   const [open, setOpen] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
-
+  const box = useRef<HTMLDivElement>(null);
   useEffect(() => { setText(value); }, [value]);
+  const q = text.trim().toLowerCase();
+  const suggestions = q.length >= 2 ? cities.filter((c) => c.toLowerCase().includes(q)).slice(0, 25) : [];
 
-  const suggestions = text.length >= 3
-    ? cities.filter((c) => c.toLowerCase().includes(text.toLowerCase())).slice(0, 25)
-    : [];
-
-  function handleSelect(city: string) {
-    onChange(city);
-    setText(city);
-    setOpen(false);
-  }
-
-  function handleChange(v: string) {
-    setText(v);
-    if (value) onChange("");
-    setOpen(true);
-  }
-
-  function handleBlur(e: React.FocusEvent) {
-    if (!containerRef.current?.contains(e.relatedTarget as Node)) {
-      setOpen(false);
-      if (!value) setText("");
-    }
-  }
+  function pick(c: string) { onChange(c); setText(c); setOpen(false); }
 
   return (
-    <div ref={containerRef} className="relative w-44" onBlur={handleBlur}>
+    <div ref={box} className="relative" onBlur={(e) => {
+      if (box.current?.contains(e.relatedTarget as Node)) return;
+      setOpen(false);
+      if (free) onChange(text.trim());
+      else if (!cities.includes(text)) setText(value);
+    }}>
       <Input
+        id={id}
+        aria-label={label}
+        role="combobox"
+        aria-expanded={open && suggestions.length > 0}
+        aria-autocomplete="list"
         value={text}
-        onChange={(e) => handleChange(e.target.value)}
-        onFocus={() => text.length >= 3 && setOpen(true)}
-        placeholder={disabled ? "Selecione um estado" : (placeholder ?? "Digite 3+ letras...")}
         disabled={disabled}
-        className="w-full pr-6"
+        placeholder={disabled ? "Escolha o estado primeiro" : free ? "Digite a cidade" : "Todas as cidades"}
+        className="pr-8"
+        onChange={(e) => { setText(e.target.value); setOpen(true); if (free) onChange(e.target.value); }}
+        onFocus={() => setOpen(true)}
       />
-      {value && !disabled && (
-        <button
-          type="button"
-          className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-          onClick={() => { onChange(""); setText(""); setOpen(false); }}
-          tabIndex={-1}
-        >
-          <X className="w-3 h-3" />
+      {text && !disabled && (
+        <button type="button" aria-label="Limpar cidade" className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground"
+          onClick={() => { onChange(""); setText(""); }}>
+          <X className="w-3.5 h-3.5" aria-hidden="true" />
         </button>
       )}
       {open && suggestions.length > 0 && (
-        <div className="absolute z-50 top-full mt-1 w-full bg-popover border border-border rounded-md shadow-md max-h-48 overflow-y-auto">
-          {suggestions.map((city) => (
-            <button
-              key={city}
-              type="button"
-              className="w-full text-left px-3 py-1.5 text-sm hover:bg-accent"
-              onMouseDown={(e) => e.preventDefault()}
-              onClick={() => handleSelect(city)}
-            >
-              {city}
-            </button>
+        <ul role="listbox" className="absolute z-50 top-full mt-1 w-full max-h-56 overflow-y-auto rounded-md border border-border bg-popover shadow-md">
+          {suggestions.map((c) => (
+            <li key={c} role="option" aria-selected={c === value}>
+              <button type="button" className="w-full text-left px-3 py-2 text-sm hover:bg-accent focus:bg-accent focus:outline-none"
+                onMouseDown={(e) => e.preventDefault()} onClick={() => pick(c)}>{c}</button>
+            </li>
           ))}
-        </div>
-      )}
-      {open && text.length >= 3 && suggestions.length === 0 && (
-        <div className="absolute z-50 top-full mt-1 w-full bg-popover border border-border rounded-md shadow-md px-3 py-2 text-xs text-muted-foreground">
-          Nenhuma cidade encontrada
-        </div>
+        </ul>
       )}
     </div>
   );
 }
 
-const SOURCE_LABELS: Record<string, string> = {
-  import: "Importada",
-  app: "Usuário",
-};
-
-function sourceBadge(source: string | null) {
-  if (!source || source === "import") {
-    return <Badge variant="secondary" className="text-xs font-normal">Importada</Badge>;
-  }
-  return <Badge variant="outline" className="text-xs font-normal">Usuário</Badge>;
-}
-
-function statusBadge(c: Church) {
-  if (c.deleted_at) return <Badge variant="destructive">Removida</Badge>;
-  if (c.status === "pending_review") return <Badge variant="secondary">Em Revisão</Badge>;
-  if (c.status === "rejected") return <Badge variant="outline" className="text-destructive border-destructive/30">Rejeitada</Badge>;
-  return c.is_active
-    ? <Badge variant="default">Ativa</Badge>
-    : <Badge variant="secondary">Inativa</Badge>;
+function useCities(state: string) {
+  return useQuery({
+    queryKey: ["admin-church-cities", state],
+    queryFn: () => adminRpc<string[]>("admin_church_cities", { p_state: state }),
+    enabled: !!state,
+    staleTime: 5 * 60 * 1000,
+  }).data ?? [];
 }
 
 export default function AdminChurches() {
   const qc = useQueryClient();
-  const [search, setSearch] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<ChurchStatus>("all");
-  const [stateFilter, setStateFilter] = useState("");
-  const [cityFilter, setCityFilter] = useState("");
-  const [sourceFilter, setSourceFilter] = useState("");
-  const [page, setPage] = useState(1);
-  const [formDialog, setFormDialog] = useState<null | Partial<Church>>(null);
-  const [form, setForm] = useState(emptyForm);
-  const [resolveConfirm, setResolveConfirm] = useState(false);
-  const [pendingAction, setPendingAction] = useState<{
-    church: Church;
-    type: "approve" | "reject" | "activate" | "deactivate" | "remove" | "restore";
-    label: string;
-  } | null>(null);
-  const [actionReason, setActionReason] = useState("");
-  const [editReason, setEditReason] = useState("");
+  const { isAdmin } = useUserRole(); // ADM00/S3: moderador gerencia igrejas; importar é só de admin
+  const [tab, setTab] = useState<Tab>("all");
+  const [searchInput, setSearchInput] = useState("");
+  const search = useDebounced(searchInput);
+  const [state, setState] = useState("");
+  const [city, setCity] = useState("");
+  const [source, setSource] = useState<"" | ChurchSource>("");
+  const [page, setPage] = useState(0);
+  const [pending, setPending] = useState<{ action: Action; church: Church } | null>(null);
+  const [form, setForm] = useState<Church | "new" | null>(null);
+  const [importOpen, setImportOpen] = useState(false);
+  const filterCities = useCities(state);
 
-  useEffect(() => {
-    const t = setTimeout(() => { setDebouncedSearch(search); setPage(1); }, 350);
-    return () => clearTimeout(t);
-  }, [search]);
+  useEffect(() => { setPage(0); }, [tab, search, state, city, source]);
 
-  useEffect(() => { setPage(1); }, [statusFilter, stateFilter, cityFilter, sourceFilter]);
-
-  const { data: churchResult, isLoading } = useQuery({
-    queryKey: ["admin-churches", statusFilter, stateFilter, cityFilter, sourceFilter, debouncedSearch, page],
-    queryFn: () => fetchChurches(statusFilter, stateFilter, cityFilter, debouncedSearch, page, sourceFilter),
-    placeholderData: (prev) => prev,
+  const listTab: ListTab = tab === "duplicates" ? "all" : tab;
+  const { data, isLoading, isFetching, isError, error, refetch } = useQuery({
+    queryKey: ["admin-churches", listTab, search, state, city, source, page],
+    queryFn: () => adminRpc<ListRes>("admin_list_churches", {
+      p_tab: listTab, p_search: search || null, p_state: state || null, p_city: city || null,
+      p_source: source || null, p_offset: page * PAGE_SIZE, p_limit: PAGE_SIZE,
+    }),
+    placeholderData: keepPreviousData,
   });
 
-  const churches = churchResult?.data ?? [];
-  const totalCount = churchResult?.count ?? 0;
-  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
+  const rows = data?.rows ?? [];
+  const total = data?.total ?? 0;
+  const pageCount = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const activeTab = TABS.find((t) => t.value === tab)!;
 
-  const { data: filterCities = [] } = useQuery({
-    queryKey: ["admin-church-cities", stateFilter],
-    queryFn: () => fetchCities(stateFilter),
-    enabled: !!stateFilter,
-    staleTime: 2 * 60 * 1000,
-  });
-
-  const { data: formCities = [] } = useQuery({
-    queryKey: ["admin-church-cities", form.state],
-    queryFn: () => fetchCities(form.state),
-    enabled: !!form.state,
-    staleTime: 2 * 60 * 1000,
-  });
-
-  const { data: sessionData } = useQuery({
-    queryKey: ["session"],
-    queryFn: () => supabase.auth.getSession().then((r) => r.data),
-    staleTime: Infinity,
-  });
-  const currentUserId = sessionData?.session?.user?.id;
-
-  async function logChurch(targetId: string, action: string, reason?: string) {
-    await supabase.from("moderation_logs").insert({
-      moderator_id: currentUserId,
-      target_type: "church",
-      target_id: targetId,
-      action,
-      reason: reason || null,
-    });
+  function refresh() {
+    qc.invalidateQueries({ queryKey: ["admin-churches"] });
+    qc.invalidateQueries({ queryKey: ["admin-church-duplicates"] });
+    qc.invalidateQueries({ queryKey: ["admin-church-cities"] });
   }
 
-  const save = useMutation({
-    mutationFn: async () => {
-      const normalized = { ...form, name: normalizeChurchName(form.name) };
-      if (formDialog?.id) {
-        const { error } = await supabase.from("churches").update({ ...normalized, updated_at: new Date().toISOString() }).eq("id", formDialog.id);
-        if (error) throw error;
-        await logChurch(formDialog.id, "edit_content", editReason || undefined);
+  // Lista atualizada: o diálogo aberto passa a mostrar a situação atual da igreja.
+  useEffect(() => {
+    if (!data) return;
+    setPending((p) => {
+      const f = p && data.rows.find((r) => r.id === p.church.id);
+      return p && f && f !== p.church ? { ...p, church: f } : p;
+    });
+    // Formulário: atualiza a versão esperada sem apagar o que foi digitado.
+    setForm((f) => (f && f !== "new" ? data.rows.find((r) => r.id === f.id) ?? f : f));
+  }, [data]);
+
+  async function runAction(a: Action, c: Church, reason: string) {
+    try {
+      if (a === "unmerge") {
+        await adminRpc("admin_unmerge_church", { p_id: c.id, p_reason: reason || null });
       } else {
-        const { data, error } = await supabase.from("churches").insert({ ...normalized, status: "active", source: "app" }).select("id").single();
-        if (error) throw error;
-        if (data) await logChurch(data.id, "create");
-      }
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["admin-churches"] });
-      setFormDialog(null);
-      toast.success(formDialog?.id ? "Igreja atualizada." : "Igreja criada.");
-    },
-    onError: (e: any) => toast.error("Erro ao salvar: " + e.message),
-  });
-
-  const approve = useMutation({
-    mutationFn: async ({ id, reason }: { id: string; reason?: string }) => {
-      const { error } = await supabase.from("churches").update({ status: "active", updated_at: new Date().toISOString() }).eq("id", id);
-      if (error) throw error;
-      await logChurch(id, "approve", reason);
-    },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["admin-churches"] }); setPendingAction(null); toast.success("Igreja aprovada."); },
-    onError: (e: any) => toast.error("Erro: " + e.message),
-  });
-
-  const reject = useMutation({
-    mutationFn: async ({ id, reason }: { id: string; reason?: string }) => {
-      const { error } = await supabase.from("churches").update({ status: "rejected", updated_at: new Date().toISOString() }).eq("id", id);
-      if (error) throw error;
-      await logChurch(id, "reject", reason);
-    },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["admin-churches"] }); setPendingAction(null); toast.success("Igreja rejeitada."); },
-    onError: (e: any) => toast.error("Erro: " + e.message),
-  });
-
-  const toggleActive = useMutation({
-    mutationFn: async ({ id, current, reason }: { id: string; current: boolean; reason?: string }) => {
-      const { error } = await supabase.from("churches").update({ is_active: !current, updated_at: new Date().toISOString() }).eq("id", id);
-      if (error) throw error;
-      await logChurch(id, current ? "deactivate" : "activate", reason);
-    },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["admin-churches"] }); setPendingAction(null); },
-    onError: (e: any) => toast.error("Erro: " + e.message),
-  });
-
-  const softDelete = useMutation({
-    mutationFn: async ({ id, reason }: { id: string; reason?: string }) => {
-      const { error } = await supabase.from("churches").update({ deleted_at: new Date().toISOString(), deleted_by: currentUserId }).eq("id", id);
-      if (error) throw error;
-      await logChurch(id, "soft_delete", reason);
-    },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["admin-churches"] }); setPendingAction(null); toast.success("Igreja removida."); },
-    onError: (e: any) => toast.error("Erro: " + e.message),
-  });
-
-  const restore = useMutation({
-    mutationFn: async ({ id, reason }: { id: string; reason?: string }) => {
-      const { error } = await supabase.from("churches").update({ deleted_at: null, deleted_by: null }).eq("id", id);
-      if (error) throw error;
-      await logChurch(id, "restore", reason);
-    },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["admin-churches"] }); setPendingAction(null); toast.success("Igreja restaurada."); },
-    onError: (e: any) => toast.error("Erro: " + e.message),
-  });
-
-  const resolveAllDuplicates = useMutation({
-    mutationFn: async () => {
-      const { data, error } = await (supabase as any).rpc("get_duplicate_churches");
-      if (error) throw error;
-      const rows = (data || []) as Church[];
-
-      const groups: Record<string, Church[]> = {};
-      rows.forEach((c) => {
-        const key = `${c.name}|${c.city ?? ""}|${c.state ?? ""}`;
-        if (!groups[key]) groups[key] = [];
-        groups[key].push(c);
-      });
-
-      const toDeactivate: string[] = [];
-      Object.values(groups).forEach((group) => {
-        const nonDeleted = group.filter((c) => !c.deleted_at);
-        if (nonDeleted.length <= 1) return;
-        const sorted = [...nonDeleted].sort((a, b) => {
-          const score = (c: Church) =>
-            (c.is_active ? 0 : 2) + (c.status === "active" ? 0 : 1);
-          const diff = score(a) - score(b);
-          if (diff !== 0) return diff;
-          return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+        await adminRpc("admin_set_church_status", {
+          p_id: c.id, p_action: a, p_reason: reason || null,
+          p_expected_status: c.status, p_expected_deleted: !!c.deleted_at,
         });
-        sorted.slice(1).filter((c) => c.is_active).forEach((c) => toDeactivate.push(c.id));
-      });
-
-      if (toDeactivate.length === 0) return 0;
-      for (let i = 0; i < toDeactivate.length; i += 100) {
-        const batch = toDeactivate.slice(i, i + 100);
-        const { error: err } = await supabase
-          .from("churches")
-          .update({ is_active: false, updated_at: new Date().toISOString() })
-          .in("id", batch);
-        if (err) throw err;
       }
-      await Promise.all(toDeactivate.map((id) => logChurch(id, "deactivate", "Resolver duplicatas")));
-      return toDeactivate.length;
-    },
-    onSuccess: (count) => {
-      qc.invalidateQueries({ queryKey: ["admin-churches"] });
-      setResolveConfirm(false);
-      toast.success(`${count} igrejas inativadas. Um registro ativo mantido por grupo.`);
-    },
-    onError: (e: any) => { toast.error("Erro: " + e.message); setResolveConfirm(false); },
-  });
-
-  function openCreate() { setForm(emptyForm); setFormDialog({}); }
-  function openEdit(c: Church) { setForm({ name: c.name, city: c.city || "", state: c.state || "" }); setFormDialog(c); setEditReason(""); }
-
-  function executeAction() {
-    if (!pendingAction) return;
-    const { church, type } = pendingAction;
-    const reason = actionReason || undefined;
-    if (type === "approve") approve.mutate({ id: church.id, reason });
-    else if (type === "reject") reject.mutate({ id: church.id, reason });
-    else if (type === "activate") toggleActive.mutate({ id: church.id, current: false, reason });
-    else if (type === "deactivate") toggleActive.mutate({ id: church.id, current: true, reason });
-    else if (type === "remove") softDelete.mutate({ id: church.id, reason });
-    else if (type === "restore") restore.mutate({ id: church.id, reason });
+    } catch (e) {
+      refresh();
+      throw e;
+    }
+    refresh();
+    toast.success({
+      approve: "Igreja aprovada.", reject: "Sugestão rejeitada.", activate: "Igreja ativada.", deactivate: "Igreja inativada.",
+      remove: "Igreja removida. Ela está em Arquivadas.", restore: "Igreja restaurada.", unmerge: "Mesclagem desfeita.",
+    }[a]);
   }
 
   return (
-    <div className="p-6 space-y-4">
-      <div className="flex items-center justify-between">
+    <div className="p-4 md:p-6 space-y-4">
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold">Igrejas</h1>
-          <p className="text-muted-foreground text-sm">Gerencie as paróquias e igrejas cadastradas</p>
+          <p className="text-muted-foreground text-sm">Cadastro de paróquias e igrejas. Toda alteração fica no log de moderação.</p>
         </div>
-        <div className="flex gap-2">
-          {statusFilter === "duplicates" && totalCount > 0 && (
-            <Button size="sm" variant="outline" onClick={() => setResolveConfirm(true)}>
-              Resolver todas
+        <div className="flex gap-2 shrink-0">
+          {isAdmin && (
+            <Button size="sm" variant="outline" onClick={() => setImportOpen(true)}>
+              <FileUp className="w-4 h-4 mr-2" aria-hidden="true" /> Importar CSV
             </Button>
           )}
-          <Button size="sm" onClick={openCreate}>
-            <Plus className="w-4 h-4 mr-2" /> Nova Igreja
+          <Button size="sm" onClick={() => setForm("new")}>
+            <Plus className="w-4 h-4 mr-2" aria-hidden="true" /> Nova igreja
           </Button>
         </div>
       </div>
 
-      <Tabs value={statusFilter} onValueChange={(v) => setStatusFilter(v as ChurchStatus)}>
-        <TabsList>
-          {(["all", "active", "inactive", "pending_review", "archived", "duplicates"] as ChurchStatus[]).map((t) => (
-            <Tooltip key={t}>
-              <TooltipTrigger asChild>
-                <span>
-                  <TabsTrigger value={t}>
-                    {{ all: "Todas", active: "Ativas", inactive: "Inativas", pending_review: "Em Revisão", archived: "Arquivadas", duplicates: "Duplicatas" }[t]}
-                  </TabsTrigger>
-                </span>
-              </TooltipTrigger>
-              <TooltipContent side="bottom"><p className="text-xs">{STATUS_TAB_TOOLTIPS[t]}</p></TooltipContent>
-            </Tooltip>
-          ))}
-        </TabsList>
-      </Tabs>
-
-      <div className="flex flex-wrap gap-2">
-        <div className="relative flex-1 min-w-[180px] max-w-xs">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input
-            className="pl-9"
-            placeholder="Buscar nome, cidade ou estado..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
+      <div className="space-y-2">
+        <div className="overflow-x-auto -mx-1 px-1">
+          <Tabs value={tab} onValueChange={(v) => setTab(v as Tab)}>
+            <TabsList aria-label="Filtrar igrejas por situação">
+              {TABS.map((t) => (
+                <TabsTrigger key={t.value} value={t.value} className="whitespace-nowrap">
+                  {t.label}
+                  {t.value !== "duplicates" && data?.counts && (
+                    <span className="ml-1.5 text-xs text-muted-foreground tabular-nums">{data.counts[t.value as ListTab].toLocaleString("pt-BR")}</span>
+                  )}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </Tabs>
         </div>
-        <Select
-          value={stateFilter || "_all"}
-          onValueChange={(v) => { setStateFilter(v === "_all" ? "" : v); setCityFilter(""); }}
-        >
-          <SelectTrigger className="w-44">
-            <SelectValue placeholder="Todos os estados" />
-          </SelectTrigger>
+        <p className="text-xs text-muted-foreground">{activeTab.help}</p>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
+          <Input className="pl-9" aria-label="Buscar por nome, cidade ou estado" placeholder="Buscar nome, cidade ou estado..."
+            value={searchInput} onChange={(e) => setSearchInput(e.target.value)} />
+        </div>
+        <Select value={state || "_all"} onValueChange={(v) => { setState(v === "_all" ? "" : v); setCity(""); }}>
+          <SelectTrigger aria-label="Filtrar por estado"><SelectValue placeholder="Todos os estados" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="_all">Todos os estados</SelectItem>
-            {STATE_OPTIONS.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+            {STATES.map((s) => <SelectItem key={s.uf} value={s.name}>{s.name} ({s.uf})</SelectItem>)}
           </SelectContent>
         </Select>
-        <CitySearchInput
-          cities={filterCities as string[]}
-          value={cityFilter}
-          onChange={setCityFilter}
-          disabled={!stateFilter}
-        />
-        <Select value={sourceFilter || "_all"} onValueChange={(v) => setSourceFilter(v === "_all" ? "" : v)}>
-          <SelectTrigger className="w-36">
-            <SelectValue placeholder="Origem" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="_all">Todas origens</SelectItem>
-            <SelectItem value="import">Importada</SelectItem>
-            <SelectItem value="app">Usuário</SelectItem>
-          </SelectContent>
-        </Select>
+        <CityInput id="church-city-filter" label="Filtrar por cidade" cities={filterCities} value={city} onChange={setCity} disabled={!state} />
+        {tab !== "duplicates" && (
+          <Select value={source || "_all"} onValueChange={(v) => setSource(v === "_all" ? "" : (v as ChurchSource))}>
+            <SelectTrigger aria-label="Filtrar por origem"><SelectValue placeholder="Todas as origens" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="_all">Todas as origens</SelectItem>
+              {(Object.keys(SOURCE_LABELS) as ChurchSource[]).map((s) => <SelectItem key={s} value={s}>{SOURCE_LABELS[s]}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        )}
       </div>
 
-      <div className="rounded-lg border border-border overflow-hidden">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Estado</TableHead>
-              <TableHead>Cidade</TableHead>
-              <TableHead>Nome</TableHead>
-              <TableHead>Origem</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="w-10" />
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {isLoading ? (
-              <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">Carregando...</TableCell></TableRow>
-            ) : churches.length === 0 ? (
-              <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">Nenhuma igreja encontrada.</TableCell></TableRow>
-            ) : churches.map((c: Church) => (
-              <TableRow key={c.id} className={c.deleted_at ? "opacity-50" : ""}>
-                <TableCell className="text-muted-foreground text-sm">{c.state || "—"}</TableCell>
-                <TableCell className="text-muted-foreground text-sm">{c.city || "—"}</TableCell>
-                <TableCell className="font-medium">{c.name}</TableCell>
-                <TableCell>{sourceBadge(c.source)}</TableCell>
-                <TableCell>{statusBadge(c)}</TableCell>
-                <TableCell>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-8 w-8">
-                        <MoreHorizontal className="w-4 h-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      {!c.deleted_at && (
-                        <>
-                          {c.status === "pending_review" && (
-                            <>
-                              <DropdownMenuItem onClick={() => { setPendingAction({ church: c, type: "approve", label: "Aprovar Igreja" }); setActionReason(""); }}>
-                                <Check className="w-4 h-4 mr-2 text-green-500" /> Aprovar
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => { setPendingAction({ church: c, type: "reject", label: "Rejeitar Igreja" }); setActionReason(""); }}>
-                                <X className="w-4 h-4 mr-2 text-destructive" /> Rejeitar
-                              </DropdownMenuItem>
-                              <DropdownMenuSeparator />
-                            </>
-                          )}
-                          <DropdownMenuItem onClick={() => openEdit(c)}>Editar</DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => { setPendingAction({ church: c, type: c.is_active ? "deactivate" : "activate", label: c.is_active ? "Desativar Igreja" : "Ativar Igreja" }); setActionReason(""); }}>
-                            {c.is_active ? "Desativar" : "Ativar"}
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem className="text-destructive" onClick={() => { setPendingAction({ church: c, type: "remove", label: "Remover Igreja" }); setActionReason(""); }}>
-                            Remover
-                          </DropdownMenuItem>
-                        </>
-                      )}
-                      {c.deleted_at && (
-                        <DropdownMenuItem onClick={() => { setPendingAction({ church: c, type: "restore", label: "Restaurar Igreja" }); setActionReason(""); }}>
-                          <Undo2 className="w-4 h-4 mr-2" /> Restaurar
-                        </DropdownMenuItem>
-                      )}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
-
-      <div className="flex items-center justify-between text-xs text-muted-foreground">
-        <span>
-          {totalCount > 0
-            ? `${(page - 1) * PAGE_SIZE + 1}–${Math.min(page * PAGE_SIZE, totalCount)} de ${totalCount} igrejas`
-            : "Nenhuma igreja"}
-        </span>
-        <div className="flex items-center gap-1">
-          <Button variant="ghost" size="icon" className="h-7 w-7" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>
-            <ChevronLeft className="w-4 h-4" />
-          </Button>
-          <span className="px-2">Página {page} de {totalPages}</span>
-          <Button variant="ghost" size="icon" className="h-7 w-7" disabled={page >= totalPages} onClick={() => setPage((p) => p + 1)}>
-            <ChevronRight className="w-4 h-4" />
-          </Button>
-        </div>
-      </div>
-
-      <Dialog open={resolveConfirm} onOpenChange={setResolveConfirm}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Resolver todas as duplicatas?</DialogTitle>
-          </DialogHeader>
-          <p className="text-sm text-muted-foreground">
-            Para cada grupo com o mesmo nome, cidade e estado, será mantido{" "}
-            <strong>apenas um registro ativo</strong> (o mais antigo com status ativo).
-            Os demais serão <strong>inativados</strong> (não removidos).
+      {tab === "duplicates" ? (
+        <DuplicateGroups search={search} state={state} city={city} onChanged={refresh} />
+      ) : (
+        <>
+          <p className="text-xs text-muted-foreground" aria-live="polite">
+            {isFetching && !isLoading ? "Atualizando…" : total > 0 ? `Mostrando ${(page * PAGE_SIZE + 1).toLocaleString("pt-BR")}–${Math.min(total, (page + 1) * PAGE_SIZE).toLocaleString("pt-BR")} de ${plural(total, "igreja", "igrejas")}` : ""}
           </p>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setResolveConfirm(false)}>Cancelar</Button>
-            <Button onClick={() => resolveAllDuplicates.mutate()} disabled={resolveAllDuplicates.isPending}>
-              {resolveAllDuplicates.isPending ? "Processando..." : "Confirmar"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
-      <Dialog open={!!pendingAction} onOpenChange={() => setPendingAction(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{pendingAction?.label}</DialogTitle>
-          </DialogHeader>
-          {pendingAction && (
-            <p className="text-sm text-muted-foreground">
-              {pendingAction.church.name}
-              {pendingAction.church.city ? ` — ${pendingAction.church.city}/${pendingAction.church.state}` : ""}
-            </p>
-          )}
-          <div className="space-y-1">
-            <Label>Motivo / Justificativa</Label>
-            <Textarea
-              value={actionReason}
-              onChange={(e) => setActionReason(e.target.value)}
-              placeholder="Opcional — aparecerá nos logs de moderação"
-              className="min-h-[80px]"
-              autoFocus
-            />
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setPendingAction(null)}>Cancelar</Button>
-            <Button
-              variant={pendingAction?.type === "remove" || pendingAction?.type === "reject" ? "destructive" : "default"}
-              onClick={executeAction}
-              disabled={approve.isPending || reject.isPending || toggleActive.isPending || softDelete.isPending || restore.isPending}
-            >
-              Confirmar
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={formDialog !== null} onOpenChange={() => setFormDialog(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{formDialog?.id ? "Editar igreja" : "Nova Igreja"}</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-3">
-            <div>
-              <Label>Nome da paróquia / igreja *</Label>
-              <Input
-                className="mt-1"
-                value={form.name}
-                onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))}
-                placeholder="Ex: Paróquia Nossa Senhora Aparecida"
-              />
+          {isError ? (
+            <div role="alert" className="flex flex-wrap items-center gap-3 rounded-lg border border-destructive/40 bg-destructive/5 p-4 text-sm">
+              <AlertTriangle className="w-4 h-4 text-destructive" aria-hidden="true" />
+              <span className="flex-1">Não foi possível carregar as igrejas. {error instanceof Error ? error.message : ""}</span>
+              <Button size="sm" variant="outline" onClick={() => void refetch()}><RefreshCw className="w-4 h-4 mr-1" aria-hidden="true" /> Tentar novamente</Button>
             </div>
-            <div>
-              <Label>Estado</Label>
-              <Select
-                value={form.state || "_none"}
-                onValueChange={(v) => setForm((prev) => ({ ...prev, state: v === "_none" ? "" : v, city: "" }))}
-              >
-                <SelectTrigger className="mt-1">
-                  <SelectValue placeholder="Selecione o estado..." />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="_none">— Nenhum —</SelectItem>
-                  {STATE_OPTIONS.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label>Cidade</Label>
-              <div className="mt-1">
-                <CitySearchInput
-                  cities={formCities as string[]}
-                  value={form.city}
-                  onChange={(v) => setForm((prev) => ({ ...prev, city: v }))}
-                  disabled={!form.state}
-                  placeholder={form.state ? "Digite 3+ letras para buscar..." : "Selecione um estado primeiro"}
-                />
+          ) : isLoading ? (
+            <p role="status" className="py-8 text-center text-muted-foreground">Carregando igrejas…</p>
+          ) : rows.length === 0 ? (
+            <p className="py-8 text-center text-muted-foreground">{search || state || source ? "Nenhuma igreja encontrada com esses filtros." : "Nenhuma igreja nesta aba."}</p>
+          ) : (
+            <>
+              {/* Celular: cartões */}
+              <ul className="space-y-2 md:hidden" aria-label="Igrejas">
+                {rows.map((c) => (
+                  <li key={c.id} className={`rounded-lg border border-border p-3 space-y-2 ${c.deleted_at ? "opacity-70" : ""}`}>
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="font-medium break-words">{c.name}</p>
+                        <p className="text-xs text-muted-foreground">{place(c)} · {SOURCE_LABELS[c.source]}</p>
+                      </div>
+                      <StatusBadge c={c} />
+                    </div>
+                    <ChurchDetails c={c} />
+                    <RowActions c={c} onEdit={() => setForm(c)} onAction={(action) => setPending({ action, church: c })} />
+                  </li>
+                ))}
+              </ul>
+              {/* Tela larga: tabela */}
+              <div className="hidden md:block rounded-lg border border-border overflow-hidden">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Igreja</TableHead>
+                      <TableHead>Cidade/UF</TableHead>
+                      <TableHead>Origem</TableHead>
+                      <TableHead>Situação</TableHead>
+                      <TableHead className="w-28"><span className="sr-only">Ações</span></TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {rows.map((c) => (
+                      <TableRow key={c.id} className={c.deleted_at ? "opacity-70" : ""}>
+                        <TableCell className="align-top">
+                          <p className="font-medium break-words">{c.name}</p>
+                          <ChurchDetails c={c} />
+                        </TableCell>
+                        <TableCell className="align-top text-sm text-muted-foreground whitespace-nowrap">{place(c)}</TableCell>
+                        <TableCell className="align-top text-sm text-muted-foreground">{SOURCE_LABELS[c.source]}</TableCell>
+                        <TableCell className="align-top"><StatusBadge c={c} /></TableCell>
+                        <TableCell className="align-top text-right">
+                          <RowActions c={c} onEdit={() => setForm(c)} onAction={(action) => setPending({ action, church: c })} />
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
               </div>
-              {form.state && !form.city && (
-                <p className="text-xs text-muted-foreground mt-1">
-                  Ou digite manualmente se a cidade não aparecer.
-                </p>
-              )}
-            </div>
-          </div>
-          {formDialog?.id && (
-            <div>
-              <Label>Motivo da edição</Label>
-              <Textarea
-                className="mt-1 min-h-[70px]"
-                value={editReason}
-                onChange={(e) => setEditReason(e.target.value)}
-                placeholder="Opcional — aparecerá nos logs de moderação"
-              />
-            </div>
+            </>
           )}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setFormDialog(null)}>Cancelar</Button>
-            <Button onClick={() => save.mutate()} disabled={!form.name || save.isPending}>Salvar</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+
+          {pageCount > 1 && (
+            <nav aria-label="Paginação" className="flex items-center justify-between gap-2">
+              <Button variant="outline" size="sm" disabled={page === 0} onClick={() => setPage((n) => n - 1)}>Anterior</Button>
+              <span className="text-xs text-muted-foreground">Página {(page + 1).toLocaleString("pt-BR")} de {pageCount.toLocaleString("pt-BR")}</span>
+              <Button variant="outline" size="sm" disabled={page + 1 >= pageCount} onClick={() => setPage((n) => n + 1)}>Próxima</Button>
+            </nav>
+          )}
+        </>
+      )}
+
+      <AdminActionDialog
+        open={!!pending}
+        onOpenChange={(o) => { if (!o) setPending(null); }}
+        title={pending ? ACTION_UI[pending.action].title : ""}
+        target={pending ? { id: pending.church.id, name: `${pending.church.name} · ${place(pending.church)} · ${statusLabel(pending.church)}` } : null}
+        description={pending ? consequence(pending.action, pending.church) : undefined}
+        confirmLabel={pending ? ACTION_UI[pending.action].confirm : ""}
+        destructive={pending ? ACTION_UI[pending.action].destructive : false}
+        reasonOptional={pending ? ACTION_UI[pending.action].reasonOptional : false}
+        onConfirm={(reason) => runAction(pending!.action, pending!.church, reason)}
+      />
+
+      <ChurchFormDialog church={form} onClose={() => setForm(null)} onSaved={refresh} />
+      <ChurchImportDialog open={importOpen} onOpenChange={setImportOpen} onImported={refresh} />
     </div>
   );
 }
 
+function ChurchDetails({ c }: { c: Church }) {
+  return (
+    <div className="text-xs text-muted-foreground space-y-0.5">
+      {c.address && <p className="break-words">{c.address}</p>}
+      <p>
+        {linkedText(c.linked_profiles)}
+        {c.merged_into && <> · Mesclada em <span className="text-foreground">{c.merged_into_name ?? "outra igreja"}</span></>}
+      </p>
+    </div>
+  );
+}
+
+function RowActions({ c, onEdit, onAction }: { c: Church; onEdit: () => void; onAction: (a: Action) => void }) {
+  const acts = actionsFor(c);
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="outline" size="sm" className="h-8" aria-label={`Ações para ${c.name}, ${place(c)}`}>
+          Ações <ChevronDown className="w-3.5 h-3.5 ml-1" aria-hidden="true" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        {!c.deleted_at && <DropdownMenuItem onClick={onEdit}>Editar…</DropdownMenuItem>}
+        {acts.filter((a) => a !== "remove").map((a) => (
+          <DropdownMenuItem key={a} onClick={() => onAction(a)}>{ACTION_UI[a].menu}</DropdownMenuItem>
+        ))}
+        {acts.includes("remove") && (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem className="text-destructive" onClick={() => onAction("remove")}>{ACTION_UI.remove.menu}</DropdownMenuItem>
+          </>
+        )}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+function ChurchFormDialog({ church, onClose, onSaved }: { church: Church | "new" | null; onClose: () => void; onSaved: () => void }) {
+  const ids = useId();
+  const editing = church && church !== "new" ? church : null;
+  const [name, setName] = useState("");
+  const [state, setState] = useState("");
+  const [city, setCity] = useState("");
+  const [address, setAddress] = useState("");
+  const [reason, setReason] = useState("");
+  const [err, setErr] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const cities = useCities(state);
+
+  useEffect(() => {
+    if (!church) return;
+    setName(editing?.name ?? ""); setState(editing?.state ?? ""); setCity(editing?.city ?? "");
+    setAddress(editing?.address ?? ""); setReason(""); setErr(null); setSaving(false);
+    // Só ao abrir ou trocar de igreja; a versão nova do mesmo registro não apaga o que foi digitado.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [church === "new" ? "new" : church?.id]);
+
+  const valid = name.trim().length >= 3 && !!state && city.trim().length >= 2;
+
+  async function save() {
+    if (!valid || saving) return;
+    setSaving(true); setErr(null);
+    try {
+      await adminRpc("admin_save_church", {
+        p_id: editing?.id ?? null, p_name: name, p_city: city, p_state: state, p_address: address || null,
+        p_reason: reason || null, p_expected_updated_at: editing?.updated_at ?? null,
+      });
+      toast.success(editing ? "Igreja atualizada." : "Igreja criada e ativa.");
+      onSaved();
+      onClose();
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Não foi possível salvar.");
+      onSaved();
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <Dialog open={!!church} onOpenChange={(o) => { if (!o && !saving) onClose(); }}>
+      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>{editing ? "Editar igreja" : "Nova igreja"}</DialogTitle>
+          <DialogDescription>
+            {editing ? `Situação atual: ${statusLabel(editing).toLowerCase()}. Editar não muda a situação.` : "A igreja criada aqui já entra como ativa."}
+          </DialogDescription>
+        </DialogHeader>
+        <form className="space-y-3" onSubmit={(e) => { e.preventDefault(); void save(); }}>
+          <div className="space-y-1.5">
+            <Label htmlFor={`${ids}-name`}>Nome da paróquia ou igreja</Label>
+            <Input id={`${ids}-name`} value={name} maxLength={150} onChange={(e) => setName(e.target.value)} placeholder="Ex.: Paróquia Nossa Senhora Aparecida" />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor={`${ids}-state`}>Estado</Label>
+            <Select value={state || undefined} onValueChange={(v) => { setState(v); setCity(""); }}>
+              <SelectTrigger id={`${ids}-state`}><SelectValue placeholder="Escolha o estado" /></SelectTrigger>
+              <SelectContent>
+                {STATES.map((s) => <SelectItem key={s.uf} value={s.name}>{s.name} ({s.uf})</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor={`${ids}-city`}>Cidade</Label>
+            <CityInput id={`${ids}-city`} label="Cidade" cities={cities} value={city} onChange={setCity} disabled={!state} free />
+            <p className="text-xs text-muted-foreground">Escolha da lista ou digite, se a cidade ainda não tiver igrejas.</p>
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor={`${ids}-address`}>Endereço (opcional)</Label>
+            <Input id={`${ids}-address`} value={address} maxLength={300} onChange={(e) => setAddress(e.target.value)} placeholder="Rua, número, bairro" />
+          </div>
+          {editing && (
+            <div className="space-y-1.5">
+              <Label htmlFor={`${ids}-reason`}>Motivo da edição (opcional)</Label>
+              <Textarea id={`${ids}-reason`} rows={2} maxLength={500} value={reason} onChange={(e) => setReason(e.target.value)} />
+              <p className="text-xs text-muted-foreground">Fica registrado no log de moderação.</p>
+            </div>
+          )}
+          {err && (
+            <div role="alert" className="flex gap-2 rounded-md border border-destructive/40 bg-destructive/5 px-3 py-2 text-sm text-destructive">
+              <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" aria-hidden="true" />
+              <span>{err}</span>
+            </div>
+          )}
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button type="button" variant="outline" onClick={onClose} disabled={saving}>Cancelar</Button>
+            <Button type="submit" disabled={!valid || saving}>{saving ? "Salvando…" : "Salvar"}</Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
