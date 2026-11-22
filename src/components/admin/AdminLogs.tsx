@@ -34,6 +34,9 @@ const ACTION_LABELS: Record<string, string> = {
   create: "Criado",
   activate: "Ativado",
   deactivate: "Inativado",
+  merge: "Mesclada em outra",
+  unmerge: "Mesclagem desfeita",
+  import: "Importação (lote)",
   xp_override: "XP alterado",
   xp_multiplier: "Multiplicador XP",
 };
@@ -185,6 +188,9 @@ export default function AdminLogs() {
                   <SelectItem value="create">Criado</SelectItem>
                   <SelectItem value="activate">Ativado</SelectItem>
                   <SelectItem value="deactivate">Inativado</SelectItem>
+                  <SelectItem value="merge">Mesclada em outra</SelectItem>
+                  <SelectItem value="unmerge">Mesclagem desfeita</SelectItem>
+                  <SelectItem value="import">Importação (lote)</SelectItem>
                   <SelectItem value="xp_override">XP alterado</SelectItem>
                   <SelectItem value="xp_multiplier">Multiplicador XP</SelectItem>
                 </SelectContent>
