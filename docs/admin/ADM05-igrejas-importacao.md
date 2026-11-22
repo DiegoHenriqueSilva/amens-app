@@ -120,7 +120,7 @@ Os textos foram revisados antes da tela. Os critérios:
 | `supabase/migrations/20261122000000_adm05_igrejas.sql` | **Aplicada** em produção (`AmensAntigravity`, 22/11). É idempotente |
 | `supabase/migrations/20261122010000_adm05_escrita_so_por_funcoes.sql` | **Pendente:** aplicar logo depois do deploy deste front |
 | `docs/admin/testes/bateria_adm05_igrejas.sql` | Bateria; roda numa transação desfeita |
-| `docs/admin/testes/tela/fase5_igrejas.cjs`, `semeia_adm05.sql`, `limpa_adm05.sql` | Testes de tela (precisam de conta admin) |
+| `docs/admin/testes/tela/fase5_igrejas.cjs`, `semeia_adm05.sql`, `limpa_adm05.sql` | Testes de tela (precisam de conta admin para a importação) |
 
 ## 6. Testes
 

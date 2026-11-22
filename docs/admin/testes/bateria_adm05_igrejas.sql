@@ -45,16 +45,19 @@ begin
   out := out || 'M3=' || (select count(*) from churches where status not in ('pending_review','active','inactive','rejected')) || '(0) ';
 
   -- ── Permissões
-  got := pg_temp.run($q$select admin_list_churches('all', null, null, null, null, 0, 5)::text$q$, md);
-  out := out || 'P1=' || got || '(bloq:42501) ';
+  -- ADM00/S3: moderador gerencia Igrejas (só a importação é de admin)
+  got := pg_temp.run($q$select (admin_list_churches('all', null, null, null, null, 0, 5)->>'total' is not null)::text$q$, md);
+  out := out || 'P1=' || got || '(ok:true) ';
   got := pg_temp.run($q$select admin_list_churches('all', null, null, null, null, 0, 5)::text$q$, null, 'anon');
   out := out || 'P2=' || got || '(bloq:42501) ';
   got := pg_temp.run($q$select count(*)::text from search_churches('SP', null, 'paroquia', 5)$q$, null, 'anon');
   out := out || 'P3=' || got || '(ok:5) ';
   got := pg_temp.run($q$select count(*)::text from get_duplicate_churches()$q$, aut);
   out := out || 'P4=' || got || '(bloq:42501) ';
+  got := pg_temp.run($q$select (count(*) > 0)::text from get_duplicate_churches()$q$, md);
+  out := out || 'P5=' || got || '(ok:true) ';
 
-  -- ── Criar e editar (admin)
+  -- ── Criar e editar
   got := pg_temp.run($q$select admin_save_church(null, '  [Teste ADM05]   Grupo  ', 'Cidade Teste ADM05', 'sp', null, 'teste')->>'state'$q$, adm);
   out := out || 'C1=' || got || '(ok:São_Paulo) ';
   out := replace(out, 'ok:São Paulo', 'ok:São_Paulo');
@@ -76,13 +79,13 @@ begin
   out := out || 'C7=' || replace(got, ' ', '_') || '(ok:Rua_A) ';
   out := out || 'C7b=' || (select metadata->'before'->>'address' is null and metadata->'after'->>'address' = 'Rua A'
                            from moderation_logs where target_id = g1 and action = 'edit_content' order by created_at desc limit 1) || '(true) ';
-  got := pg_temp.run(format($q$select admin_save_church('%s', '[Teste ADM05] Grupo', 'Cidade Teste ADM05', 'SP')->>'id'$q$, g1), md);
-  out := out || 'C8=' || got || '(bloq:42501) ';
+  got := pg_temp.run(format($q$select (admin_save_church('%s', '[Teste ADM05] Grupo', 'Cidade Teste ADM05', 'SP', 'Rua A')->>'id')::uuid = '%s'$q$, g1, g1), md);
+  out := out || 'C8=' || got || '(ok:true) ';
+  out := out || 'C8b=' || (select count(*) from moderation_logs where target_id = g1 and action = 'edit_content' and moderator_id = md) || '(1) ';
 
   -- ── Escrita direta (RLS + trigger)
-  got := pg_temp.run(format($q$update churches set name = 'hack' where id = '%s'$q$, g1), md);
-  out := out || 'W1=' || (select name from churches where id = g1) || '(' || '[Teste ADM05] Grupo' || ') ';
-  out := replace(out, '[Teste ADM05] Grupo', 'G');
+  got := pg_temp.run(format($q$update churches set address = 'Rua M' where id = '%s'$q$, g1), md);
+  out := out || 'W1=' || (select replace(address, ' ', '_') from churches where id = g1) || '(Rua_M) ';
   got := pg_temp.run(format($q$update churches set name = 'hack' where id = '%s'$q$, g1), aut);
   out := out || 'W2=' || (select name = '[Teste ADM05] Grupo' from churches where id = g1) || '(true) ';
   -- Sugestão pelo app: entra em revisão, ignora campos de moderação
@@ -171,7 +174,7 @@ begin
   out := out || 'D6=' || got || '(ok:inactive) ';
   out := out || 'D6b=' || (select count(*) from profiles where id in (d1, d2) and church_id = g3) || '(2) ';
   got := pg_temp.run(format($q$select admin_merge_churches('%s', array['%s']::uuid[], 'x')->>'moved_profiles'$q$, g1, g3), md);
-  out := out || 'D7=' || got || '(bloq:42501) ';
+  out := out || 'D7=' || got || '(ok:2) ';
   -- Resolver em lote: prévia conta, gravação respeita o limite e reduz o restante
   got := pg_temp.run($q$select admin_resolve_duplicates(null, true)::text$q$, adm);
   js := substr(got, 4)::jsonb;

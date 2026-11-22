@@ -4,7 +4,8 @@
 --   * Situação única: pending_review | active | inactive | rejected (+ deleted_at para remoção reversível).
 --     is_active continua existindo e é sempre (status = 'active'), sincronizado por trigger,
 --     para o painel publicado (que ainda grava is_active) não quebrar até o deploy.
---   * Toda escrita do painel passa por funções no servidor, só para admin, com log na mesma transação.
+--   * Toda escrita do painel passa por funções no servidor (moderador e admin, ADM00/S3; importação só admin),
+--     com log na mesma transação.
 --   * Duplicadas: mesclagem no servidor (perfis passam para a igreja que fica; as outras ficam
 --     inativas com merged_into), reversível.
 --   * Importação CSV pelo painel: validação no servidor, prévia, gravação em lotes, sem apagar nada.
@@ -137,7 +138,7 @@ security invoker -- precisa ver o papel real de quem grava (as funções do pain
 set search_path = public, extensions
 as $$
 declare
-  v_admin boolean := current_user in ('postgres', 'service_role', 'supabase_admin') or coalesce(public.is_admin(), false);
+  v_admin boolean := current_user in ('postgres', 'service_role', 'supabase_admin') or coalesce(public.is_moderator_or_admin(), false);
   v_err text;
 begin
   if tg_op = 'UPDATE' then
@@ -192,11 +193,11 @@ create trigger churches_before_write
   before insert or update on public.churches
   for each row execute function public.churches_before_write();
 
--- Moderador não entra em /admin/churches (rota só de admin). A escrita direta segue o mesmo papel.
+-- ADM00/S3: moderador gerencia Igrejas (escrita direta mantida para mod/admin até 20261122010000).
 drop policy if exists churches_insert_mod on public.churches;
-create policy churches_insert_mod on public.churches for insert to authenticated with check (public.is_admin());
+create policy churches_insert_mod on public.churches for insert to authenticated with check (public.is_moderator_or_admin());
 drop policy if exists churches_update_admin on public.churches;
-create policy churches_update_admin on public.churches for update to authenticated using (public.is_admin()) with check (public.is_admin());
+create policy churches_update_admin on public.churches for update to authenticated using (public.is_moderator_or_admin()) with check (public.is_moderator_or_admin());
 
 drop trigger if exists churches_enforce_not_restricted on public.churches;
 create trigger churches_enforce_not_restricted
@@ -256,7 +257,7 @@ security definer
 set search_path = public, extensions
 as $$
 begin
-  if not public.is_admin() then
+  if not coalesce(public.is_moderator_or_admin(), false) then
     raise exception 'Sem permissão.' using errcode = '42501';
   end if;
   return query
@@ -281,7 +282,22 @@ set search_path = public
 as $$
 begin
   if auth.uid() is null or not coalesce(public.is_admin(), false) then
-    raise exception 'Só administradores podem gerenciar igrejas.' using errcode = '42501';
+    raise exception 'Só administradores podem importar igrejas.' using errcode = '42501';
+  end if;
+end;
+$$;
+
+create or replace function public._church_require_staff()
+returns void
+language plpgsql
+stable
+security definer
+set search_path = public
+as $$
+begin
+  -- ADM00/S3: moderador gerencia Igrejas
+  if auth.uid() is null or not coalesce(public.is_moderator_or_admin(), false) then
+    raise exception 'Só a moderação pode gerenciar igrejas.' using errcode = '42501';
   end if;
 end;
 $$;
@@ -344,7 +360,7 @@ declare
   v_rows jsonb;
   v_counts jsonb;
 begin
-  perform public._church_require_admin();
+  perform public._church_require_staff();
   if p_tab not in ('all', 'active', 'inactive', 'pending_review', 'archived') then
     raise exception 'Aba inválida.' using errcode = '22023';
   end if;
@@ -397,7 +413,7 @@ security definer
 set search_path = public, extensions
 as $$
 begin
-  perform public._church_require_admin();
+  perform public._church_require_staff();
   return coalesce((select array_agg(distinct c.city order by c.city) from public.churches c
                    where c.state = public._church_state(p_state) and c.city is not null), '{}');
 end;
@@ -424,7 +440,7 @@ declare
   v_dup public.churches;
   v_new public.churches;
 begin
-  perform public._church_require_admin();
+  perform public._church_require_staff();
   v_err := public._church_invalid(v_name, v_city, p_state, v_addr);
   if v_err is not null then
     raise exception '%', v_err using errcode = '22023', hint = 'invalid_church';
@@ -484,7 +500,7 @@ declare
   v_reason text := nullif(btrim(coalesce(p_reason, '')), '');
   v_ok boolean;
 begin
-  perform public._church_require_admin();
+  perform public._church_require_staff();
   if p_action not in ('approve', 'reject', 'activate', 'deactivate', 'remove', 'restore') then
     raise exception 'Ação inválida.' using errcode = '22023';
   end if;
@@ -558,7 +574,7 @@ declare
   v_like text;
   v_res jsonb;
 begin
-  perform public._church_require_admin();
+  perform public._church_require_staff();
   v_like := case when v_q is null then null
                  else '%' || replace(replace(replace(v_q, '\', '\\'), '%', '\%'), '_', '\_') || '%' end;
 
@@ -651,7 +667,7 @@ as $$
 declare
   v_res jsonb;
 begin
-  perform public._church_require_admin();
+  perform public._church_require_staff();
   if coalesce(array_length(p_merge, 1), 0) = 0 then
     raise exception 'Escolha ao menos uma igreja para mesclar.' using errcode = '22023';
   end if;
@@ -674,7 +690,7 @@ declare
   l record;
   v_back int;
 begin
-  perform public._church_require_admin();
+  perform public._church_require_staff();
   select * into c from public.churches where id = p_id for update;
   if not found or c.merged_into is null then
     raise exception 'Esta igreja não está mais mesclada. A lista foi atualizada.' using errcode = 'PT409', hint = 'stale';
@@ -714,7 +730,7 @@ declare
   v_res jsonb;
   v_remaining int;
 begin
-  perform public._church_require_admin();
+  perform public._church_require_staff();
 
   for g in
     with cand as (
@@ -782,7 +798,7 @@ declare
   v_ok int := 0; v_dup int := 0; v_bad int := 0;
   v_id uuid;
 begin
-  perform public._church_require_admin();
+  perform public._church_require_admin(); -- importação: só admin (decisão de 21/11)
   if jsonb_typeof(p_rows) <> 'array' then
     raise exception 'Formato inválido.' using errcode = '22023';
   end if;
@@ -846,7 +862,7 @@ declare
 begin
   foreach f in array array[
     'public._norm_text(text)', 'public._church_key(text, text, text)', 'public._church_state(text)',
-    'public._church_invalid(text, text, text, text)', 'public._church_require_admin()',
+    'public._church_invalid(text, text, text, text)', 'public._church_require_admin()', 'public._church_require_staff()',
     'public._church_log(uuid, text, text, jsonb)', 'public._church_json(public.churches)',
     'public._church_keep_rank(public.churches, bigint)', 'public._church_merge(uuid, uuid[], text, boolean)',
     'public.churches_before_write()'

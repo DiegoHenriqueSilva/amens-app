@@ -20,6 +20,7 @@ import {
 import { AlertTriangle, ChevronDown, FileUp, Plus, RefreshCw, Search, X } from "lucide-react";
 import { toast } from "sonner";
 import { adminRpc } from "@/lib/admin-rpc";
+import { useUserRole } from "@/hooks/use-user-role";
 import { AdminActionDialog } from "./AdminActionDialog";
 import { ChurchImportDialog } from "./churches/ChurchImportDialog";
 import { DuplicateGroups } from "./churches/DuplicateGroups";
@@ -149,6 +150,7 @@ function useCities(state: string) {
 
 export default function AdminChurches() {
   const qc = useQueryClient();
+  const { isAdmin } = useUserRole(); // ADM00/S3: moderador gerencia igrejas; importar é só de admin
   const [tab, setTab] = useState<Tab>("all");
   const [searchInput, setSearchInput] = useState("");
   const search = useDebounced(searchInput);
@@ -224,9 +226,11 @@ export default function AdminChurches() {
           <p className="text-muted-foreground text-sm">Cadastro de paróquias e igrejas. Toda alteração fica no log de moderação.</p>
         </div>
         <div className="flex gap-2 shrink-0">
-          <Button size="sm" variant="outline" onClick={() => setImportOpen(true)}>
-            <FileUp className="w-4 h-4 mr-2" aria-hidden="true" /> Importar CSV
-          </Button>
+          {isAdmin && (
+            <Button size="sm" variant="outline" onClick={() => setImportOpen(true)}>
+              <FileUp className="w-4 h-4 mr-2" aria-hidden="true" /> Importar CSV
+            </Button>
+          )}
           <Button size="sm" onClick={() => setForm("new")}>
             <Plus className="w-4 h-4 mr-2" aria-hidden="true" /> Nova igreja
           </Button>

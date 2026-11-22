@@ -45,13 +45,15 @@ async function confirmar(p, d, motivo, botao, nome) {
 (async () => {
   const b = await abrirBrowser();
 
-  // T04 · Moderador não entra
+  // T04 · Papéis (ADM00/S3): moderador gerencia igrejas, mas não importa; usuário comum não lista
   const M = await (await novoContexto(b)).newPage();
   await login(M, 'mod');
-  await M.goto(BASE + '/admin/churches', { waitUntil: 'domcontentloaded' }); await esperar(M, 1500);
-  log('[mod] /admin/churches →', M.url(), '|', (await M.locator('main, body').first().innerText()).replace(/\s+/g, ' ').slice(0, 160));
-  await shot(M, 'f5_01_moderador_sem_acesso');
-  log('[mod] RPC admin_list_churches →', JSON.stringify(await rpc('mod', 'admin_list_churches', { p_tab: 'all' })).slice(0, 160));
+  await M.goto(BASE + '/admin/churches', { waitUntil: 'domcontentloaded' }); await esperar(M, 2500);
+  log('[mod] /admin/churches →', M.url(), '| botão Importar CSV visível?', await M.getByRole('button', { name: 'Importar CSV' }).isVisible().catch(() => false),
+    '| abas:', (await M.getByRole('tablist').innerText().catch(() => '—')).replace(/\s+/g, ' '));
+  await shot(M, 'f5_01_moderador_sem_importar');
+  log('[mod] RPC admin_import_churches →', JSON.stringify(await rpc('mod', 'admin_import_churches', { p_rows: [], p_dry_run: true })).slice(0, 160));
+  log('[comum] RPC admin_list_churches →', JSON.stringify(await rpc('autor', 'admin_list_churches', { p_tab: 'all' })).slice(0, 160));
 
   const A = await (await novoContexto(b)).newPage();
   await login(A, ADM);
