@@ -273,7 +273,10 @@ export function ChurchImportDialog({ open, onOpenChange, onImported }: {
 
             <div className="flex flex-wrap gap-2" role="group" aria-label="Filtrar linhas">
               {([["error", "Com erro"], ["dup", "Ignoradas"], ["ok", step === "done" ? "Gravadas" : "Prontas"]] as [Filter, string][]).map(([f, l]) => (
-                <Button key={f} type="button" size="sm" variant={filter === f ? "default" : "outline"} aria-pressed={filter === f} onClick={() => setFilter(f)}>{l}</Button>
+                <Button key={f} type="button" size="sm" variant={filter === f ? "default" : "outline"} aria-pressed={filter === f}
+                  className={filter === f ? "ring-2 ring-foreground/70 ring-offset-1 ring-offset-background" : "opacity-80"} onClick={() => setFilter(f)}>
+                  {filter === f && <span aria-hidden="true" className="mr-1">✓</span>}{l}
+                </Button>
               ))}
             </div>
             <ul className="max-h-60 overflow-y-auto rounded-md border border-border divide-y divide-border" aria-label="Linhas do arquivo">
