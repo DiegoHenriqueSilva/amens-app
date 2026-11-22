@@ -1,6 +1,6 @@
 # ADM05 — Igrejas, cadastro e importação
 
-Rota: `/admin/churches` (só admin). Pacote: `revisao/admin/ADM05-igrejas-cadastro-e-importacao.md` (revisão de 15/11/2026 sobre `0063610`).
+Rota: `/admin/churches` (moderador e admin, decisão S3 da ADM00; importação só admin). Pacote: `revisao/admin/ADM05-igrejas-cadastro-e-importacao.md` (revisão de 15/11/2026 sobre `0063610`).
 
 Esta entrega corrige o painel de igrejas, cria a importação de CSV pelo painel e publica no servidor a busca de igrejas que o app vai usar.
 
@@ -13,6 +13,7 @@ Esta entrega corrige o painel de igrejas, cria a importação de CSV pelo painel
 | Situação (F01) | **Um campo só:** em revisão, ativa, inativa ou rejeitada; remoção à parte e reversível. `is_active` continua, calculado a partir da situação | Dois campos com trava |
 | Duplicadas | **Mesclar no servidor:** os perfis passam para a igreja que fica, as outras ficam inativas e marcadas como mescladas, e dá para desfazer | Só inativar, com trava para igrejas com vínculo |
 | Layout | Importação em diálogo de 3 passos; duplicadas em cartão por grupo | Página própria; tabela agrupada |
+| Papéis | Segue a **S3 da ADM00** (já aprovada): moderador gerencia Igrejas. Só a importação é de admin | — |
 
 ## 2. Problemas encontrados (`0063610` e produção em 21/11)
 
@@ -20,10 +21,10 @@ Esta entrega corrige o painel de igrejas, cria a importação de CSV pelo painel
 1. **O app não usa a tabela `churches`.** No cadastro e no perfil, a paróquia é texto livre (`profiles.parish`), com sugestões tiradas de outros perfis. Nada do que o painel faz (aprovar, inativar, remover) chega ao usuário. Há 34.229 igrejas, 25 perfis, 21 com paróquia em texto e só 10 com `church_id`.
 2. **Dois campos de situação soltos.** 530 igrejas tinham `status = active` e `is_active = false`. A leitura pública só olhava `status`, então **qualquer visitante continuava vendo as "inativas"**.
 3. **"Resolver todas" de 24/05.** Inativou 530 igrejas no navegador, sem prévia. Os **10 perfis com vínculo** apontam para 3 igrejas criadas pelo app que foram inativadas nesse dia, sem nenhuma gêmea ativa.
-4. **3.247 grupos duplicados** (5.743 igrejas ativas com o mesmo nome, cidade e UF). Para a comparação, maiúsculas, acentos e espaços faziam diferença.
+4. **3.247 grupos duplicados** (5.743 igrejas ativas com o mesmo nome, cidade e UF), contados com acento e espaço fazendo diferença. Com a chave normalizada, são **3.276 grupos**, e "Resolver todas" inativaria 3.531 igrejas sem mover nenhum perfil.
 
 **Segurança e permissões**
-5. **Papel diferente na tela e no banco.** A rota exige admin, mas a RLS deixava **moderador** criar e alterar igrejas.
+5. **Papel diferente na tela e no banco.** Em `0063610`, a rota exigia admin e a RLS deixava moderador gravar. A ADM00 (S3) decidiu "moderador gerencia" e liberou a tela; esta entrega leva a mesma regra para as funções do servidor.
 6. **Função aberta a qualquer um.** `get_duplicate_churches` era `SECURITY DEFINER` e executável por qualquer pessoa, inclusive sem login, e listava até as removidas.
 7. **Importação destrutiva.** Ela só existia por script local com a chave de serviço. O `reimport-churches.cjs` **apagava todas as igrejas** antes de inserir (com `ON DELETE SET NULL`, desfaria o vínculo dos perfis). Os dois scripts usavam a `xlsx` 0.18.5, com falhas públicas de *prototype pollution* e ReDoS.
 8. **Busca sem escape.** Ela montava `.or(name.ilike.%busca%…)`, então caracteres como `,` `%` `_` `(` mudavam o filtro.
@@ -40,10 +41,10 @@ Esta entrega corrige o painel de igrejas, cria a importação de CSV pelo painel
 - **Situação única:** `status ∈ {pending_review, active, inactive, rejected}`. As 530 foram para `inactive`.
   - O trigger `churches_before_write` mantém `is_active = (status = 'active')`.
   - Ele também traduz o `is_active` gravado pelo painel antigo, então nada quebra antes do deploy.
-- **Escrita:** só admin. A sugestão do app (INSERT) entra sempre `pending_review`/`app`, validada e sem campos de moderação.
+- **Escrita:** moderador e admin. A sugestão do app (INSERT) entra sempre `pending_review`/`app`, validada e sem campos de moderação.
 - **Chave de duplicidade** `dedupe_key`: nome, cidade e UF sem acento, minúsculas e espaços. Tem índice parcial.
 - **Busca:** `search_text` com índice de trigramas, sem corte de 500.
-- **Funções do painel** (`admin_*`, só admin, log na mesma transação, `PT409` quando outra pessoa mudou antes):
+- **Funções do painel** (`admin_*`, moderador e admin, exceto a importação, que é só de admin; log na mesma transação, `PT409` quando outra pessoa mudou antes):
 
 | Função | O que faz |
 |---|---|
@@ -120,37 +121,47 @@ Os textos foram revisados antes da tela. Os critérios:
 | `supabase/migrations/20261122000000_adm05_igrejas.sql` | **Aplicada** em produção (`AmensAntigravity`, 22/11). É idempotente |
 | `supabase/migrations/20261122010000_adm05_escrita_so_por_funcoes.sql` | **Pendente:** aplicar logo depois do deploy deste front |
 | `docs/admin/testes/bateria_adm05_igrejas.sql` | Bateria; roda numa transação desfeita |
-| `docs/admin/testes/tela/fase5_igrejas.cjs`, `semeia_adm05.sql`, `limpa_adm05.sql` | Testes de tela (precisam de conta admin para a importação) |
+| `docs/admin/testes/tela/fase5_igrejas.cjs`, `semeia_adm05.sql`, `limpa_adm05.sql` | Testes de tela (moderador e admin) |
 
 ## 6. Testes
 
-### 6.1 Bateria em produção — 63/63 (22/11/2026)
+### 6.1 Bateria em produção — 65/65 (22/11/2026)
 
 Rodada duas vezes: junto com a migration, numa transação desfeita, e depois da migration aplicada. As baterias da ADM03 (34/34) e da ADM04 (51/51) foram repetidas sem regressão.
 
 | Grupo | Casos | Cobre |
 |---|---|---|
 | Migração | M1–M3 | Nenhuma linha com `is_active` diferente da situação; as 530 viraram `inactive`; só situações válidas |
-| Permissões | P1–P4, C8, D7, I5 | Moderador e visitante sem acesso às funções do painel (`42501`); busca pública funciona sem login; `get_duplicate_churches` fechada |
+| Permissões | P1–P5, C8, C8b, D7, I5 | Moderador lista, edita (com log) e mescla (S3); só a importação devolve `42501` para ele. Visitante e usuário comum sem acesso. Busca pública funciona sem login. `get_duplicate_churches` fechada para quem não modera |
 | Criar/editar | C1–C7 | Sigla `sp` vira "São Paulo"; espaços normalizados; duplicada com outra caixa e acento bloqueada; mesmo nome em outra cidade permitido (T02); UF inválida e fórmula recusadas; edição com versão velha dá `PT409`; log com antes/depois |
-| Escrita direta | W1–W6 | Moderador e usuário comum não alteram a tabela; sugestão do app entra em revisão mesmo enviando `status = active`/`source = import`; fórmula recusada; painel antigo (`is_active`) continua funcionando |
+| Escrita direta | W1–W6 | Usuário comum não altera a tabela (moderador sim, até a migration pós-deploy); sugestão do app entra em revisão mesmo enviando `status = active`/`source = import`; fórmula recusada; painel antigo (`is_active`) continua funcionando |
 | Situação | S1–S10 | Motivo obrigatório; ação repetida dá `PT409`; transição inválida recusada; aprovar, rejeitar, remover e restaurar, cada um com log |
 | Visibilidade | V1–V4 | Inativa não aparece para usuário nem na lista pública de cidades; o admin vê a cidade; `search_churches` só devolve ativas |
 | Listagem | L1–L5 | Contagem por aba; busca com `%` não vira curinga; aba inválida recusada; São Paulo com mais de 500 ativas e página na posição 900 (T02); total igual à contagem direta |
 | Duplicadas | D1–D9b | Grupo por chave normalizada, com sugestão pela regra; mesclar move 2 perfis; mesclar de novo dá `PT409`; mesclada não "ativa", só desfaz; desfazer devolve situação e perfis; prévia conta mais de 1.000 grupos; gravação em lote respeita o limite e grava um log por igreja |
 | Importação | I1–I6 | Linhas válidas, repetidas no arquivo, já existentes, fórmula, UF inválida, nome vazio e estado sem acento (`parana`); a prévia não grava; a gravação insere só as válidas, com lote e log; repetir o arquivo não duplica (T03); mais de 500 linhas recusado; 500 linhas gravadas numa chamada |
 
-### 6.2 Testes de tela
+### 6.2 Testes de tela com login (22/11/2026)
 
-**Bloqueado:** `/admin/churches` exige admin e não há conta admin de teste. O roteiro está em `fase5_igrejas.cjs`:
-- moderador sem acesso;
-- criar, editar e duplicada bloqueada;
-- inativar, ativar, remover e restaurar;
-- conflito entre sessões;
-- mesclar e desfazer;
-- prévia de "Resolver todas";
-- importação mista e arquivo sem colunas;
-- 4 tamanhos e 2 temas.
+Feitos com `fase5_igrejas.cjs` contra produção, com o app local na porta 8080 (ADM00–ADM05 integradas).
+- **Moderador:** `adm-teste-moderador`.
+- **Admin:** `adm-teste-admin`, criada para esta rodada com autorização do responsável. O papel de admin foi retirado ao final.
+- **Dados:** apagados por `limpa_adm05.sql`. As capturas estão em `docs/admin/evidencias/ADM05/`.
+
+| Caso | Observado | Estado |
+|---|---|---|
+| T04 · Papéis | Moderador abre Igrejas sem "Importar CSV". No servidor, a importação devolve 403 "Só administradores podem importar igrejas."; para o usuário comum, `admin_list_churches` devolve 403 | **Aprovado** |
+| T01 · Cadastro e situação | Criar com cidade digitada e endereço; duplicada com outra caixa e acento bloqueada com o nome da existente; editar com motivo; inativar sem motivo é barrado; inativar, ativar, remover e restaurar, cada um com aviso e consequência | **Aprovado** |
+| T04 · Conflito | Outra sessão inativa com o diálogo aberto: "Outra pessoa já alterou esta igreja…", e a lista é atualizada | **Aprovado** |
+| T02 · Duplicadas | Grupo com a sugerida (a que tem perfil ligado); mesclar ("Nenhum perfil muda de igreja"); a igreja aparece como "Mesclada" em Inativas; desfazer. Prévia do "Resolver todas": 3.276 grupos, **não executado** | **Aprovado** |
+| T03 · Importar | Arquivo com `;`, aspas, coluna extra "status" e 7 linhas: 2 prontas, 2 ignoradas (repetida no arquivo; já existe) e 3 com erro (fórmula, UF "XX", sem nome). Gravou 2; o relatório tem todas as linhas, com a fórmula neutralizada (`'=HYPERLINK…`). Sem a coluna "estado": erro claro e nada gravado | **Aprovado** |
+| T05 · Integração | `search_churches` sem login devolve só as ativas de teste. Cadastro e perfil do app ainda não usam essa busca (B19) | **Parcial**, por decisão |
+| U01–U03 · Tamanhos | 1440, 390, 320 e 844 × 390 px nos temas atual e legado; tabela vira cartões no celular | **Aprovado** visualmente |
+| Volume | 34.231 igrejas paginadas no servidor; contagem por aba correta | **Aprovado** |
+
+**Defeitos encontrados nos testes e corrigidos:**
+1. **Papel errado.** A primeira versão restringia tudo a admin, contra a S3 da ADM00. Funções, RLS e trigger foram alinhados; a importação continua só de admin.
+2. **Filtro sem destaque.** Na prévia da importação, no tema atual, não dava para ver qual filtro estava selecionado. Agora aparece com ✓ e contorno.
 
 O leitor de CSV foi testado à parte no Node:
 - aspas, `;` e quebra de linha dentro de aspas;
@@ -160,9 +171,8 @@ O leitor de CSV foi testado à parte no Node:
 
 ## 7. Pendente
 
-- [ ] Testes de tela (precisam de conta admin de teste ou de execução por um admin).
 - [ ] Aplicar `20261122010000` logo depois do deploy.
-- [ ] **Resolver as duplicadas existentes em produção** (3.247 grupos). É decisão de dados: rodar "Resolver todas…" depois do deploy, olhando a prévia.
+- [ ] **Resolver as duplicadas existentes em produção** (3.276 grupos pela chave normalizada). É decisão de dados: rodar "Resolver todas…" depois do deploy, olhando a prévia.
 - [ ] **Os 3 cadastros criados pelo app, inativados em 24/05**, com os 10 perfis ligados: avaliar se devem ser ativados de novo ou mesclados.
 - [ ] Atualizar `context-app-features` (PR #24) com o contrato de igrejas.
 - [ ] Revisão do colega.
