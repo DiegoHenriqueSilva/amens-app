@@ -82,7 +82,7 @@ O usuário compartilha sua necessidade espiritual com a comunidade.
 
 ---
 
-## 📖 Evangelho do Dia
+## 📖 Evangelho e Liturgia Diária Completa (APP06)
 
 ### Rota
 - **Produção**: `https://www.amens.com.br/daily-gospel`
@@ -90,14 +90,26 @@ O usuário compartilha sua necessidade espiritual com a comunidade.
 - **Rota interna**: `/daily-gospel`
 
 ### Descrição
-Apresenta a liturgia diária, reflexão e curiosidade contextual usando IA.
+Apresenta a liturgia diária completa da Igreja Católica com suporte a navegação por datas (calendário), abas para todas as leituras existentes (Primeira Leitura, Salmo Responsorial, Segunda Leitura quando houver e Evangelho), além de reflexão em vídeo, reflexão por IA ("Curiosidade da época") e compartilhamento.
 
-### Regras de Negócio
-- Busca liturgia via API.
-- IA (Gemini) gera resumo e "Curiosidade da época" (contexto histórico, arqueológico, cultural da época de Jesus).
-- Reflexão em vídeo do Youtube (selecionada automaticamente, ex: vídeo do dia anterior antes das 6h da manhã).
-- Compartilhamento de imagem nativo se suportado, senão fallback para cópia de texto.
-- Possíveis evoluções: 1ª Leitura, Salmo, busca por calendário.
+### Regras de Negócio e Confiabilidade
+- **Navegação por Calendário e Datas:** Permite avançar, retroceder ou selecionar qualquer data via seletor/calendário. Possui cancelamento de requisições anteriores (`AbortController`) para evitar race conditions em trocas rápidas de data.
+- **Abas de Liturgia Completa:** Exibe dinamicamente as abas:
+  - *1ª Leitura*
+  - *Salmo Responsorial*
+  - *2ª Leitura* (renderizada apenas em domingos e solenidades litúrgicas onde ela existe; omitida sem abas vazias nos demais dias)
+  - *Evangelho*
+- **Tratamento Honesto de Indisponibilidade & Fallbacks:**
+  - Caso a API externa de liturgia falhe (500, timeout, erro de rede), o sistema exibe aviso explícito de indisponibilidade com opção de nova tentativa (*retry*).
+  - Textos devocionais ou perenes de contingência são claramente identificados como apoio espiritual e nunca rotulados enganosamente como a liturgia oficial do dia.
+- **Resiliência Independente:** A falha no vídeo do YouTube ou na Edge Function de IA (resumo / curiosidade) não bloqueia ou corrompe a leitura textual das leituras bíblicas. Cada bloco explica seu próprio estado.
+- **Vínculo Fiel com o Altar e Métricas:**
+  - O evento `gospel_read` é disparado e persistido no altar **somente quando uma liturgia oficial válida for carregada com sucesso** (nunca em caso de erro de rede ou exibição de fallback).
+  - O evento `gospel_share` é disparado **apenas após a confirmação real do compartilhamento** (seja via `navigator.share` bem-sucedido ou cópia confirmada no clipboard), nunca em cancelamentos ou recusas de permissão.
+- **Compatibilidade e Acessibilidade:**
+  - Suporta temas *refresh* e *legacy*.
+  - Viewports mobile estreitos (390 px e 320 px) com espaçamento seguro (*safe-area-inset-bottom* e *bottom navigation* fixa).
+  - Controles navegáveis por teclado e compatíveis com leitores de tela.
 
 ---
 
