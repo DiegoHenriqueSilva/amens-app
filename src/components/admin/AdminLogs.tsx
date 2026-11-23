@@ -37,6 +37,9 @@ const ACTION_LABELS: Record<string, string> = {
   merge: "Mesclada em outra",
   unmerge: "Mesclagem desfeita",
   import: "Importação (lote)",
+  reply: "Respondido",
+  archive: "Arquivado",
+  unarchive: "Desarquivado",
   xp_override: "XP alterado",
   xp_multiplier: "Multiplicador XP",
 };
@@ -47,6 +50,7 @@ const TARGET_LABELS: Record<string, string> = {
   report: "Report",
   church: "Igreja",
   contribution: "Corrente de Oração",
+  feedback: "Feedback",
 };
 
 async function fetchLogs(targetType: string, action: string) {
@@ -157,6 +161,7 @@ export default function AdminLogs() {
                   <SelectItem value="user">Usuários</SelectItem>
                   <SelectItem value="report">Reports</SelectItem>
                   <SelectItem value="church">Igrejas</SelectItem>
+                  <SelectItem value="feedback">Feedback</SelectItem>
                   <SelectItem value="contribution">Corrente de Oração</SelectItem>
                 </SelectContent>
               </Select>
@@ -191,6 +196,9 @@ export default function AdminLogs() {
                   <SelectItem value="merge">Mesclada em outra</SelectItem>
                   <SelectItem value="unmerge">Mesclagem desfeita</SelectItem>
                   <SelectItem value="import">Importação (lote)</SelectItem>
+                  <SelectItem value="reply">Respondido</SelectItem>
+                  <SelectItem value="archive">Arquivado</SelectItem>
+                  <SelectItem value="unarchive">Desarquivado</SelectItem>
                   <SelectItem value="xp_override">XP alterado</SelectItem>
                   <SelectItem value="xp_multiplier">Multiplicador XP</SelectItem>
                 </SelectContent>
