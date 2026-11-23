@@ -65,7 +65,7 @@ async function abrir(p, busca = '[TESTE ADM08]') {
   await abrir(A, '');
   await A.getByRole('combobox', { name: 'Filtrar por quem fez' }).click(); await A.getByRole('option', { name: 'Automático (sistema)' }).click(); await A.waitForTimeout(2000);
   log('[filtro automático] rodapé:', await A.locator('[aria-live="polite"]').first().innerText());
-  await A.getByLabel('De').fill('2026-11-23'); await A.getByLabel('Até').fill('2026-11-01'); await A.waitForTimeout(800);
+  await A.getByLabel('De', { exact: true }).fill('2026-11-23'); await A.getByLabel('Até', { exact: true }).fill('2026-11-01'); await A.waitForTimeout(800);
   log('[período inválido]', await A.locator('[aria-live="polite"]').first().innerText());
   await shot(A, 'f8_07_periodo_invalido');
   await A.getByRole('button', { name: 'Limpar filtros' }).click(); await A.waitForTimeout(1500);

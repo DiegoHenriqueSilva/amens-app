@@ -232,7 +232,12 @@ export default function AdminLogs() {
         </div>
       )}
 
-      {isLoading ? (
+      {rangeError ? (
+        <div role="alert" className="flex items-center gap-2 rounded-lg border border-destructive/40 bg-destructive/5 p-4 text-sm">
+          <AlertTriangle className="w-4 h-4 text-destructive" aria-hidden="true" />
+          <span>Período inválido: a data final é anterior à inicial. Corrija as datas para ver os registros.</span>
+        </div>
+      ) : isLoading ? (
         <p role="status" className="py-8 text-center text-muted-foreground">Carregando logs…</p>
       ) : rows.length === 0 && !isError ? (
         <p className="py-8 text-center text-muted-foreground">{filtered ? "Nenhum registro com esses filtros." : "Nenhum registro ainda."}</p>
