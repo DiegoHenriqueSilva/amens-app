@@ -212,7 +212,7 @@ export default function AdminUserDetail({ userId, userName, userEmail, open, onC
             </div>
             <div className="rounded-md border border-border p-3 space-y-1.5">
               <p className="text-sm font-medium">Multiplicador de XP</p>
-              <p className="text-xs text-muted-foreground">Vale para o XP ganho daqui em diante (0,1 a 10). Não altera o XP atual.</p>
+              <p className="text-xs text-muted-foreground">Vale para o XP ganho daqui em diante (0,1 a 10), multiplicado também pelo multiplicador global de Configurações. Não altera o XP atual.</p>
               <Button size="sm" variant="outline" onClick={() => { setValue(String(multiplier)); setEdit("multiplier"); }}>Definir multiplicador…</Button>
             </div>
           </section>

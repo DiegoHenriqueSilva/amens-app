@@ -40,6 +40,7 @@ const ACTION_LABELS: Record<string, string> = {
   reply: "Respondido",
   archive: "Arquivado",
   unarchive: "Desarquivado",
+  setting_update: "Configuração alterada",
   xp_override: "XP alterado",
   xp_multiplier: "Multiplicador XP",
 };
@@ -51,6 +52,7 @@ const TARGET_LABELS: Record<string, string> = {
   church: "Igreja",
   contribution: "Corrente de Oração",
   feedback: "Feedback",
+  setting: "Configuração",
 };
 
 async function fetchLogs(targetType: string, action: string) {
@@ -162,6 +164,7 @@ export default function AdminLogs() {
                   <SelectItem value="report">Reports</SelectItem>
                   <SelectItem value="church">Igrejas</SelectItem>
                   <SelectItem value="feedback">Feedback</SelectItem>
+                  <SelectItem value="setting">Configurações</SelectItem>
                   <SelectItem value="contribution">Corrente de Oração</SelectItem>
                 </SelectContent>
               </Select>
@@ -199,6 +202,7 @@ export default function AdminLogs() {
                   <SelectItem value="reply">Respondido</SelectItem>
                   <SelectItem value="archive">Arquivado</SelectItem>
                   <SelectItem value="unarchive">Desarquivado</SelectItem>
+                  <SelectItem value="setting_update">Configuração alterada</SelectItem>
                   <SelectItem value="xp_override">XP alterado</SelectItem>
                   <SelectItem value="xp_multiplier">Multiplicador XP</SelectItem>
                 </SelectContent>

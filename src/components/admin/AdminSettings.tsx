@@ -1,188 +1,212 @@
-import { useState, useEffect } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { useEffect, useId, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
+import { AlertTriangle, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
+import { format } from "date-fns";
+import { adminRpc } from "@/lib/admin-rpc";
 import { CELESTIAL_LEVELS } from "@/lib/faith-points";
 
-type AppSetting = { key: string; value: string };
+type Setting = { value: string | null; default: string; updated_at: string | null; updated_by_name: string | null };
+type Level = { number: number; min_xp: number; daily_prayers: number; people: number };
+type SettingsRes = {
+  settings: Record<"xp_global_multiplier" | "auto_escalate_threshold", Setting>;
+  overrides: number;
+  levels: Level[];
+};
+type Key = keyof SettingsRes["settings"];
 
-async function fetchSettings(): Promise<Record<string, string>> {
-  const { data, error } = await supabase
-    .from("app_settings" as any)
-    .select("key, value");
-  if (error) throw error;
-  const map: Record<string, string> = {};
-  (data as AppSetting[]).forEach((s) => { map[s.key] = s.value; });
-  return map;
+const fmt = (v: string) => v.replace(".", ",");
+
+function lastChange(s: Setting) {
+  if (!s.updated_at) return "Ainda no valor padrão.";
+  return `Alterado ${s.updated_by_name ? `por ${s.updated_by_name} ` : ""}em ${format(new Date(s.updated_at), "dd/MM/yyyy 'às' HH:mm")}.`;
 }
 
-async function updateSetting(key: string, value: string) {
-  const { data: session } = await supabase.auth.getSession();
-  const { error } = await supabase
-    .from("app_settings" as any)
-    .update({ value, updated_at: new Date().toISOString(), updated_by: session.session?.user.id })
-    .eq("key", key);
-  if (error) throw error;
+function validate(key: Key, raw: string): string | null {
+  const v = raw.trim().replace(",", ".");
+  if (key === "xp_global_multiplier") {
+    if (!/^\d+(\.\d)?$/.test(v)) return "Use um número com até 1 casa decimal, de 0,1 a 10.";
+    const n = Number(v);
+    if (n < 0.1 || n > 10) return "O multiplicador vai de 0,1 a 10.";
+    return null;
+  }
+  if (!/^\d+$/.test(v)) return "Use um número inteiro de 2 a 20.";
+  const n = Number(v);
+  if (n < 2 || n > 20) return "O número de pessoas vai de 2 a 20.";
+  return null;
 }
 
 export default function AdminSettings() {
-  const qc = useQueryClient();
-
-  const { data: settings = {}, isLoading } = useQuery({
-    queryKey: ["app-settings"],
-    queryFn: fetchSettings,
+  const { data, isLoading, isError, error, refetch } = useQuery({
+    queryKey: ["admin-settings"],
+    queryFn: () => adminRpc<SettingsRes>("admin_get_settings", {}),
   });
 
-  // --- XP multiplier ---
-  const [xpMultiplier, setXpMultiplier] = useState("1.0");
-  const [escalateThreshold, setEscalateThreshold] = useState("3");
+  if (isLoading) return <p role="status" className="p-6 text-muted-foreground">Carregando configurações…</p>;
+  if (isError || !data) {
+    return (
+      <div className="p-4 md:p-6">
+        <div role="alert" className="flex flex-wrap items-center gap-3 rounded-lg border border-destructive/40 bg-destructive/5 p-4 text-sm">
+          <AlertTriangle className="w-4 h-4 text-destructive" aria-hidden="true" />
+          <span className="flex-1">Não foi possível carregar as configurações. Nada foi alterado. {error instanceof Error ? error.message : ""}</span>
+          <Button size="sm" variant="outline" onClick={() => void refetch()}><RefreshCw className="w-4 h-4 mr-1" aria-hidden="true" /> Tentar novamente</Button>
+        </div>
+      </div>
+    );
+  }
 
-  useEffect(() => {
-    if (settings["xp_global_multiplier"]) setXpMultiplier(settings["xp_global_multiplier"]);
-    if (settings["auto_escalate_threshold"]) setEscalateThreshold(settings["auto_escalate_threshold"]);
-  }, [settings]);
-
-  // XP levels from app_settings (optional override)
-  const xpLevelsJson = settings["xp_levels_json"] ? JSON.parse(settings["xp_levels_json"]) : null;
-  const [levelThresholds, setLevelThresholds] = useState<number[]>(
-    CELESTIAL_LEVELS.map((l) => l.minFaithPoints)
-  );
-  useEffect(() => {
-    if (xpLevelsJson) setLevelThresholds(xpLevelsJson);
-  }, [settings["xp_levels_json"]]);
-
-  const saveSetting = useMutation({
-    mutationFn: ({ key, value }: { key: string; value: string }) => updateSetting(key, value),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["app-settings"] });
-      toast.success("Configuração salva.");
-    },
-    onError: (e: any) => toast.error("Erro ao salvar: " + e.message),
-  });
-
-  if (isLoading) return <div className="p-6 text-muted-foreground">Carregando...</div>;
+  const mult = Number((data.settings.xp_global_multiplier.value ?? "1").replace(",", ".")) || 1;
 
   return (
-    <div className="p-6 space-y-8 max-w-3xl">
+    <div className="p-4 md:p-6 space-y-6 max-w-3xl">
       <div>
         <h1 className="text-2xl font-bold">Configurações</h1>
-        <p className="text-muted-foreground text-sm">Parâmetros globais da plataforma Amens</p>
+        <p className="text-muted-foreground text-sm">Parâmetros que valem para todo o Améns. Cada alteração fica no log de moderação.</p>
       </div>
 
-      {/* XP / Jornada da Fé */}
+      <SettingCard
+        k="xp_global_multiplier"
+        s={data.settings.xp_global_multiplier}
+        title="Multiplicador de XP"
+        description="Multiplica o XP de todas as ações da Jornada da Fé."
+        label="Multiplicador"
+        inputMode="decimal"
+        help={(v) => {
+          const n = Number(v.replace(",", ".")) || 1;
+          return `Vale para os próximos ganhos; o XP já acumulado não muda. Exemplo: orar vale 10 XP, com ${fmt(String(n))} passa a valer ${Math.round(10 * n)} XP. `
+            + (data.overrides > 0
+              ? `${data.overrides === 1 ? "1 pessoa tem" : `${data.overrides} pessoas têm`} multiplicador individual (em Usuários); para elas, os dois se multiplicam.`
+              : "Quem tiver multiplicador individual (em Usuários) recebe os dois multiplicados.");
+        }}
+      />
+
+      <SettingCard
+        k="auto_escalate_threshold"
+        s={data.settings.auto_escalate_threshold}
+        title="Revisão automática por denúncias"
+        description="Quantas pessoas diferentes precisam denunciar um pedido ativo para ele sair do ar e ir para revisão."
+        label="Pessoas diferentes"
+        inputMode="numeric"
+        help={(v) => `Com ${v || "N"}, quando ${v || "N"} pessoas diferentes denunciarem o mesmo pedido ativo, ele fica "Em revisão" e o autor é avisado. Vale para as próximas denúncias. O mínimo é 2: com 1, uma única pessoa tiraria qualquer pedido do ar.`}
+      />
+
       <Card>
         <CardHeader>
-          <CardTitle>XP / Jornada da Fé</CardTitle>
-          <CardDescription>Multiplicador global de XP e thresholds de nível</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="flex items-end gap-3">
-            <div className="flex-1">
-              <Label>Multiplicador global de XP</Label>
-              <p className="text-xs text-muted-foreground mb-1">Ex: 1.5 = 50% a mais de XP em todas as ações</p>
-              <Input
-                type="number"
-                min="0.1"
-                max="10"
-                step="0.1"
-                value={xpMultiplier}
-                onChange={(e) => setXpMultiplier(e.target.value)}
-              />
-            </div>
-            <Button
-              onClick={() => saveSetting.mutate({ key: "xp_global_multiplier", value: xpMultiplier })}
-              disabled={saveSetting.isPending}
-            >
-              Salvar
-            </Button>
-          </div>
-
-          <Separator />
-
-          <div className="space-y-2">
-            <Label>Thresholds dos níveis (minXP)</Label>
-            <p className="text-xs text-muted-foreground">Edite e salve para sobrescrever os valores padrão</p>
-            <div className="rounded-lg border border-border overflow-hidden">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-8">#</TableHead>
-                    <TableHead>Nível</TableHead>
-                    <TableHead className="w-32">Min XP</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {CELESTIAL_LEVELS.map((level, idx) => (
-                    <TableRow key={level.name}>
-                      <TableCell className="text-muted-foreground text-xs">{idx + 1}</TableCell>
-                      <TableCell className="text-sm">{level.emoji} {level.name}</TableCell>
-                      <TableCell>
-                        <Input
-                          type="number"
-                          min="0"
-                          className="h-7 text-xs"
-                          value={levelThresholds[idx] ?? level.minFaithPoints}
-                          onChange={(e) => {
-                            const next = [...levelThresholds];
-                            next[idx] = parseInt(e.target.value) || 0;
-                            setLevelThresholds(next);
-                          }}
-                        />
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-            <Button
-              onClick={() => saveSetting.mutate({ key: "xp_levels_json", value: JSON.stringify(levelThresholds) })}
-              disabled={saveSetting.isPending}
-            >
-              Salvar thresholds
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Auto-escalação */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Auto-escalação de Reports</CardTitle>
-          <CardDescription>Número mínimo de reports para escalar um pedido para revisão</CardDescription>
+          <CardTitle>Níveis da Jornada da Fé</CardTitle>
+          <CardDescription>
+            Só leitura. Os níveis são fixos no app e no banco. Cada nível muda quantas orações por dia a pessoa pode registrar
+            (2 + nível ÷ 5, arredondado para baixo). Multiplicador atual: {fmt(String(mult))}×.
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex items-end gap-3">
-            <div className="flex-1">
-              <Label>Threshold de reports</Label>
-              <p className="text-xs text-muted-foreground mb-1">
-                Quando um pedido de oração atingir este número de reports abertos, o status muda para "Em revisão"
-              </p>
-              <Input
-                type="number"
-                min="1"
-                max="100"
-                value={escalateThreshold}
-                onChange={(e) => setEscalateThreshold(e.target.value)}
-              />
-            </div>
-            <Button
-              onClick={() => saveSetting.mutate({ key: "auto_escalate_threshold", value: escalateThreshold })}
-              disabled={saveSetting.isPending}
-            >
-              Salvar
-            </Button>
+          <div className="rounded-lg border border-border overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-10">#</TableHead>
+                  <TableHead>Nível</TableHead>
+                  <TableHead className="text-right">XP mínimo</TableHead>
+                  <TableHead className="text-right">Orações/dia</TableHead>
+                  <TableHead className="text-right">Pessoas</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {data.levels.map((l) => {
+                  const meta = CELESTIAL_LEVELS[l.number - 1];
+                  return (
+                    <TableRow key={l.number}>
+                      <TableCell className="text-muted-foreground text-xs">{l.number}</TableCell>
+                      <TableCell className="text-sm whitespace-nowrap">{meta ? `${meta.emoji} ${meta.name}` : "—"}</TableCell>
+                      <TableCell className="text-right tabular-nums text-sm">{l.min_xp.toLocaleString("pt-BR")}</TableCell>
+                      <TableCell className="text-right tabular-nums text-sm">{l.daily_prayers}</TableCell>
+                      <TableCell className="text-right tabular-nums text-sm">{l.people}</TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
           </div>
+          <p className="mt-2 text-xs text-muted-foreground">Administradores não têm limite diário. "Pessoas" conta quem já ganhou algum XP.</p>
         </CardContent>
       </Card>
     </div>
   );
 }
 
+function SettingCard({ k, s, title, description, label, help, inputMode }: {
+  k: Key; s: Setting; title: string; description: string; label: string;
+  help: (v: string) => string; inputMode: "decimal" | "numeric";
+}) {
+  const id = useId();
+  const qc = useQueryClient();
+  const saved = fmt(s.value ?? s.default);
+  const [value, setValue] = useState(saved);
+  const [baseline, setBaseline] = useState({ value: saved, at: s.updated_at });
+  const [saving, setSaving] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  // Valor novo vindo do servidor: só substitui o campo se não houver edição em andamento.
+  useEffect(() => {
+    if (baseline.at === s.updated_at && baseline.value === saved) return;
+    if (value.trim() === baseline.value) setValue(saved);
+    setBaseline({ value: saved, at: s.updated_at });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [saved, s.updated_at]);
+
+  const dirty = value.trim() !== baseline.value;
+  const invalid = dirty ? validate(k, value) : null;
+
+  async function save() {
+    if (!dirty || invalid || saving) return;
+    setSaving(true); setErr(null);
+    try {
+      const res = await adminRpc<{ value: string }>("admin_set_setting", { p_key: k, p_value: value, p_expected_updated_at: baseline.at });
+      toast.success(`${title}: salvo (${fmt(res.value)}).`);
+      setValue(fmt(res.value));
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Não foi possível salvar.");
+    } finally {
+      setSaving(false);
+      await qc.invalidateQueries({ queryKey: ["admin-settings"] });
+    }
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>{title}</CardTitle>
+        <CardDescription>{description}</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form className="space-y-2" onSubmit={(e) => { e.preventDefault(); void save(); }} aria-label={title}>
+          <Label htmlFor={`${id}-v`}>{label}</Label>
+          <div className="flex flex-wrap items-start gap-2">
+            <Input id={`${id}-v`} className="w-32" inputMode={inputMode} value={value}
+              onChange={(e) => { setValue(e.target.value); setErr(null); }}
+              aria-invalid={!!invalid} aria-describedby={`${id}-help ${id}-state`} />
+            <Button type="submit" disabled={!dirty || !!invalid || saving}>{saving ? "Salvando…" : "Salvar"}</Button>
+            {dirty && <Button type="button" variant="outline" disabled={saving} onClick={() => { setValue(baseline.value); setErr(null); }}>Desfazer</Button>}
+          </div>
+          <p id={`${id}-state`} className={`text-xs ${invalid ? "text-destructive" : dirty ? "text-amber-700 dark:text-amber-400 font-medium" : "text-muted-foreground"}`} aria-live="polite">
+            {invalid ?? (dirty ? `Alteração não salva (salvo: ${baseline.value}).` : lastChange(s))}
+          </p>
+          {/* Ajuda com valor inválido usaria o número errado ("1 pessoas"): mostra o efeito do valor salvo. */}
+          <p id={`${id}-help`} className="text-xs text-muted-foreground">{help(invalid || !value.trim() ? baseline.value : value.trim())}</p>
+          {err && (
+            <div role="alert" className="flex gap-2 rounded-md border border-destructive/40 bg-destructive/5 px-3 py-2 text-sm text-destructive">
+              <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" aria-hidden="true" />
+              <span>{err}</span>
+            </div>
+          )}
+        </form>
+      </CardContent>
+    </Card>
+  );
+}
