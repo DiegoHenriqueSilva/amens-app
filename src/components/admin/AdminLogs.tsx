@@ -203,14 +203,14 @@ export default function AdminLogs() {
             {actors.map((a) => <SelectItem key={a.id} value={a.id}>{a.name} ({a.count})</SelectItem>)}
           </SelectContent>
         </Select>
-        <div className="flex items-end gap-2">
-          <div className="flex-1 space-y-1">
+        <div className="grid grid-cols-1 min-[360px]:grid-cols-2 gap-2">
+          <div className="min-w-0 space-y-1">
             <Label htmlFor="log-from" className="text-xs">De</Label>
-            <Input id="log-from" type="date" value={from} onChange={(e) => setFrom(e.target.value)} aria-invalid={!!rangeError} />
+            <Input id="log-from" type="date" className="min-w-0" value={from} onChange={(e) => setFrom(e.target.value)} aria-invalid={!!rangeError} />
           </div>
-          <div className="flex-1 space-y-1">
+          <div className="min-w-0 space-y-1">
             <Label htmlFor="log-to" className="text-xs">Até</Label>
-            <Input id="log-to" type="date" value={to} onChange={(e) => setTo(e.target.value)} aria-invalid={!!rangeError} />
+            <Input id="log-to" type="date" className="min-w-0" value={to} onChange={(e) => setTo(e.target.value)} aria-invalid={!!rangeError} />
           </div>
         </div>
       </div>
