@@ -197,7 +197,8 @@ function SettingCard({ k, s, title, description, label, help, inputMode }: {
           <p id={`${id}-state`} className={`text-xs ${invalid ? "text-destructive" : dirty ? "text-amber-700 dark:text-amber-400 font-medium" : "text-muted-foreground"}`} aria-live="polite">
             {invalid ?? (dirty ? `Alteração não salva (salvo: ${baseline.value}).` : lastChange(s))}
           </p>
-          <p id={`${id}-help`} className="text-xs text-muted-foreground">{help(value.trim() || baseline.value)}</p>
+          {/* Ajuda com valor inválido usaria o número errado ("1 pessoas"): mostra o efeito do valor salvo. */}
+          <p id={`${id}-help`} className="text-xs text-muted-foreground">{help(invalid || !value.trim() ? baseline.value : value.trim())}</p>
           {err && (
             <div role="alert" className="flex gap-2 rounded-md border border-destructive/40 bg-destructive/5 px-3 py-2 text-sm text-destructive">
               <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" aria-hidden="true" />
