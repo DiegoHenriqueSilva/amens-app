@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Send, ArrowLeft, Eye, Heart, Clock, MessageCircle, Check, Users, ChevronDown, ChevronUp, RefreshCw } from "lucide-react";
+import { Send, ArrowLeft, Eye, Heart, Clock, MessageCircle, Check, Users, ChevronDown, ChevronUp, RefreshCw, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
@@ -63,6 +63,7 @@ const Submit = () => {
   const [sendingFeedback, setSendingFeedback] = useState(false);
   const [intercessorsOpen, setIntercessorsOpen] = useState<string | null>(null);
   const [showHistory, setShowHistory] = useState(false);
+  const [isAnonymous, setIsAnonymous] = useState(false);
 
   const fetchHistory = async () => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -166,7 +167,7 @@ const Submit = () => {
     }
   };
 
-  const handleFeedback = async (prayerId: string, feedbackValue: string) => {
+  const handleFeedbackLegacy = async (prayerId: string, feedbackValue: string) => {
     setSendingFeedback(true);
     try {
       const option = FEEDBACK_OPTIONS.find(f => f.value === feedbackValue);
@@ -187,6 +188,7 @@ const Submit = () => {
         const title = prayer?.title || "um pedido";
         const notifications = intercessions.map(i => ({
           user_id: i.user_id,
+          sender_id: session.user.id,
           prayer_request_id: prayerId,
           message: `🙏 Há novidades sobre o pedido de oração "${title}". Entre para conferir o testemunho!`,
         }));
@@ -204,7 +206,7 @@ const Submit = () => {
     }
   };
 
-  const handleReopen = async (prayerId: string) => {
+  const handleReopenLegacy = async (prayerId: string) => {
     setSendingFeedback(true);
     try {
       const { error } = await supabase
@@ -226,6 +228,59 @@ const Submit = () => {
     }
   };
 
+  const handleFeedback = async (prayerId: string, feedbackValue: string) => {
+    setSendingFeedback(true);
+    try {
+      const { data, error } = await supabase.rpc("submit_prayer_feedback", {
+        p_prayer_id: prayerId,
+        p_feedback: feedbackValue,
+      });
+      if (error) throw error;
+      setPrayers(prev => prev.map(p => p.id === prayerId ? { ...p, ...data } : p));
+      setFeedbackOpen(null);
+      toast.success("Feedback enviado! Os intercessores serão notificados.");
+      refreshAltar();
+    } catch (e) {
+      toast.error("Erro ao enviar feedback");
+    } finally {
+      setSendingFeedback(false);
+    }
+  };
+
+  const handleReopen = async (prayerId: string) => {
+    setSendingFeedback(true);
+    try {
+      const { data, error } = await supabase.rpc("reopen_prayer_request", {
+        p_prayer_id: prayerId,
+      });
+      if (error) throw error;
+      setPrayers(prev => prev.map(p => p.id === prayerId ? { ...p, ...data } : p));
+      toast.success("Pedido reaberto com sucesso! 🙏");
+    } catch (e) {
+      toast.error("Erro ao reabrir pedido");
+    } finally {
+      setSendingFeedback(false);
+    }
+  };
+
+  const handleDelete = async (prayerId: string) => {
+    if (!window.confirm("Excluir este pedido? Ele deixará de aparecer para você e para a comunidade.")) return;
+    setSendingFeedback(true);
+    try {
+      const { error } = await supabase.rpc("delete_prayer_request", {
+        p_prayer_id: prayerId,
+      });
+      if (error) throw error;
+      setPrayers(prev => prev.filter(p => p.id !== prayerId));
+      setFeedbackOpen(null);
+      toast.success("Pedido excluído com sucesso.");
+    } catch (e) {
+      toast.error("Erro ao excluir pedido");
+    } finally {
+      setSendingFeedback(false);
+    }
+  };
+
   useEffect(() => {
     fetchHistory();
   }, []);
@@ -233,7 +288,8 @@ const Submit = () => {
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!session) {
-        navigate("/auth");
+        const returnPath = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+        navigate(`/auth?redirect=${encodeURIComponent(returnPath)}`);
       } else {
         const city = session.user.user_metadata?.city;
         const state = session.user.user_metadata?.state;
@@ -266,6 +322,7 @@ const Submit = () => {
 
       const notifications = friendsData.map(f => ({
         user_id: f.friend_id,
+        sender_id: session.user.id,
         prayer_request_id: prayerId,
         message: `🙏 ${userFirstName} acabou de enviar um novo pedido de oração: "${title}"`,
         is_read: false
@@ -277,7 +334,7 @@ const Submit = () => {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmitLegacy = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.content.trim()) {
       toast.error("Por favor, descreva seu pedido de oração");
@@ -336,6 +393,66 @@ const Submit = () => {
     }
   };
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.content.trim()) {
+      toast.error("Por favor, descreva seu pedido de oração");
+      return;
+    }
+    if (formData.title.trim().length < 5) {
+      toast.error("O título do pedido deve ter pelo menos 5 letras");
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const body = {
+        title: formData.title.trim(),
+        content: formData.content.trim(),
+        location: formData.location.trim(),
+        is_anonymous: isAnonymous,
+      };
+      let { data, error } = await supabase.functions.invoke("submit-prayer-request", { body });
+      if (error) throw error;
+
+      if (data?.status === "needs_review") {
+        const confirmed = window.confirm("Este pedido será encaminhado para revisão antes de aparecer para a comunidade. Deseja confirmar o envio?");
+        if (!confirmed) return;
+        ({ data, error } = await supabase.functions.invoke("submit-prayer-request", {
+          body: { ...body, confirm_review: true },
+        }));
+        if (error) throw error;
+      }
+
+      const { data: { session } } = await supabase.auth.getSession();
+      const request = data?.prayer_request;
+      if (data?.status === "approved" && request?.id) {
+        refreshAltar();
+        await notifyFriends(request.id, request.title);
+      }
+
+      const userId = session?.user?.id;
+      const today = new Date().toISOString().split("T")[0];
+      const submitFaithPointsKey = `amens_submit_faith_points_${userId}_${today}`;
+      if (userId && data?.status === "approved" && !localStorage.getItem(submitFaithPointsKey)) {
+        await addFaithPoints("submit");
+        localStorage.setItem(submitFaithPointsKey, "1");
+        toast.success(`Pedido enviado! Ganhou +${FAITH_POINTS_REWARDS.submit} pontos de fé`);
+      } else {
+        toast.success(data?.status === "pending_review" ? "Pedido enviado para revisão da comunidade." : "Pedido enviado com sucesso!");
+      }
+      setFormData({ title: "", content: "", location: "" });
+      setIsAnonymous(false);
+      setTimeout(() => triggerPushPrompt("Saiba quando alguém orar por seu pedido, autorize as notificações"), 800);
+      setTimeout(() => navigate("/"), 3000);
+    } catch (error: any) {
+      console.error("Error submitting prayer request:", error);
+      toast.error(`Erro técnico: ${error.message || JSON.stringify(error)}`);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <PageTransition>
       <div className="min-h-screen bg-transparent relative overflow-hidden pb-28">
@@ -374,6 +491,21 @@ const Submit = () => {
                   <Label htmlFor="content" className="text-base">Seu Pedido de Oração *</Label>
                   <Textarea id="content" placeholder="Descreva seu pedido de oração com detalhes..." value={formData.content} onChange={(e) => setFormData({ ...formData, content: e.target.value })} className="mt-2 min-h-[180px]" required maxLength={1000} />
                   <p className="text-sm text-muted-foreground mt-1">{formData.content.length}/1000 caracteres</p>
+                </div>
+                <div className="rounded-2xl border border-primary/10 bg-primary/5 p-4">
+                  <div className="flex items-start gap-3">
+                    <input
+                      id="is-anonymous"
+                      type="checkbox"
+                      checked={isAnonymous}
+                      onChange={(e) => setIsAnonymous(e.target.checked)}
+                      className="mt-1 h-4 w-4 accent-primary"
+                    />
+                    <div>
+                      <Label htmlFor="is-anonymous" className="cursor-pointer font-semibold">Desejo permanecer anônimo</Label>
+                      <p className="mt-1 text-xs leading-relaxed text-muted-foreground">Seu nome e sua localização não serão exibidos para a comunidade.</p>
+                    </div>
+                  </div>
                 </div>
                 <Button type="submit" disabled={isSubmitting} size="lg" className="w-full gradient-divine text-black hover:opacity-90 font-bold">
                   <Send className="w-4 h-4 mr-2" />
@@ -436,7 +568,20 @@ const Submit = () => {
                               <div className="mb-4">
                                 <div className="flex justify-between items-start mb-2">
                                   {prayer.title && <h3 className="text-base font-bold text-foreground">{prayer.title}</h3>}
-                                  <span className="text-[10px] bg-primary/5 px-2 py-1 rounded-full text-primary font-bold">{formatTimeAgo(prayer.created_at)}</span>
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-[10px] bg-primary/5 px-2 py-1 rounded-full text-primary font-bold">{formatTimeAgo(prayer.created_at)}</span>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      onClick={() => handleDelete(prayer.id)}
+                                      disabled={sendingFeedback}
+                                      aria-label="Excluir pedido"
+                                      title="Excluir pedido"
+                                      className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                                    >
+                                      <Trash2 className="h-3.5 w-3.5" />
+                                    </Button>
+                                  </div>
                                 </div>
                                 <p className="text-sm text-muted-foreground leading-relaxed line-clamp-2">{prayer.content}</p>
                               </div>

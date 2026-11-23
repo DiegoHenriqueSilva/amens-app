@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useReportDialogA11y } from "@/hooks/use-report-dialog-a11y";
 
 const REPORT_CATEGORIES = [
   { value: "inappropriate", label: "Conteúdo ofensivo ou inapropriado" },
@@ -32,6 +33,7 @@ export const ReportPrayerDialog = ({
   const [customReason, setCustomReason] = useState("");
   const [description, setDescription] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { dialogRef, closeButtonRef } = useReportDialogA11y(open, onClose);
 
   const handleSubmit = async () => {
     if (!category) {
@@ -86,6 +88,10 @@ export const ReportPrayerDialog = ({
       {open && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto p-4">
           <motion.div
+            ref={dialogRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="report-prayer-title"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -108,7 +114,7 @@ export const ReportPrayerDialog = ({
                     <Flag className="w-4 h-4 text-red-500" />
                   </div>
                   <div>
-                    <h3 className="text-base font-bold text-foreground">
+                    <h3 id="report-prayer-title" className="text-base font-bold text-foreground">
                       Reportar Causa
                     </h3>
                     <p className="text-[10px] text-muted-foreground">
@@ -117,6 +123,9 @@ export const ReportPrayerDialog = ({
                   </div>
                 </div>
                 <button
+                  type="button"
+                  ref={closeButtonRef}
+                  aria-label="Fechar denúncia de causa"
                   onClick={onClose}
                   className="w-8 h-8 rounded-full bg-muted/50 flex items-center justify-center hover:bg-muted transition-colors"
                 >
@@ -137,6 +146,7 @@ export const ReportPrayerDialog = ({
                         setCategory(cat.value);
                         if (cat.value !== "other") setCustomReason("");
                       }}
+                      aria-pressed={category === cat.value}
                       className={`w-full text-left px-3 py-2.5 rounded-xl border text-sm transition-all ${
                         category === cat.value
                           ? "border-red-400 bg-red-50 text-red-700 font-medium"
@@ -156,6 +166,8 @@ export const ReportPrayerDialog = ({
                     Qual motivo deseja reportar? *
                   </p>
                   <Textarea
+                    id="report-prayer-custom-reason"
+                    aria-label="Motivo personalizado da denúncia"
                     placeholder="Escreva o motivo do reporte..."
                     value={customReason}
                     onChange={(e) => setCustomReason(e.target.value)}
@@ -170,6 +182,8 @@ export const ReportPrayerDialog = ({
                   Descrição adicional (opcional)
                 </p>
                 <Textarea
+                  id="report-prayer-description"
+                  aria-label="Descrição adicional da denúncia"
                   placeholder="Descreva o motivo com mais detalhes..."
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}

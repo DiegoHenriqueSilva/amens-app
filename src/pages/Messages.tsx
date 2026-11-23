@@ -3,13 +3,14 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Mail, Sparkles, ArrowLeft, Heart, CheckCircle2, MessageCircle } from "lucide-react";
+import { Mail, Sparkles, ArrowLeft, Heart, CheckCircle2, MessageCircle, Flag } from "lucide-react";
 import PageTransition from "@/components/PageTransition";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { formatTimeAgo } from "@/lib/utils";
 import { usePushPrompt } from "@/contexts/PushPromptContext";
 import "./messages.css";
+import { ReportUserDialog } from "@/components/ReportUserDialog";
 
 const renderNotificationMessage = (message: string) => {
   const match = message.match(/^(\P{L}*?)(\p{L}[^\n]*?)(?= (?:acabou de enviar|reagiu com|te convidou)\b)([\s\S]*)$/u);
@@ -28,6 +29,7 @@ const Messages = () => {
   const navigate = useNavigate();
   const [notifications, setNotifications] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [reportedSender, setReportedSender] = useState<{ id: string; name?: string } | null>(null);
 
   const { triggerPushPrompt } = usePushPrompt();
 
@@ -183,6 +185,20 @@ const Messages = () => {
                                {notif.is_read && (
                                  <CheckCircle2 className="w-3 h-3 text-primary/40" />
                                )}
+                                {notif.sender_id && (
+                                  <button
+                                    type="button"
+                                    aria-label="Denunciar remetente"
+                                    title="Denunciar remetente"
+                                    className="ml-auto mr-2 rounded-full p-1 text-muted-foreground hover:text-red-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400"
+                                    onClick={(event) => {
+                                      event.stopPropagation();
+                                      setReportedSender({ id: notif.sender_id, name: undefined });
+                                    }}
+                                  >
+                                    <Flag className="h-3 w-3" aria-hidden="true" />
+                                  </button>
+                                )}
                              </div>
                           </div>
                        </div>
@@ -207,8 +223,15 @@ const Messages = () => {
              <p className="text-[10px] text-muted-foreground/60 leading-relaxed max-w-[200px] mx-auto uppercase tracking-widest font-bold">
                 As notificações são arquivadas após 30 dias de luz.
              </p>
-          </motion.div>
-        </div>
+           </motion.div>
+           <ReportUserDialog
+             open={Boolean(reportedSender)}
+             targetUserId={reportedSender?.id ?? null}
+             targetName={reportedSender?.name}
+             onClose={() => setReportedSender(null)}
+             onConfirmed={() => setReportedSender(null)}
+           />
+         </div>
       </div>
     </PageTransition>
   );

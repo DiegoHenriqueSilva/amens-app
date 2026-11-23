@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 export interface Contributor {
+  id?: string;
   timestamp: number;
   user_id?: string;
   name: string;
@@ -23,7 +24,7 @@ export const usePrayerQueue = (currentPrayerId: string | undefined, currentPhras
       try {
         const { data, error } = await supabase
           .from('prayer_contributions')
-          .select('user_id, target_timestamp, author_name, author_city')
+          .select('id, user_id, target_timestamp, author_name, author_city')
           .gte('target_timestamp', clock.current - 20000)
           .lte('target_timestamp', clock.current + 180000); // 3 min window
         
@@ -34,10 +35,11 @@ export const usePrayerQueue = (currentPrayerId: string | undefined, currentPhras
         }
 
         if (data) {
-          const records = data as Array<{ user_id?: string; target_timestamp: number | string; author_name: string; author_city: string }>;
+          const records = data as Array<{ id: string; user_id?: string; target_timestamp: number | string; author_name: string; author_city: string }>;
           const mapped = records.reduce<Record<string, Omit<Contributor, "timestamp">>>((acc, curr) => ({
             ...acc,
             [String(curr.target_timestamp)]: {
+              id: curr.id,
               user_id: curr.user_id,
               name: curr.author_name,
               city: curr.author_city
@@ -69,6 +71,7 @@ export const usePrayerQueue = (currentPrayerId: string | undefined, currentPhras
             ...prev,
             [String(newContrib.target_timestamp)]: {
               user_id: newContrib.user_id,
+              id: newContrib.id,
               name: newContrib.author_name,
               city: newContrib.author_city
             }

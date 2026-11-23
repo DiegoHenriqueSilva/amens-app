@@ -15,7 +15,6 @@ import { FriendSelector } from "@/components/FriendSelector";
 import { formatTimeAgo, formatFullDatetime, getDisplayName } from "@/lib/utils";
 import { usePushPrompt } from "@/contexts/PushPromptContext";
 import { useDailyTasks } from "@/hooks/use-daily-tasks";
-import { usePrayerDailyLimit } from "@/hooks/use-prayer-daily-limit";
 import { InviteGatePopup } from "@/components/InviteGatePopup";
 import { ReportPrayerDialog } from "@/components/ReportPrayerDialog";
 import { refreshAltar } from '@/features/altar/events';
@@ -83,7 +82,6 @@ const Pray = () => {
   const [sharedByName, setSharedByName] = useState<string | null>(null);
   const [editingReactionHistoryId, setEditingReactionHistoryId] = useState<string | null>(null);
   const [devotionalSaint, setDevotionalSaint] = useState<string | null>(null);
-  const dailyLimit = usePrayerDailyLimit(currentUser?.id ?? null);
   const fetchUserFriends = async (userId: string) => {
     const { data } = await supabase.from("friendships").select("friend_id").eq("user_id", userId);
     if (data) {
@@ -228,15 +226,9 @@ const Pray = () => {
     });
     if (error) {
       if (error.code === "23505") return true;
-      if (error.message.includes("Daily prayer limit reached") || error.hint === "daily_prayer_limit_reached") {
-        await dailyLimit.refresh().catch(() => undefined);
-        toast.info("Você já utilizou todas as suas oportunidades de oração de hoje.");
-        return false;
-      }
       throw error;
     }
     await supabase.rpc('increment_prayer_count' as any, { row_id: prayerId });
-    await dailyLimit.refresh().catch(() => undefined);
     setEngagementRevision(value => value + 1);
     refreshAltar();
     return true;
@@ -326,17 +318,6 @@ const Pray = () => {
   const fetchRandomPrayerRequest = async () => {
     if (!currentUser) {
       toast.error("Faça login para receber causas");
-      return;
-    }
-
-    try {
-      const allowance = await dailyLimit.refresh();
-      if (!allowance.isAdmin && allowance.remaining === 0) {
-        toast.info("Seu limite de orações por causas foi atingido hoje. Amanhã você poderá continuar essa corrente de fé.");
-        return;
-      }
-    } catch {
-      toast.error("Não foi possível verificar suas oportunidades de oração. Tente novamente.");
       return;
     }
 
@@ -468,6 +449,7 @@ const Pray = () => {
 
       const notifications = recipients.map(friendId => ({
         user_id: friendId,
+        sender_id: currentUser.id,
         message: `🙏 ${inviterName} te convidou para interceder por uma causa!`,
         prayer_request_id: prayerRequest.id,
         is_read: false
@@ -507,7 +489,7 @@ const Pray = () => {
         setIsGenerating(false);
         return;
       }
-      
+
       const systemPrompt = `Você é um gerador de orações empáticas e poderosas para a rede social "Améns".
 REGRA DE OURO: A oração DEVE OBRIGATORIAMENTE começar com: "Que faça de minha oração uma ferramenta para a bencao dessa causa..." ou algo muito similar que use a palavra "ferramenta".
 REGRAS ADICIONAIS:
@@ -526,10 +508,10 @@ ${devotionalSaint ? `5. A pessoa que está orando tem devoção a ${devotionalSa
       });
 
       if (!response.ok) throw new Error('Falha na resposta do Gemini');
-      
+
       const data = await response.json();
       const prayerText = data.candidates?.[0]?.content?.parts?.[0]?.text;
-      
+
       setSuggestedPrayer(prayerText || "Desculpe, não conseguimos gerar a sugestão agora.");
     } catch (error) {
       console.error('Error generating prayer:', error);
@@ -570,6 +552,7 @@ ${devotionalSaint ? `5. A pessoa que está orando tem devoção a ${devotionalSa
           const senderFirstName = currentUser.user_metadata?.full_name?.split(" ")[0] || "Um irmão";
           await supabase.from("notifications").insert({
             user_id: pReq.user_id,
+            sender_id: currentUser.id,
             prayer_request_id: targetPrayerId,
             message: `${reactionDef?.emoji} ${senderFirstName} reagiu com ${reactionDef?.label} ao seu pedido!`,
           });
@@ -608,30 +591,6 @@ ${devotionalSaint ? `5. A pessoa que está orando tem devoção a ${devotionalSa
     toast.info("Você pode sortear uma nova causa agora.");
   };
 
-  const dailyLimitNotice = currentUser ? (
-    <div className="rounded-2xl border border-primary/15 bg-primary/5 px-4 py-3 text-center text-sm text-muted-foreground">
-      {dailyLimit.loading ? (
-        <span>Consultando suas oportunidades de oração…</span>
-      ) : dailyLimit.isAdmin ? (
-        <span>Como administrador, você pode interceder por causas sem limite diário.</span>
-      ) : (
-        <>
-          <span>
-            Hoje você pode orar por <strong className="text-primary">{dailyLimit.limit}</strong> causas.{' '}
-            {dailyLimit.remaining === 0
-              ? <strong className="text-amber-700">Você já utilizou todas; novas oportunidades estarão disponíveis amanhã.</strong>
-              : <>Ainda {dailyLimit.remaining === 1 ? 'resta' : 'restam'} <strong className="text-primary">{dailyLimit.remaining}</strong>.</>}
-          </span>
-          {dailyLimit.nextBonusLevel && (
-            <span className="mt-1 block text-xs">
-              No nível <strong>{dailyLimit.nextBonusLevel}</strong>, você ganhará +1 oportunidade por dia. O limite aumenta novamente a cada 5 níveis.
-            </span>
-          )}
-        </>
-      )}
-    </div>
-  ) : null;
-
   return (
     <PageTransition>
       <div className="cause-page min-h-screen relative overflow-hidden pb-28">
@@ -662,10 +621,9 @@ ${devotionalSaint ? `5. A pessoa que está orando tem devoção a ${devotionalSa
                        <Sparkles className="w-12 h-12 text-primary mx-auto mb-6 opacity-30" />
                     </motion.div>
                     <div className="flex flex-col gap-4">
-                      <Button onClick={fetchRandomPrayerRequest} disabled={isLoading || dailyLimit.loading || dailyLimit.isLimitReached} size="lg" className={`w-full h-16 bg-gradient-to-br from-[#d4a017] to-[#e8c547] text-[#3d2800] hover:opacity-90 transition-opacity font-bold text-lg rounded-2xl shadow-lg border-0 ${!currentUser || dailyLimit.isLimitReached ? 'opacity-60 pointer-events-none' : ''}`}>
+                      <Button onClick={fetchRandomPrayerRequest} disabled={isLoading || !currentUser} size="lg" className={`w-full h-16 bg-gradient-to-br from-[#d4a017] to-[#e8c547] text-[#3d2800] hover:opacity-90 transition-opacity font-bold text-lg rounded-2xl shadow-lg border-0 ${!currentUser ? 'opacity-60 pointer-events-none' : ''}`}>
                         {isLoading ? "Buscando..." : "Receber uma Causa"}
                       </Button>
-                      {dailyLimitNotice}
                     </div>
                   </Card>
                 </motion.div>
@@ -675,10 +633,9 @@ ${devotionalSaint ? `5. A pessoa que está orando tem devoção a ${devotionalSa
                     <motion.div animate={{ scale: [1, 1.08, 1] }} transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }} className="w-20 h-20 mx-auto mb-8 bg-transparent flex items-center justify-center overflow-visible relative">
                       <img src="/estrela_3d.png" alt="Estrela brilhante" className="w-full h-full object-contain drop-shadow-md transition-all duration-500 group-active:drop-shadow-[0_0_30px_rgba(255,215,0,1)] group-active:brightness-125 group-active:scale-110" />
                     </motion.div>
-                    <Button onClick={fetchRandomPrayerRequest} disabled={isLoading || dailyLimit.loading || dailyLimit.isLimitReached} size="lg" className="w-full max-w-[240px] h-16 gradient-divine text-white hover:opacity-90 font-black text-xl uppercase tracking-widest shadow-xl rounded-2xl disabled:opacity-50">
+                    <Button onClick={fetchRandomPrayerRequest} disabled={isLoading || !currentUser} size="lg" className="w-full max-w-[240px] h-16 gradient-divine text-white hover:opacity-90 font-black text-xl uppercase tracking-widest shadow-xl rounded-2xl disabled:opacity-50">
                       {isLoading ? <BuscandoText /> : "Receber Causa"}
                     </Button>
-                    <div className="mt-5">{dailyLimitNotice}</div>
                   </Card>
                 </motion.div>
               ) : (
@@ -687,10 +644,9 @@ ${devotionalSaint ? `5. A pessoa que está orando tem devoção a ${devotionalSa
                   {isSharedCause && (
                     <div className="bg-blue-50 border border-blue-100 rounded-2xl p-4 text-center">
                       <p className="text-blue-800 text-sm font-medium mb-3">{sharedByName ? `${sharedByName} compartilhou esta causa com você.` : "Você acessou uma causa compartilhada."}</p>
-                      {isPrayerConcluded(prayerRequest) ? <p className="text-sm text-blue-800">Esta causa já foi encerrada.</p> : <Button onClick={handleAcceptSharedCause} disabled={dailyLimit.loading || dailyLimit.isLimitReached} className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm h-9">
+                      {isPrayerConcluded(prayerRequest) ? <p className="text-sm text-blue-800">Esta causa já foi encerrada.</p> : <Button onClick={handleAcceptSharedCause} disabled={!currentUser} className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm h-9">
                         {currentUser ? "Aceitar interceder" : "Entrar ou criar conta para interceder"}
                       </Button>}
-                      {currentUser && dailyLimit.isLimitReached && <p className="mt-2 text-xs text-blue-800">Você já utilizou suas oportunidades de hoje.</p>}
                     </div>
                   )}
 
@@ -715,12 +671,11 @@ ${devotionalSaint ? `5. A pessoa que está orando tem devoção a ${devotionalSa
                     feedback={FEEDBACK_OPTIONS[prayerRequest.feedback]}
                     onReaction={type => toggleReaction(type, prayerRequest.id, activeReaction, false)}
                     onSuggestion={generatePrayer}
-                    onNext={!isPrayerConcluded(prayerRequest) && !isSharedCause && !dailyLimit.isLimitReached ? fetchRandomPrayerRequest : undefined}
+                    onNext={!isPrayerConcluded(prayerRequest) && !isSharedCause ? fetchRandomPrayerRequest : undefined}
                     onFriendShare={() => setFriendSelectorOpen(true)}
                     onExternalShare={handleShareCompartilhar}
                     onReport={!isPrayerConcluded(prayerRequest) && !prayerRequest.is_default && !isSharedCause ? () => setReportDialogOpen(true) : undefined}
                   />
-                  {!isSharedCause && dailyLimitNotice}
 
                   <FriendSelector 
                     open={friendSelectorOpen}

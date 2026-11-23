@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Award, ChevronDown, ChevronRight, Church, Heart, Map as MapIcon, RotateCw, User as UserIcon, Users } from "lucide-react";
+import { ArrowLeft, Award, ChevronDown, ChevronRight, Church, Heart, Map as MapIcon, RotateCw, User as UserIcon, Users, Flag } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { NameWithInsignias, usePublicInsignias } from "@/features/insignias/Insignias";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import PageTransition from "@/components/PageTransition";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { ReportUserDialog } from "@/components/ReportUserDialog";
 
 export const STATE_NAMES: Record<string, string> = {
   AC: "Acre", AL: "Alagoas", AP: "Amapá", AM: "Amazonas", BA: "Bahia", CE: "Ceará", DF: "Distrito Federal",
@@ -38,6 +39,7 @@ const CommunityDirectory = () => {
   const [directoryError, setDirectoryError] = useState(false);
   const [resultsLoading, setResultsLoading] = useState(false);
   const [membersLoading, setMembersLoading] = useState(false);
+  const [reportedUser, setReportedUser] = useState<{ id: string; name: string } | null>(null);
   const { data: insignias } = usePublicInsignias(members.map(member => member.id));
 
   const loadDirectory = async () => {
@@ -150,6 +152,7 @@ const CommunityDirectory = () => {
         </button>
         {!isMe && !isFriend && <Button variant="ghost" size="sm" disabled={isPending} onClick={() => addFriend(member.id)} className="rounded-full h-8 px-4 text-[10px] font-bold uppercase shrink-0 ml-2 bg-primary/10 text-primary">{isPending ? "Pendente" : "Adicionar"}</Button>}
         {isFriend && <div className="p-2 bg-green-50 text-green-600 rounded-full shrink-0 ml-2"><Heart className="w-4 h-4 fill-current" /></div>}
+        {!isMe && <button type="button" aria-label={`Denunciar ${name}`} title="Denunciar usuário" onClick={() => setReportedUser({ id: member.id, name })} className="p-2 ml-1 rounded-full text-muted-foreground hover:text-red-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400"><Flag className="w-3.5 h-3.5" aria-hidden="true" /></button>}
       </Card>
     </motion.div>;
   };
@@ -169,7 +172,14 @@ const CommunityDirectory = () => {
           {resultsLoading ? <Card className="h-20 animate-pulse bg-white/50 rounded-2xl" /> : !selectedParish ? <div className="space-y-2.5">{parishStats.length > 0 ? parishStats.map(item => <button key={item.parish} onClick={() => openParish(item.parish)} className="w-full p-4 flex items-center gap-3 text-left border border-primary/15 bg-white/85 rounded-2xl soft-shadow hover:border-primary/40"><span className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center shrink-0"><Church className="w-5 h-5 text-primary" /></span><span className="min-w-0 flex-1"><strong className="block text-sm truncate">{item.parish}</strong><small className="block text-muted-foreground mt-1">{item.total_users} {Number(item.total_users) === 1 ? "membro público" : "membros públicos"}</small></span><ChevronRight className="w-4 h-4 text-primary" /></button>) : <Card className="p-5 text-center rounded-2xl text-sm text-muted-foreground">Nenhuma paróquia pública encontrada nesta cidade.</Card>}</div> : <div className="space-y-4"><Card className="p-5 text-center rounded-[2rem] bg-white/85 border-primary/15"><div className="w-16 h-16 mx-auto rounded-full bg-primary/10 flex items-center justify-center mb-3"><Church className="w-8 h-8 text-primary" /></div><h3 className="text-xl font-bold">{selectedParish}</h3><p className="text-[10px] uppercase tracking-[0.2em] text-primary mt-1">Comunidade paroquial</p></Card><div><h4 className="text-xs font-bold uppercase tracking-widest px-2 mb-2 text-primary/80">Irmãos de fé públicos</h4><div className="space-y-2.5">{membersLoading ? [1,2].map(item => <Card key={item} className="h-16 animate-pulse bg-white/50 rounded-2xl" />) : members.length > 0 ? members.map(renderMember) : <p className="text-center text-xs italic text-muted-foreground py-4">Ainda não há membros públicos nesta paróquia.</p>}</div></div></div>}
         </section>}
         <Card className="p-5 border-dashed border-primary/20 bg-primary/5 rounded-3xl text-center"><Award className="w-6 h-6 text-primary/70 mx-auto mb-2" /><h3 className="text-sm font-bold mb-1">Ranking de Intercessores</h3><p className="text-xs text-muted-foreground">Mostre sua luz na comunidade. O ranking mensal chega em breve! ✨</p></Card>
-      </div>
+       </div>
+       <ReportUserDialog
+         open={Boolean(reportedUser)}
+         targetUserId={reportedUser?.id ?? null}
+         targetName={reportedUser?.name}
+         onClose={() => setReportedUser(null)}
+         onConfirmed={() => setReportedUser(null)}
+       />
     </main>
   </div></PageTransition>;
 };

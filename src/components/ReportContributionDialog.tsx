@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useReportDialogA11y } from "@/hooks/use-report-dialog-a11y";
 
 const REPORT_CATEGORIES = [
   { value: "inappropriate", label: "Conteúdo ofensivo ou inapropriado" },
@@ -26,6 +27,7 @@ export const ReportContributionDialog = ({ open, contributionId, authorName, onC
   const [category, setCategory] = useState("");
   const [description, setDescription] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { dialogRef, closeButtonRef } = useReportDialogA11y(open, onClose);
 
   const handleSubmit = async () => {
     if (!category || !contributionId) return;
@@ -60,6 +62,10 @@ export const ReportContributionDialog = ({ open, contributionId, authorName, onC
       {open && (
         <>
           <motion.div
+            ref={dialogRef}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Diálogo de denúncia"
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             className="fixed inset-0 z-[100] bg-black/40 backdrop-blur-sm"
             onClick={onClose}
@@ -82,7 +88,7 @@ export const ReportContributionDialog = ({ open, contributionId, authorName, onC
                     {authorName && <p className="text-[10px] text-muted-foreground">de {authorName}</p>}
                   </div>
                 </div>
-                <button onClick={onClose} className="w-8 h-8 rounded-full bg-muted/50 flex items-center justify-center hover:bg-muted transition-colors">
+                <button type="button" ref={closeButtonRef} aria-label="Fechar denúncia" onClick={onClose} className="w-8 h-8 rounded-full bg-muted/50 flex items-center justify-center hover:bg-muted transition-colors">
                   <X className="w-4 h-4 text-muted-foreground" />
                 </button>
               </div>
@@ -94,6 +100,7 @@ export const ReportContributionDialog = ({ open, contributionId, authorName, onC
                     <button
                       key={cat.value}
                       onClick={() => setCategory(cat.value)}
+                      aria-pressed={category === cat.value}
                       className={`w-full text-left px-3 py-2.5 rounded-xl border text-sm transition-all ${
                         category === cat.value
                           ? "border-red-400 bg-red-50 text-red-700 font-medium"
@@ -109,6 +116,8 @@ export const ReportContributionDialog = ({ open, contributionId, authorName, onC
               <div className="mb-5">
                 <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-2">Descrição adicional (opcional)</p>
                 <Textarea
+                  id="report-dialog-description"
+                  aria-label="Descrição adicional da denúncia"
                   placeholder="Descreva o motivo com mais detalhes..."
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}

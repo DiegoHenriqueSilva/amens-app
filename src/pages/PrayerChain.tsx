@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Send, Sparkles, Wind, Users, Heart } from "lucide-react";
+import { ArrowLeft, Send, Sparkles, Wind, Users, Heart, Flag } from "lucide-react";
 import PageTransition from "@/components/PageTransition";
 import { PRAYERS, PHRASE_DURATION, PRAYER_GAP, TOTAL_CYCLE_TIME, BR_CITIES_200K, COMMON_NAMES } from "@/data/prayer-data";
 import { motion, AnimatePresence } from "framer-motion";
@@ -13,6 +13,7 @@ import { useFriends } from "@/hooks/use-friends";
 import { cn } from "@/lib/utils";
 import { useDailyTasks } from "@/hooks/use-daily-tasks";
 import "./prayer-chain.css";
+import { ReportContributionDialog } from "@/components/ReportContributionDialog";
 
 // Marco zero para a sincronização global (1º de Janeiro de 2024)
 const EPOCH = new Date("2024-01-01T00:00:00Z").getTime();
@@ -29,6 +30,7 @@ const PrayerChain = () => {
   const [globalTime, setGlobalTime] = useState(Date.now());
   const [timeOffset, setTimeOffset] = useState<number>(0);
   const [isSyncing, setIsSyncing] = useState(true);
+  const [reportedContribution, setReportedContribution] = useState<{ id: string; authorName?: string } | null>(null);
   const { completeTask } = useDailyTasks();
   const { friends } = useFriends();
   const syncAttempted = useRef(false);
@@ -379,8 +381,30 @@ const PrayerChain = () => {
                             "text-[#3d2800]/70 font-semibold text-[11px] md:text-[13px] text-center tracking-wide px-2 py-1 rounded-full transition-all",
                             contrib?.user_id === currentUser?.id && "text-primary font-bold bg-[#d4a017]/10 soft-shadow",
                             contrib?.user_id && friendIds.has(contrib.user_id) && "text-friend-accent font-bold bg-friend-accent/10 soft-shadow"
+                          )}>
+                          {/*
+                            <button
+                              type="button"
+                              aria-label={`Denunciar contribuição de ${contrib.name}`}
+                              title="Denunciar contribuição"
+                              className="ml-2 inline-flex rounded-full p-1 text-[#a0720a]/60 hover:text-red-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400"
+                              onClick={() => setReportedContribution({ id: contrib.id!, authorName: contrib.name })}
+                            >
+                              <Flag className="h-3 w-3" aria-hidden="true" />
+                            </button>
+                          */}
+                        {null}
+                          {contrib.id && contrib.user_id !== currentUser?.id && (
+                            <button
+                              type="button"
+                              aria-label={`Denunciar contribuição de ${contrib.name}`}
+                              title="Denunciar contribuição"
+                              className="ml-2 inline-flex rounded-full p-1 text-[#a0720a]/60 hover:text-red-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400"
+                              onClick={() => setReportedContribution({ id: contrib.id!, authorName: contrib.name })}
+                            >
+                              <Flag className="h-3 w-3" aria-hidden="true" />
+                            </button>
                           )}
-                        >
                           {contrib.name} ({contrib.city}) — entrou na oração
                         </motion.div>
                       ))}
@@ -436,7 +460,14 @@ const PrayerChain = () => {
         </div>
 
         {/* Global Progress Indicator (Hidden or reduced) */}
-        <div className="h-2 shrink-0 bg-transparent" />
+         <div className="h-2 shrink-0 bg-transparent" />
+         <ReportContributionDialog
+           open={Boolean(reportedContribution)}
+           contributionId={reportedContribution?.id ?? null}
+           authorName={reportedContribution?.authorName}
+           onClose={() => setReportedContribution(null)}
+           onConfirmed={() => setReportedContribution(null)}
+         />
       </div>
     </PageTransition>
   );
