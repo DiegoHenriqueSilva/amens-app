@@ -332,10 +332,11 @@ function ReplyDialog({ f, onClose, onChanged }: { f: Feedback | null; onClose: (
             )}
             <DialogFooter className="gap-2 sm:gap-0 flex-wrap">
               <Button type="button" variant="outline" onClick={onClose} disabled={sending}>Cancelar</Button>
+              {/* keys distintas: sem elas o React reaproveita o <button>, que vira submit durante o clique e envia sem querer */}
               {others > 0 ? (
-                <Button type="button" onClick={() => { setExpected(f.replies.length); setErr(null); }}>Li a resposta nova; continuar</Button>
+                <Button key="ack" type="button" onClick={() => { setExpected(f.replies.length); setErr(null); }}>Li a resposta nova; continuar</Button>
               ) : (
-                <Button type="submit" disabled={!valid || sending}>{sending ? "Enviando…" : "Enviar resposta"}</Button>
+                <Button key="send" type="submit" disabled={!valid || sending}>{sending ? "Enviando…" : "Enviar resposta"}</Button>
               )}
             </DialogFooter>
           </form>
