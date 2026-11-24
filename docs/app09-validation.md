@@ -99,3 +99,36 @@ O APP09 só poderá ser encerrado após validar as duas experiências, as quatro
 modalidades, os controles manuais, o auxílio de voz, os estados de erro, as
 dimensões móveis e a integração do altar. Build aprovado ou inspeção de código
 isolada não substitui os testes de dispositivo.
+
+## Execução inicial — 24/11/2026
+
+### Aprovado nesta rodada
+
+- `/rosary-selection` carregou as quatro modalidades:
+  Santo Terço Mariano, Terço da Misericórdia, Terço da Libertação e Coroa de
+  São Miguel.
+- As rotas `/rosary/misterios`, `/rosary/misericordia`,
+  `/rosary/libertacao` e `/rosary/miguel` carregaram sem erro de página.
+- As sequências exibiram, respectivamente, 74, 62, 59 e 50 contas.
+- A navegação manual próxima/anterior alterou a conta e restaurou a conta
+  anterior corretamente.
+- `/terco` carregou, iniciou a prece e exibiu o controle manual `Avançar`.
+- `npm run build` passou.
+
+### Falhas e pendências encontradas
+
+- `/rosary/invalido` retorna uma tela vazia, sem mensagem de erro ou retorno
+  para uma rota válida. Deve ser tratado antes da conclusão.
+- Os quatro cards da seleção são `div`s com `onClick`, sem foco de teclado ou
+  semântica de botão/link. Isso impede aprovar APP09-U01 e APP09-U04.
+- Na experiência nova, clicar no controle de voz altera o título para `Voz
+  Ativada`, mas não apresenta texto explícito quando o reconhecimento não está
+  disponível ou não iniciou. APP09-U03 permanece pendente.
+- A validação real de microfone, permissão negada, silêncio e reconhecimento
+  incorreto ainda depende de navegador/dispositivo com captura de áudio.
+
+### Capturas desta rodada
+
+- `artifacts/app09-rosary-selection-390.png`
+- `artifacts/app09-rosary-prayer-390.png`
+- `artifacts/app09-terco-390.png`
