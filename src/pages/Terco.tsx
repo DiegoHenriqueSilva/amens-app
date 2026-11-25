@@ -1,10 +1,9 @@
-import { useState, useEffect, useMemo, useRef, useCallback } from "react";
+import { useState, useMemo, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { ArrowLeft, ChevronLeft, Mic, MicOff, Play, Pause, FastForward } from "lucide-react";
+import { ArrowLeft, ChevronLeft, Play, FastForward } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { useSpeechRecognition } from "@/hooks/use-speech-recognition";
 import { PRAYERS, ROSARY_SEQUENCE, RosaryBead } from "@/data/rosary";
 import PageTransition from "@/components/PageTransition";
 import { motion, AnimatePresence } from "framer-motion";
@@ -126,57 +125,9 @@ const Terco = () => {
     return pts.join(" ");
   }, [beadCoordinates]);
 
-  // Validation function
-  const validateTranscript = useCallback((speechText: string) => {
-    if (!currentPrayer) return;
-
-    // Remove punctuation, lower case
-    const text = speechText.toLowerCase().replace(/[.,!?;:()]/g, '');
-    const words = text.split(/\s+/);
-
-    const requiredKeywords = currentPrayer.keywords;
-    let matchCount = 0;
-
-    requiredKeywords.forEach(kw => {
-      // Allow partial string matching for things like "espírito" vs "espirito"
-      const normalizedKW = kw.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-      
-      const found = words.some(w => {
-        const normW = w.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-        return normW.includes(normalizedKW) || normalizedKW.includes(normW);
-      });
-
-      if (found) matchCount++;
-    });
-
-    // We want the user to say at least 30% of the important words to ensure they are actually praying
-    const matchThreshold = Math.max(1, Math.floor(requiredKeywords.length * 0.3));
-    
-    // AND we prioritize the FINAL TRIGGER WORD (palavra gatilho)
-    const lastKeyword = requiredKeywords[requiredKeywords.length - 1];
-    const normalizedLastKW = lastKeyword.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-    
-    const hasCompletedEnding = words.some(w => {
-        const normW = w.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-        return normW === normalizedLastKW || normW.includes(normalizedLastKW) || normalizedLastKW.includes(normW);
-    });
-    
-    // If they spoke the final trigger word, and we got at least some context of the prayer, we advance!
-    // Or if they somehow spoke a large portion of it but missed the exact word due to transcription error 
-    if ((hasCompletedEnding && matchCount >= matchThreshold) || matchCount >= requiredKeywords.length * 0.8) {
-      handleCompleteCurrentBead();
-    }
-  }, [currentPrayer, currentBeadIndex]);
-
-  const { isListening, transcript, toggleListening, clearTranscript, supported, error: voiceError } = useSpeechRecognition({
-    onResult: validateTranscript,
-    continuous: true,
-  });
-
   const handleCompleteCurrentBead = () => {
     toast.success(`${currentBead.label} concluído!`);
     setCompletedBeads(prev => new Set(prev).add(currentBeadIndex));
-    clearTranscript();
     
     if (currentBeadIndex < ROSARY_SEQUENCE.length - 1) {
       setCurrentBeadIndex(prev => prev + 1);
@@ -188,7 +139,6 @@ const Terco = () => {
 
   const handleFinishRosary = async () => {
     void recordAltarEvent('rosary_marian', altarSessionId.current);
-    toggleListening();
     setSessionActive(false);
     await addFaithPoints("pray");
     toast.success("O Terço foi concluído com sucesso. Uma chuva de bênçãos sobre você!");
@@ -201,22 +151,15 @@ const Terco = () => {
 
   const handlePrevious = () => {
     if (currentBeadIndex > 0) {
-      clearTranscript();
       setCurrentBeadIndex(previous => previous - 1);
     }
   };
 
   const startSession = () => {
-    if (!supported) {
-      toast.error("O navegador não suporta reconhecimento de fala. Você pode usar o botão 'Avançar'.");
-    }
     setSessionActive(true);
     altarSessionId.current = crypto.randomUUID();
     setCurrentBeadIndex(0);
     setCompletedBeads(new Set());
-    if (!isListening) {
-      toggleListening();
-    }
   };
 
   return (
@@ -376,33 +319,12 @@ const Terco = () => {
                           >
                              <ChevronLeft className="w-6 h-6" />
                           </Button>
-                          <Button 
-                             onClick={toggleListening} 
-                             variant={isListening ? "default" : "outline"}
-                             size="icon"
-                             className={`rounded-full shadow-md w-14 h-14 transition-all duration-300 ${isListening ? 'bg-red-500 hover:bg-red-600 animate-pulse text-white border-transparent' : 'border-primary/30 text-primary hover:bg-primary/10'}`}
-                             aria-label={isListening ? "Desativar microfone" : "Ativar microfone"}
-                             title={isListening ? "Desativar microfone" : "Ativar microfone"}
-                          >
-                             {isListening ? <Mic className="w-6 h-6" /> : <MicOff className="w-6 h-6" />}
-                          </Button>
-                          <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                             {voiceError || (!supported ? "Voz indisponível — avance manualmente" : isListening ? "Ouvindo você..." : "Microfone mudo")}
-                          </span>
                        </div>
 
                        <Button onClick={handleSkip} variant="ghost" className="text-primary hover:bg-primary/10 rounded-full gap-2">
                           Avançar <FastForward className="w-4 h-4 ml-1" />
                        </Button>
                     </div>
-
-                    {/* Subtitle Transcrição Ao vivo */}
-                    {isListening && transcript && (
-                       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-6 p-4 rounded-2xl bg-foreground/5 backdrop-blur border border-foreground/10 text-foreground/80 italic text-sm relative">
-                          <div className="absolute -top-3 left-4 bg-background px-2 text-[10px] font-bold uppercase tracking-widest text-primary">Transcrição</div>
-                          "{transcript}..."
-                       </motion.div>
-                    )}
 
                     {debugMode && (
                       <div className="mt-8 p-4 bg-black/80 text-green-400 text-xs font-mono rounded">

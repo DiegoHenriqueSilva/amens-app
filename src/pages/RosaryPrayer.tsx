@@ -2,11 +2,10 @@ import { useState, useMemo, useEffect, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { ArrowLeft, Mic, MicOff, ChevronRight, ChevronLeft, Sparkles, Heart, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, ChevronRight, ChevronLeft, Sparkles, Heart, CheckCircle2 } from "lucide-react";
 import PageTransition from "@/components/PageTransition";
 import { motion, AnimatePresence } from "framer-motion";
 import { PRAYERS, getMysteriesByDay, MISTERIOS, COROS_ANJOS, ROSARY_TYPES } from "@/data/rosary-data";
-import { useRosaryVoice } from "@/hooks/use-rosary-voice";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useDailyTasks } from "@/hooks/use-daily-tasks";
@@ -27,7 +26,6 @@ const RosaryPrayer = () => {
   const rosaryMeta = ROSARY_TYPES.find(t => t.id === type);
   const altarSessionId = useRef(crypto.randomUUID());
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [isVoiceActive, setIsVoiceActive] = useState(false);
   const { completeTask } = useDailyTasks();
   
   const activeBeadRef = useRef<HTMLDivElement>(null);
@@ -168,7 +166,6 @@ const RosaryPrayer = () => {
     }
   };
 
-  const { listening, supported, error: voiceError } = useRosaryVoice(handleNext, isVoiceActive, beads[currentIndex]?.prayer);
   const currentBead = beads[currentIndex] || beads[0];
   const isAtEnd = currentIndex === beads.length - 1;
 
@@ -197,25 +194,6 @@ const RosaryPrayer = () => {
       </PageTransition>
     );
   }
-
-  const handleVoiceToggle = () => {
-    if (!supported) {
-      setIsVoiceActive(false);
-      toast.error("O reconhecimento de voz não está disponível. Use os controles manuais.");
-      return;
-    }
-    setIsVoiceActive(active => !active);
-  };
-
-  const voiceStatus = voiceError
-    ? voiceError
-    : !supported
-      ? "Voz indisponível — use os controles manuais"
-      : isVoiceActive && listening
-        ? "Ouvindo sua oração…"
-        : isVoiceActive
-          ? "Voz ativada — aguardando o microfone"
-          : "Voz desligada — avance manualmente";
 
   return (
     <PageTransition>
@@ -246,21 +224,7 @@ const RosaryPrayer = () => {
             </p>
           </div>
 
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={handleVoiceToggle}
-            className={cn(
-              "rounded-full border transition-all duration-300 shadow-sm",
-              isVoiceActive 
-                ? "bg-amber-500/15 border-amber-500/40 text-amber-600 animate-pulse" 
-                : "border-primary/15 text-muted-foreground hover:bg-primary/10"
-            )}
-            title={isVoiceActive ? "Desativar voz" : "Ativar voz"}
-            aria-label={isVoiceActive ? "Desativar auxílio de voz" : "Ativar auxílio de voz"}
-          >
-            {isVoiceActive ? <Mic className="w-4 h-4 text-amber-600" /> : <MicOff className="w-4 h-4" />}
-          </Button>
+          <div className="w-10" aria-hidden="true" />
         </header>
 
         {/* Main Content: Vertical Rosary beside the Prayer Text */}
@@ -478,14 +442,6 @@ const RosaryPrayer = () => {
         {/* Bottom Bar: Ergonomic Controls */}
         <footer className="px-3 sm:px-8 pt-3 pb-[max(1rem,env(safe-area-inset-bottom))] flex flex-col items-center z-30 shrink-0 bg-background/80 backdrop-blur-md border-t border-primary/10">
           
-          {/* Listening Feedback HUD */}
-          <div className={cn(
-            "mb-3 px-4 py-1.5 rounded-full border text-[11px] font-bold uppercase tracking-widest text-center",
-            voiceError ? "bg-destructive/10 border-destructive/30 text-destructive" : "bg-primary/5 border-primary/20 text-muted-foreground"
-          )} role="status" aria-live="polite">
-            {voiceStatus}
-          </div>
-
           <div className="w-full max-w-2xl flex items-center justify-between gap-2">
             {/* Previous Bead Button */}
             <Button 
