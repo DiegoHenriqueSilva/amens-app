@@ -125,46 +125,16 @@ const DailyGospel = () => {
       
       // Limpa números de versículos (ex: [1], 1., 20, etc) para uma leitura mais fluida
       const evangelhoTextoCompleto = evangelhoTextoBruto.replace(/\[\d+\]|\d+\.|\d+/g, '').replace(/\s+/g, ' ').trim();
-         const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
       let verseResumo = evangelhoTextoCompleto;
       let curiosidade = "";
-      
-      // O sistema resume o pão diário e gera o extra!
-      if (GEMINI_API_KEY && evangelhoTextoCompleto.length > 50) {
-          const promptDaily = `Abaixo está o texto do Evangelho Católico do dia de hoje (${evangelhoReferencia}).
-Texto Oficial: "${evangelhoTextoCompleto}"
-
-Sua tarefa é extrair 2 informações:
-1. RESUMO: Um resumo poético de no máximo 2 frases que capture a essência da mensagem.
-2. CURIOSIDADE: Um fato HISTÓRICO, ARQUEOLÓGICO ou CULTURAL único e específico sobre a época de Jesus que ajude a dar contexto a este texto exato. Evite generalidades. Comece com 'Você sabia que...'.
-
-Responda APENAS com um objeto JSON válido no formato:
-{
-  "resumo": "texto aqui",
-  "curiosidade": "texto aqui"
-}`;
-          try {
-            const geminiRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ contents: [{ parts: [{ text: promptDaily }] }] })
-            });
-            
-            if (geminiRes.ok) {
-              const gData = await geminiRes.json();
-              const textResponse = gData.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
-              
-              // Limpa Markdown se houver
-              const jsonClean = textResponse.replace(/```json|```/g, "").trim();
-              const parsed = JSON.parse(jsonClean);
-              
-              if (parsed.resumo) verseResumo = parsed.resumo;
-              if (parsed.curiosidade) curiosidade = parsed.curiosidade;
-            }
-          } catch(e) { 
-            console.error("Falha ao processar resumo", e);
-          }
-      }
+      // The public daily cache is generated server-side; no provider credential enters Vite.
+      try {
+        const { data, error } = await supabase.functions.invoke('generate-prayer', { body: { kind: 'gospel' } });
+        if (!error && data) {
+          if (typeof data.resumo === 'string') verseResumo = data.resumo;
+          if (typeof data.curiosidade === 'string') curiosidade = data.curiosidade;
+        }
+      } catch { /* Reading remains available when optional AI support is unavailable. */ }
 
       // Fallback dinâmico para curiosidade caso a IA falhe ou não tenha chave
       if (!curiosidade) {

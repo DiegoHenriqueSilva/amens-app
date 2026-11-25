@@ -11,7 +11,7 @@ export const PRAYER_REACTIONS = [
   { type: "empathy", emoji: "🥺", label: "Empatia" },
 ];
 
-type Engagement = { intercessor_count: number; reactions: Record<string, number> };
+type Engagement = { intercessor_count: number; reactions: Record<string, number>; unavailable?: boolean };
 type Intercessor = {
   intercessor_id: string;
   display_name: string;
@@ -25,13 +25,16 @@ export function usePrayerEngagement(ids: string[], revision = 0) {
   const [counts, setCounts] = useState<Record<string, Engagement>>({});
   const key = [...new Set(ids)].filter(id => /^[0-9a-f-]{36}$/i.test(id)).sort().join(",");
   useEffect(() => {
+    setCounts({});
     if (!key) return;
     let active = true;
     const refresh = async () => {
       if (document.hidden) return;
       const { data, error } = await supabase.rpc("get_prayer_engagement_counts", { prayer_ids: key.split(",") });
-      if (!active || error) return;
+      if (!active) return;
       const next: Record<string, Engagement> = {};
+      for (const id of key.split(',')) next[id] = { intercessor_count: 0, reactions: {}, unavailable: true };
+      if (error) { setCounts(next); return; }
       (data as unknown as (Engagement & { prayer_request_id: string })[] | null)?.forEach(row => { next[row.prayer_request_id] = row; });
       setCounts(next);
     };
@@ -77,13 +80,14 @@ export function PrayerEngagement({ counts, prayerId, canViewIntercessors = false
     setIsLoading(false);
   };
 
-  const showListButton = Boolean(canViewIntercessors && prayerId && counts && counts.intercessor_count > 0);
+  const confirmed = counts && !counts.unavailable ? counts : undefined;
+  const showListButton = Boolean(canViewIntercessors && prayerId && confirmed && confirmed.intercessor_count > 0);
 
   return (
     <div className="my-3 space-y-2" aria-label="Intercessões e reações recebidas" aria-live="polite">
       <div className="prayer-engagement__summary">
         <p className="text-xs font-medium text-muted-foreground">
-          🙏 {counts ? `${counts.intercessor_count} ${Number(counts.intercessor_count) === 1 ? "pessoa intercedeu" : "pessoas intercederam"}` : "Carregando intercessões…"}
+          🙏 {counts?.unavailable ? "Contagens indisponíveis no momento." : confirmed ? `${confirmed.intercessor_count} ${Number(confirmed.intercessor_count) === 1 ? "pessoa intercedeu" : "pessoas intercederam"}` : "Carregando intercessões…"}
         </p>
         {showListButton && <button
           type="button"
@@ -119,8 +123,8 @@ export function PrayerEngagement({ counts, prayerId, canViewIntercessors = false
       </div>}
       <div className="flex flex-wrap gap-1.5">
         {PRAYER_REACTIONS.map(r => (
-          <span key={r.type} title={r.label} aria-label={`${r.label}: ${counts?.reactions[r.type] ?? "carregando"}`} className="inline-flex items-center gap-1 rounded-lg bg-primary/5 px-2 py-1 text-xs">
-            <span aria-hidden="true">{r.emoji}</span><span>{counts ? counts.reactions[r.type] || 0 : "–"}</span>
+          <span key={r.type} title={r.label} aria-label={`${r.label}: ${confirmed?.reactions[r.type] ?? "carregando"}`} className="inline-flex items-center gap-1 rounded-lg bg-primary/5 px-2 py-1 text-xs">
+            <span aria-hidden="true">{r.emoji}</span><span>{confirmed ? confirmed.reactions[r.type] || 0 : "–"}</span>
             <span className="sr-only">{r.label}</span>
           </span>
         ))}

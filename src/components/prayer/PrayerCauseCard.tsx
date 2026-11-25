@@ -1,4 +1,4 @@
-import type { ComponentProps } from "react";
+import { useState, type ComponentProps } from "react";
 import { Check, ChevronRight, Clock, Flag, Heart, MapPin, Share2, Sparkles, Users } from "lucide-react";
 import { PrayerEngagement, PRAYER_REACTIONS } from "@/components/PrayerEngagement";
 import { formatFullDatetime } from "@/lib/utils";
@@ -8,16 +8,16 @@ import "./prayer-cause.css";
 interface Cause {
   id?: string;
   status?: string;
-  title?: string;
+  title?: string | null;
   content: string;
   display_name?: string;
-  avatar_url?: string;
+  avatar_url?: string | null;
   is_friend?: boolean;
   is_anonymous?: boolean;
   is_default?: boolean;
   created_at?: string;
   updated_at?: string;
-  location?: string;
+  location?: string | null;
   feedback?: string | null;
 }
 
@@ -26,6 +26,8 @@ interface Props {
   counts?: ComponentProps<typeof PrayerEngagement>["counts"];
   activeReaction: string | null;
   isGenerating: boolean;
+  isBusy?: boolean;
+  nextDisabled?: boolean;
   feedback?: { emoji: string; label: string };
   onReaction: (type: string) => void;
   onSuggestion: () => void;
@@ -39,9 +41,10 @@ interface Props {
 /** Presentation only. The page retains all authentication, queries and mutations.
  * Native elements deliberately avoid the global .amens-card/.amens-button skin.
  */
-export function PrayerCauseCard({ cause, counts, activeReaction, isGenerating, feedback, onReaction, onSuggestion, onNext, onFriendShare, onExternalShare, onReport, canViewIntercessors }: Props) {
+export function PrayerCauseCard({ cause, counts, activeReaction, isGenerating, isBusy, nextDisabled, feedback, onReaction, onSuggestion, onNext, onFriendShare, onExternalShare, onReport, canViewIntercessors }: Props) {
+  const [failedAvatar, setFailedAvatar] = useState<string | null>(null);
   return (
-    <article className="devotional-cause" aria-labelledby="cause-request-title">
+    <article className="devotional-cause" aria-labelledby="cause-request-title" aria-busy={isBusy}>
       <header className="devotional-cause__ribbon">
         <h1>Orar por uma Causa</h1>
         <p>Seja um instrumento da graça divina</p>
@@ -60,11 +63,11 @@ export function PrayerCauseCard({ cause, counts, activeReaction, isGenerating, f
 
       <div className="devotional-cause__body">
         <div className="devotional-cause__author">
-          {cause.avatar_url && !cause.is_anonymous ? (
-            <img className="devotional-cause__avatar" src={cause.avatar_url} alt={`Foto de ${cause.display_name || "quem solicitou a oração"}`} />
+          {cause.avatar_url && !cause.is_anonymous && cause.avatar_url !== failedAvatar ? (
+            <img className="devotional-cause__avatar" src={cause.avatar_url} onError={() => setFailedAvatar(cause.avatar_url ?? null)} alt={`Foto de ${cause.display_name || "quem solicitou a oração"}`} />
           ) : (
             <span className="devotional-cause__avatar devotional-cause__avatar--placeholder" aria-hidden="true">
-              {cause.is_default ? <Sparkles /> : <Heart />}
+              <Heart />
             </span>
           )}
           <div>
@@ -86,7 +89,7 @@ export function PrayerCauseCard({ cause, counts, activeReaction, isGenerating, f
           {cause.location && <p className="devotional-cause__location"><MapPin aria-hidden="true" />{cause.location}</p>}
         </div>
 
-        {!cause.is_default && <div className="devotional-cause__engagement"><PrayerEngagement counts={counts} prayerId={cause.id} canViewIntercessors={canViewIntercessors} /></div>}
+        <div className="devotional-cause__engagement"><PrayerEngagement counts={counts} prayerId={cause.id} canViewIntercessors={canViewIntercessors} /></div>
 
         <section className="devotional-cause__solidarity" aria-label="Envie Energia e Solidariedade">
           <h3>Envie Energia e Solidariedade</h3>
@@ -99,7 +102,7 @@ export function PrayerCauseCard({ cause, counts, activeReaction, isGenerating, f
           ) : (
             <div className="devotional-cause__reactions">
               {PRAYER_REACTIONS.map(reaction => (
-                <button type="button" key={reaction.type} className="devotional-cause__reaction" aria-pressed={activeReaction === reaction.type} onClick={() => onReaction(reaction.type)}>
+                <button type="button" key={reaction.type} disabled={isBusy} className="devotional-cause__reaction" aria-pressed={activeReaction === reaction.type} onClick={() => onReaction(reaction.type)}>
                   <span aria-hidden="true">{reaction.emoji}</span>
                   <span>{reaction.label}</span>
                 </button>
@@ -110,24 +113,24 @@ export function PrayerCauseCard({ cause, counts, activeReaction, isGenerating, f
 
         <div className="devotional-cause__actions" aria-label="Ações para esta causa">
           <div className={`devotional-cause__primary-actions${onNext ? "" : " devotional-cause__primary-actions--single"}`}>
-          <button type="button" className="devotional-cause__action devotional-cause__action--suggestion" disabled={isGenerating} onClick={onSuggestion}>
+          <button type="button" className="devotional-cause__action devotional-cause__action--suggestion" disabled={isGenerating || isBusy} onClick={onSuggestion}>
             <Sparkles aria-hidden="true" /><span>{isGenerating ? "Gerando..." : "Sugestão de Oração"}</span>
           </button>
-          {onNext && <button type="button" className="devotional-cause__action devotional-cause__action--next" onClick={onNext}>
+          {onNext && <button type="button" disabled={isBusy || nextDisabled} className="devotional-cause__action devotional-cause__action--next" onClick={onNext}>
             <ChevronRight aria-hidden="true" /><span>Próxima Causa</span>
           </button>}
           </div>
           <div className="devotional-cause__sharing-actions">
-          <button type="button" className="devotional-cause__action devotional-cause__action--friend" onClick={onFriendShare}>
+          <button type="button" disabled={isBusy} className="devotional-cause__action devotional-cause__action--friend" onClick={onFriendShare}>
             <Users aria-hidden="true" /><span>Enviar a um amigo do Améns</span>
           </button>
-          <button type="button" className="devotional-cause__action devotional-cause__action--share" onClick={onExternalShare}>
+          <button type="button" disabled={isBusy} className="devotional-cause__action devotional-cause__action--share" onClick={onExternalShare}>
             <Share2 aria-hidden="true" /><span>Compartilhar fora do Améns</span>
           </button>
           </div>
         </div>
 
-        {onReport && <button type="button" className="devotional-cause__report" onClick={onReport}><Flag aria-hidden="true" /><span>Reportar essa causa a um administrador</span></button>}
+        {onReport && <button type="button" disabled={isBusy} className="devotional-cause__report" onClick={onReport}><Flag aria-hidden="true" /><span>Reportar essa causa a um administrador</span></button>}
       </div>
     </article>
   );

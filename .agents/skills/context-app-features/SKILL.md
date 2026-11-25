@@ -37,27 +37,36 @@ A página inicial é o hub principal do Améns, apresentando as funções centra
 
 ---
 
-## 🙏 Orar por uma Causa
+## Prayer causes (`/pray`)
 
-### Rota
-- **Produção**: `https://www.amens.com.br/pray`
-- **Código**: `src/pages/Pray.tsx`
-- **Rota interna**: `/pray`
+### Purpose and implementation
+- Let a member receive a community request, assume intercession, react, request optional prayer support, invite friends and revisit their history.
+- Entry points: `/pray` and `/pray?id=<uuid>`. Every received cause uses the same UUID route.
+- `src/pages/Pray.tsx` observes authentication; `PraySession.tsx` resets account-scoped state. `PrayerCauseCard` retains the devotional presentation.
 
-### Descrição
-Permite ao usuário receber uma causa enviada pela comunidade e interceder, tornando-se uma rede de apoio espiritual.
+- UI copy uses **Intercessões diárias**. The compact summary shows available intercessions once, without a separate circled number, a next-level line and a midnight/Sao Paulo clock at the lower right; consumption details are in **Como funciona**. Loading uses a skeleton and a short accessible announcement.
+- On `/pray`, `AppFrame` reserves a separate menu row and scrolls the reading area above it, including safe areas. Other routes retain their existing layout.
 
-### Regras de Negócio
-- Limite diário: O usuário sorteia até 3 causas por dia. A regra é interna (usando hooks como `useDrawLimit`) e a lógica de fallback exibe orações padrão quando a fila está vazia.
-- Filtros: Não exibe causas do próprio usuário, causas já intercedidas e causas com restrições/banimento.
-- Permite ver histórico de intercessões anteriores para re-orar.
-- Sorteio Inteligente: Prioriza causas sem feedback, recentes, etc. (Regra de peso invisível para o usuário).
+### Approved consumption rule (2026-11-16)
+- Receiving or accepting an individual cause immediately registers the intercession and consumes one daily opportunity. No additional "I prayed" confirmation is required.
+- Standard daily allowance: 2 initially, plus 1 every five levels (2/3/4/5/6 at levels 1/5/10/15/20). Administrators are unlimited. Renewal uses America/Sao_Paulo.
+- Reading a shared link, reopening history, reacting, sharing or requesting an AI suggestion does not consume another opportunity.
+- When the eligible member queue is empty, the server may return a curated general intention through the same cause contract. It consumes one daily opportunity, appears in individual history and must be indistinguishable from a normal anonymous cause in UI, routes and public data. Reactions, reports and friend invitations use the same controls and commands.
 
-### Interações
-- Reações emocionais (Compaixão, Graça, Paciência, Força, Empatia).
-- Sugestão de oração por IA.
-- Compartilhamento (interno para amigos ou externo via link WhatsApp).
-- Reportar causa inadequada.
+### Server contract
+- `receive_prayer_cause` selects a member request or server-side general intention, records it and updates the counter atomically. Per-account advisory locking enforces quota; operation identifiers make uncertain responses retryable. Receipt time is server-owned and intercessions are immutable.
+- Exclude the member's own requests, previously assumed requests, deleted/restricted content, suspended/deleted authors, completed causes and closing feedback even when legacy status remains active. Preserve weighted selection among the 50 most recent eligible candidates and a random top-five pool.
+- Public links, draws, history and the community feed use safe projections. Anonymous authors expose no identifier, avatar, location or friend badge. Owners and moderators retain authorized raw-row access.
+- History uses stable cursor pagination and placeholders for unavailable causes. Reaction removal is a soft delete. Reactions and invitations report success only after the database command commits.
+- Internal invitations validate friendship and account eligibility server-side. Anonymous authors can receive the same generic invitation as another friend: filtering them would reveal their identity.
+- External sharing sends a generic public link, without copied cause text or the sharer's user identifier. Native cancellation and blocked popups do not count as a confirmed share. Opening WhatsApp alone cannot prove delivery.
+
+### Optional AI and integrations
+- `generate-prayer` verifies the member and cause access, reserves a daily attempt budget and caches the result. Provider credentials and model configuration are server-only.
+- Send a broad intention category and an optional known devotion, never the original request, personal identifiers or location. Use varied, humble Catholic wording, up to 150 words, without promises of outcomes.
+- Current protective budgets: 3 attempts per member/day and 100 total attempts/day; the public Gospel has a shared cache and 3 attempts/day. Failed attempts also count. Prayer and Gospel reading remain usable when AI is unavailable.
+- Preserve APP04 owner history/intercessors, APP05 reporting, APP10 messages, APP11 invitations, APP16 points/levels and APP19 altar synchronization. Global XP integrity remains an APP16 dependency; testing supplied XP thresholds is not proof that XP itself is authoritative.
+- Implementation details and release checks: `docs/app03-prayer-flow.md`. Local migrations/tests do not imply hosted deployment or production verification.
 
 ---
 

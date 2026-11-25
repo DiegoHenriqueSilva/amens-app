@@ -152,6 +152,8 @@ const Messages = () => {
                       markAsRead(notif.id);
                       if (notif.type === "daily_gospel") {
                         navigate("/daily-gospel");
+                      } else if (/^prayer_cause:[0-9a-f-]{36}$/i.test(notif.type || '')) {
+                        navigate(`/pray?id=${notif.type.split(':')[1]}`);
                       } else if (notif.prayer_request_id) {
                         navigate(`/pray?id=${notif.prayer_request_id}`);
                       } else if (notif.message.toLowerCase().includes('interceder')) {

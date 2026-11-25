@@ -5,7 +5,7 @@ import { useFriends } from "@/hooks/use-friends";
 import { useUnreadNotifications } from "@/hooks/use-unread-notifications";
 import { useUserRole } from "@/hooks/use-user-role";
 
-const BottomNav = () => {
+const BottomNav = ({ inline = false }: { inline?: boolean }) => {
   const location = useLocation();
   const { requests, friends, loading } = useFriends();
   const unreadCount = useUnreadNotifications(location.pathname);
@@ -27,7 +27,7 @@ const BottomNav = () => {
   ];
 
   return (
-    <nav className="nav-blur bottom-nav-devotional fixed bottom-0 left-0 right-0 h-20 flex items-center justify-around px-2 pb-2 z-50">
+    <nav aria-label="Menu principal" className={cn("nav-blur bottom-nav-devotional bottom-0 left-0 right-0 h-20 flex items-center justify-around px-2 pb-2 z-50", inline ? "bottom-nav-devotional--inline" : "fixed")}>
       {navItems.map((item) => {
         const isActive = location.pathname === item.path || (item.path === "/admin" && location.pathname.startsWith("/admin"));
         const Icon = item.icon;

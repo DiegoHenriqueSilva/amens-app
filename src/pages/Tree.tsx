@@ -23,36 +23,8 @@ const Tree = () => {
   }, []);
 
   const fetchRecentPrayers = async () => {
-    // Fetch prayers first
-    const { data: prayers } = await supabase
-      .from("prayer_requests")
-      .select("author_name, created_at, user_id")
-      .order("created_at", { ascending: false })
-      .limit(10);
-    
-    if (prayers && prayers.length > 0) {
-      const userIds = prayers.map(p => p.user_id).filter(Boolean);
-      
-      // Fetch profiles for these users
-      const { data: profiles } = await supabase
-        .from("profiles" as any)
-        .select("id, full_name, show_real_name, display_name, avatar_url")
-        .in("id", userIds);
-
-      const profileMap = new Map(((profiles || []) as any[]).map(p => [p.id, p]));
-
-      setRecentPrayers(
-        prayers.map(p => {
-          const profile: any = profileMap.get(p.user_id);
-          return {
-            name: profile?.show_real_name 
-              ? (profile?.display_name || profile?.full_name?.split(" ")[0] || p.author_name || "Intercessor")
-              : "Intercessor",
-            timestamp: p.created_at
-          };
-        })
-      );
-    }
+    const { data, error } = await supabase.rpc('get_recent_prayer_activity');
+    if (!error) setRecentPrayers(data || []);
   };
 
   const fetchCommunityStats = async () => {

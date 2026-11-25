@@ -91,6 +91,23 @@ export default function AdminReports() {
     queryFn: () => fetchReports(tab),
   });
 
+  const { data: generalReports = [] } = useQuery({
+    queryKey: ["admin-general-prayer-reports"],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("admin_general_prayer_reports");
+      if (error) throw error;
+      return (data || []) as any[];
+    },
+  });
+  const resolveGeneral = useMutation({
+    mutationFn: async ({ id, action }: { id: string; action: "dismiss" | "remove" }) => {
+      const { error } = await supabase.rpc("admin_resolve_general_prayer_report", { p_id: id, p_action: action });
+      if (error) throw error;
+    },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["admin-general-prayer-reports"] }); toast.success("Denúncia analisada."); },
+    onError: () => toast.error("Não foi possível concluir a análise."),
+  });
+
   const prayerIds = useMemo(
     () => (reports as any[]).filter((r) => r.prayer_request_id).map((r) => r.prayer_request_id),
     [reports]
@@ -388,6 +405,19 @@ export default function AdminReports() {
       </div>
 
       <div className="rounded-lg border border-border overflow-hidden">
+        {generalReports.filter((r: any) => tab === "all" || r.status === tab).map((r: any) => (
+          <div key={r.id} className="mb-3 rounded-lg border p-4 space-y-2">
+            <p className="font-medium">Intenção cadastrada: {r.title}</p>
+            <p className="text-sm">{r.content}</p>
+            <p className="text-sm">Motivo: {CATEGORY_LABELS[r.category] || r.category} {r.custom_reason || ""}</p>
+            {r.description && <p className="text-sm">{r.description}</p>}
+            <p className="text-sm">{STATUS_LABELS[r.status] || r.status}</p>
+            {r.status === "open" && <div className="flex gap-2">
+              <Button variant="outline" disabled={resolveGeneral.isPending} onClick={() => resolveGeneral.mutate({ id: r.id, action: "dismiss" })}>Descartar denúncia</Button>
+              <Button variant="destructive" disabled={resolveGeneral.isPending} onClick={() => resolveGeneral.mutate({ id: r.id, action: "remove" })}>Retirar intenção</Button>
+            </div>}
+          </div>
+        ))}
         <Table>
           <TableHeader>
             <TableRow>
