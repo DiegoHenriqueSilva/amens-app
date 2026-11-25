@@ -62,17 +62,23 @@ const RosarySelection = () => {
                   initial={{ opacity: 0, y: 16 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: idx * 0.1, duration: 0.4 }}
-                  onClick={() => navigate(`/rosary/${type.id}`)}
                 >
-                  <Card className="p-6 transition-all duration-300 relative overflow-hidden group cursor-pointer border-primary/10 bg-white/70 backdrop-blur-md rounded-3xl interactive-card">
-                    <div className={cn("w-14 h-14 rounded-2xl flex items-center justify-center transition-transform duration-500 group-hover:scale-110 shadow-sm", bgColor, iconColor)}>
-                       <DisplayIcon className={cn("w-7 h-7", type.id === 'misericordia' && "fill-current")} />
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="text-lg font-bold text-foreground mb-1">{type.name}</h3>
-                      <p className="text-xs text-muted-foreground leading-snug font-medium">{type.description}</p>
-                    </div>
-                  </Card>
+                  <button
+                    type="button"
+                    onClick={() => navigate(`/rosary/${type.id}`)}
+                    aria-label={`Iniciar ${type.name}`}
+                    className="w-full text-left rounded-3xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                  >
+                    <Card className="p-6 transition-all duration-300 relative overflow-hidden group cursor-pointer border-primary/10 bg-white/70 backdrop-blur-md rounded-3xl interactive-card">
+                      <div className={cn("w-14 h-14 rounded-2xl flex items-center justify-center transition-transform duration-500 group-hover:scale-110 shadow-sm", bgColor, iconColor)}>
+                         <DisplayIcon className={cn("w-7 h-7", type.id === 'misericordia' && "fill-current")} aria-hidden="true" />
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="text-lg font-bold text-foreground mb-1">{type.name}</h3>
+                        <p className="text-xs text-muted-foreground leading-snug font-medium">{type.description}</p>
+                      </div>
+                    </Card>
+                  </button>
                 </motion.div>
               );
             })}

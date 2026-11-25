@@ -168,7 +168,7 @@ const Terco = () => {
     }
   }, [currentPrayer, currentBeadIndex]);
 
-  const { isListening, transcript, toggleListening, clearTranscript, supported } = useSpeechRecognition({
+  const { isListening, transcript, toggleListening, clearTranscript, supported, error: voiceError } = useSpeechRecognition({
     onResult: validateTranscript,
     continuous: true,
   });
@@ -381,11 +381,13 @@ const Terco = () => {
                              variant={isListening ? "default" : "outline"}
                              size="icon"
                              className={`rounded-full shadow-md w-14 h-14 transition-all duration-300 ${isListening ? 'bg-red-500 hover:bg-red-600 animate-pulse text-white border-transparent' : 'border-primary/30 text-primary hover:bg-primary/10'}`}
+                             aria-label={isListening ? "Desativar microfone" : "Ativar microfone"}
+                             title={isListening ? "Desativar microfone" : "Ativar microfone"}
                           >
                              {isListening ? <Mic className="w-6 h-6" /> : <MicOff className="w-6 h-6" />}
                           </Button>
                           <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                             {isListening ? "Ouvindo você..." : "Microfone Mudo"}
+                             {voiceError || (!supported ? "Voz indisponível — avance manualmente" : isListening ? "Ouvindo você..." : "Microfone mudo")}
                           </span>
                        </div>
 

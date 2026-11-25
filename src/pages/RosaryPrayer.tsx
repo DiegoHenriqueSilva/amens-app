@@ -24,6 +24,7 @@ interface Bead {
 const RosaryPrayer = () => {
   const navigate = useNavigate();
   const { type } = useParams();
+  const rosaryMeta = ROSARY_TYPES.find(t => t.id === type);
   const altarSessionId = useRef(crypto.randomUUID());
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isVoiceActive, setIsVoiceActive] = useState(false);
@@ -167,10 +168,54 @@ const RosaryPrayer = () => {
     }
   };
 
-  const { listening } = useRosaryVoice(handleNext, isVoiceActive, beads[currentIndex]?.prayer);
+  const { listening, supported, error: voiceError } = useRosaryVoice(handleNext, isVoiceActive, beads[currentIndex]?.prayer);
   const currentBead = beads[currentIndex] || beads[0];
-  const rosaryMeta = ROSARY_TYPES.find(t => t.id === type);
   const isAtEnd = currentIndex === beads.length - 1;
+
+  useEffect(() => {
+    if (!rosaryMeta) {
+      toast.error("Essa modalidade de terço não existe.");
+    }
+  }, [rosaryMeta]);
+
+  if (!rosaryMeta || !currentBead) {
+    return (
+      <PageTransition>
+        <div className="min-h-screen bg-background flex items-center justify-center px-6 text-center">
+          <Card className="max-w-md p-8 space-y-5 border-primary/15 soft-shadow">
+            <div>
+              <h1 className="text-2xl font-serif font-bold text-foreground">Modalidade não encontrada</h1>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Escolha uma modalidade disponível para iniciar sua oração.
+              </p>
+            </div>
+            <Button onClick={() => navigate("/rosary-selection")} className="gradient-divine w-full">
+              Voltar às modalidades
+            </Button>
+          </Card>
+        </div>
+      </PageTransition>
+    );
+  }
+
+  const handleVoiceToggle = () => {
+    if (!supported) {
+      setIsVoiceActive(false);
+      toast.error("O reconhecimento de voz não está disponível. Use os controles manuais.");
+      return;
+    }
+    setIsVoiceActive(active => !active);
+  };
+
+  const voiceStatus = voiceError
+    ? voiceError
+    : !supported
+      ? "Voz indisponível — use os controles manuais"
+      : isVoiceActive && listening
+        ? "Ouvindo sua oração…"
+        : isVoiceActive
+          ? "Voz ativada — aguardando o microfone"
+          : "Voz desligada — avance manualmente";
 
   return (
     <PageTransition>
@@ -204,14 +249,15 @@ const RosaryPrayer = () => {
           <Button 
             variant="ghost" 
             size="icon" 
-            onClick={() => setIsVoiceActive(!isVoiceActive)}
+            onClick={handleVoiceToggle}
             className={cn(
               "rounded-full border transition-all duration-300 shadow-sm",
               isVoiceActive 
                 ? "bg-amber-500/15 border-amber-500/40 text-amber-600 animate-pulse" 
                 : "border-primary/15 text-muted-foreground hover:bg-primary/10"
             )}
-            title={isVoiceActive ? "Voz Ativada" : "Ativar Voz"}
+            title={isVoiceActive ? "Desativar voz" : "Ativar voz"}
+            aria-label={isVoiceActive ? "Desativar auxílio de voz" : "Ativar auxílio de voz"}
           >
             {isVoiceActive ? <Mic className="w-4 h-4 text-amber-600" /> : <MicOff className="w-4 h-4" />}
           </Button>
@@ -433,14 +479,12 @@ const RosaryPrayer = () => {
         <footer className="px-3 sm:px-8 pt-3 pb-[max(1rem,env(safe-area-inset-bottom))] flex flex-col items-center z-30 shrink-0 bg-background/80 backdrop-blur-md border-t border-primary/10">
           
           {/* Listening Feedback HUD */}
-          {listening && isVoiceActive && (
-            <div className="mb-3 flex items-center gap-2 px-4 py-1.5 bg-amber-500/10 border border-amber-500/30 rounded-full shadow-sm animate-pulse">
-              <div className="w-2 h-2 bg-amber-500 rounded-full" />
-              <span className="text-[11px] font-bold text-amber-700 uppercase tracking-widest">
-                Ouvindo sua oração...
-              </span>
-            </div>
-          )}
+          <div className={cn(
+            "mb-3 px-4 py-1.5 rounded-full border text-[11px] font-bold uppercase tracking-widest text-center",
+            voiceError ? "bg-destructive/10 border-destructive/30 text-destructive" : "bg-primary/5 border-primary/20 text-muted-foreground"
+          )} role="status" aria-live="polite">
+            {voiceStatus}
+          </div>
 
           <div className="w-full max-w-2xl flex items-center justify-between gap-2">
             {/* Previous Bead Button */}

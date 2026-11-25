@@ -2,7 +2,10 @@ import { useState, useEffect, useRef } from "react";
 
 export const useRosaryVoice = (onNext: () => void, isActive: boolean, currentPrayer: string = "") => {
   const [listening, setListening] = useState(false);
+  const [supported, setSupported] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const recognitionRef = useRef<any>(null);
+  const blockedRef = useRef(false);
   const onNextRef = useRef(onNext);
   const prayerRef = useRef(currentPrayer);
   const lastAdvanceTime = useRef(0);
@@ -16,7 +19,12 @@ export const useRosaryVoice = (onNext: () => void, isActive: boolean, currentPra
   useEffect(() => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     
-    if (!SpeechRecognition) return;
+    if (!SpeechRecognition) {
+      setSupported(false);
+      return;
+    }
+
+    setSupported(true);
 
     if (!recognitionRef.current) {
         const recognition = new SpeechRecognition();
@@ -57,10 +65,25 @@ export const useRosaryVoice = (onNext: () => void, isActive: boolean, currentPra
           }
         };
 
-        recognition.onstart = () => setListening(true);
+        recognition.onstart = () => {
+          blockedRef.current = false;
+          setError(null);
+          setListening(true);
+        };
+        recognition.onerror = (event: any) => {
+          if (event.error === "not-allowed" || event.error === "service-not-allowed") {
+            blockedRef.current = true;
+            setError("Permissão de microfone negada — use os controles manuais");
+          } else if (event.error === "no-speech") {
+            setError("Nenhuma fala detectada — tente novamente ou avance manualmente");
+          } else {
+            setError("Não foi possível reconhecer a voz — use os controles manuais");
+          }
+          setListening(false);
+        };
         recognition.onend = () => {
           setListening(false);
-          if (isActive) {
+          if (isActive && !blockedRef.current) {
             try { recognition.start(); } catch(e) {}
           }
         };
@@ -74,15 +97,17 @@ export const useRosaryVoice = (onNext: () => void, isActive: boolean, currentPra
 
   useEffect(() => {
     if (isActive && recognitionRef.current) {
-      if (!listening) {
+      if (!blockedRef.current && !listening) {
+        setError(null);
         try { recognitionRef.current.start(); } catch(e) {}
       }
     } else if (!isActive && recognitionRef.current) {
+      blockedRef.current = false;
       if (listening) {
         try { recognitionRef.current.stop(); } catch(e) {}
       }
     }
   }, [isActive, listening]);
 
-  return { listening };
+  return { listening, supported, error };
 };

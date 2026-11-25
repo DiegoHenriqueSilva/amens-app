@@ -17,6 +17,7 @@ export function useSpeechRecognition({
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState("");
   const [supported, setSupported] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const recognitionRef = useRef<any>(null);
 
@@ -53,7 +54,12 @@ export function useSpeechRecognition({
       console.error("Speech recognition error", event.error);
       if (event.error === 'not-allowed') {
         setIsListening(false);
+        setError("Permissão de microfone negada — você pode avançar manualmente.");
         toast.error("Permissão de microfone negada.");
+      } else if (event.error === 'no-speech') {
+        setError("Nenhuma fala detectada — tente novamente ou avance manualmente.");
+      } else {
+        setError("Não foi possível reconhecer a voz — você pode avançar manualmente.");
       }
       // Outros erros como no-speech não param necessariamente
     };
@@ -98,6 +104,7 @@ export function useSpeechRecognition({
       recognitionRef.current?.stop();
     } else {
       setTranscript("");
+      setError(null);
       try {
         recognitionRef.current?.start();
         setIsListening(true);
@@ -122,5 +129,6 @@ export function useSpeechRecognition({
     toggleListening,
     clearTranscript,
     supported,
+    error,
   };
 }

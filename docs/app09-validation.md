@@ -132,3 +132,27 @@ isolada não substitui os testes de dispositivo.
 - `artifacts/app09-rosary-selection-390.png`
 - `artifacts/app09-rosary-prayer-390.png`
 - `artifacts/app09-terco-390.png`
+
+## Correções aplicadas e reteste
+
+- Cards da seleção convertidos em botões semânticos, com `aria-label` e foco
+  visível por teclado.
+- Tipo inválido agora mostra `Modalidade não encontrada` e um botão para voltar
+  às modalidades, em vez de deixar a tela vazia.
+- O fluxo novo de voz agora informa voz desligada, aguardando microfone, voz
+  indisponível e erros de permissão/reconhecimento em texto com `role=status`.
+- O fluxo legado recebeu o mesmo feedback textual e nomes acessíveis para o
+  botão de microfone.
+- Reteste automatizado confirmou foco no primeiro card e texto
+  `Voz indisponível — use os controles manuais` sem a API de voz.
+- Evidências atualizadas:
+  `artifacts/app09-rosary-selection-fixed-390.png`,
+  `artifacts/app09-invalid-type-fallback-390.png` e
+  `artifacts/app09-voice-unsupported-390.png`.
+
+### Ainda bloqueado
+
+O teste real de permissão de microfone, silêncio, reconhecimento incorreto,
+redução de movimento e encerramento da captura ao sair da rota ainda precisa de
+um navegador/dispositivo com suporte de áudio. Esses casos não serão marcados
+como aprovados apenas pelo teste headless.
