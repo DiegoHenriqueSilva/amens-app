@@ -135,5 +135,24 @@ isolada não substitui os testes de dispositivo.
 
 ### Ainda pendente
 
-Faltam os testes de conclusão completa, duplicidade de eventos do altar,
-redução de movimento e validação final em telas móveis e paisagem.
+Permanece pendente apenas a confirmação remota da persistência e da não
+duplicidade do evento do altar com uma sessão autenticada no ambiente real.
+
+## Testes finais — 24/11/2026
+
+- As quatro modalidades novas foram concluídas pelos controles manuais e
+  retornaram à home:
+  - `misterios`: 74 avanços;
+  - `misericordia`: 62 avanços;
+  - `libertacao`: 59 avanços;
+  - `miguel`: 50 avanços.
+- O fluxo legado `/terco` foi iniciado e concluído após 72 avanços, exibindo a
+  tela `Amém!` e o botão `Voltar ao Início`.
+- Em viewport de 320 × 844, a largura de rolagem permaneceu em 320 px e os
+  controles anterior/próxima ficaram disponíveis.
+- Em viewport paisagem de 844 × 390 com redução de movimento, a largura e a
+  altura permaneceram dentro da viewport e os controles continuaram acessíveis.
+- A persistência remota do evento do altar não foi confirmada nesta rodada,
+  porque a sessão autenticada de teste não permaneceu disponível no navegador
+  automatizado. A proteção contra repetição usa `altarSessionId` por sessão e
+  deve ser confirmada com uma conta autenticada no ambiente real.
