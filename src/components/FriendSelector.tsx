@@ -1,5 +1,4 @@
 import { useRef, useState } from "react";
-import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -23,6 +22,7 @@ export const FriendSelector = ({ open, onOpenChange, onSelect, title = "Convidar
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [confirming, setConfirming] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
   const confirmLock = useRef(false);
   const opener = useRef<HTMLElement | null>(null);
   const pending = isSubmitting || confirming;
@@ -42,10 +42,12 @@ export const FriendSelector = ({ open, onOpenChange, onSelect, title = "Convidar
   const handleConfirm = async () => {
     if (confirmLock.current || pending) return;
     confirmLock.current = true; setConfirming(true);
+    setErrorMessage('');
     try {
       const result = await onSelect(selectedIds);
       if (result !== false) { setSearchTerm(''); setSelectedIds([]); }
-    } catch { toast.error('Não foi possível enviar o convite. Sua seleção foi mantida.'); }
+      else setErrorMessage('Não foi possível enviar o convite. Sua seleção foi mantida.');
+    } catch { setErrorMessage('Não foi possível enviar o convite. Sua seleção foi mantida.'); }
     finally { confirmLock.current = false; setConfirming(false); }
   };
 
@@ -75,6 +77,7 @@ export const FriendSelector = ({ open, onOpenChange, onSelect, title = "Convidar
           />
         </div>
 
+        {errorMessage && <p role="alert" className="text-sm text-destructive">{errorMessage}</p>}
         <ScrollArea className="h-[300px] pr-4">
           <div className="space-y-2">
             {loading ? (

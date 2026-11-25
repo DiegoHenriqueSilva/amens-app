@@ -165,12 +165,6 @@ await context.route('**/*', async (route) => {
             body.p_before,
             body.p_before_id,
           ]),
-        general_intention_reaction: () =>
-          client.query('select general_intention_reaction($1,$2,$3) result', [
-            body.p_intention_id,
-            body.p_reaction ?? null,
-            body.p_write ?? false,
-          ]),
         invite_prayer_friends: () => {
           if (failInvite) throw new Error('synthetic_invite_failure');
           return client.query('select invite_prayer_friends($1,$2,$3,$4) result', [
@@ -179,6 +173,10 @@ await context.route('**/*', async (route) => {
             body.p_operation_id,
             body.p_intention_id,
           ]);
+        },
+        report_prayer_cause: async () => {
+          reports++;
+          return { rows: [{ result: null }] };
         },
         get_prayer_engagement_counts: async () => ({
           rows: [
@@ -221,10 +219,6 @@ await context.route('**/*', async (route) => {
       return respond([
         { friend_id: uid(3), profiles: { ...profile, id: uid(3), display_name: 'Amigo Fictício' } },
       ]);
-    if (url.pathname.endsWith('/prayer_reports') && request.method() === 'POST') {
-      reports++;
-      return respond(null, 201);
-    }
     return respond([]);
   }
   // External fonts, images, analytics, provider and websocket services are blocked.
@@ -555,14 +549,30 @@ try {
   await visible(page.getByRole('alert'));
   check(received, 1, 'invalid link never automatically draws another cause');
   await screenshot('03-link-indisponivel.png');
-  await page.goto('http://127.0.0.1:4176/pray?intention=default-001');
+  const generalCauseId = '00000000-0000-4000-9000-000000000001';
+  await page.goto(`http://127.0.0.1:4176/pray?id=${generalCauseId}`);
   await visible(page.locator('.devotional-cause'));
+  check(
+    await page.getByText(/Intenção geral|não conta nas intercessões/i).count(),
+    0,
+    'general cause origin is not disclosed',
+  );
+  await page.getByRole('button', { name: 'Aceitar interceder', exact: true }).click();
+  await page.waitForTimeout(150);
   await page.getByRole('button', { name: 'Força', exact: true }).click();
   await page.waitForTimeout(150);
   check(
     (await actor.query('select prayer_daily_status() result')).rows[0].result.used,
-    1,
-    'general intention reaction does not consume',
+    2,
+    'accepting a general cause consumes one daily intercession',
+  );
+  const generalHistory = (await actor.query('select get_my_prayer_history() result')).rows[0].result;
+  check(
+    generalHistory.some(
+      (item) => item.prayer_request_id === generalCauseId && item.cause?.is_default === false,
+    ),
+    true,
+    'general cause appears in normal history without an origin marker',
   );
   // Switch the authenticated account while keeping the same mounted application.
   profile.id = uid(4);

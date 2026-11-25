@@ -3,7 +3,6 @@ import type { User } from '@supabase/supabase-js';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, useReducedMotion } from 'framer-motion';
 import { ArrowLeft, Clock, Heart, Sparkles } from 'lucide-react';
-import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -19,18 +18,15 @@ import { DailyIntercessions } from '@/components/prayer/DailyIntercessions';
 import { PRAYER_REACTIONS, usePrayerEngagement } from '@/components/PrayerEngagement';
 import { FriendSelector } from '@/components/FriendSelector';
 import { ReportPrayerDialog } from '@/components/ReportPrayerDialog';
-import { InviteGatePopup } from '@/components/InviteGatePopup';
 import PageTransition from '@/components/PageTransition';
 import { usePrayerDailyLimit } from '@/hooks/use-prayer-daily-limit';
 import { useDailyTasks } from '@/hooks/use-daily-tasks';
 import { useFaithPoints } from '@/hooks/use-faith-points';
 import { usePushPrompt } from '@/contexts/PushPromptContext';
 import { refreshAltar } from '@/features/altar/events';
-import { DEFAULT_PRAYERS } from '@/data/default-prayers';
 import { formatFullDatetime } from '@/lib/utils';
 import { isPrayerConcluded } from '@/lib/prayer-status';
 import {
-  isGeneralIntentionId,
   isPrayerId,
   prayerFailureMessage,
   prayerOperation,
@@ -51,29 +47,21 @@ const FEEDBACK: Record<string, { label: string; emoji: string }> = {
   god_knows: { label: 'Não deu certo, mas agradeço pelas orações.', emoji: '✝️' },
   keep_trying: { label: 'Vou continuar tentando. Obrigado pelas orações.', emoji: '🙏' },
 };
-const defaultCause = (id: string): PrayerCause | null => {
-  const intention = DEFAULT_PRAYERS.find((item) => item.id === id);
-  return intention
-    ? {
-        ...intention,
-        display_name: intention.author_display_name,
-        is_friend: false,
-        is_owner: false,
-        has_interceded: false,
-        user_reaction: null,
-      }
-    : null;
-};
-
 export default function PraySession({ currentUser }: { currentUser: User | null }) {
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
-  const linkId = params.get('id') || params.get('intention');
+  const linkId = params.get('id');
   const [cause, setCause] = useState<PrayerCause | null>(null);
   const [loading, setLoading] = useState(Boolean(linkId));
   const [busy, setBusy] = useState<string | null>(null);
   const actionLock = useRef(false);
   const [pageError, setPageError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<{ text: string; error: boolean } | null>(null);
+  const toast = {
+    success: (text: string) => setNotice({ text, error: false }),
+    info: (text: string) => setNotice({ text, error: false }),
+    error: (text: string) => setNotice({ text, error: true }),
+  };
   const [shared, setShared] = useState(Boolean(linkId));
   const [suggestion, setSuggestion] = useState('');
   const [generating, setGenerating] = useState(false);
@@ -90,12 +78,11 @@ export default function PraySession({ currentUser }: { currentUser: User | null 
   const localLink = useRef<string | null>(null);
   const view = useRef(0);
   const allowance = usePrayerDailyLimit(currentUser?.id ?? null);
-  const counts = usePrayerEngagement(cause && !cause.is_default ? [cause.id] : [], revision);
+  const counts = usePrayerEngagement(cause ? [cause.id] : [], revision);
   const { completeTask } = useDailyTasks();
   const { addFaithPoints } = useFaithPoints();
   const { triggerPushPrompt } = usePushPrompt();
   const reducedMotion = useReducedMotion();
-  const userId = currentUser?.id;
   useEffect(() => {
     alive.current = true;
     return () => {
@@ -115,9 +102,8 @@ export default function PraySession({ currentUser }: { currentUser: User | null 
   const syncLink = (next: PrayerCause) => {
     const query = new URLSearchParams(params);
     query.delete('id');
-    query.delete('intention');
     query.delete('from');
-    query.set(next.is_default ? 'intention' : 'id', next.id);
+    query.set('id', next.id);
     if (linkId !== next.id) localLink.current = next.id;
     setParams(query, { replace: true });
   };
@@ -144,22 +130,10 @@ export default function PraySession({ currentUser }: { currentUser: User | null 
     setLoading(true);
     void (async () => {
       try {
-        let next: PrayerCause | null;
-        if (isGeneralIntentionId(linkId)) {
-          next = defaultCause(linkId);
-          if (userId && next) {
-            const result = await supabase.rpc('general_intention_reaction', {
-              p_intention_id: linkId,
-            });
-            if (result.error) throw result.error;
-            next.user_reaction = result.data;
-          }
-        } else {
-          if (!isPrayerId(linkId)) throw new Error('prayer_unavailable');
-          const result = await supabase.rpc('get_prayer_cause', { p_prayer_id: linkId });
-          if (result.error) throw result.error;
-          next = result.data as PrayerCause | null;
-        }
+        if (!isPrayerId(linkId)) throw new Error('prayer_unavailable');
+        const result = await supabase.rpc('get_prayer_cause', { p_prayer_id: linkId });
+        if (result.error) throw result.error;
+        const next = result.data as PrayerCause | null;
         if (!next) throw new Error('prayer_unavailable');
         if (active && view.current === request) setCause(next);
       } catch {
@@ -172,7 +146,7 @@ export default function PraySession({ currentUser }: { currentUser: User | null 
     return () => {
       active = false;
     };
-  }, [linkId, userId]);
+  }, [linkId]);
 
   async function receive(target?: string) {
     if (!currentUser) {
@@ -197,19 +171,8 @@ export default function PraySession({ currentUser }: { currentUser: User | null 
       if (!alive.current || view.current !== request) return;
       operation.acknowledge();
       if (data.unavailable) throw new Error('prayer_unavailable');
-      let next = data.cause as PrayerCause | null;
-      if (!next) {
-        next = defaultCause(DEFAULT_PRAYERS[Math.floor(Math.random() * DEFAULT_PRAYERS.length)].id);
-        const reaction = await supabase.rpc('general_intention_reaction', {
-          p_intention_id: next!.id,
-        });
-        if (reaction.error) throw reaction.error;
-        if (!alive.current || view.current !== request) return;
-        next!.user_reaction = reaction.data;
-        toast.info(
-          'Por enquanto, acolha esta intenção geral. Ela não conta nas intercessões diárias.',
-        );
-      }
+      const next = data.cause as PrayerCause | null;
+      if (!next) throw new Error('prayer_unavailable');
       if (next) syncLink(next);
       display(next);
       setShared(false);
@@ -291,16 +254,10 @@ export default function PraySession({ currentUser }: { currentUser: User | null 
     setBusy('reaction');
     const desired = target.user_reaction === type ? null : type;
     try {
-      const result = target.is_default
-        ? await supabase.rpc('general_intention_reaction', {
-            p_intention_id: target.id,
-            p_reaction: desired,
-            p_write: true,
-          })
-        : await supabase.rpc('set_prayer_reaction', {
-            p_prayer_id: target.id,
-            p_reaction: desired,
-          });
+      const result = await supabase.rpc('set_prayer_reaction', {
+        p_prayer_id: target.id,
+        p_reaction: desired,
+      });
       if (result.error) throw result.error;
       if (!alive.current) return;
       setCause((previous) =>
@@ -344,8 +301,8 @@ export default function PraySession({ currentUser }: { currentUser: User | null 
     );
     try {
       const { data, error } = await supabase.rpc('invite_prayer_friends', {
-        p_prayer_id: cause.is_default ? null : cause.id,
-        p_intention_id: cause.is_default ? cause.id : null,
+        p_prayer_id: cause.id,
+        p_intention_id: null,
         p_recipients: recipients,
         p_operation_id: operation.id,
       });
@@ -495,6 +452,7 @@ export default function PraySession({ currentUser }: { currentUser: User | null 
                     </>
                   )}
                   {dailyIntercessions}
+                  {notice && <div role={notice.error ? 'alert' : 'status'} className="rounded-xl border p-3 text-sm text-left"><p>{notice.text}</p><Button variant="ghost" onClick={() => setNotice(null)}>Fechar aviso</Button></div>}
                 </Card>
               </motion.div>
             ) : (
@@ -502,7 +460,7 @@ export default function PraySession({ currentUser }: { currentUser: User | null 
                 {shared && (
                   <div className="rounded-2xl border border-primary/20 bg-card p-4 text-center space-y-3">
                     <p>Uma intenção compartilhada com você.</p>
-                    {!cause.is_default && !isPrayerConcluded(cause) && !cause.is_owner && (
+                    {!isPrayerConcluded(cause) && !cause.is_owner && (
                       <Button
                         onClick={() => receive(cause.id)}
                         disabled={
@@ -527,14 +485,6 @@ export default function PraySession({ currentUser }: { currentUser: User | null 
                     )}
                   </div>
                 )}
-                {cause.is_default && (
-                  <div
-                    role="status"
-                    className="rounded-2xl border border-primary/20 bg-primary/5 p-4 text-center text-sm"
-                  >
-                    Intenção geral · não conta nas intercessões diárias.
-                  </div>
-                )}
                 <PrayerCauseCard
                   cause={cause}
                   counts={counts[cause.id]}
@@ -545,17 +495,14 @@ export default function PraySession({ currentUser }: { currentUser: User | null 
                   feedback={FEEDBACK[cause.feedback ?? '']}
                   onReaction={react}
                   onSuggestion={generate}
-                  onNext={!shared || cause.is_default ? () => receive() : undefined}
+                  onNext={!shared ? () => receive() : undefined}
                   nextDisabled={!canReceive}
                   onFriendShare={() => (currentUser ? setFriendsOpen(true) : login())}
                   onExternalShare={externalShare}
-                  onReport={
-                    !cause.is_default
-                      ? () => (currentUser ? setReportOpen(true) : login())
-                      : undefined
-                  }
+                  onReport={() => (currentUser ? setReportOpen(true) : login())}
                 />
                 {dailyIntercessions}
+                {notice && <div role={notice.error ? 'alert' : 'status'} className="rounded-xl border bg-card p-3 text-sm"><p>{notice.text}</p><Button variant="ghost" onClick={() => setNotice(null)}>Fechar aviso</Button></div>}
                 {suggestion && (
                   <section className="devotional-cause-suggestion" aria-live="polite">
                     <h3>Sugestão de Oração</h3>
@@ -581,7 +528,6 @@ export default function PraySession({ currentUser }: { currentUser: User | null 
               Ver minhas intercessões anteriores
             </Button>
           </div>
-          <InviteGatePopup isAuthenticated={Boolean(currentUser)} />
           <FriendSelector
             open={friendsOpen}
             onOpenChange={setFriendsOpen}
@@ -592,7 +538,7 @@ export default function PraySession({ currentUser }: { currentUser: User | null 
           />
           <ReportPrayerDialog
             open={reportOpen}
-            prayerRequestId={cause?.is_default ? null : (cause?.id ?? null)}
+            prayerRequestId={cause?.id ?? null}
             onClose={() => setReportOpen(false)}
             onConfirmed={() => {
               setReportOpen(false);

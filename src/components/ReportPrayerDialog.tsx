@@ -4,7 +4,6 @@ import { Flag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
 
 const REPORT_CATEGORIES = [
   { value: 'inappropriate', label: 'Conteúdo ofensivo ou inapropriado' },
@@ -28,6 +27,8 @@ export const ReportPrayerDialog = ({ open, prayerRequestId, onClose, onConfirmed
   const [customReason, setCustomReason] = useState('');
   const [description, setDescription] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+  const toast = { error: (message: string) => setErrorMessage(message), success: (_message: string) => setErrorMessage('') };
 
   const handleSubmit = async () => {
     if (submissionLock.current) return;
@@ -52,14 +53,11 @@ export const ReportPrayerDialog = ({ open, prayerRequestId, onClose, onConfirmed
         return;
       }
 
-      const { error } = await supabase.from('prayer_reports').insert({
-        prayer_request_id: prayerRequestId,
-        target_type: 'prayer_request',
-        reporter_user_id: session.user.id,
-        category,
-        custom_reason: category === 'other' ? customReason.trim() : null,
-        description: description.trim() || null,
-        status: 'open',
+      const { error } = await supabase.rpc('report_prayer_cause', {
+        p_prayer_id: prayerRequestId,
+        p_category: category,
+        p_custom_reason: category === 'other' ? customReason.trim() : null,
+        p_description: description.trim() || null,
       });
 
       if (error) throw error;
@@ -173,6 +171,7 @@ export const ReportPrayerDialog = ({ open, prayerRequestId, onClose, onConfirmed
           />
         </div>
 
+        {errorMessage && <p role="alert" className="mb-4 text-sm text-destructive">{errorMessage}</p>}
         {/* Ações */}
         <div className="flex gap-3">
           <Button

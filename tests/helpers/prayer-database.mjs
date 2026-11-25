@@ -52,6 +52,7 @@ export async function prayerDatabase() {
     create table prayer_intercessions(id uuid primary key default gen_random_uuid(),user_id uuid,prayer_request_id uuid references prayer_requests(id),created_at timestamptz not null default now(),unique(user_id,prayer_request_id));
     create table prayer_reactions(id uuid primary key default gen_random_uuid(),prayer_request_id uuid references prayer_requests(id),reactor_user_id uuid,reaction_type text,created_at timestamptz default now(),deleted_at timestamptz,deleted_by uuid);
     create table notifications(id uuid primary key default gen_random_uuid(),user_id uuid,prayer_request_id uuid references prayer_requests(id),message text not null,is_read boolean default false,type text,created_at timestamptz default now());
+    create table prayer_reports(id uuid primary key default gen_random_uuid(),prayer_request_id uuid references prayer_requests(id),target_type text,reporter_user_id uuid,category text,custom_reason text,description text,status text default 'open');
     create table friendships(user_id uuid,friend_id uuid);
     alter table prayer_requests enable row level security;
     create policy legacy_public_read on prayer_requests for select using(true);
@@ -74,6 +75,7 @@ export async function prayerDatabase() {
   const apply = async () => {
     await migration('20261116050000_app03_prayer_commands.sql');
     await migration('20261116060000_prayer_ai_budget.sql');
+    await migration('20261116070000_general_intentions_as_causes.sql');
   };
   const connect = async (user, role = 'authenticated') => {
     const connection = new Client(config);

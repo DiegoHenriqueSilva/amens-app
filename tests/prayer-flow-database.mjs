@@ -314,16 +314,28 @@ try {
     reactionActor.query('delete from prayer_reactions where reactor_user_id=$1', [uid(18)]),
     /permission denied/,
   );
-  await reactionActor.query("select general_intention_reaction('default-001','love',true)");
-  check(
-    await result(reactionActor, "select general_intention_reaction('default-001') result"),
-    'love',
-    'general intention reactions persist without a UUID cause',
-  );
+  const generalCauseId = '00000000-0000-4000-9000-000000000001';
+  const beforeGeneral = (await result(reactionActor, 'select prayer_daily_status() result')).used;
+  const generalReceipt = await receive(reactionActor, generalCauseId);
+  check(generalReceipt.cause.is_default, false, 'general causes expose no origin marker');
+  check(generalReceipt.cause.display_name, 'Um fiel', 'general causes use the normal anonymous byline');
   check(
     (await result(reactionActor, 'select prayer_daily_status() result')).used,
-    0,
-    'general intentions do not consume individual quota',
+    beforeGeneral + 1,
+    'general causes consume one daily intercession',
+  );
+  await reactionActor.query("select set_prayer_reaction($1,'love')", [generalCauseId]);
+  check(
+    await result(reactionActor, 'select set_prayer_reaction($1,$2) result', [generalCauseId, 'love']),
+    'love',
+    'general cause reactions use the normal command',
+  );
+  check(
+    (await result(reactionActor, 'select get_my_prayer_history() result')).some(
+      (item) => item.prayer_request_id === generalCauseId && item.cause?.is_default === false,
+    ),
+    true,
+    'general causes appear in history without an origin marker',
   );
   await db.query('insert into friendships values($1,$2),($1,$3)', [uid(18), uid(19), uid(80)]);
   const inviteOp = randomUUID();
@@ -361,7 +373,8 @@ try {
     /prayer_invite_invalid/,
   );
   check(
-    await result(reactionActor, "select invite_prayer_friends(null,$1,$2,'default-002') result", [
+    await result(reactionActor, 'select invite_prayer_friends($1,$2,$3) result', [
+      generalCauseId,
       [uid(19)],
       randomUUID(),
     ]),
@@ -371,10 +384,10 @@ try {
   check(
     await result(
       db,
-      "select type result from notifications where type like 'prayer_intention:%' limit 1",
+      "select type result from notifications where type like 'prayer_cause:%' limit 1",
     ),
-    'prayer_intention:default-002',
-    'messages carry the safe general intention route',
+    `prayer_cause:${generalCauseId}`,
+    'messages carry the normal UUID cause route',
   );
   // A notification failure must not leave a successful reaction behind.
   await db.query(`create function fail_app03_notification() returns trigger language plpgsql as $$begin raise exception 'fixture_notification_failure';end$$;
@@ -474,11 +487,12 @@ try {
     'budget',
     'installation-wide cap also limits failed attempts',
   );
-  // An empty eligible queue spends nothing; completed or closed legacy requests stay out.
+  // An empty member queue falls back to a normal-looking general cause.
   await db.query('update prayer_requests set deleted_at=now()');
   const empty = await receive(await actor(24));
-  check(empty.cause, null, 'empty queue returns no individual cause');
-  check(empty.allowance.used, 0, 'empty queue does not consume');
+  check(isNaN(Date.parse(empty.cause.created_at)), false, 'fallback cause has normal cause metadata');
+  check(empty.cause.is_default, false, 'fallback cause exposes no general-intention marker');
+  check(empty.allowance.used, 1, 'fallback cause consumes one daily intercession');
   await db.query(
     "insert into prayer_requests(id,user_id,status,feedback,content,is_anonymous) values($1,$5,'completed',null,'closed',false),($2,$5,'active','success','legacy closed',false),($3,$5,'pending_review',null,'restricted',false),($4,$5,'active',null,'open',true)",
     [uid(301), uid(302), uid(303), uid(304), uid(80)],

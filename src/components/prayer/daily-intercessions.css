@@ -16,11 +16,16 @@
 .daily-intercessions__count span { font-size: 12px; line-height: 1.5; }
 .daily-intercessions__bonus { display: flex; align-items: center; gap: 8px; margin: 0; padding: 10px 0 12px; border-top: 1px solid #eee5d4; font-size: 12px; line-height: 1.5; }
 .daily-intercessions__bonus svg { width: 15px; height: 15px; flex-shrink: 0; color: #a56b15; }
-.daily-intercessions__footer { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 4px 12px; border-top: 1px solid #eee5d4; }
+.daily-intercessions__footer { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: start; gap: 4px 12px; border-top: 1px solid #eee5d4; }
+.daily-intercessions__details { grid-column: 1 / -1; grid-row: 1; min-width: 0; }
+.daily-intercessions__details > summary { padding-right: 125px; list-style: none; }
+.daily-intercessions__details > summary::-webkit-details-marker { display: none; }
+.daily-intercessions__details > .daily-intercessions-help { padding: 12px 0; border-top: 1px solid #eee5d4; }
+.daily-intercessions__details:not([open]) > .daily-intercessions-help { display: none; }
 .daily-intercessions__help { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 6px 0; border: 0; background: none; font: inherit; font-size: 12px; color: #514538; cursor: pointer; }
 .daily-intercessions__help svg { width: 15px; height: 15px; }
 .daily-intercessions__help:focus-visible, .daily-intercessions__error button:focus-visible { outline: 3px solid #a56b15; outline-offset: 3px; border-radius: 4px; }
-.daily-intercessions__reset { display: flex; align-items: center; gap: 7px; margin-left: auto; padding: 6px 0; font-size: 11px; line-height: 1.4; text-align: right; }
+.daily-intercessions__reset { grid-column: 2; grid-row: 1; display: flex; align-items: center; gap: 7px; margin-left: auto; padding: 6px 0; font-size: 11px; line-height: 1.4; text-align: right; }
 .daily-intercessions__reset > svg { width: 21px; height: 21px; color: #a56b15; }
 .daily-intercessions__reset small { display: block; font-size: 10px; }
 .daily-intercessions-help { max-width: calc(100vw - 32px); border-color: #e6d2af; background: #fffdf8; color: #514538; font-size: 13px; line-height: 1.6; }

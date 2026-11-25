@@ -1,5 +1,4 @@
 import { Clock3, Heart, Info, Sparkles } from 'lucide-react';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import type { PrayerDailyLimit } from '@/hooks/use-prayer-daily-limit';
 import './daily-intercessions.css';
 
@@ -76,24 +75,15 @@ export function DailyIntercessions({
             </p>
           )}
           <div className="daily-intercessions__footer">
-            <Popover>
-              <PopoverTrigger asChild>
-                <button type="button" className="daily-intercessions__help">
-                  <Info aria-hidden="true" />
-                  Como funciona
-                </button>
-              </PopoverTrigger>
-              <PopoverContent
-                align="start"
-                className="daily-intercessions-help motion-reduce:animate-none"
-              >
-                <p>
-                  Receber ou assumir uma causa registra uma intercessão. Reler o histórico não
-                  registra outra.
-                </p>
-                <p>Intenções gerais não contam nas intercessões diárias.</p>
-              </PopoverContent>
-            </Popover>
+            <details className="daily-intercessions__details">
+              <summary className="daily-intercessions__help">
+                <Info aria-hidden="true" />
+                Como funciona
+              </summary>
+              <div className="daily-intercessions-help">
+                <p>Receber ou assumir uma causa registra uma intercessão e usa uma das intercessões disponíveis no dia. Reler o histórico não registra outra.</p>
+              </div>
+            </details>
             {!isAdmin && (
               <time
                 className="daily-intercessions__reset"

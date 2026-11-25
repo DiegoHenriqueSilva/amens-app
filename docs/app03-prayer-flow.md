@@ -2,7 +2,7 @@
 
 Implementation base: `0063610`. Work is linked to planning issue APP03; its private audit stays in the planning repository.
 
-Receiving a cause or accepting a shared cause records one intercession immediately. Reading a public link, reopening history, reacting, sharing and requesting a suggestion do not spend another opportunity. General intentions are offered when no individual cause remains and spend none. Limits are 2/3/4/5/6 at levels 1/5/10/15/20; administrators are unlimited. The day is America/Sao_Paulo.
+Receiving a cause or accepting a shared cause records one intercession immediately. Reading a public link, reopening history, reacting, sharing and requesting a suggestion do not spend another opportunity. When no eligible member request remains, the server returns a curated general intention through the same UUID cause contract. It spends one daily intercession, appears in history and exposes no origin label, special route or client-visible behavior. Limits are 2/3/4/5/6 at levels 1/5/10/15/20; administrators are unlimited. The day is America/Sao_Paulo.
 
 The selected approach is a database command that selects and records the cause in one transaction. A client-generated operation identifier makes a retry return the same result. Keeping separate client selection, insertion and counter updates would require recovery across three independent operations and would expose author identifiers. Safe server projections serve links, history and the community feed. Reaction removal uses soft deletion.
 

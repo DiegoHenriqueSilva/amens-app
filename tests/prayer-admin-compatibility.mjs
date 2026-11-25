@@ -44,7 +44,8 @@ for (const app03First of [true, false]) {
     );
     assert.equal(
       (
-        await user.query("select invite_prayer_friends(null,$1,$2,'default-001') result", [
+        await user.query('select invite_prayer_friends($1,$2,$3) result', [
+          '00000000-0000-4000-9000-000000000001',
           [uid(3)],
           randomUUID(),
         ])

@@ -19,7 +19,6 @@ export interface PrayerCause {
 
 export const isPrayerId = (id: string) =>
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
-export const isGeneralIntentionId = (id: string) => /^default-00[1-8]$/.test(id);
 
 export function prayerFailureMessage(error: unknown): string {
   const value = error as { message?: string; hint?: string; code?: string };
@@ -37,7 +36,7 @@ export function prayerFailureMessage(error: unknown): string {
 
 export function prayerShare(cause: PrayerCause) {
   const url = new URL('/pray', 'https://www.amens.com.br');
-  url.searchParams.set(cause.is_default ? 'intention' : 'id', cause.id);
+  url.searchParams.set('id', cause.id);
   return {
     title: 'Pedido de oração no Améns',
     text: 'Conheça esta intenção e una-se a nós em oração.',

@@ -5,7 +5,6 @@ import {
   sharePrayer,
   prayerOperation,
   isPrayerId,
-  isGeneralIntentionId,
 } from '../src/lib/prayer-flow.ts';
 const cause = {
   id: '00000000-0000-4000-8000-000000000123',
@@ -22,10 +21,11 @@ test('public shares contain only the application link and generic invitation', (
     assert.equal(value.includes(privateValue), false);
   assert.equal(new URL(payload.url).searchParams.get('id'), cause.id);
 });
-test('general intentions use a valid share route instead of passing a non-UUID as a cause id', () => {
-  const payload = prayerShare({ ...cause, id: 'default-001', is_default: true });
-  assert.equal(new URL(payload.url).searchParams.get('intention'), 'default-001');
-  assert.equal(new URL(payload.url).searchParams.has('id'), false);
+test('every cause uses the same UUID share route without an origin marker', () => {
+  const generalCause = { ...cause, id: '00000000-0000-4000-9000-000000000001' };
+  const payload = prayerShare(generalCause);
+  assert.equal(new URL(payload.url).searchParams.get('id'), generalCause.id);
+  assert.equal(new URL(payload.url).searchParams.has('intention'), false);
 });
 test('cancelled native shares do not report success or open WhatsApp', async () => {
   const value = await sharePrayer(cause, {
@@ -61,9 +61,8 @@ test('operation ids persist until acknowledgment and stay isolated by account an
 });
 test('identifier validation rejects malformed public links', () => {
   assert.equal(isPrayerId(cause.id), true);
+  assert.equal(isPrayerId('00000000-0000-4000-9000-000000000001'), true);
   assert.equal(isPrayerId('not-a-uuid'), false);
-  assert.equal(isGeneralIntentionId('default-008'), true);
-  assert.equal(isGeneralIntentionId('default-009'), false);
 });
 
 test('retries retain their identity when optional recovery storage is unavailable', () => {

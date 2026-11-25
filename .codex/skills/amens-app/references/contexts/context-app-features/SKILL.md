@@ -41,7 +41,7 @@ A página inicial é o hub principal do Améns, apresentando as funções centra
 
 ### Purpose and implementation
 - Let a member receive a community request, assume intercession, react, request optional prayer support, invite friends and revisit their history.
-- Entry points: `/pray`, `/pray?id=<uuid>` and `/pray?intention=default-001` through `default-008`.
+- Entry points: `/pray` and `/pray?id=<uuid>`. Every received cause uses the same UUID route.
 - `src/pages/Pray.tsx` observes authentication; `PraySession.tsx` resets account-scoped state. `PrayerCauseCard` retains the devotional presentation.
 
 - UI copy uses **Intercessões diárias**. The compact summary shows available intercessions once, without a separate circled number, a next-level line and a midnight/Sao Paulo clock at the lower right; consumption details are in **Como funciona**. Loading uses a skeleton and a short accessible announcement.
@@ -51,10 +51,10 @@ A página inicial é o hub principal do Améns, apresentando as funções centra
 - Receiving or accepting an individual cause immediately registers the intercession and consumes one daily opportunity. No additional "I prayed" confirmation is required.
 - Standard daily allowance: 2 initially, plus 1 every five levels (2/3/4/5/6 at levels 1/5/10/15/20). Administrators are unlimited. Renewal uses America/Sao_Paulo.
 - Reading a shared link, reopening history, reacting, sharing or requesting an AI suggestion does not consume another opportunity.
-- General intentions appear when the eligible queue is empty, spend no quota and are not individual history records. General-intention reactions and friend invitations remain available.
+- When the eligible member queue is empty, the server may return a curated general intention through the same cause contract. It consumes one daily opportunity, appears in individual history and must be indistinguishable from a normal anonymous cause in UI, routes and public data. Reactions, reports and friend invitations use the same controls and commands.
 
 ### Server contract
-- `receive_prayer_cause` selects, records and updates the counter atomically. Per-account advisory locking enforces quota; operation identifiers make uncertain responses retryable. Receipt time is server-owned and intercessions are immutable.
+- `receive_prayer_cause` selects a member request or server-side general intention, records it and updates the counter atomically. Per-account advisory locking enforces quota; operation identifiers make uncertain responses retryable. Receipt time is server-owned and intercessions are immutable.
 - Exclude the member's own requests, previously assumed requests, deleted/restricted content, suspended/deleted authors, completed causes and closing feedback even when legacy status remains active. Preserve weighted selection among the 50 most recent eligible candidates and a random top-five pool.
 - Public links, draws, history and the community feed use safe projections. Anonymous authors expose no identifier, avatar, location or friend badge. Owners and moderators retain authorized raw-row access.
 - History uses stable cursor pagination and placeholders for unavailable causes. Reaction removal is a soft delete. Reactions and invitations report success only after the database command commits.

@@ -67,7 +67,7 @@ export function PrayerCauseCard({ cause, counts, activeReaction, isGenerating, i
             <img className="devotional-cause__avatar" src={cause.avatar_url} onError={() => setFailedAvatar(cause.avatar_url ?? null)} alt={`Foto de ${cause.display_name || "quem solicitou a oração"}`} />
           ) : (
             <span className="devotional-cause__avatar devotional-cause__avatar--placeholder" aria-hidden="true">
-              {cause.is_default ? <Sparkles /> : <Heart />}
+              <Heart />
             </span>
           )}
           <div>
@@ -89,7 +89,7 @@ export function PrayerCauseCard({ cause, counts, activeReaction, isGenerating, i
           {cause.location && <p className="devotional-cause__location"><MapPin aria-hidden="true" />{cause.location}</p>}
         </div>
 
-        {!cause.is_default && <div className="devotional-cause__engagement"><PrayerEngagement counts={counts} prayerId={cause.id} canViewIntercessors={canViewIntercessors} /></div>}
+        <div className="devotional-cause__engagement"><PrayerEngagement counts={counts} prayerId={cause.id} canViewIntercessors={canViewIntercessors} /></div>
 
         <section className="devotional-cause__solidarity" aria-label="Envie Energia e Solidariedade">
           <h3>Envie Energia e Solidariedade</h3>
