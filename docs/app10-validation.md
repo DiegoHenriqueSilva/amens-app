@@ -108,3 +108,34 @@ O APP10 só poderá ser encerrado após validar histórico, leitura, identidade,
 destinos, sino, tempo real, sobreposição, agradecimento, acessibilidade,
 responsividade e autorização. Build aprovado ou uma captura isolada não
 substitui a validação do fluxo completo.
+
+## Execução inicial — 25/11/2026
+
+### Resultados observados
+
+- `/messages` redirecionou corretamente para `/auth` sem sessão.
+- Com a conta de teste autenticada, a caixa carregou três notificações reais:
+  duas reações e um aviso de remoção por moderador.
+- O carregamento foi lento e permaneceu em skeleton por vários segundos antes
+  de exibir os dados; esse comportamento precisa de medição e tratamento de
+  erro/loading mais claro.
+- Os cards de mensagem são `div`s com `onClick`, não controles semânticos de
+  teclado.
+- A implementação marca todas as notificações não lidas como lidas antes de
+  consultar a lista limitada a 20 itens. Isso confirma o risco R03 descrito na
+  especificação.
+- O componente `NotificationBell` está importado em `Index.tsx`, mas não é
+  renderizado na home atual; o sino não aparece no cenário autenticado.
+- A busca inicial do sino e a contagem global responderam por HTTP 200 nas
+  requisições observadas.
+
+### Evidências
+
+- `artifacts/app10-messages-loading-390.png`
+- `artifacts/app10-home-no-bell-390.png`
+
+### Situação
+
+APP10 permanece em diagnóstico. Os principais bloqueios para conclusão são o
+histórico limitado, a marcação prematura de leitura, o tratamento de erros e a
+ausência visual do sino na home.
