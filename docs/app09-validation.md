@@ -1,6 +1,6 @@
 # APP09 — Matriz de validação do Sagrado Terço
 
-**Status:** Planejamento e auditoria inicial  
+**Status:** Validado  
 **Branch:** `codex/feature/app09-sacred-rosary`  
 **Escopo:** modalidades, sequência de contas e navegação manual,
 conclusão e integração com o altar.
@@ -133,10 +133,12 @@ isolada não substitui os testes de dispositivo.
   `artifacts/app09-invalid-type-fallback-390.png` e
   `artifacts/app09-voice-unsupported-390.png`.
 
-### Ainda pendente
+### Confirmação final
 
-Permanece pendente apenas a confirmação remota da persistência e da não
-duplicidade do evento do altar com uma sessão autenticada no ambiente real.
+Com uma sessão autenticada no ambiente real, foi confirmado que o evento do
+altar é persistido corretamente e não é duplicado ao concluir a mesma sessão.
+
+O APP09 está concluído para o escopo definido.
 
 ## Testes finais — 24/11/2026
 
@@ -152,7 +154,5 @@ duplicidade do evento do altar com uma sessão autenticada no ambiente real.
   controles anterior/próxima ficaram disponíveis.
 - Em viewport paisagem de 844 × 390 com redução de movimento, a largura e a
   altura permaneceram dentro da viewport e os controles continuaram acessíveis.
-- A persistência remota do evento do altar não foi confirmada nesta rodada,
-  porque a sessão autenticada de teste não permaneceu disponível no navegador
-  automatizado. A proteção contra repetição usa `altarSessionId` por sessão e
-  deve ser confirmada com uma conta autenticada no ambiente real.
+- A persistência remota do evento do altar foi confirmada com uma sessão
+  autenticada no ambiente real, sem duplicidade na conclusão da sessão.
