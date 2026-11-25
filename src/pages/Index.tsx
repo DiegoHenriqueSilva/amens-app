@@ -30,6 +30,8 @@ const fadeUp = {
   animate: { opacity: 1, y: 0, transition: { duration: 0.4 } },
 };
 
+type HomeProfile = { full_name?: string | null; avatar_url?: string | null };
+
 const RosaryGlyph = () => (
   <svg viewBox="0 0 44 44" fill="none" aria-hidden="true" className="amens-home-icon">
     <circle cx="16" cy="14" r="10.5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeDasharray="0.8 2.2" />
@@ -69,7 +71,9 @@ const LegacyHomeActions = () => {
             <Card className="p-3 sm:p-4 h-full text-center flex flex-col items-center justify-between border-primary/5 soft-shadow bg-[#FAFAFA] hover:-translate-y-1 hover:shadow-xl transition-all duration-300 rounded-[2rem]">
               <div className="w-11 h-11 bg-transparent rounded-full flex items-center justify-center mb-2 overflow-hidden"><img src={action.image} alt={action.title} className="w-full h-full object-cover rounded-full drop-shadow-md" /></div>
               <div><h2 className="text-sm sm:text-base font-bold mb-1">{action.title}</h2><p className="text-xs text-slate-700 leading-snug mb-2 font-semibold px-2">{action.description}</p></div>
-              <Button size="sm" className="w-full rounded-full text-xs h-9 py-2 font-bold shadow-md bg-gradient-to-br from-[#d4a017] to-[#e8c547] text-[#3d2800] hover:opacity-90 transition-opacity border-0"><Icon className="w-3.5 h-3.5 mr-2" />{action.cta}</Button>
+              <span className="w-full rounded-full text-xs h-9 py-2 font-bold shadow-md bg-gradient-to-br from-[#d4a017] to-[#e8c547] text-[#3d2800] hover:opacity-90 transition-opacity border-0 inline-flex items-center justify-center">
+                <Icon className="w-3.5 h-3.5 mr-2" />{action.cta}
+              </span>
             </Card>
           </Link>
         </motion.div>;
@@ -83,7 +87,7 @@ const Index = () => {
   const [onlineCount, setOnlineCount] = useState(0);
   const navigate = useNavigate();
   const { totalFaithPoints } = useFaithPoints();
-  const [profile, setProfile] = useState<any>(null);
+  const [profile, setProfile] = useState<HomeProfile | null>(null);
   const location = useLocation();
   const [activeIntercessionNotifId, setActiveIntercessionNotifId] = useState<string | null>(null);
   const [isLegacyTheme, setIsLegacyTheme] = useState(() => localStorage.getItem("amens-theme") === "legacy");
@@ -199,7 +203,7 @@ const Index = () => {
 
   return (
     <PageTransition>
-      <div className="min-h-screen pb-28">
+      <div className="min-h-screen pb-[calc(7rem+env(safe-area-inset-bottom))]">
         <CompleteProfileDialog />
         <AngelicalNotificationOverlay 
           notificationId={activeIntercessionNotifId} 
@@ -219,7 +223,9 @@ const Index = () => {
               </div>
             </div>
             {user && (
-              <div className="w-full min-w-0">
+              <div className="w-full min-w-0 flex items-center gap-2">
+                <NotificationBell />
+                <div className="min-w-0 flex-1">
                 <FaithPointsBadge
                   compact
                   totalFaithPoints={totalFaithPoints}
@@ -227,6 +233,7 @@ const Index = () => {
                   avatarUrl={profile?.avatar_url || user.user_metadata?.avatar_url || user.user_metadata?.picture}
                   isSupporter={myInsignias.data?.showSupporterCard === true}
                 />
+                </div>
               </div>
             )}
           </div>
@@ -284,7 +291,7 @@ const Index = () => {
           </motion.div>}
 
           {!isLegacyTheme && (
-            <motion.div variants={fadeUp} initial="initial" animate="animate">
+            <div>
             <Link className="amens-donation-banner" to="/donate" aria-labelledby="amens-donation-title">
               <span className="amens-donation-banner__eyebrow">Faça parte desta missão</span>
               <h2 id="amens-donation-title">Apoie o Améns</h2>
@@ -295,7 +302,7 @@ const Index = () => {
               </p>
               <Sparkles className="amens-donation-banner__ornament" aria-hidden="true" />
             </Link>
-            </motion.div>
+            </div>
           )}
 
           {!user && (

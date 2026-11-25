@@ -13,9 +13,21 @@ interface AngelicalNotificationOverlayProps {
   onClose: () => void;
 }
 
+interface IntercessorProfile {
+  id: string;
+  avatar_url?: string | null;
+  show_real_name?: boolean | null;
+  display_name?: string | null;
+  full_name?: string | null;
+  parish?: string | null;
+  created_at: string;
+  user_xp?: Array<{ total_xp: number | null }> | null;
+}
+
 export const AngelicalNotificationOverlay = ({ notificationId, onClose }: AngelicalNotificationOverlayProps) => {
-  const [intercessor, setIntercessor] = useState<any>(null);
+  const [intercessor, setIntercessor] = useState<IntercessorProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
   const [prayerRequestId, setPrayerRequestId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -56,19 +68,22 @@ export const AngelicalNotificationOverlay = ({ notificationId, onClose }: Angeli
   };
 
   const handleThank = async () => {
-    if (!intercessor) return;
+    if (!intercessor || submitting) return;
 
     try {
+      setSubmitting(true);
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
 
       const myName = session.user.user_metadata?.display_name || session.user.user_metadata?.full_name?.split(" ")[0] || "Um fiel";
 
       // 1. Notify the intercessor
-      await supabase.from("notifications").insert({
+      const { error: notificationError } = await supabase.from("notifications").insert({
         user_id: intercessor.id,
+        sender_id: session.user.id,
         message: `✨ ${myName} agradeceu pela sua oração! "Deus te abençoe!"`,
       });
+      if (notificationError) throw notificationError;
 
       // 2. Grant XP to the intercessor (10 XP)
       const { error: xpError } = await supabase.rpc('add_xp', {
@@ -91,6 +106,8 @@ export const AngelicalNotificationOverlay = ({ notificationId, onClose }: Angeli
       onClose();
     } catch (error) {
       toast.error("Erro ao enviar agradecimento.");
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -145,6 +162,7 @@ export const AngelicalNotificationOverlay = ({ notificationId, onClose }: Angeli
           
           <button 
             onClick={onClose}
+            aria-label="Fechar aviso de intercessão"
             className="absolute top-6 right-6 p-2 rounded-full bg-secondary/50 hover:bg-secondary transition-colors"
           >
             <X className="w-4 h-4 text-muted-foreground" />
@@ -199,6 +217,7 @@ export const AngelicalNotificationOverlay = ({ notificationId, onClose }: Angeli
               </p>
               <Button 
                 onClick={handleThank}
+                disabled={submitting}
                 className="w-full h-16 gradient-divine rounded-2xl text-lg font-bold shadow-lg hover:scale-[1.02] transition-transform active:scale-[0.98]"
               >
                 Agradecer e Abençoar

@@ -102,6 +102,29 @@ intercessão/agradecimento.
 - Resultado de build e checks aplicáveis.
 - Teste de autorização entre duas contas fictícias.
 
+## Correções funcionais aplicadas — 24/11/2026
+
+- A caixa de mensagens deixou de marcar todas as mensagens como lidas durante
+  o carregamento.
+- O histórico agora usa páginas de 20 registros e oferece carregamento de
+  mensagens antigas quando há mais resultados.
+- A leitura ocorre ao abrir uma mensagem ou ao usar “Marcar todas como lidas”,
+  com tratamento visual de falha.
+- A troca de sessão limpa os dados anteriores e impede que respostas atrasadas
+  apareçam na conta errada.
+- O sino foi ativado na Home, ganhou nome acessível, link para a caixa completa
+  e não marca mensagens automaticamente ao ser aberto.
+- O agradecimento ao intercessor agora grava o remetente, impede duplo envio e
+  só conclui o fluxo quando a notificação foi registrada.
+
+### Validação técnica após as correções
+
+- `npm run build`: aprovado.
+- `git diff --check`: aprovado; apenas avisos de conversão de final de linha do
+  Git foram exibidos.
+- A proteção de rota sem sessão e o carregamento autenticado observados no teste
+  inicial permanecem preservados.
+
 ## Critério de conclusão
 
 O APP10 só poderá ser encerrado após validar histórico, leitura, identidade,
