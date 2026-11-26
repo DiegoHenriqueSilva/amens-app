@@ -216,6 +216,12 @@ const Profile = () => {
       }
 
       const file = event.target.files[0];
+      if (!file.type.startsWith("image/")) {
+        throw new Error("Selecione uma imagem válida.");
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        throw new Error("A imagem deve ter no máximo 5 MB.");
+      }
       const fileExt = file.name.split(".").pop();
       const filePath = `${user.id}/${Math.random()}.${fileExt}`;
 

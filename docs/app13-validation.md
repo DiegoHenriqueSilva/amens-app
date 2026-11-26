@@ -34,7 +34,7 @@
 | Caso | Validação | Estado |
 | --- | --- | --- |
 | APP13-T01 | Salvar, cancelar, recarregar e falhar gravação | Cancelamento aprovado; falha de gravação pendente |
-| APP13-T02 | Foto válida, formato/tamanho inválido e falha de upload | Não executado |
+| APP13-T02 | Foto válida, formato/tamanho inválido e falha de upload | Tipo e tamanho inválidos aprovados; upload válido pendente |
 | APP13-T03 | Nome público e presença na paróquia entre duas contas | Não executado |
 | APP13-T04 | Indicação válida, própria, repetida e concorrente | Não executado |
 | APP13-T05 | Preferência de desempenho e movimento reduzido | Não executado |
@@ -49,6 +49,10 @@
 - Campos de devoção e presença pública na paróquia foram encontrados.
 - Cancelar uma alteração temporária retornou ao altar sem persistir o valor.
 - Captura autenticada gerada em `artifacts/app13-profile-edit-390.png`.
+- Upload de arquivo não-imagem e imagem acima de 5 MB rejeitados antes do
+  Storage.
+- Atualização do próprio perfil confirmada diretamente no Supabase sem alterar
+  o valor armazenado.
 - Contrato de segurança de `process-referral` validado estaticamente.
 - `npm run build`: aprovado.
 
