@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Send, Sparkles, Wind, Users, Heart, Flag } from "lucide-react";
 import PageTransition from "@/components/PageTransition";
-import { PRAYERS, PHRASE_DURATION, PRAYER_GAP, TOTAL_CYCLE_TIME, BR_CITIES_200K, COMMON_NAMES } from "@/data/prayer-data";
+import { PRAYERS, PHRASE_DURATION, PRAYER_GAP, TOTAL_CYCLE_TIME } from "@/data/prayer-data";
 import { motion, AnimatePresence } from "framer-motion";
 import { Contributor, usePrayerQueue } from "@/hooks/use-prayer-queue";
 import { useFriends } from "@/hooks/use-friends";
@@ -143,33 +143,7 @@ const PrayerChain = () => {
 
   const { recentContributors, isLoading: queueLoading } = usePrayerQueue(currentPrayer?.id, currentPhraseIndex, globalTime);
   const [hasClickedOrarJunto, setHasClickedOrarJunto] = useState(false);
-  const [ambientContributor, setAmbientContributor] = useState<Contributor | null>(null);
-  const displayedPrayerCount = Math.max(6, onlineCount - 1 + 6 + (hasClickedOrarJunto ? 1 : 0));
-
-  useEffect(() => {
-    let nextMessageTimer: number | undefined;
-    let dismissTimer: number | undefined;
-    let stopped = false;
-
-    const showAmbientContributor = () => {
-      if (stopped || document.hidden) {
-        nextMessageTimer = window.setTimeout(showAmbientContributor, 8000);
-        return;
-      }
-      const name = COMMON_NAMES[Math.floor(Math.random() * COMMON_NAMES.length)];
-      const city = BR_CITIES_200K[Math.floor(Math.random() * BR_CITIES_200K.length)];
-      setAmbientContributor({ timestamp: Date.now(), name, city });
-      dismissTimer = window.setTimeout(() => setAmbientContributor(null), 5500);
-      nextMessageTimer = window.setTimeout(showAmbientContributor, 14000 + Math.floor(Math.random() * 9000));
-    };
-
-    nextMessageTimer = window.setTimeout(showAmbientContributor, 5000 + Math.floor(Math.random() * 5000));
-    return () => {
-      stopped = true;
-      if (nextMessageTimer) window.clearTimeout(nextMessageTimer);
-      if (dismissTimer) window.clearTimeout(dismissTimer);
-    };
-  }, []);
+  const displayedPrayerCount = onlineCount;
 
   const handleOrarJunto = async () => {
     if (!currentUser) {
@@ -247,7 +221,8 @@ const PrayerChain = () => {
     if (!intention.trim() || isSubmitting || !currentUser) return;
     setIsSubmitting(true);
     try {
-      await supabase.from("prayer_intentions").insert({ user_id: currentUser.id, content: intention.trim() });
+      const { error } = await supabase.from("prayer_intentions").insert({ user_id: currentUser.id, content: intention.trim() });
+      if (error) throw error;
       toast({ title: "Intenção Unida!", description: "Sua prece agora faz parte da corrente eterna." });
       setIntention("");
       setHasSentIntentionToday(true);
@@ -363,14 +338,14 @@ const PrayerChain = () => {
               </AnimatePresence>
 
               {/* Fixed List (Outside AnimatePresence) */}
-              {(recentContributors.length > 0 || ambientContributor) && !queueLoading && (
+              {recentContributors.length > 0 && !queueLoading && (
                 <div className="mt-2 flex flex-col items-center w-full max-w-xs shrink-0">
                   <p className="text-[#a0720a] text-[10px] uppercase tracking-[0.3em] font-bold mb-3 opacity-60 border-b border-[#a0720a]/20 pb-1 w-full text-center">
                     Unidos em oração agora
                   </p>
                   <div className="flex flex-col gap-1.5 w-full justify-end max-h-[160px] overflow-y-auto py-2">
                     <AnimatePresence initial={false}>
-                      {[...recentContributors, ...(ambientContributor ? [ambientContributor] : [])].slice(0, 3).map((contrib) => (
+                      {recentContributors.slice(0, 3).map((contrib) => (
                         <motion.div 
                           key={`${contrib.user_id || contrib.name}-${contrib.timestamp}`}
                           initial={{ opacity: 0, scale: 0.9, y: -10 }}
