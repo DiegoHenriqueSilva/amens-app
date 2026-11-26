@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -30,13 +30,7 @@ export const AngelicalNotificationOverlay = ({ notificationId, onClose }: Angeli
   const [submitting, setSubmitting] = useState(false);
   const [prayerRequestId, setPrayerRequestId] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (notificationId) {
-      fetchIntercessorDetails();
-    }
-  }, [notificationId]);
-
-  const fetchIntercessorDetails = async () => {
+  const fetchIntercessorDetails = useCallback(async () => {
     setLoading(true);
     try {
       // 1. Get notification details to find the intercessor (sender_id)
@@ -65,7 +59,11 @@ export const AngelicalNotificationOverlay = ({ notificationId, onClose }: Angeli
     } finally {
       setLoading(false);
     }
-  };
+  }, [notificationId, onClose]);
+
+  useEffect(() => {
+    if (notificationId) void fetchIntercessorDetails();
+  }, [fetchIntercessorDetails, notificationId]);
 
   const handleThank = async () => {
     if (!intercessor || submitting) return;

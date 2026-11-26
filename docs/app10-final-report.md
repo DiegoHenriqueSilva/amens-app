@@ -2,7 +2,7 @@
 
 **Status:** Concluído e validado
 **Branch:** `codex/feature/app10-messages-notifications`
-**Último commit:** `a043404`
+**Último commit:** `Pendente após a validação final`
 
 ## Resumo
 
@@ -137,7 +137,13 @@ foi enviado uma única vez mesmo com duplo acionamento.
 - Modal de intercessão, agradecimento e proteção contra duplicidade: aprovado.
 - Isolamento entre contas A/B no Supabase: aprovado.
 - `npm run build`: aprovado.
-- ESLint dos arquivos alterados: 0 erros e 2 avisos de dependências de hooks.
+- ESLint dos arquivos alterados: aprovado, sem erros ou avisos.
+- As quatro contas de teste foram consultadas. A conta B começou sem
+  notificações; a conta A tinha três notificações históricas.
+- A matriz real de 0/1/20/21 foi executada com dados controlados no navegador,
+  sem alterar registros permanentes. A limpeza de registros reais inseridos por
+  usuário não é permitida pela política atual do Supabase, que não concede
+  `DELETE` a usuários autenticados.
 
 ## Conclusão
 

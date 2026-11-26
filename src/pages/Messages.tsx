@@ -61,6 +61,7 @@ const Messages = () => {
   useEffect(() => {
     let disposed = false;
     let promptTimer: number | undefined;
+    const initialRequestVersion = requestRef.current;
     const applySession = (session: { user: { id: string } } | null) => {
       if (disposed) return;
       requestRef.current++;
@@ -78,7 +79,7 @@ const Messages = () => {
     };
     void supabase.auth.getSession().then(({ data: { session } }) => applySession(session));
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => applySession(session));
-    return () => { disposed = true; requestRef.current++; subscription.unsubscribe(); if (promptTimer) window.clearTimeout(promptTimer); };
+    return () => { disposed = true; requestRef.current = initialRequestVersion + 1; subscription.unsubscribe(); if (promptTimer) window.clearTimeout(promptTimer); };
   }, [navigate, triggerPushPrompt]);
 
   const markAsRead = async (id: string) => {
