@@ -1,152 +1,145 @@
-# APP10 — Relatório final de mensagens e notificações
+# APP10 — Mensagens, alertas e notificações
 
-**Status:** Concluído e validado
-**Branch:** `codex/feature/app10-messages-notifications`
-**Último commit:** `Pendente após a validação final`
+**Status:** Concluído e validado  
+**Branch:** `codex/feature/app10-messages-notifications`  
+**Commit final:** `087d17d`
 
-## Resumo
+## Resumo da entrega
 
-O fluxo completo de mensagens e notificações do Améns (APP10) foi implementado,
-auditado, corrigido e validado. A solução abrange a caixa de mensagens em
-`/messages`, o sino de notificações (`NotificationBell`) na página inicial com
-popover, a contagem e badge de itens não lidos, o tratamento de segurança e
-isolamento entre usuários, e a sobreposição de intercessão e agradecimento.
+O APP10 foi revisado, corrigido e testado nos principais fluxos de mensagens e
+notificações do Améns. A validação incluiu a caixa de mensagens, o sino na Home,
+leitura individual e coletiva, histórico, responsividade, acessibilidade,
+isolamento entre contas e o modal de intercessão.
 
-Foram eliminados os problemas de leitura prematura que consumiam notificações
-ainda não vistas pelo usuário, implementada a paginação em blocos de 20 itens e
-garantida a navegação e acessibilidade por teclado e leitores de tela em telas
-móveis estreitas (390 px e 320 px).
+## Correções realizadas
 
-## Alterações e melhorias realizadas
+- A abertura da caixa não marca mais todas as mensagens como lidas.
+- A leitura acontece somente ao abrir uma mensagem ou solicitar a leitura de
+  todas explicitamente.
+- O histórico passou a carregar mensagens em páginas de 20 registros.
+- Foi incluído o botão para carregar mensagens antigas.
+- Falhas de consulta e atualização agora exibem mensagem de erro e permitem
+  nova tentativa.
+- A troca de conta limpa os dados da sessão anterior e evita mistura de
+  notificações.
+- O sino foi ativado na Home autenticada.
+- O popover do sino não marca mensagens automaticamente.
+- Foi incluído o link “Ver todas” para acessar `/messages`.
+- Mensagens possuem navegação por teclado, foco visível e nomes acessíveis.
+- O modal de intercessão recebeu fechamento acessível.
+- O agradecimento registra o remetente e impede envio duplicado por duplo clique.
 
-- **Preservação de histórico e paginação:**
-  - A caixa de mensagens (`/messages`) deixou de marcar todas as notificações
-    como lidas na carga inicial.
-  - O histórico agora é carregado em lotes de 20 itens, com suporte a busca de
-    mensagens antigas.
-  - A leitura ocorre sob demanda (ao abrir uma notificação individual ou ao
-    clicar explicitamente em "Marcar todas como lidas").
+## Testes executados
 
-- **Sino de notificações na Home:**
-  - Integrado o `NotificationBell` na Home autenticada.
-  - Abertura de popover com link "Ver todas" e fechamento com tecla `Escape`.
-  - Botão com `aria-label` acessível e sem consumir o estado de leitura
-    automaticamente ao abrir.
+| Teste | Resultado |
+| --- | --- |
+| Acesso sem autenticação redireciona para `/auth` | Aprovado |
+| Login com conta de teste | Aprovado |
+| Caixa vazia | Aprovado |
+| Caixa com 1 mensagem | Aprovado |
+| Caixa com 20 mensagens | Aprovado |
+| Caixa com 21 mensagens e paginação | Aprovado |
+| Textos longos | Aprovado |
+| Erro de carregamento (`SELECT`) | Aprovado |
+| Sino na Home | Aprovado |
+| Popover e link “Ver todas” | Aprovado |
+| Fechamento com `Escape` | Aprovado |
+| Navegação por teclado | Aprovado |
+| Responsividade em 390 × 844 | Aprovado |
+| Responsividade em 320 × 844 | Aprovado |
+| Responsividade em 844 × 390 | Aprovado |
+| Modal de intercessão | Aprovado |
+| Agradecimento sem duplicidade | Aprovado |
+| Isolamento entre contas A e B | Aprovado |
+| Push com aplicativo fechado | Confirmado pelo responsável do produto |
 
-- **Segurança e isolamento de contas:**
-  - As consultas e atualizações de leitura são estritamente filtradas pelo
-    `user_id` autenticado.
-  - Teste de segurança confirmou que a conta B não tem acesso a ler ou alterar
-    notificações da conta A.
-  - Na alternância de contas (troca de sessão), o estado local anterior é limpo
-    imediatamente, evitando o vazamento de respostas atrasadas.
+## Evidências visuais
 
-- **Agradecimento e intercessão:**
-  - Gravação garantida do `sender_id`.
-  - Prevenção contra duplo clique e envio duplicado de agradecimento e concessão
-    de XP.
+### 1. Acesso sem autenticação
 
-- **Acessibilidade e responsividade:**
-  - Cards de notificação transformados em botões acessíveis com atributos ARIA e
-    suporte a acionamento por teclado (`Enter`/`Space`).
-  - Viewports estreitos de 320 px e 390 px testados e aprovados sem *overflow*
-    horizontal.
+![Redirecionamento para autenticação](../artifacts/app10-unauthenticated-auth.png)
 
-## Casos testados
+O acesso direto à caixa de mensagens sem sessão ativa encaminha o usuário para
+a tela de autenticação.
 
-| Caso | Descrição | Resultado |
-| --- | --- | --- |
-| APP10-T01 | Histórico com paginação e contagem coerente | Aprovado |
-| APP10-T02 | Abertura da caixa preservando não lidas antigas | Aprovado |
-| APP10-T03 | Tratamento de falhas de rede (`SELECT`/`UPDATE`) | Aprovado |
-| APP10-T04 | Troca de contas A/B com isolamento de dados | Aprovado |
-| APP10-T05 | Abertura do sino, teclado (`Escape`) e badge | Aprovado |
-| APP10-T06 | Navegação para causas, Evangelho e avisos gerais | Aprovado |
-| APP10-T07 | Eventos em tempo real sincronizados no app | Aprovado |
-| APP10-T08 | Agradecimento seguro sem duplicação de envio/XP | Aprovado |
-| APP10-T09 | Responsividade em 390 px e 320 px sem overflow | Aprovado |
+### 2. Sino na Home
 
-## Evidência 1 — Proteção de rota e autenticação
+![Sino de notificações na Home](../artifacts/app10-home-bell-390.png)
 
-![Redirecionamento desautenticado](../artifacts/app10-unauthenticated-auth.png)
+O sino aparece no cabeçalho da Home para usuários autenticados, com badge de
+mensagens não lidas.
 
-Tentativas de acessar `/messages` sem sessão ativa redirecionam
-automaticamente para `/auth`.
+### 3. Popover de notificações
 
-## Evidência 2 — Sino de notificações na Home
+![Popover de notificações](../artifacts/app10-bell-popover-390.png)
 
-![Sino ativo na Home](../artifacts/app10-home-bell-390.png)
+O popover apresenta as mensagens recentes e o acesso à caixa completa. Abrir o
+popover não altera automaticamente o estado de leitura.
 
-O sino de notificações é apresentado no cabeçalho da Home com contagem e estado
-acessível para o usuário autenticado.
+### 4. Caixa autenticada
 
-## Evidência 3 — Popover de notificações
+![Caixa de mensagens autenticada](../artifacts/app10-messages-authenticated-390.png)
 
-![Popover do sino](../artifacts/app10-bell-popover-390.png)
+As mensagens são apresentadas com distinção entre lidas e não lidas, data,
+conteúdo e ações acessíveis.
 
-O popover exibe as notificações recentes e o link "Ver todas", podendo ser
-fechado com `Escape` ou clique fora, sem marcar mensagens como lidas
-involuntariamente.
+### 5. Histórico com 21 mensagens
 
-## Evidência 4 — Caixa de mensagens autenticada
+![Histórico paginado com 21 mensagens](../artifacts/app10-history-21-390.png)
 
-![Caixa de mensagens](../artifacts/app10-messages-authenticated-390.png)
+As primeiras 20 mensagens são carregadas inicialmente. A 21ª é carregada pelo
+botão “Carregar mensagens antigas”.
 
-A tela `/messages` lista as notificações com cards semânticos, distinção de
-lidas/não lidas e controles acessíveis.
+### 6. Tela estreita de 320 px
 
-## Evidência 5 — Responsividade em 320 px
+![Caixa em 320 pixels](../artifacts/app10-messages-320.png)
 
-![Responsividade em 320px](../artifacts/app10-messages-320.png)
+O conteúdo permanece utilizável sem cortes ou rolagem horizontal.
 
-Em viewport estreito de 320 px, a interface se adapta perfeitamente sem cortes
-laterais ou quebra de elementos.
+### 7. Tela em paisagem
 
-## Validações técnicas
+![Caixa em paisagem](../artifacts/app10-messages-landscape-844x390.png)
 
-- `npm run build`: aprovado (código 0).
-- `node tests/app10-security.mjs`: aprovado (isolamento estrito entre contas).
-- `node tests/app10-final.e2e.mjs`: aprovado (fluxo completo, popover, teclado e
-  overflow).
+O fluxo também foi validado em orientação paisagem.
 
-## Evidências adicionais — testes finais
-
-![Histórico com 21 mensagens](../artifacts/app10-history-21-390.png)
-
-O teste controlado confirmou a paginação em blocos de 20, o carregamento da
-21ª mensagem e a preservação de textos longos.
-
-![Mensagens em paisagem](../artifacts/app10-messages-landscape-844x390.png)
-
-A caixa permaneceu utilizável em 844 × 390, sem overflow horizontal.
+### 8. Estado de erro
 
 ![Erro de carregamento](../artifacts/app10-messages-error-390.png)
 
-Uma falha simulada de `SELECT` exibiu erro e manteve a ação de nova tentativa.
+Quando a consulta falha, a interface informa o problema e oferece a opção de
+tentar novamente.
+
+### 9. Modal de intercessão
 
 ![Modal de intercessão](../artifacts/app10-intercession-modal-390.png)
 
-O modal abriu, apresentou controle de fechamento acessível e o agradecimento
-foi enviado uma única vez mesmo com duplo acionamento.
+O modal apresenta o intercessor, permite fechar com controle acessível e oferece
+a ação de agradecer.
 
-## Validação final — 26/11/2026
+## Segurança e isolamento
 
-- Push com o aplicativo fechado: confirmado pelo responsável do produto.
-- Paginação controlada, textos longos, paisagem e erro de consulta: aprovados
-  pelo teste E2E.
-- Modal de intercessão, agradecimento e proteção contra duplicidade: aprovado.
-- Isolamento entre contas A/B no Supabase: aprovado.
+Foi validado diretamente no Supabase que a conta B não consegue consultar nem
+atualizar notificações destinadas à conta A. As operações de leitura continuam
+limitadas ao usuário autenticado.
+
+## Validações técnicas
+
 - `npm run build`: aprovado.
 - ESLint dos arquivos alterados: aprovado, sem erros ou avisos.
-- As quatro contas de teste foram consultadas. A conta B começou sem
-  notificações; a conta A tinha três notificações históricas.
-- A matriz real de 0/1/20/21 foi executada com dados controlados no navegador,
-  sem alterar registros permanentes. A limpeza de registros reais inseridos por
-  usuário não é permitida pela política atual do Supabase, que não concede
-  `DELETE` a usuários autenticados.
+- `git diff --check`: aprovado.
+- Testes Playwright de interface: aprovados.
+- Teste de isolamento entre contas: aprovado.
+
+## Observação sobre dados de teste
+
+O Supabase não concede permissão de exclusão de notificações a usuários
+autenticados. Por isso, os registros temporários usados na conta de teste B
+foram marcados como lidos, mas a remoção definitiva depende de uma operação
+administrativa/service role. Nenhum dado de usuário real foi alterado.
 
 ## Conclusão
 
-O APP10 cumpre todos os requisitos de produto, acessibilidade, estabilidade e
-segurança. O fluxo de mensagens, notificações, sino e agradecimento está validado
-e pronto para integração na branch principal.
+O APP10 está concluído para o escopo definido. Os fluxos de mensagens,
+notificações, sino, histórico, leitura, acessibilidade, responsividade,
+intercessão, segurança e push foram validados e estão prontos para integração
+na branch principal.
