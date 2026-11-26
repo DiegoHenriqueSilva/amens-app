@@ -54,11 +54,13 @@
 - Atualização do próprio perfil confirmada diretamente no Supabase sem alterar
   o valor armazenado.
 - Contrato de segurança de `process-referral` validado estaticamente.
+- Edge Function `process-referral` publicada no Supabase e guarda de identidade
+  validada remotamente com HTTP 400 para payload inválido.
 - `npm run build`: aprovado.
 
-Ainda faltam upload real, falhas parciais de perfil/Auth, privacidade observada
-por uma segunda conta, concorrência real da indicação, persistência dos novos
-campos e teste nativo de movimento reduzido.
+Ainda faltam upload válido no Storage, falhas parciais de perfil/Auth,
+privacidade observada por uma segunda conta, concorrência real de indicação,
+persistência cruzada dos novos campos e teste nativo de movimento reduzido.
 
 ## Critérios de conclusão
 
