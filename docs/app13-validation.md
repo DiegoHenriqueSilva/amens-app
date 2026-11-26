@@ -72,9 +72,8 @@ O APP13 está concluído. A edição de conta, foto, devoção, privacidade,
 preferências, estatísticas, indicações, segurança da Edge Function,
 responsividade e acessibilidade foram validadas.
 
-## Critérios de conclusão
+## Critérios atendidos
 
-O APP13 só será concluído após validar a edição completa, os estados de erro,
-upload, privacidade com segunda conta, indicação legítima sem duplicidade,
-preferências, acessibilidade, responsividade e o contrato de segurança da Edge
-Function.
+Foram validados a edição completa, os estados de erro, upload, privacidade com
+segunda conta, indicação legítima sem duplicidade, preferências,
+acessibilidade, responsividade e o contrato de segurança da Edge Function.
