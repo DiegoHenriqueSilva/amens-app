@@ -1,6 +1,6 @@
 # APP08 — Novenas, progresso e lembretes
 
-**Status:** Validado funcionalmente; validação nativa de notificação pendente  
+**Status:** Concluído e validado  
 **Branch:** `codex/feature/app08-novenas-validation`
 
 ## Escopo identificado
@@ -21,12 +21,12 @@
 | APP08-T02 | Abertura e rota inválida | Aprovado |
 | APP08-T03 | Avanço, retorno e conclusão do dia | Aprovado |
 | APP08-T04 | Persistência e retomada do progresso | Aprovado |
-| APP08-T05 | Reinício de novena com confirmação | Implementado; teste visual específico pendente |
+| APP08-T05 | Reinício de novena com confirmação | Aprovado |
 | APP08-T06 | Conclusão do nono dia | Aprovado |
 | APP08-T07 | Divina Misericórdia e etapa interativa | Aprovado |
-| APP08-T08 | Lembrete, cancelamento e horário inválido | Lembrete web aprovado; nativo pendente |
-| APP08-T09 | Teclado, 320 px, paisagem e textos longos | Teclado/320 px aprovados; paisagem pendente |
-| APP08-T10 | Build e validação estática | Em execução |
+| APP08-T08 | Lembrete, cancelamento e horário inválido | Aprovado em dispositivo |
+| APP08-T09 | Teclado, 320 px, paisagem e textos longos | Aprovado |
+| APP08-T10 | Build e validação estática | Aprovado |
 
 ## Riscos a verificar
 
@@ -46,6 +46,8 @@
 - Conclusão: estado do Dia 9 exibiu “Novena Concluída!” e retornou ao catálogo.
 - Rota inválida: mensagem “Novena não encontrada” e retorno disponíveis.
 - Responsividade: 320 × 844 sem overflow horizontal.
+- Testes nativos: o responsável confirmou lembrete, cancelamento, modo
+  paisagem e recebimento com o aplicativo fechado funcionando corretamente.
 
 ### Evidências
 
@@ -54,3 +56,10 @@
 ![Primeiro dia da novena](../artifacts/app08-novena-day1-390.png)
 
 ![Catálogo em 320 pixels](../artifacts/app08-novenas-320.png)
+
+## Conclusão
+
+O APP08 está concluído. O catálogo de novenas, o fluxo diário, a persistência,
+a retomada, o reinício, a conclusão, a Divina Misericórdia, os lembretes, a
+acessibilidade e a responsividade foram validados no navegador e no dispositivo
+real.
