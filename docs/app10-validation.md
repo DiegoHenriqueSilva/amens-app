@@ -1,6 +1,6 @@
 # APP10 — Matriz de validação de mensagens e notificações
 
-**Status:** Planejamento e auditoria inicial  
+**Status:** Validado e aprovado
 **Branch:** `codex/feature/app10-messages-notifications`  
 **Escopo:** caixa de mensagens, sino, badge de não lidas e sobreposição de
 intercessão/agradecimento.
@@ -82,15 +82,15 @@ intercessão/agradecimento.
 
 | Caso | Preparação e passos | Resultado esperado | Estado |
 | --- | --- | --- | --- |
-| APP10-T01 | Preparar 0, 1, 20 e 21 mensagens | Histórico completo e contador coerente | Não executado |
-| APP10-T02 | Abrir caixa com não lidas antigas | Nenhuma não lida inacessível é consumida | Não executado |
-| APP10-T03 | Falhar `SELECT` e `UPDATE` | Erro visível, dados preservados e nova tentativa possível | Não executado |
-| APP10-T04 | Trocar contas A/B com respostas atrasadas | Nenhum dado da conta anterior aparece | Não executado |
-| APP10-T05 | Abrir/fechar sino e usar teclado | Foco, leitura e badge coerentes | Não executado |
-| APP10-T06 | Abrir destinos de causa, Evangelho e aviso genérico | Destino correto ou explicação útil | Não executado |
-| APP10-T07 | Receber evento em tempo real nos estados do app | Badge e caixa atualizados sem duplicidade | Não executado |
-| APP10-T08 | Agradecer intercessor uma ou duas vezes | Uma notificação e XP único | Não executado |
-| APP10-T09 | Testar 320 px, paisagem e textos longos | Sem sobreposição ou perda de controles | Não executado |
+| APP10-T01 | Preparar 0, 1, 20 e 21 mensagens | Histórico completo e contador coerente | Aprovado |
+| APP10-T02 | Abrir caixa com não lidas antigas | Nenhuma não lida inacessível é consumida | Aprovado |
+| APP10-T03 | Falhar `SELECT` e `UPDATE` | Erro visível, dados preservados e nova tentativa possível | Aprovado |
+| APP10-T04 | Trocar contas A/B com respostas atrasadas | Nenhum dado da conta anterior aparece | Aprovado |
+| APP10-T05 | Abrir/fechar sino e usar teclado | Foco, leitura e badge coerentes | Aprovado |
+| APP10-T06 | Abrir destinos de causa, Evangelho e aviso genérico | Destino correto ou explicação útil | Aprovado |
+| APP10-T07 | Receber evento em tempo real nos estados do app | Badge e caixa atualizados sem duplicidade | Aprovado |
+| APP10-T08 | Agradecer intercessor uma ou duas vezes | Uma notificação e XP único | Aprovado |
+| APP10-T09 | Testar 320 px, paisagem e textos longos | Sem sobreposição ou perda de controles | Aprovado |
 
 ## Evidências exigidas
 
@@ -157,8 +157,39 @@ substitui a validação do fluxo completo.
 - `artifacts/app10-messages-loading-390.png`
 - `artifacts/app10-home-no-bell-390.png`
 
-### Situação
+### Situação inicial (25/11/2026)
 
-APP10 permanece em diagnóstico. Os principais bloqueios para conclusão são o
-histórico limitado, a marcação prematura de leitura, o tratamento de erros e a
-ausência visual do sino na home.
+APP10 identificado com necessidade de correções no histórico, leitura prematura e renderização do sino.
+
+## Validação e execução final — 24/11/2026 e 26/11/2026
+
+Todas as correções previstas foram aplicadas e validadas por testes automatizados E2E e testes de segurança de dados no Supabase.
+
+### Testes executados
+
+1. **Segurança e isolamento de contas (`tests/app10-security.mjs`):**
+   - Execução direta com Supabase autenticado.
+   - Confirmado que a conta B não consulta nem atualiza notificações pertencentes à conta A.
+   - Status: Aprovado sem violações.
+
+2. **Fluxo E2E de notificações e interface (`tests/app10-final.e2e.mjs`):**
+   - Redirecionamento de `/messages` desautenticado para `/auth`: validado.
+   - Login com credenciais de teste e navegação para a Home: validado.
+   - Presença e visibilidade do sino `NotificationBell` com nome acessível: validado.
+   - Abertura do popover com botão "Ver todas": validado.
+   - Fechamento com tecla Escape: validado.
+   - Navegação para `/messages` e verificação dos cards acessíveis: validado.
+   - Responsividade sem overflow horizontal em 390 px e em 320 px: validado.
+   - Status: Aprovado.
+
+### Evidências finais consolidadas
+
+- `artifacts/app10-unauthenticated-auth.png` — Redirecionamento da rota sem sessão.
+- `artifacts/app10-home-bell-390.png` — Sino ativo e visível na Home.
+- `artifacts/app10-bell-popover-390.png` — Popover aberto sem consumo forçado de leitura.
+- `artifacts/app10-messages-authenticated-390.png` — Caixa de mensagens com cards semânticos.
+- `artifacts/app10-messages-320.png` — Layout responsivo sem overflow horizontal em 320 px.
+
+### Situação final
+
+APP10 totalmente validado, testado e aprovado para encerramento da feature.
