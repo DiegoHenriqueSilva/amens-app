@@ -1,6 +1,6 @@
 # APP13 — Editar conta, devoção, privacidade e indicações
 
-**Status:** Em validação funcional  
+**Status:** Em validação funcional
 **Branch:** `codex/feature/app13-account-privacy-referrals`
 
 ## Escopo
