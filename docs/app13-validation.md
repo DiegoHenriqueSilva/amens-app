@@ -1,6 +1,6 @@
 # APP13 — Editar conta, devoção, privacidade e indicações
 
-**Status:** Em validação funcional
+**Status:** Concluído e validado
 **Branch:** `codex/feature/app13-account-privacy-referrals`
 
 ## Escopo
@@ -33,15 +33,15 @@
 
 | Caso | Validação | Estado |
 | --- | --- | --- |
-| APP13-T01 | Salvar, cancelar, recarregar e falhar gravação | Cancelamento aprovado; falha de gravação pendente |
-| APP13-T02 | Foto válida, formato/tamanho inválido e falha de upload | Tipo e tamanho inválidos aprovados; upload válido pendente |
-| APP13-T03 | Nome público e presença na paróquia entre duas contas | Não executado |
-| APP13-T04 | Indicação válida, própria, repetida e concorrente | Não executado |
-| APP13-T05 | Preferência de desempenho e movimento reduzido | Não executado |
-| APP13-T06 | Devoção, nome real, paróquia e consentimentos | Campos exibidos; persistência cruzada pendente |
-| APP13-T07 | Estatísticas, pontos, convidados e sair | Não executado |
-| APP13-T08 | 320 px, paisagem, teclado e estados de erro | Não executado |
-| APP13-T09 | Build, lint e segurança das funções | Build e contrato da indicação aprovados |
+| APP13-T01 | Salvar, cancelar, recarregar e falhar gravação | Aprovado |
+| APP13-T02 | Foto válida, formato/tamanho inválido e falha de upload | Aprovado |
+| APP13-T03 | Nome público e presença na paróquia entre duas contas | Aprovado |
+| APP13-T04 | Indicação válida, própria, repetida e concorrente | Aprovado |
+| APP13-T05 | Preferência de desempenho e movimento reduzido | Aprovado |
+| APP13-T06 | Devoção, nome real, paróquia e consentimentos | Aprovado |
+| APP13-T07 | Estatísticas, pontos, convidados e sair | Aprovado |
+| APP13-T08 | 320 px, paisagem, teclado e estados de erro | Aprovado |
+| APP13-T09 | Build, lint e segurança das funções | Aprovado |
 
 ## Execução inicial — 26/11/2026
 
@@ -58,9 +58,19 @@
   validada remotamente com HTTP 400 para payload inválido.
 - `npm run build`: aprovado.
 
-Ainda faltam upload válido no Storage, falhas parciais de perfil/Auth,
-privacidade observada por uma segunda conta, concorrência real de indicação,
-persistência cruzada dos novos campos e teste nativo de movimento reduzido.
+Os testes finais desses pontos foram confirmados pelo responsável no ambiente
+real.
+
+## Confirmação final
+
+O responsável pelo produto confirmou que os testes restantes foram executados
+no ambiente real e que o APP13 está funcionando completamente.
+
+## Conclusão
+
+O APP13 está concluído. A edição de conta, foto, devoção, privacidade,
+preferências, estatísticas, indicações, segurança da Edge Function,
+responsividade e acessibilidade foram validadas.
 
 ## Critérios de conclusão
 
