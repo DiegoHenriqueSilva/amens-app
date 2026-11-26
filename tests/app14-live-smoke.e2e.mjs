@@ -9,7 +9,7 @@ try {
   await page.goto(`${baseURL}/prayer-chain`, { waitUntil: "commit", timeout: 30000 });
   await page.waitForTimeout(3000);
   console.log("APP14 initial", page.url(), (await page.locator("body").innerText()).slice(0, 300));
-  await page.getByText(/Corrente de/).waitFor({ state: "visible", timeout: 15000 });
+  await page.getByText(/Corrente de/i).waitFor({ state: "visible", timeout: 15000 });
   await page.waitForTimeout(3000);
   const body = await page.locator("body").innerText();
   assert.doesNotMatch(body, /entrou na oração/);

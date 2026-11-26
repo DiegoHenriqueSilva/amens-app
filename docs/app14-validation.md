@@ -51,3 +51,16 @@ Erros ao enviar intenção também deixam de ser apresentados como sucesso.
 O APP14 só será encerrado após validar sincronização real com duas contas,
 concorrência de slot, reconexão, intenção, denúncia, origem das contribuições,
 responsividade, redução de movimento e contratos das RPCs.
+## Resultados adicionais — 26/11/2026
+
+- Concorrência RPC passou com duas contas reais disputando o mesmo `target_timestamp`: exatamente uma chamada retornou `true` e a outra `false`.
+- O registro criado para a disputa foi removido pelo `cleanup_prayer_contributions`.
+- `get_server_time` respondeu com número do servidor.
+- A chamada anônima a `join_prayer_chain` foi rejeitada com "Usuário não autenticado".
+- O smoke test em 320 x 844 passou sem overflow horizontal e sem participante sintético.
+- `npm run build` passou.
+
+As validações que ainda exigem interação simultânea ou estado físico ficam
+pendentes: dois dispositivos visíveis, reconexão, teclado/paisagem, baixa
+altura, redução de movimento, intenção/denúncia reais e confirmação da origem
+visual dos nomes.
