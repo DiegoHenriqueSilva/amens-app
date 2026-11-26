@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import {InsigniaSettings,NameWithInsignias,usePublicInsignias} from '@/features/insignias/Insignias';
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { signOutWithPushCleanup } from "@/lib/push";
 import { Button } from "@/components/ui/button";
@@ -28,6 +28,7 @@ import "./profile.css";
 
 const Profile = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [user, setUser] = useState<any>(null);
   const {data:insignias}=usePublicInsignias(user?[user.id]:[]);
   const { totalFaithPoints, loading: faithPointsLoading } = useFaithPoints();
@@ -36,7 +37,7 @@ const Profile = () => {
   const { completeTask } = useDailyTasks();
   
   // Advanced Editing
-  const [isEditing, setIsEditing] = useState(false);
+  const [isEditing, setIsEditing] = useState(location.pathname === "/profile/edit");
   const [states, setStates] = useState<IBGEState[]>([]);
   const [cities, setCities] = useState<IBGECity[]>([]);
   const [existingParishes, setExistingParishes] = useState<string[]>([]);
@@ -203,6 +204,7 @@ const Profile = () => {
       setIsEditing(false);
       toast.success("Perfil atualizado com sucesso! 🙏");
       fetchProfile(user.id);
+      navigate("/profile");
     }
   };
 
@@ -386,7 +388,7 @@ const Profile = () => {
                    exit={{ scale: 0.9, y: 20 }}
                    className="bg-card w-full max-w-md p-8 rounded-[2.5rem] soft-shadow border-primary/10 relative my-auto"
                 >
-                    <Button variant="ghost" size="icon" className="absolute top-4 right-4" onClick={() => setIsEditing(false)}>
+                    <Button variant="ghost" size="icon" className="absolute top-4 right-4" aria-label="Cancelar edição do perfil" onClick={() => navigate("/profile")}>
                         <X className="w-5 h-5" />
                     </Button>
                     
@@ -472,7 +474,7 @@ const Profile = () => {
                                     onChange={(e) => setEditData({...editData, showRealName: e.target.checked})}
                                 />
                                 <Label htmlFor="show-real-name-profile" className="text-xs font-medium cursor-pointer">
-                                    Desejo utilizar um apelido ou outro nome para manter o anonimato.
+                                    Desejo utilizar um nome diferente para permanecer anônimo.
                                 </Label>
                             </div>
 
