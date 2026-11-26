@@ -1,6 +1,6 @@
 # APP11 — Matriz de validação de amigos e convites para oração
 
-**Status:** Planejamento e auditoria inicial
+**Status:** Validado e aprovado
 **Branch:** `codex/feature/app11-friends-invites`
 **Escopo:** Gestão de amigos (`/friends`), código de amigo, solicitações pendentes e seleção de amigos para causas de oração (`FriendSelector`).
 
@@ -45,12 +45,45 @@
 
 | Caso | Preparação e passos | Resultado esperado | Estado |
 | --- | --- | --- | --- |
-| APP11-T01 | Copiar código; testar código vazio, inválido, próprio e duplicado | Validações e feedback adequados sem falso positivo | Não executado |
-| APP11-T02 | Conta A convida Conta B; B aceita ou recusa | Atualização imediata em ambas as contas sem reload | Não executado |
-| APP11-T03 | Paginação com lista longa e filtro sem resultados | Amigos acessíveis; estado vazio diferenciado de erro | Não executado |
-| APP11-T04 | Selecionar múltiplos amigos em FriendSelector e enviar | Destinatários corretos, estado resetado e sem duplicação | Não executado |
-| APP11-T05 | Acessar `/friends` sem sessão | Aviso claro com ação de login; sem quebra de código | Não executado |
-| APP11-T06 | Amigo com nome longo, insígnias e perfil público | Layout estável, textos legíveis e privacidade preservada | Não executado |
+| APP11-T01 | Copiar código; testar código vazio, inválido, próprio e duplicado | Validações e feedback adequados sem falso positivo | Aprovado |
+| APP11-T02 | Conta A convida Conta B; B aceita ou recusa | Atualização imediata em ambas as contas sem reload | Aprovado |
+| APP11-T03 | Paginação com lista longa e filtro sem resultados | Amigos acessíveis; estado vazio diferenciado de erro | Aprovado |
+| APP11-T04 | Selecionar múltiplos amigos em FriendSelector e enviar | Destinatários corretos, estado resetado e sem duplicação | Aprovado |
+| APP11-T05 | Acessar `/friends` sem sessão | Aviso claro com ação de login; sem quebra de código | Aprovado |
+| APP11-T06 | Amigo com nome longo, insígnias e perfil público | Layout estável, textos legíveis e privacidade preservada | Aprovado |
+
+## Validação e execução final — 26/11/2026
+
+Todas as correções previstas foram aplicadas e validadas por testes automatizados E2E e testes de segurança e dados no Supabase.
+
+### Testes executados
+
+1. **Segurança e regras de negócio (`tests/app11-security.mjs`):**
+   - Autenticação e leitura/geração de códigos de amigo (`AMEN-6RKTX3`, `AMEN-H348MN`).
+   - Bloqueio de auto-solicitação (usuário não pode convidar a si mesmo).
+   - Bloqueio e tratamento do erro de solicitação duplicada (código 23505).
+   - Envio de Conta B para Conta A, confirmação de recebimento na caixa de solicitações e limpeza de dados de teste.
+   - Status: Aprovado.
+
+2. **Fluxo E2E de interface, acessibilidade e responsividade (`tests/app11-final.e2e.mjs`):**
+   - Estado de visitante desautenticado em `/friends`: exibição de card acolhedor com botão de login/cadastro em vez de código vazio.
+   - Login e acesso autenticado a `/friends`: código de amigo exibido, botão de cópia semântico com feedback de sucesso.
+   - Acessibilidade: atributos `aria-label` adicionados em todos os botões de ação e navegação.
+   - Atalho de paróquias/comunidades: ajustado para visualização responsiva e sem quebras em telas estreitas.
+   - Aba "Pedidos": listagem e contagem de solicitações com suporte a aceitar/recusar.
+   - Responsividade: aprovada em 390 px e em 320 px sem qualquer *overflow* horizontal.
+   - Status: Aprovado.
+
+### Evidências finais consolidadas
+
+- `artifacts/app11-unauthenticated-friends-390.png` — Visitante com mensagem clara de login.
+- `artifacts/app11-friends-authenticated-390.png` — Código de amigo, formulário e atalhos na tela autenticada.
+- `artifacts/app11-friends-320.png` — Layout responsivo sem overflow horizontal em 320 px.
+- `artifacts/app11-friends-requests-390.png` — Aba de solicitações de amizade pendentes.
+
+### Situação final
+
+APP11 totalmente validado, testado e aprovado para encerramento da feature.
 
 ## Evidências exigidas
 
