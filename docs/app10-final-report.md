@@ -109,6 +109,36 @@ laterais ou quebra de elementos.
 - `node tests/app10-final.e2e.mjs`: aprovado (fluxo completo, popover, teclado e
   overflow).
 
+## Evidências adicionais — testes finais
+
+![Histórico com 21 mensagens](../artifacts/app10-history-21-390.png)
+
+O teste controlado confirmou a paginação em blocos de 20, o carregamento da
+21ª mensagem e a preservação de textos longos.
+
+![Mensagens em paisagem](../artifacts/app10-messages-landscape-844x390.png)
+
+A caixa permaneceu utilizável em 844 × 390, sem overflow horizontal.
+
+![Erro de carregamento](../artifacts/app10-messages-error-390.png)
+
+Uma falha simulada de `SELECT` exibiu erro e manteve a ação de nova tentativa.
+
+![Modal de intercessão](../artifacts/app10-intercession-modal-390.png)
+
+O modal abriu, apresentou controle de fechamento acessível e o agradecimento
+foi enviado uma única vez mesmo com duplo acionamento.
+
+## Validação final — 26/11/2026
+
+- Push com o aplicativo fechado: confirmado pelo responsável do produto.
+- Paginação controlada, textos longos, paisagem e erro de consulta: aprovados
+  pelo teste E2E.
+- Modal de intercessão, agradecimento e proteção contra duplicidade: aprovado.
+- Isolamento entre contas A/B no Supabase: aprovado.
+- `npm run build`: aprovado.
+- ESLint dos arquivos alterados: 0 erros e 2 avisos de dependências de hooks.
+
 ## Conclusão
 
 O APP10 cumpre todos os requisitos de produto, acessibilidade, estabilidade e
