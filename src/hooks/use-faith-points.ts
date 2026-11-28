@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 const FAITH_POINTS_CACHE_KEY = "amens_faith_points_cache";
@@ -17,7 +17,7 @@ const cachePoints = (userId: string, points: number) => {
     const cache = JSON.parse(localStorage.getItem(FAITH_POINTS_CACHE_KEY) || "{}") as Record<string, number>;
     localStorage.setItem(FAITH_POINTS_CACHE_KEY, JSON.stringify({ ...cache, [userId]: points }));
   } catch {
-    // A cache is only a visual optimization; the database remains authoritative.
+    // Cache is only a visual optimization; the database remains authoritative.
   }
 };
 
@@ -25,45 +25,66 @@ export function useFaithPoints() {
   const [totalFaithPoints, setTotalFaithPoints] = useState(0);
   const [loading, setLoading] = useState(true);
 
-  const fetchFaithPoints = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) { setLoading(false); return; }
+  const fetchFaithPoints = useCallback(async (userId: string | null) => {
+    if (!userId) {
+      setTotalFaithPoints(0);
+      setLoading(false);
+      return;
+    }
 
-    const cached = readCachedPoints(session.user.id);
+    const cached = readCachedPoints(userId);
     if (cached !== null) setTotalFaithPoints(cached);
-    // Render immediately from cache (or zero on the first visit), then refresh
-    // silently from Supabase instead of blocking the entire profile card.
     setLoading(false);
 
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("user_xp")
       .select("total_xp")
-      .eq("user_id", session.user.id)
+      .eq("user_id", userId)
       .maybeSingle();
 
+    if (error) return;
     const currentPoints = data?.total_xp ?? 0;
     setTotalFaithPoints(currentPoints);
-    cachePoints(session.user.id, currentPoints);
-  };
+    cachePoints(userId, currentPoints);
+  }, []);
 
-  useEffect(() => { fetchFaithPoints(); }, []);
+  useEffect(() => {
+    let active = true;
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (active) void fetchFaithPoints(session?.user.id || null);
+    });
 
-  const addFaithPoints = async (action: "pray" | "submit" | "react", customAmount?: number) => {
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (active) void fetchFaithPoints(session?.user.id || null);
+    });
+
+    return () => {
+      active = false;
+      authListener.subscription.unsubscribe();
+    };
+  }, [fetchFaithPoints]);
+
+  const addFaithPoints = useCallback(async (action: "pray" | "submit" | "react") => {
     const { data: { session } } = await supabase.auth.getSession();
-    if (!session) return;
+    if (!session) return null;
 
-    const faithPointsMap = { pray: 10, submit: 20, react: 5 };
+    const faithPointsMap = { pray: 10, submit: 20, react: 5 } as const;
     const { data, error } = await supabase.rpc("add_xp", {
       p_user_id: session.user.id,
-      p_xp_amount: customAmount ?? faithPointsMap[action],
+      p_xp_amount: faithPointsMap[action],
       p_action: action,
     });
 
-    if (!error && data != null) {
+    if (error) throw error;
+    if (data != null) {
       setTotalFaithPoints(data);
       cachePoints(session.user.id, data);
     }
-  };
+    return data;
+  }, []);
 
-  return { totalFaithPoints, loading, addFaithPoints, refetch: fetchFaithPoints };
+  return { totalFaithPoints, loading, addFaithPoints, refetch: async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    await fetchFaithPoints(session?.user.id || null);
+  } };
 }

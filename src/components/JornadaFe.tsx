@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 
 export const JornadaFe = ({ compact = false }: { compact?: boolean }) => {
   const [isExpanded, setIsExpanded] = useState(false);
-  const { completedTasks, totalCompleted } = useDailyTasks();
+  const { completedTasks, totalCompleted, loading } = useDailyTasks();
   const navigate = useNavigate();
   const cardRef = useRef<HTMLDivElement>(null);
   
@@ -29,7 +29,7 @@ export const JornadaFe = ({ compact = false }: { compact?: boolean }) => {
 
   return (
     <div ref={cardRef}>
-      <Card className={cn("border border-primary/20 overflow-hidden relative", compact ? "rounded-[18px] bg-white/95 shadow-sm" : "mx-6 mt-4 p-1 rounded-[2rem] bg-gradient-to-br from-white/90 to-white/60 soft-shadow backdrop-blur-md")}>
+      <Card className={cn("border border-primary/20 overflow-hidden relative", compact ? "rounded-[18px] bg-white/95 shadow-sm" : "mx-6 mt-4 p-1 rounded-[2rem] bg-gradient-to-br from-white/90 to-white/60 soft-shadow backdrop-blur-md")} aria-busy={loading}>
       <button
         type="button"
         aria-expanded={isExpanded}
@@ -73,22 +73,23 @@ export const JornadaFe = ({ compact = false }: { compact?: boolean }) => {
             className="overflow-hidden border-t border-primary/5"
           >
             <div className="px-4 py-3 space-y-1">
-                <p className="text-[11px] text-muted-foreground text-center mb-2 leading-relaxed px-1">
+                <p id="journey-description" className="text-[11px] text-muted-foreground text-center mb-2 leading-relaxed px-1">
                     Complete pelo menos 5 ações diárias para fortalecer sua coroa de fé e receber <strong className="text-[#8b6508]">+100 Pontos extras!</strong>
                 </p>
+                {loading && <p role="status" className="text-center text-[10px] text-muted-foreground mb-2">Carregando suas missões…</p>}
                 <div className="grid grid-cols-1 gap-1">
                     {DAILY_TASKS.map((task) => {
                         const isDone = completedTasks.includes(task.id);
                         return (
-                            <div 
+                            <button
+                                type="button"
                                 key={task.id} 
-                                onClick={() => {
-                                  if (!isDone) {
-                                    navigate(task.route);
-                                  }
-                                }}
+                                onClick={() => !isDone && navigate(task.route)}
+                                disabled={isDone || loading}
+                                aria-label={`${task.title}: ${isDone ? "concluída" : `vale ${task.xpReward} Pontos de Fé`}`}
+                                aria-describedby="journey-description"
                                 className={cn(
-                                    "flex items-center justify-between px-3 py-2 rounded-xl transition-all cursor-pointer group", 
+                                    "w-full flex items-center justify-between px-3 py-2 rounded-xl transition-all text-left group disabled:cursor-default",
                                     isDone ? "bg-primary/5 border border-primary/10" : "bg-transparent border border-transparent hover:bg-white/50"
                                 )}
                             >
@@ -100,7 +101,7 @@ export const JornadaFe = ({ compact = false }: { compact?: boolean }) => {
                                 ) : (
                                     <div className="w-4 h-4 rounded-full border-[1.5px] border-primary/20 shrink-0 group-hover:border-primary/40 transition-colors" />
                                 )}
-                            </div>
+                            </button>
                         );
                     })}
                 </div>

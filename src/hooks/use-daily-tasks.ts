@@ -1,17 +1,16 @@
-import { useState, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useFaithPoints } from "./use-faith-points";
 import { toast } from "sonner";
 
-export type DailyTaskType = 
-  | "pray_cause" 
-  | "read_gospel" 
-  | "read_promise" 
-  | "share_word" 
+export type DailyTaskType =
+  | "pray_cause"
+  | "read_gospel"
+  | "read_promise"
+  | "share_word"
   | "share_promise"
-  | "send_invite" 
-  | "pray_rosary" 
-  | "live_prayer" 
+  | "send_invite"
+  | "pray_rosary"
+  | "live_prayer"
   | "share_cause"
   | "pray_novena";
 
@@ -35,58 +34,84 @@ export const DAILY_TASKS: DailyTask[] = [
   { id: "pray_novena", title: "Rezar dia de Novena", xpReward: 30, route: "/novenas" },
 ];
 
+interface CompletionResult {
+  completed: boolean;
+  awarded: boolean;
+  points_awarded: number;
+  bonus_awarded: boolean;
+  total_xp: number;
+}
+
 export function useDailyTasks() {
   const [completedTasks, setCompletedTasks] = useState<DailyTaskType[]>([]);
   const [userId, setUserId] = useState<string | null>(null);
-  const { addFaithPoints } = useFaithPoints();
+  const [loading, setLoading] = useState(true);
 
-  // Helper para gerar a chave diária
-  const getDailyKey = (uid: string) => {
-    const today = new Date().toISOString().split("T")[0];
-    return `amens_journey_${uid}_${today}`;
-  };
+  const loadTasks = useCallback(async (activeUserId: string | null) => {
+    if (!activeUserId) {
+      setUserId(null);
+      setCompletedTasks([]);
+      setLoading(false);
+      return;
+    }
 
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        setUserId(session.user.id);
-        const stored = localStorage.getItem(getDailyKey(session.user.id));
-        if (stored) {
-          try {
-            setCompletedTasks(JSON.parse(stored));
-          } catch(e) {}
-        }
-      }
-    });
+    setUserId(activeUserId);
+    setLoading(true);
+    const { data, error } = await supabase.rpc("get_daily_faith_tasks" as any);
+    if (error) {
+      setCompletedTasks([]);
+      toast.error("Não foi possível carregar sua jornada diária.");
+    } else {
+      const validTaskIds = new Set(DAILY_TASKS.map((task) => task.id));
+      const taskIds = ((data || []) as Array<{ task_id: string }>)
+        .map((row) => row.task_id)
+        .filter((taskId): taskId is DailyTaskType => validTaskIds.has(taskId as DailyTaskType));
+      setCompletedTasks(taskIds);
+    }
+    setLoading(false);
   }, []);
 
-  const completeTask = async (taskId: DailyTaskType) => {
-    if (!userId) return;
-    
-    // Já completou hoje
-    if (completedTasks.includes(taskId)) return;
+  useEffect(() => {
+    let active = true;
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (active) void loadTasks(session?.user.id || null);
+    });
 
-    // Recupera dados
-    const taskDef = DAILY_TASKS.find(t => t.id === taskId);
-    if (!taskDef) return;
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (active) void loadTasks(session?.user.id || null);
+    });
 
-    // Atualiza estado e localstorage
-    const newCompleted = [...completedTasks, taskId];
-    setCompletedTasks(newCompleted);
-    localStorage.setItem(getDailyKey(userId), JSON.stringify(newCompleted));
+    return () => {
+      active = false;
+      authListener.subscription.unsubscribe();
+    };
+  }, [loadTasks]);
 
-    // Award XP
-    try {
-        await addFaithPoints("pray", taskDef.xpReward);
-        toast.success(`Graça Alcançada: +${taskDef.xpReward} Pontos de Fé! 🙏`, { description: taskDef.title });
-    } catch(e) {}
+  const completeTask = useCallback(async (taskId: DailyTaskType) => {
+    if (!userId || completedTasks.includes(taskId)) return false;
 
-    // Bonus check (Se bateu 5 tasks no momento deste clique)
-    if (newCompleted.length === 5) {
-        toast.success("Jornada de Fé: 5 Concluídas! 🎉", { description: "Você ganhou +100 Pontos de Fé Bônus!" });
-        await addFaithPoints("pray");
+    const taskDef = DAILY_TASKS.find((task) => task.id === taskId);
+    if (!taskDef) return false;
+
+    const { data, error } = await supabase.rpc("complete_daily_faith_task" as any, { p_task_id: taskId });
+    if (error) {
+      toast.error("Não foi possível concluir esta missão. Tente novamente.");
+      return false;
     }
-  };
 
-  return { completedTasks, completeTask, totalCompleted: completedTasks.length };
+    const result = data as CompletionResult;
+    if (!result.completed) return false;
+
+    setCompletedTasks((current) => current.includes(taskId) ? current : [...current, taskId]);
+    if (result.awarded) {
+      toast.success(`Graça alcançada: +${result.points_awarded} Pontos de Fé! 🙏`, { description: taskDef.title });
+    }
+
+    if (result.bonus_awarded) {
+      toast.success("Jornada de Fé: 5 concluídas! 🎉", { description: "Você ganhou +100 Pontos de Fé bônus!" });
+    }
+    return result.awarded;
+  }, [completedTasks, userId]);
+
+  return { completedTasks, completeTask, totalCompleted: completedTasks.length, loading };
 }
