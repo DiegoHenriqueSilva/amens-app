@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -17,35 +17,61 @@ const CATEGORIES = [
   { value: "bug", label: "Problema / Bug" },
   { value: "elogio", label: "Elogio" },
   { value: "outro", label: "Outro" },
-];
+] as const;
 
-export function FeedbackDialog() {
+type FeedbackDialogProps = {
+  iconOnly?: boolean;
+};
+
+export function FeedbackDialog({ iconOnly = false }: FeedbackDialogProps) {
   const [open, setOpen] = useState(false);
   const [category, setCategory] = useState("");
   const [message, setMessage] = useState("");
   const [sending, setSending] = useState(false);
 
+  const clearDraft = () => {
+    setCategory("");
+    setMessage("");
+  };
+
+  const closeDialog = () => {
+    if (sending) return;
+    setOpen(false);
+    clearDraft();
+  };
+
   async function handleSend() {
-    if (!category || message.trim().length < 10) {
-      toast.error("Preencha a categoria e escreva pelo menos 10 caracteres.");
+    const trimmedMessage = message.trim();
+    if (!category) {
+      toast.error("Escolha uma categoria para o feedback.");
+      return;
+    }
+    if (trimmedMessage.length < 10) {
+      toast.error("Escreva pelo menos 10 caracteres para enviar o feedback.");
       return;
     }
 
     setSending(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast.error("Entre na sua conta para enviar uma sugestão.");
+        return;
+      }
+
       const { error } = await (supabase.from("user_feedback" as any) as any).insert({
-        user_id: session?.user?.id ?? null,
+        user_id: session.user.id,
         category,
-        message: message.trim(),
+        message: trimmedMessage,
       });
       if (error) throw error;
-      toast.success("Obrigado! Seu feedback foi enviado.");
+
+      toast.success("Obrigado! Seu feedback foi enviado para a equipe.");
       setOpen(false);
-      setCategory("");
-      setMessage("");
-    } catch (e: any) {
-      toast.error("Erro ao enviar: " + e.message);
+      clearDraft();
+    } catch {
+      // Keep the draft in place so the user can retry without losing the text.
+      toast.error("Não foi possível enviar agora. Revise e tente novamente.");
     } finally {
       setSending(false);
     }
@@ -55,50 +81,56 @@ export function FeedbackDialog() {
     <>
       <Button
         variant="ghost"
-        size="sm"
-        className="text-xs font-bold gap-1.5"
+        size={iconOnly ? "icon" : "sm"}
+        className={iconOnly ? "h-10 w-10 rounded-full border border-primary/20 bg-background/90 text-primary shadow-sm backdrop-blur-sm hover:bg-primary/10" : "text-xs font-bold gap-1.5"}
         onClick={() => setOpen(true)}
+        aria-label="Enviar sugestão ou feedback"
+        title="Enviar sugestão ou feedback"
       >
-        <MessageSquare className="w-3.5 h-3.5" />
-        Enviar sugestão
+        <MessageSquare className="w-3.5 h-3.5" aria-hidden="true" />
+        {!iconOnly && "Enviar sugestão"}
       </Button>
 
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-sm">
+      <Dialog open={open} onOpenChange={(nextOpen) => nextOpen ? setOpen(true) : closeDialog()}>
+        <DialogContent className="max-w-sm" aria-describedby="feedback-dialog-description">
           <DialogHeader>
-            <DialogTitle>Enviar sugestão ou feedback</DialogTitle>
+            <DialogTitle>Enviar sugestão ou problema</DialogTitle>
+            <DialogDescription id="feedback-dialog-description">
+              Sugestões, elogios e problemas chegam à equipe do Améns. Este formulário não é uma denúncia de conteúdo ou de usuário.
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <Label>Categoria</Label>
-              <Select value={category} onValueChange={setCategory}>
-                <SelectTrigger className="mt-1">
-                  <SelectValue placeholder="Selecione..." />
+              <Label htmlFor="feedback-category">Categoria</Label>
+              <Select value={category} onValueChange={setCategory} disabled={sending}>
+                <SelectTrigger id="feedback-category" className="mt-1" aria-label="Categoria do feedback">
+                  <SelectValue placeholder="Selecione uma categoria" />
                 </SelectTrigger>
                 <SelectContent>
-                  {CATEGORIES.map((c) => (
-                    <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>
-                  ))}
+                  {CATEGORIES.map((item) => <SelectItem key={item.value} value={item.value}>{item.label}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
             <div>
-              <Label>Mensagem</Label>
+              <Label htmlFor="feedback-message">Mensagem</Label>
               <Textarea
+                id="feedback-message"
                 className="mt-1 resize-none"
                 rows={4}
                 placeholder="Compartilhe sua ideia, problema ou elogio..."
                 value={message}
-                onChange={(e) => setMessage(e.target.value)}
+                onChange={(event) => setMessage(event.target.value)}
                 maxLength={2000}
+                aria-describedby="feedback-message-help"
+                disabled={sending}
               />
-              <p className="text-xs text-muted-foreground text-right mt-1">{message.length}/2000</p>
+              <p id="feedback-message-help" className="text-xs text-muted-foreground text-right mt-1">{message.length}/2000 caracteres; mínimo de 10</p>
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
-            <Button onClick={handleSend} disabled={sending}>
-              {sending ? "Enviando..." : "Enviar"}
+            <Button variant="outline" onClick={closeDialog} disabled={sending}>Cancelar</Button>
+            <Button onClick={handleSend} disabled={sending || !category || message.trim().length < 10}>
+              {sending ? "Enviando..." : "Enviar feedback"}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -57,13 +57,6 @@ export default function AdminFeedback() {
   const [replyDialog, setReplyDialog] = useState<any>(null);
   const [replyText, setReplyText] = useState("");
 
-  const { data: sessionData } = useQuery({
-    queryKey: ["session"],
-    queryFn: () => supabase.auth.getSession().then((r) => r.data),
-    staleTime: Infinity,
-  });
-  const currentUserId = sessionData?.session?.user?.id;
-
   const { data: feedback = [], isLoading } = useQuery({
     queryKey: ["admin-feedback", tab],
     queryFn: () => fetchFeedback(tab),
@@ -107,22 +100,13 @@ export default function AdminFeedback() {
   );
 
   const sendReply = useMutation({
-    mutationFn: async ({ feedbackId, userId, message, feedback }: { feedbackId: string; userId: string; message: string; feedback: any }) => {
-      const categoryLabel = CATEGORY_LABELS[feedback.category] || feedback.category;
-      const preview = feedback.message?.slice(0, 80) + (feedback.message?.length > 80 ? "…" : "");
-      const fullMessage = `Em resposta ao seu feedback (${categoryLabel}): "${preview}"\n\n${message}`;
-      await supabase.from("notifications").insert({
-        user_id: userId,
-        message: fullMessage,
-        type: "system",
-        is_read: false,
+    mutationFn: async ({ feedbackId, userId, message }: { feedbackId: string; userId: string; message: string; feedback: any }) => {
+      if (!userId || !message.trim()) throw new Error("Informe uma resposta para um usuário válido.");
+      const { error } = await supabase.rpc("reply_to_user_feedback" as any, {
+        p_feedback_id: feedbackId,
+        p_message: message.trim(),
       });
-      await (supabase.from("user_feedback" as any) as any).update({
-        status: "replied",
-        reply_text: message,
-        replied_by: currentUserId,
-        replied_at: new Date().toISOString(),
-      }).eq("id", feedbackId);
+      if (error) throw error;
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["admin-feedback"] });
