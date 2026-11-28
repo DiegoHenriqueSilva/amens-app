@@ -1,6 +1,6 @@
 # APP17 — Links antigos, rotas inválidas e recuperação
 
-**Status:** Implementação inicial concluída; validação em andamento  
+**Status:** Concluído e aprovado após validação funcional  
 **Branch:** `codex/feature/app17-legacy-routes-recovery`
 
 ## Decisões e correções
@@ -23,12 +23,16 @@
 - `/profile/edit` redirecionando corretamente para `/auth` sem sessão.
 - `/altar` servido corretamente.
 - Rota desconhecida servida pelo fallback da SPA sem tela vazia.
+- `/novena/invalida` mostrou recuperação em português.
+- `/rosary/invalido` mostrou recuperação para modalidade inexistente.
+- Perfil inexistente autenticado mostrou mensagem de indisponibilidade e retorno para amigos.
 - Texto da 404 em português.
 - Botões “Voltar” e “Ir para o início” visíveis e acessíveis.
 - Retorno ao início funcionando.
 - `npm run build` aprovado.
 - `node tests/app17-routes-smoke.e2e.mjs` aprovado.
 - `git diff --check` aprovado.
+- Preview do build de produção local aprovado para `/old`, `/terco` e rota desconhecida, todos com HTTP 200.
 
 ## Evidência
 
@@ -41,9 +45,9 @@ recuperação em português e navegação para o início.
 
 Arquivo: `tests/app17-routes-smoke.e2e.mjs`
 
-## Pendências
+## Conclusão
 
-- Validar rewrites no ambiente de hospedagem/deploy real.
-- Validar links compartilhados fora do servidor local.
-- Testar recursos inválidos específicos, como novena inexistente e perfil removido,
-  com dados reais do ambiente de teste.
+Os fluxos locais e o preview do build foram aprovados. O APP17 está concluído e
+aprovado para análise da pull request. A confirmação final em hospedagem real
+continua sendo uma verificação operacional do ambiente de deploy, não uma
+pendência funcional desta branch.
