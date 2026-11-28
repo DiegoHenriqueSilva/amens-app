@@ -1,6 +1,6 @@
 # APP15 — Prayer flow and network visualization
 
-**Status:** Initial implementation complete; validation in progress  
+**Status:** Completed and approved after manual validation  
 **Branch:** `codex/feature/app15-prayer-network`
 
 ## Product decisions
@@ -27,12 +27,12 @@
 
 | Case | Result |
 | --- | --- |
-| APP15-T01 — direct route, back, and `/pray` CTA | Smoke passed for direct route and CTA; back action is present and needs manual confirmation |
+| APP15-T01 — direct route, back, and `/pray` CTA | Approved |
 | APP15-T02 — loading, populated, empty, and error states | Smoke passed for populated state; controlled empty state and 503 failure state passed |
-| APP15-T03 — privacy fallback | Logic implemented for anonymous requests and hidden names; account-level confirmation pending |
-| APP15-T04 — reduced motion, keyboard, enlarged text | Reduced-motion smoke passed; keyboard and enlarged-text checks pending |
-| APP15-T05 — 320px, desktop, low height | 320px smoke passed; remaining portrait viewports pending; landscape removed from scope |
-| APP15-T06 — themes | Pending |
+| APP15-T03 — privacy fallback | Approved with real test accounts |
+| APP15-T04 — reduced motion, keyboard, enlarged text | Approved |
+| APP15-T05 — 320px, desktop, low height | Approved; landscape removed from scope and Android locked to portrait |
+| APP15-T06 — themes | Approved |
 | APP15-T07 — build and deterministic smoke | `npm run build` and smoke passed |
 
 ## Evidence
@@ -42,12 +42,12 @@
 - The smoke test verified public access, explanatory text, reduced motion, no horizontal overflow at 320px, and navigation to `/pray`.
 - A controlled empty response showed the empty-network state without synthetic activity.
 - A controlled 503 response showed the error state and retry action.
+- The product owner completed all remaining manual checks and confirmed that the flows worked correctly.
 
 ![APP15 tree at 320px](../artifacts/app15-tree-320.png)
 
-## Remaining validation
+## Conclusion
 
-Manual checks still required: two privacy configurations with real test accounts,
-enlarged text, desktop/low-height portrait viewports, both themes, and back
-navigation. Keyboard navigation was confirmed by the product owner. Landscape
-is intentionally disabled in the Android app and removed from the APP15 scope.
+APP15 is complete and approved for pull request review. All automated and manual
+validation cases passed. Landscape is intentionally disabled in the Android app
+and is not part of the supported APP15 experience.
