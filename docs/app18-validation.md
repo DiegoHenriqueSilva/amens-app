@@ -1,6 +1,6 @@
 # APP18 — Enviar sugestão ou problema à equipe
 
-**Status:** Concluído e aprovado  
+**Status:** Concluído e aprovado
 **Branch:** `codex/feature/app18-feedback-suggestions`
 
 ## Correções realizadas
