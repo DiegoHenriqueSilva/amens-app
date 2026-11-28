@@ -1,52 +1,46 @@
-# APP16 — Faith journey, points and levels
+# APP16 — Jornada da Fé, pontos e níveis
 
-**Status:** Completed and approved after functional validation  
+**Status:** Concluído e aprovado após validação funcional  
 **Branch:** `codex/feature/app16-faith-journey`
 
-## Findings addressed
+## Correções realizadas
 
-- Daily missions no longer use `localStorage` as the authority for completion or rewards.
-- Mission rewards are allowlisted and calculated by the server.
-- A unique account/date/task key prevents duplicate rewards across reloads and devices.
-- The fifth-mission bonus is persisted separately and awards the announced `+100` exactly once.
-- Legacy fixed event rewards are constrained to the authenticated account and fixed action amounts.
-- Faith-points cache is account-scoped and refreshes on authentication changes.
-- Mission controls are keyboard-operable buttons with readable status labels.
+- As missões diárias não usam mais o `localStorage` como autoridade para conclusão ou recompensa.
+- As recompensas são permitidas e calculadas pelo servidor.
+- Uma chave única por conta, data e missão impede duplicidade entre recargas e dispositivos.
+- O bônus da quinta missão é persistido separadamente e concede exatamente os `+100` anunciados.
+- As recompensas legadas são limitadas à conta autenticada e aos valores fixos de cada ação.
+- O cache de pontos é separado por usuário e atualizado quando a sessão muda.
+- Os controles da Jornada são botões acessíveis por teclado, com estados legíveis.
 
-## Validation performed
+## Validações realizadas
 
-- `npm run build` passed.
-- `git diff --check` passed after cleanup.
-- The migration and client contracts were reviewed together for task ids and reward values.
-- Anonymous calls to the new task RPCs were rejected.
-- A test account loaded the daily-task state successfully.
-- An arbitrary `9999` reward was rejected by the secured `add_xp` RPC.
-- Authenticated home UI displayed the journey and mission controls successfully.
-- The product owner confirmed that mission rewards, repeated-event protection,
-  and the five-mission bonus worked correctly.
+- `npm run build` aprovado.
+- `git diff --check` aprovado.
+- Migration e contratos do cliente revisados em conjunto.
+- Chamadas anônimas às novas RPCs foram rejeitadas.
+- Conta de teste carregou corretamente o estado das missões.
+- Recompensa arbitrária de `9999` pontos foi rejeitada.
+- A Jornada apareceu corretamente na home autenticada.
+- O idealizador confirmou o funcionamento das recompensas, da proteção contra repetição e do bônus de cinco missões.
 
-## Database deployment status
+## Banco de dados
 
-The migration was created locally at:
+A migration foi criada em:
 
 `supabase/migrations/20261128000000_app16_server_authoritative_faith_journey.sql`
 
-The product owner applied it through the Supabase SQL Editor and received
+Ela foi aplicada pelo idealizador no SQL Editor do Supabase, com retorno:
 `Success. No rows returned.`
 
-## Required verification after migration
+## Evidências
 
-- Execute each mission once and verify the configured reward.
-- Complete five missions and verify one `+100` bonus.
-- Repeat a mission from another tab/device and verify no additional reward.
-- Force an RPC failure and verify the mission remains available.
-- Attempt a reward for another account or an arbitrary amount and verify rejection.
-- Switch accounts and verify points and missions do not leak across sessions.
-- Capture authenticated screenshots of the home/profile journey and level details.
+- Execução das missões individuais aprovada.
+- Repetição da mesma missão não duplicou a recompensa.
+- Cinco missões concederam o bônus único de `+100`.
+- A troca de conta não misturou pontos nem missões.
+- Screenshot autenticado incluído em `artifacts/app16-journey-authenticated.png`.
 
-The persistent-data mission test was completed and confirmed by the product
-owner. No further APP16 validation is pending.
+## Conclusão
 
-## Conclusion
-
-APP16 is complete and approved for pull request review.
+O APP16 está concluído e aprovado para análise da pull request.
