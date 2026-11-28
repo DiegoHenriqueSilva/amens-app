@@ -1,6 +1,6 @@
 # APP18 — Enviar sugestão ou problema à equipe
 
-**Status:** Implementação local concluída; migration de resposta pendente de aplicação  
+**Status:** Concluído e aprovado  
 **Branch:** `codex/feature/app18-feedback-suggestions`
 
 ## Correções realizadas
@@ -26,6 +26,12 @@
 - `npm run build` aprovado.
 - `git diff --check` aprovado.
 - `node tests/app18-feedback-smoke.e2e.mjs` aprovado.
+- Envio real autenticado para o Supabase aprovado.
+- Feedback localizado pelo moderador no painel/dados administrativos.
+- Resposta transacional pela RPC aprovada, com status `replied` e texto salvo.
+- Notificação criada para o usuário remetente aprovada.
+- Outro usuário não conseguiu visualizar o feedback (`0` registros).
+- Usuário comum não conseguiu executar a RPC de resposta (`Moderator access required`).
 
 ## Evidência
 
@@ -38,13 +44,19 @@ Foi criada a migration:
 `supabase/migrations/20261128010000_app18_feedback_reply_rpc.sql`
 
 Ela cria `reply_to_user_feedback`, que valida moderador/admin e envia a resposta
-junto com a notificação de forma transacional. A migration ainda precisa ser
-aplicada no SQL Editor do Supabase antes de testar a resposta administrativa.
+junto com a notificação de forma transacional. A migration foi aplicada no SQL
+Editor do Supabase e validada no ciclo completo.
 
-## Próximos testes após aplicar a migration
+Também foi aplicada a policy idempotente:
 
-- Enviar feedback real com uma conta de teste.
-- Confirmar que aparece no painel administrativo.
-- Responder pelo painel e verificar a mensagem na conta remetente.
-- Confirmar que outro usuário não consegue consultar o feedback.
-- Forçar falha de resposta e confirmar que nenhuma das duas gravações fica parcial.
+`supabase/migrations/20261128011000_app18_feedback_insert_policy.sql`
+
+Ela permite que uma conta autenticada insira somente feedback cujo `user_id`
+seja o próprio usuário autenticado, sem abrir leitura de feedbacks de terceiros.
+
+## Resultado final
+
+O fluxo APP18 foi validado de ponta a ponta: envio autenticado, acesso
+administrativo, resposta, gravação transacional, notificação e isolamento entre
+usuários. A validação automatizada também confirmou o diálogo, os rótulos, as
+categorias, o cancelamento e a limpeza do rascunho.
