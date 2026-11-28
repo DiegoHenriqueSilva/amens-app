@@ -1,6 +1,6 @@
 # APP16 — Faith journey, points and levels
 
-**Status:** Server migration applied; read-only and UI validation passed  
+**Status:** Completed and approved after functional validation  
 **Branch:** `codex/feature/app16-faith-journey`
 
 ## Findings addressed
@@ -22,6 +22,8 @@
 - A test account loaded the daily-task state successfully.
 - An arbitrary `9999` reward was rejected by the secured `add_xp` RPC.
 - Authenticated home UI displayed the journey and mission controls successfully.
+- The product owner confirmed that mission rewards, repeated-event protection,
+  and the five-mission bonus worked correctly.
 
 ## Database deployment status
 
@@ -42,6 +44,9 @@ The product owner applied it through the Supabase SQL Editor and received
 - Switch accounts and verify points and missions do not leak across sessions.
 - Capture authenticated screenshots of the home/profile journey and level details.
 
-The only remaining test that changes persistent test data is executing one real
-mission and repeating it. It is intentionally pending to avoid changing the
-test account balance without explicit approval.
+The persistent-data mission test was completed and confirmed by the product
+owner. No further APP16 validation is pending.
+
+## Conclusion
+
+APP16 is complete and approved for pull request review.
