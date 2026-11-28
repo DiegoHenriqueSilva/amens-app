@@ -31,7 +31,7 @@
 | APP15-T02 — loading, populated, empty, and error states | Smoke passed for populated state; controlled empty state and 503 failure state passed |
 | APP15-T03 — privacy fallback | Logic implemented for anonymous requests and hidden names; account-level confirmation pending |
 | APP15-T04 — reduced motion, keyboard, enlarged text | Reduced-motion smoke passed; keyboard and enlarged-text checks pending |
-| APP15-T05 — 320px, landscape, desktop, low height | 320px smoke passed; remaining viewports pending |
+| APP15-T05 — 320px, desktop, low height | 320px smoke passed; remaining portrait viewports pending; landscape removed from scope |
 | APP15-T06 — themes | Pending |
 | APP15-T07 — build and deterministic smoke | `npm run build` and smoke passed |
 
@@ -48,5 +48,6 @@
 ## Remaining validation
 
 Manual checks still required: two privacy configurations with real test accounts,
-keyboard/enlarged text, landscape and low-height viewports, both themes, and
-back navigation.
+enlarged text, desktop/low-height portrait viewports, both themes, and back
+navigation. Keyboard navigation was confirmed by the product owner. Landscape
+is intentionally disabled in the Android app and removed from the APP15 scope.
