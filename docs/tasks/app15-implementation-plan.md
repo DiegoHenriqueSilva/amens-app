@@ -59,6 +59,12 @@ Tradeoff: less immediate visual impact and a broader information hierarchy chang
 2. May the network show public display names, or should APP15 use only anonymous labels such as “Intercessor” until an explicit privacy contract is confirmed?
 3. Should the aggregate metric remain “Pontos de Fé Coletivos”, or should it represent prayer activity instead of XP?
 
-## Decision gate
+## Decision
 
-Implement Option A unless the product owner selects another option. No source files should be changed until the decision and the three open questions are confirmed.
+The product owner selected Option A and confirmed:
+
+- `/tree` is public; the prayer action can continue to enforce its own authentication rules.
+- User-selected public names may be shown; anonymous profiles and anonymous prayer requests must remain `Intercessor`.
+- `Pontos de Fé Coletivos` remains the official aggregate metric.
+
+Implementation may proceed with these decisions as the approved contract.
